@@ -33,12 +33,14 @@ export function LogMethod(
     trackParams?: boolean;
     trackReturn?: boolean;
     trackPerformance?: boolean;
+    trackResult?: boolean;
   } = {},
 ) {
   const {
     trackParams = true,
     trackReturn = false,
     trackPerformance = true,
+    trackResult = false,
   } = options;
 
   return function (

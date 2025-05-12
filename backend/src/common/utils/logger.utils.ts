@@ -52,7 +52,7 @@ export function logError(
   error: Error | string,
   context: string,
   filePath: string,
-  lineNumber?: number,
+  lineNumber?: string | number,
   additionalInfo?: Record<string, any>,
 ): void {
   if (!loggerInstance) {
@@ -66,7 +66,7 @@ export function logError(
     errorMessage,
     context,
     fileName,
-    lineNumber?.toString(),
+    lineNumber !== undefined ? String(lineNumber) : undefined,
     typeof error === 'object' ? error : undefined,
     additionalInfo,
   );
