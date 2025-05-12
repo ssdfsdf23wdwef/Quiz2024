@@ -25,7 +25,7 @@ export enum FlowCategory {
 }
 
 // FlowCategory'yi TrackerFlowCategory'ye eşleştiren yardımcı fonksiyon
-function mapToTrackerCategory(category: FlowCategory): TrackerFlowCategory {
+export function mapToTrackerCategory(category: FlowCategory): TrackerFlowCategory {
   switch(category) {
     case FlowCategory.API:
       return TrackerFlowCategory.API;

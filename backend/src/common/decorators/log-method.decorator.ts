@@ -54,10 +54,10 @@ export function LogMethod(
       const className = target.constructor.name;
       const context = `${className}.${methodName}`;
       const startTime = trackPerformance ? Date.now() : 0;
+      let safeParams: Record<string, any> | undefined;
 
       try {
         // Safeleştirilmiş argümanlar
-        let safeParams;
         if (trackParams) {
           try {
             // Serileştirilebilir objeleri güvenli şekilde dönüştür
@@ -89,7 +89,9 @@ export function LogMethod(
         flowTracker.trackMethodStart(
           methodName,
           className,
-          trackParams ? safeParams : undefined,
+          trackParams && safeParams
+            ? safeStringify(safeParams, 500)
+            : undefined,
         );
 
         // Metot çalıştırma
@@ -127,7 +129,10 @@ export function LogMethod(
       } catch (error) {
         // Hata durumunda loglama
         logger.logError(error, context, __filename, '100', {
-          args: trackParams ? safeStringify(args, 200) : 'Not tracked',
+          args:
+            trackParams && safeParams
+              ? safeStringify(safeParams, 200)
+              : 'Not tracked',
         });
 
         // Hata mesajını izle

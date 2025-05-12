@@ -15,7 +15,7 @@ import { setAuthCookie, removeAuthCookie } from "@/lib/utils";
 import { User } from "@/types";
 import { adaptUserFromBackend, adaptUserToBackend } from "@/lib/adapters";
 import axios, { AxiosError } from "axios";
-import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "../lib/logger.utils";
+import { getLogger, getFlowTracker, FlowCategory, trackFlow, mapToTrackerCategory } from "../lib/logger.utils";
 
 // API yanıt tipleri
 interface AuthResponse {
@@ -152,20 +152,45 @@ class AuthService {
       // ID token al
       const idToken = await userCredential.user.getIdToken();
 
-      // Backend'e kayıt için API çağrısı yap
-      const response = await apiService.post<AuthResponse>("/auth/register", {
-        idToken,
-        ...userData,
-      });
+      // Bunun yerine loginWithIdToken çağır, bu metod backend'de kullanıcıyı oluşturacak/güncelleyecektir.
+      // userData'nın (firstName, lastName) nasıl işleneceği ayrıca değerlendirilmeli.
+      // Belki loginWithIdToken backend'de bu bilgileri Firebase'den alır veya ayrı bir updateProfile gerekir.
+      const loginResponse = await this.loginWithIdToken(idToken);
+
+      // Eğer Firebase'de displayName güncellenmemişse ve userData varsa güncelleyelim.
+      // Bu, Firebase Console'da kullanıcının adının görünmesine yardımcı olabilir.
+      if (userData.firstName && userCredential.user.displayName !== `${userData.firstName} ${userData.lastName || ''}`.trim()) {
+        try {
+          await firebaseUpdateProfile(userCredential.user, {
+            displayName: `${userData.firstName} ${userData.lastName || ''}`.trim(),
+          });
+          this.logger.info(
+            'Firebase kullanıcı profili (displayName) güncellendi.',
+            'AuthService.register',
+            __filename,
+            100 // Satır numarasını kontrol edin
+          );
+        } catch (profileError) {
+          this.logger.warn(
+            'Firebase kullanıcı profili (displayName) güncellenemedi.',
+            'AuthService.register',
+            __filename,
+            106, // Satır numarasını kontrol edin
+            { error: this.formatFirebaseError(profileError) }
+          );
+        }
+      }
 
       // Token artık backend tarafından HttpOnly cookie olarak yönetiliyor
       // localStorage kullanımını kaldırıyoruz
       
       // User tipini dönüştür
-      return {
-        ...response,
-        user: adaptUserFromBackend(response.user),
-      };
+      // return {
+      //   ...response,
+      //   user: adaptUserFromBackend(response.user),
+      // };
+      return loginResponse; // loginWithIdToken yanıtını döndür
+
     } catch (error: unknown) {
       this.logger.error(
         'Kayıt hatası',
@@ -204,7 +229,7 @@ class AuthService {
       const result = await signInWithEmailAndPassword(auth, email, password);
       
       // Ölç ve logla
-      const duration = this.flowTracker.markEnd('login', FlowCategory.Auth, 'AuthService.login');
+      const duration = this.flowTracker.markEnd('login', mapToTrackerCategory(FlowCategory.Auth), 'AuthService.login');
       this.logger.info(
         `Kullanıcı girişi başarılı: ${email}`,
         'AuthService.login',
@@ -363,7 +388,7 @@ class AuthService {
       }
       
       // Çıkış işlemi başarılı
-      const duration = this.flowTracker.markEnd('logout', FlowCategory.Auth, 'AuthService.signOut');
+      const duration = this.flowTracker.markEnd('logout', mapToTrackerCategory(FlowCategory.Auth), 'AuthService.signOut');
       this.logger.info(
         'Kullanıcı çıkışı tamamlandı',
         'AuthService.signOut',

@@ -23,6 +23,7 @@ import { auth } from "@/app/firebase/config";
 import axios, { AxiosError } from "axios";
 import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
 import { FirebaseError } from "firebase/app";
+import { useRouter } from "next/navigation";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
@@ -97,6 +98,7 @@ export const useAuth = () => useContext(AuthContext);
  * AuthContext oturum açma/kapatma işlemlerini ve kullanıcı durumunu yönetir
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
   // State yönetimi - sadece yerel durumlar için
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -607,6 +609,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           trackFlow('Kayıt işlemi başarılı', 'AuthContext.register', FlowCategory.Auth);
           
+          // Başarılı kayıt sonrası ana sayfaya yönlendir
+          logger.info('Kayıt başarılı, ana sayfaya yönlendiriliyor', 'AuthContext.register', 'AuthContext.tsx', 600);
+          router.push('/');
+          
           return response;
         } catch (error) {
           const errorMessage = authService.formatAuthError(error);
@@ -632,6 +638,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateProfile,
       checkSession,
       resetPassword,
+      router,
     ],
   );
 

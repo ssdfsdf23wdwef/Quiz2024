@@ -15,7 +15,7 @@ export enum FlowCategory {
   User = 'User', // Kullanıcı etkileşimleri
   Error = 'Error', // Hata izleme
   Custom = 'Custom',
-  Method = "Method", // Özel kategoriler
+  Method = 'Method', // Özel kategoriler
 }
 
 /**
@@ -136,27 +136,41 @@ export class FlowTrackerService {
   trackMethodStart(
     methodName: string,
     context: string,
-    params?: Record<string, any>,
+    params?: Record<string, any> | string,
   ): void {
-    if (!this.isEnabled) {
+    if (!this.isEnabled || !this.enabledCategories.has(FlowCategory.Method)) {
       return;
     }
 
     let message = `${chalk.green('➡️')} ${methodName} başladı`;
 
     if (params) {
-      // Hassas verileri gizle (password, token vb.)
-      const safeParams = { ...params };
-      ['password', 'token', 'secret', 'key', 'auth'].forEach((key) => {
-        if (key in safeParams) {
-          safeParams[key] = '***gizli***';
-        }
-      });
-
-      message += ` - Parametreler: ${JSON.stringify(safeParams)}`;
+      // Parametreler zaten string ise doğrudan kullan, değilse Record olarak işle (eski davranışa fallback)
+      if (typeof params === 'string') {
+        message += ` - Parametreler: ${params}`;
+      } else {
+        // Hassas verileri gizle (password, token vb.)
+        const safeParamsCopy = { ...params };
+        [
+          'password',
+          'token',
+          'secret',
+          'key',
+          'auth',
+          'idToken',
+          'authorization',
+        ].forEach((key) => {
+          if (key in safeParamsCopy) {
+            safeParamsCopy[key] = '***gizli***';
+          }
+        });
+        // Standart JSON.stringify kullanılıyor, çünkü döngüsel referansların
+        // bir üst katmanda (log-method.decorator) halledilmiş olması beklenir.
+        message += ` - Parametreler: ${JSON.stringify(safeParamsCopy)}`;
+      }
     }
 
-    this.trackCategory(FlowCategory.Custom, message, context);
+    this.trackCategory(FlowCategory.Method, message, context);
   }
 
   /**
