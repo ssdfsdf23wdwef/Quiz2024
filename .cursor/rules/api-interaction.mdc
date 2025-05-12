@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# API Etkileşimi ve Veri Yönetimi
+
+Bu proje, frontend ve backend arasındaki veri alışverişini düzgün bir şekilde yönetmek için belirli kurallar içermektedir.
+
+## Temel API Servis Yapısı
+- [frontend/src/services/api.service.ts](mdc:frontend/src/services/api.service.ts) - Tüm API isteklerinin temel yapıtaşıdır
+- [frontend/src/services/auth.service.ts](mdc:frontend/src/services/auth.service.ts) - Kimlik doğrulama işlemleri
+- [frontend/src/services/course.service.ts](mdc:frontend/src/services/course.service.ts) - Kurs API istekleri
+- [frontend/src/services/document.service.ts](mdc:frontend/src/services/document.service.ts) - Doküman API istekleri
+
+## API Çağrıları İçin Kurallar
+1. **Gerçek Backend Kullanımı:** Mock veri kullanmak yerine, gerçek NestJS backend API'sini kullanmalısınız
+2. **Servis Katmanı:** Tüm API istekleri ilgili servis dosyası üzerinden yapılmalıdır
+3. **DTO Uyumu:** Frontend'deki tipler backend DTO'ları ile uyumlu olmalıdır, referans: [backend/src/](mdc:backend/src)
+4. **Kimlik Doğrulama:** API isteklerinde kimlik doğrulama token'ları `api.service.ts` interceptor'ları tarafından otomatik eklenir
+
+## Veri Çekme Stratejileri
+- **Server Components:** Kritik ve SEO verilerini server component'larda `async/await` ile servis fonksiyonlarını çağırarak çekin
+- **Client Components:** TanStack Query (React Query) kullanarak veri önbelleğe alma, yenileme ve durum yönetimi yapın
+- **Custom Data Hooks:** TanStack Query ile veri çekme işlemlerini [frontend/src/hooks/](mdc:frontend/src/hooks) altında özel hook'lara çıkarın
+
+## Hata Yönetimi
+- **Error Service:** [frontend/src/services/error.service.ts](mdc:frontend/src/services/error.service.ts) API hatalarını yönetmek ve loglamak için kullanılmalıdır
+- **Hata Kurtarma:** API istekleri başarısız olduğunda kullanıcıya anlamlı hatalar gösterilmelidir
+- **Yükleme Durumları:** Veri çekme işlemleri sırasında kullanıcıya yükleme durumları gösterilmelidir
+

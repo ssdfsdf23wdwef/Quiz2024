@@ -1,0 +1,33 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Proje Yapısı ve Organizasyonu
+
+Bu proje, Next.js tabanlı bir frontend ve NestJS tabanlı bir backend içeren tam bir web uygulamasıdır.
+
+## Temel Dizin Yapısı
+- [backend/](mdc:backend/) - NestJS tabanlı backend API
+- [frontend/](mdc:frontend/) - Next.js tabanlı frontend uygulaması
+
+## Frontend Yapısı
+Frontend kodları [frontend/src/](mdc:frontend/src/) altında organize edilmiştir:
+- [app/](mdc:frontend/src/app/) - Next.js App Router sayfaları
+- [components/](mdc:frontend/src/components/) - Yeniden kullanılabilir React bileşenleri
+- [services/](mdc:frontend/src/services/) - Backend API ile etkileşim için servis katmanı
+- [hooks/](mdc:frontend/src/hooks/) - Custom React hook'ları
+- [contexts/](mdc:frontend/src/contexts/) - React context'leri
+- [store/](mdc:frontend/src/store/) - Zustand tabanlı global state yönetimi
+- [types/](mdc:frontend/src/types/) - TypeScript tipleri ve arayüzleri
+- [lib/](mdc:frontend/src/lib/) - Yardımcı fonksiyonlar ve yardımcı programlar
+
+## Backend Yapısı
+Backend kodları [backend/src/](mdc:backend/src/) altında organize edilmiştir:
+- [auth/](mdc:backend/src/auth/) - Kimlik doğrulama ve yetkilendirme
+- [users/](mdc:backend/src/users/) - Kullanıcı yönetimi
+- [courses/](mdc:backend/src/courses/) - Kurs yönetimi
+- [documents/](mdc:backend/src/documents/) - Doküman yönetimi
+- [quizzes/](mdc:backend/src/quizzes/) - Test/Sınav yönetimi
+- [common/](mdc:backend/src/common/) - Ortak yardımcı programlar ve dekoratörler
+- [config/](mdc:backend/src/config/) - Uygulama yapılandırması

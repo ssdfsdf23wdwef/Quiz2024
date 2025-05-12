@@ -1,0 +1,61 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Stil ve Tailwind CSS Kullanımı
+
+Bu projede stil için Tailwind CSS framework'ü kullanılmaktadır. Aşağıda Tailwind CSS kullanımı ile ilgili kurallar ve prensipler bulunmaktadır.
+
+## Temel Prensipler
+- **Utility-First Yaklaşımı:** Öncelikle Tailwind'in utility sınıfları kullanılmalıdır
+- **Özel CSS:** Ancak Tailwind utility'leri ile çözülemeyen durumlar için özel CSS yazılmalıdır
+- **Tema Tutarlılığı:** Özel renkler, ölçüler ve boşluklar için Tailwind tema değişkenleri kullanılmalıdır
+
+## Tailwind Yapılandırması
+- [frontend/tailwind.config.ts](mdc:frontend/tailwind.config.ts) - Tailwind yapılandırması ve tema değişkenleri
+
+## Stil Uygulama Yöntemleri
+1. **Inline Tailwind Sınıfları** (Öncelikli Tercih)
+   ```tsx
+   <div className="flex items-center p-4 bg-primary text-white rounded-md">
+     <p className="text-lg font-medium">İçerik</p>
+   </div>
+   ```
+
+2. **Koşullu Sınıflar**
+   ```tsx
+   <button className={`px-4 py-2 rounded ${aktif ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}>
+     Buton
+   </button>
+   ```
+
+3. **CSS Modülleri** (Sadece İhtiyaç Varsa)
+   ```tsx
+   import styles from './Button.module.css';
+   
+   <button className={`${styles.button} px-4 py-2`}>
+     Buton
+   </button>
+   ```
+
+## Duyarlı (Responsive) Tasarım
+- Mobil öncelikli yaklaşımı benimseyin (mobil tasarımı önce yazın)
+- Ekran boyutu arttıkça duyarlı değişiklikleri ekleyin
+- Tailwind'in duyarlı öneklerini kullanın: `sm:`, `md:`, `lg:`, `xl:`, `2xl:`
+  ```tsx
+  <div className="flex flex-col md:flex-row">...</div>
+  ```
+
+## Tema ve Renk Paletleri
+- **Tema Renkleri:** Özel renkleri doğrudan yazmak yerine tema değişkenlerini kullanın
+- **Erişilebilirlik:** WCAG AA standardına uygun kontrast oranları sağlayın
+- **Karanlık Mod:** Karanlık mod için `dark:` önekini kullanın
+
+## Kötü Uygulamalar (Yapılmamalı)
+- Gereksiz `!important` kullanımı
+- Tailwind ile çözülebilecek durumlar için özel CSS yazımı
+- Inline stil (`style={}`) kullanımı
+- Global CSS stil dosyalarının aşırı kullanımı
+- `@apply` direktifinin gereksiz kullanımı
+

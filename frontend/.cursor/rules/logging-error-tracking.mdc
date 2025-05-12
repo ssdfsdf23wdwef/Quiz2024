@@ -1,0 +1,233 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Loglama ve Hata İzleme Standardı
+
+> Bu dokümantasyon frontend uygulamasında kullanılacak loglama ve hata izleme standartlarını tanımlamaktadır.
+
+## 1. Logger Kullanımı
+
+```tsx
+import { getLogger } from "@/lib/logger.utils";
+
+// Logger'ı al
+const logger = getLogger();
+
+// Farklı seviyelerle loglama
+logger.error("Bu bir hata mesajı", "BileşenAdı");
+logger.warn("Bu bir uyarı mesajı", "BileşenAdı");
+logger.info("Bu bir bilgi mesajı", "BileşenAdı");
+logger.debug("Bu bir debug mesajı", "BileşenAdı");
+logger.trace("Bu bir takip mesajı", "BileşenAdı");
+
+// Meta veri ile loglama
+logger.info("Kullanıcı işlemi", "UserComponent", __filename, 25, {
+  userId: 123,
+  action: "profile-update",
+});
+
+// Hata loglama
+try {
+  // Potansiyel hatalı kod
+} catch (error) {
+  logger.logError(error, "UserComponent", { additionalInfo: "örnek" });
+}
+```
+
+## 2. FlowTracker Kullanımı
+
+```tsx
+import { getFlowTracker } from "@/lib/logger.utils";
+
+// Flow izleyiciyi al
+const flowTracker = getFlowTracker();
+
+// İşlem adımı izleme
+flowTracker.trackStep("User", "Kullanıcı profil görüntüledi", "ProfileComponent", {
+  userId: 123
+});
+
+// Performans ölçümü
+flowTracker.markStart("profileLoad");
+// ... işlemler ...
+const duration = flowTracker.markEnd("profileLoad", "Performance", "ProfileComponent");
+console.log(`İşlem süresi: ${duration}ms`);
+
+// Akış sekansları
+const sequenceId = flowTracker.startSequence("UserRegistration");
+// ... işlem adımları ...
+flowTracker.endSequence(sequenceId);
+
+// Bileşen yaşam döngüsü
+flowTracker.trackComponent("UserProfile", "mount", { userId: 123 });
+```
+
+## 3. Dekoratör Kullanımı
+
+```tsx
+import { LogMethod, LogClass, trackHook } from "@/decorators/log-method.decorator";
+
+// Sınıf dekoratörü
+@LogClass("UserService")
+class UserService {
+  // Metot dekoratörü
+  @LogMethod("UserService", "API")
+  async fetchUserData(userId: string) {
+    // metot implementasyonu
+  }
+}
+
+// Hook izleme
+const useTrackedUserData = trackHook(
+  "useUserData", 
+  "UserHooks", 
+  (userId: string) => {
+    // hook implementasyonu
+  }
+);
+```
+
+## 4. ErrorBoundary Kullanımı
+
+```tsx
+import ErrorBoundary from "@/components/ErrorBoundary";
+
+// Basit kullanım
+<ErrorBoundary>
+  <ComponentThatMightError />
+</ErrorBoundary>
+
+// Özel fallback ve hata işleme
+<ErrorBoundary 
+  context="UserDashboard" 
+  enableStackTrace={true}
+  onError={(error, errorInfo) => {
+    // Özel hata işleme
+  }}
+  fallback={<CustomErrorScreen />}
+>
+  <ComponentThatMightError />
+</ErrorBoundary>
+```
+
+## 5. Zustand Store Middleware Kullanımı
+
+```tsx
+import { createTrackedStore, loggerMiddleware, performanceMiddleware } from "@/store/zustand.middleware";
+import { create } from "zustand";
+
+// Tek middleware kullanımı
+const useSimpleStore = create(
+  loggerMiddleware('SimpleStore')(
+    (set) => ({
+      count: 0,
+      increment: () => set((state) => ({ count: state.count + 1 })),
+    })
+  )
+);
+
+// Yardımcı fonksiyon ile tüm middleware'leri uygulama
+const useComplexStore = createTrackedStore(
+  create,
+  'ComplexStore',
+  {
+    enableLogging: true,
+    enablePersist: true,
+    enablePerformance: true
+  }
+)((set, get, api) => ({
+  // store implementasyonu
+  data: [],
+  loading: false,
+  
+  fetchData: api.trackAction('fetchData', async () => {
+    set({ loading: true });
+    // veri çekme işlemi
+    set({ loading: false, data: [] });
+  })
+}));
+```
+
+## 6. Loglama Düzeyleri Rehberi
+
+| Seviye | Kullanım Senaryosu | Örnek |
+|--------|-------------------|-------|
+| `error` | Uygulama hatası, işlemi engelleyen durumlar | `logger.error("API isteği başarısız", "ApiService", __filename, 30, { status: 500 });` |
+| `warn` | Potansiyel sorun, kullanıcıyı etkilemeyen hatalar | `logger.warn("Eski API versiyonu kullanılıyor", "ApiService");` |
+| `info` | Önemli uygulama olayları, kullanıcı eylemleri | `logger.info("Kullanıcı giriş yaptı", "AuthService", __filename, 45, { userId });` |
+| `debug` | Geliştirme sırasında yardımcı bilgiler | `logger.debug("Komponent render edildi", "UserList", __filename, 23, { itemCount });` |
+| `trace` | Çok detaylı takip bilgisi | `logger.trace("State güncellendi", "UserStore", __filename, 56, { prevState, nextState });` |
+
+## 7. FlowTracker Kategorileri
+
+| Kategori | Kullanım Alanı |
+|----------|---------------|
+| `Navigation` | Sayfa geçişleri, URL değişiklikleri |
+| `Component` | Bileşen yaşam döngüsü olayları |
+| `State` | Uygulama durumu değişiklikleri |
+| `API` | Backend API çağrıları |
+| `Auth` | Kimlik doğrulama işlemleri |
+| `Render` | Render performansı ölçümleri |
+| `User` | Kullanıcı etkileşimleri |
+| `Custom` | Diğer özel kategoriler |
+
+## 8. En İyi Uygulamalar
+
+1. **Bağlam Bilgisi Sağlayın**: Her log mesajında bileşen/servis adını ve operasyon bağlamını belirtin
+2. **Development/Production Ayrımı**: Production'da yalnızca kritik logları etkinleştirin
+3. **Kişisel Verileri Loglamayın**: Şifre, token gibi hassas bilgileri asla loglamayın
+4. **Performans Etkisini Düşünün**: Ağır nesne dönüşümleri yapılan loglamalardan kaçının
+5. **İzlenebilirlik**: İlişkili olayları bir sekans içinde gruplandırın
+6. **Nedensellik Sağlayın**: Log mesajlarında "neden" bilgisini dahil edin
+7. **Faydalı Mesajlar**: "Hata oluştu" yerine "Kullanıcı bilgileri alınamadı: Ağ hatası" gibi açıklayıcı mesajlar kullanın
+
+## 9. Uygulama Başlangıcında Loglama Kurulumu
+
+```tsx
+// src/providers.tsx veya benzer bir başlangıç dosyasında
+import { setupLogging } from "@/lib/logger.utils";
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  // Uygulama başlangıcında loglama servislerini başlat
+  React.useEffect(() => {
+    const { logger, flowTracker } = setupLogging();
+    
+    logger.configure({
+      minLevel: process.env.NODE_ENV === 'production' ? 'warn' : 'debug',
+      enableConsole: true,
+      enableRemote: process.env.NODE_ENV === 'production',
+      remoteUrl: process.env.NEXT_PUBLIC_LOG_ENDPOINT
+    });
+    
+    flowTracker.configure({
+      enabled: true,
+      consoleOutput: process.env.NODE_ENV !== 'production',
+      traceRenders: process.env.NODE_ENV !== 'production'
+    });
+    
+    logger.info('Uygulama başlatıldı', 'App', undefined, undefined, {
+      environment: process.env.NODE_ENV,
+      version: process.env.NEXT_PUBLIC_APP_VERSION || 'unknown'
+    });
+    
+    return () => {
+      logger.info('Uygulama sonlandırıldı', 'App');
+    };
+  }, []);
+  
+  return <>{children}</>;
+}
+```
+
+## Referanslar
+
+- LoggerService: `src/services/logger.service.ts`
+- FlowTrackerService: `src/services/flow-tracker.service.ts`
+- Yardımcı fonksiyonlar: `src/lib/logger.utils.ts`
+- Dekoratörler: `src/decorators/log-method.decorator.ts`
+- ErrorBoundary: `src/components/ErrorBoundary.tsx`
+- Zustand middleware: `src/store/zustand.middleware.ts`
+
+

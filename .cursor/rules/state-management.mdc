@@ -1,0 +1,299 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# State Yönetimi
+
+Bu projede state yönetimi için farklı stratejiler kullanılmaktadır. Doğru state yönetimi aracını doğru senaryoda kullanmak çok önemlidir.
+
+## Yerel (Local) State
+- Component içinde geçici veya sadece o component'ı ilgilendiren state için React'in yerleşik `useState` veya `useReducer` hook'larını kullanın
+- Bir bileşen içinde karmaşık state mantığı için `useReducer` tercih edin
+
+```tsx
+// Basit state için useState
+const [isOpen, setIsOpen] = useState(false);
+
+// Karmaşık state için useReducer
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+
+## Context API
+- [frontend/src/contexts/](mdc:frontend/src/contexts) - Context API için tanımlamalar
+- Birden fazla iç içe bileşen arasında paylaşılması gereken, ancak global olmayan state için Context API kullanın
+- Performans açısından Context API'yi sınırlı sayıda bileşen ve sık değişmeyen state için kullanın
+
+```tsx
+// Context tanımı
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+// Provider kullanımı
+export const ThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const [theme, setTheme] = useState<Theme>('light');
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+// Context'i tüketme
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+```
+
+## Global State (Zustand)
+- [frontend/src/store/](mdc:frontend/src/store) - Zustand store tanımlamaları
+- Gerçekten global olan UI state için Zustand kullanın
+- Mümkün olduğunca düz (flat) store yapısı tercih edin
+- Selector'lar ile sadece ihtiyaç duyulan state'i bileşenlerde kullanın
+
+```tsx
+// Store tanımı
+export const useAuthStore = create<AuthStore>((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  login: (userData) => set({ user: userData, isAuthenticated: true }),
+  logout: () => set({ user: null, isAuthenticated: false }),
+  setLoading: (loading) => set({ isLoading: loading }),
+}));
+
+// Store kullanımı
+const { user, isAuthenticated, login } = useAuthStore((state) => ({
+  user: state.user,
+  isAuthenticated: state.isAuthenticated,
+  login: state.login,
+}));
+```
+
+## Zustand Store Organizasyonu
+
+Store'ları aşağıdaki şekilde organize edin:
+
+```
+/store
+  /auth
+    - auth.store.ts       // Store tanımı
+    - auth.types.ts       // Tip tanımları
+    - auth.selectors.ts   // Seçiciler
+    - auth.actions.ts     // Karmaşık aksiyonlar
+  /courses
+    - courses.store.ts
+    - courses.types.ts
+    - courses.selectors.ts
+    - courses.actions.ts
+  /ui
+    - ui.store.ts
+    - ui.types.ts
+  - index.ts              // Export noktası
+```
+
+## Durum Değişimi İzleme
+
+Zustand store'larındaki durum değişimlerini izlemek için middleware'ler kullanın:
+
+```tsx
+// Logger middleware
+const loggerMiddleware = (config) => (set, get, api) => config(
+  (...args) => {
+    const prevState = get();
+    set(...args);
+    const nextState = get();
+    console.log('Durum değişti:', {
+      prev: prevState,
+      next: nextState,
+      action: args[0],
+    });
+  },
+  get,
+  api
+);
+
+// Immer middleware ile mutable yazım
+import { immer } from 'zustand/middleware/immer';
+
+const immerMiddleware = (config) => immer(config);
+
+// Persist middleware ile local storage'da saklama
+import { persist } from 'zustand/middleware';
+
+const persistMiddleware = (config) => persist(config, {
+  name: 'auth-storage',
+  partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated })
+});
+
+// Middleware'leri birleştirme
+export const useAuthStore = create(
+  process.env.NODE_ENV === 'development'
+    ? loggerMiddleware(persistMiddleware(immerMiddleware(authStoreImpl)))
+    : persistMiddleware(immerMiddleware(authStoreImpl))
+);
+```
+
+## Sunucu Durumu (TanStack Query)
+- Sunucudan gelen veri için kesinlikle Zustand veya Context API KULLANMAYIN
+- TanStack Query (React Query) kullanarak backend API verilerini önbelleğe alın, durumunu yönetin
+- API isteklerini ve sonuçlarını özel hook'larda kapsülleyin
+
+```tsx
+// TanStack Query hook örneği
+export function useKursDetay(kursId: string) {
+  return useQuery({
+    queryKey: ['kurs', kursId],
+    queryFn: () => courseService.getKursById(kursId),
+    staleTime: 5 * 60 * 1000, // 5 dakika
+  });
+}
+
+// Kullanımı
+const { data: kurs, isLoading, error } = useKursDetay(kursId);
+```
+
+## State Değişimlerini Loglama
+
+Durum değişimlerini izlemek ve debug etmek için:
+
+1. **Development Ortamında Zustand Middleware ile Loglama:**
+
+```tsx
+// /store/middlewares/logger.middleware.ts
+export const loggerMiddleware = (name: string) => (config) => (set, get, api) => config(
+  (...args) => {
+    const before = get();
+    set(...args);
+    const after = get();
+    
+    // Değişen değerleri belirle
+    const changes = Object.entries(after).reduce((acc, [key, val]) => {
+      if (before[key] !== val) {
+        acc[key] = {
+          from: before[key],
+          to: val
+        };
+      }
+      return acc;
+    }, {});
+    
+    console.group(`%c${name} Store Update`, 'color: #3498db; font-weight: bold');
+    console.log('%cPrevious State:', 'color: #777', before);
+    console.log('%cAction:', 'color: #2ecc71', args[0]);
+    console.log('%cCurrent State:', 'color: #3498db', after);
+    console.log('%cChanges:', 'color: #e74c3c', changes);
+    console.groupEnd();
+  },
+  get,
+  api
+);
+
+// Store'da kullanımı
+const useUIStore = create(
+  process.env.NODE_ENV === 'development'
+    ? loggerMiddleware('UI')(uiStoreImpl)
+    : uiStoreImpl
+);
+```
+
+2. **Context API'de Durum Değişimlerini İzleme:**
+
+```tsx
+// ThemeContext örneği
+export const ThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const [theme, setTheme] = useState<Theme>('light');
+  
+  // Wrapper fonksiyon ile değişimi izle
+  const setThemeWithLogging = useCallback((newTheme: Theme) => {
+    console.log(`Theme değişiyor: ${theme} -> ${newTheme}`);
+    setTheme(newTheme);
+  }, [theme]);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme: setThemeWithLogging }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+```
+
+3. **React DevTools ile İzleme:**
+   - React DevTools'un Components ve Profiler sekmelerini kullanın
+   - Zustand ile uyumlu DevTools bağlantısı ekleyin:
+
+```tsx
+// DevTools bağlantısı
+import { devtools } from 'zustand/middleware';
+
+const useStore = create(
+  devtools(
+    (set) => ({
+      // store implementation
+    }),
+    { name: 'AuthStore' } // DevTools'da görünecek isim
+  )
+);
+```
+
+## State Yönetimi Seçim Rehberi
+
+1. Bu state sadece bir bileşen için mi? → **useState/useReducer**
+2. Bu state bir bileşen ağacındaki sınırlı sayıdaki bileşen için mi? → **Context API**
+3. Bu state UI ile ilgili global bir state mi? → **Zustand**
+4. Bu state backend API'den gelen veri mi? → **TanStack Query**
+
+## Frontend-Backend Durum Senkronizasyonu
+
+1. **Optimistic Updates:**
+   - UI'da anında güncelleme yapın ve ardından API'yi çağırın
+   - Hata durumunda geri alabileceğiniz bir mekanizma oluşturun
+
+```tsx
+// Optimistic update örneği
+const markAsCompleted = async (taskId: string) => {
+  // Önceki durumu kaydet
+  const previousTasks = queryClient.getQueryData(['tasks']);
+  
+  // Optimistik güncelleme
+  queryClient.setQueryData(['tasks'], (old) => 
+    old.map(task => task.id === taskId ? {...task, completed: true} : task)
+  );
+  
+  try {
+    // API çağrısı
+    await taskService.markAsCompleted(taskId);
+  } catch (error) {
+    // Hata durumunda geri al
+    queryClient.setQueryData(['tasks'], previousTasks);
+    toast.error('Görev tamamlanamadı');
+  }
+};
+```
+
+2. **WebSocket ile Gerçek Zamanlı Güncellemeler:**
+   - TanStack Query ile WebSocket'ten gelen verileri entegre edin:
+
+```tsx
+useEffect(() => {
+  const socket = io('your-server');
+  
+  socket.on('taskUpdated', (updatedTask) => {
+    queryClient.setQueryData(['tasks'], (tasks) => 
+      tasks.map(task => task.id === updatedTask.id ? updatedTask : task)
+    );
+  });
+  
+  return () => socket.disconnect();
+}, [queryClient]);
+```
+
+## Referans Kaynaklar:
+- [TanStack Query Dokümantasyon](mdc:https:/tanstack.com/query/latest)
+- [Zustand GitHub](mdc:https:/github.com/pmndrs/zustand)
+- [React Context API](mdc:https:/react.dev/reference/react/createContext)
+

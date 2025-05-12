@@ -1,0 +1,42 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Bileşen Organizasyonu ve Yapısı
+
+Frontend uygulamasının bileşen organizasyonu ve yapısı ile ilgili kurallar:
+
+## Bileşen Dizin Yapısı
+- [frontend/src/components/ui/](mdc:frontend/src/components/ui) - Atomik UI bileşenleri (butonlar, inputlar, kartlar vb.)
+- [frontend/src/components/features/](mdc:frontend/src/components/features) - Özellik bazlı bileşenler (örn: kurs-listesi, kullanıcı-profili vb.)
+- [frontend/src/app/](mdc:frontend/src/app) - Sayfa bileşenleri (App Router yapısında)
+
+## Co-location Prensibi
+Sayfaya özgü kodlar ilgili sayfa dizini altında `_components/`, `_hooks/`, `_lib/` altdizinlerinde bulunmalıdır:
+```
+app/
+└── kurslar/
+    ├── page.tsx         # Sayfa bileşeni
+    ├── _components/     # Sayfaya özgü bileşenler
+    ├── _hooks/          # Sayfaya özgü hook'lar
+    └── _lib/            # Sayfaya özgü yardımcı fonksiyonlar
+```
+
+## Dosya İsimlendirme Kuralları
+- Bileşen dosyaları: `PascalCase.tsx`
+- Hook dosyaları: `useCamelCase.ts`
+- Yardımcı dosyalar: `camelCase.ts` veya `kebab-case.ts`
+- CSS Modülleri: `ComponentName.module.css`
+
+## Bileşen Yazım Prensipleri
+- **Tek Sorumluluk:** Her bileşen tek bir sorumluluğa sahip olmalıdır
+- **Küçük Bileşenler:** Karmaşık UI'lar daha küçük, yönetilebilir bileşenlere bölünmelidir
+- **Prop'lar Üzerinden İletişim:** Bileşenler arası veri akışı prop'lar üzerinden sağlanmalıdır
+- **Prop'ların Tip Güvenliği:** Prop'ların tipleri TypeScript ile tanımlanmalıdır
+
+## Server ve Client Bileşenler
+- Bileşenler varsayılan olarak **Server Component** olmalıdır
+- Client Component'lara `"use client"` direktifi eklenmelidir
+- Client Component'lara asla gereksiz veri çekme kodu konulmamalıdır
+

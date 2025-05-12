@@ -1,0 +1,37 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Kodlama Standartları ve Prensipler
+
+Bu proje için aşağıdaki kodlama standartlarını takip etmelisiniz:
+
+## Genel Prensipler
+- **Dil:** Kod açıklamaları, değişken isimleri ve UI metinleri **Türkçe** olmalıdır
+- **SOLID:** Kodlar SOLID prensiplerine uygun yazılmalıdır
+- **DRY (Don't Repeat Yourself):** Kod tekrarından kaçınılmalıdır
+- **KISS:** Çözümler gereksiz karmaşıklıktan arındırılmış olmalıdır
+- **Modern Yaklaşımlar:** ES6+, React Hooks ve Next.js App Router kullanılmalıdır
+
+## TypeScript Kullanımı
+- **`any` Kullanımı Yasaktır:** Kesinlikle `any` türü kullanılmamalıdır
+- **Açık Tipler:** Tüm değişkenler, parametreler ve dönüş değerleri için tip belirtilmelidir
+- **Null/Undefined Kontrolü:** `strictNullChecks` aktiftir, `!` operatörü kullanılmamalıdır
+- Tip tanımları için referans: [frontend/src/types/](mdc:frontend/src/types)
+
+## React & Next.js Bileşenleri
+- **Yazım Stili:** Sadece fonksiyonel bileşenler ve hook'lar kullanılmalıdır
+- **Server Components:** Varsayılan olarak Server Component kullanılmalıdır
+- **Client Components:** Sadece tarayıcı API'leri veya event handler'lar gerektiğinde `"use client"` direktifi kullanılmalıdır
+
+## API Etkileşimi
+- **API Servisleri:** Tüm backend istekleri [frontend/src/services/api.service.ts](mdc:frontend/src/services/api.service.ts) üzerinden yapılmalıdır
+- **Client-Side Veri Çekme:** TanStack Query (React Query) kullanılmalıdır
+- **Hata Yönetimi:** API çağrılarında hata durumları mutlaka ele alınmalıdır
+
+## Stil ve UI
+- **Styling:** Tailwind CSS kullanılmalıdır
+- **Tema Tutarlılığı:** Tailwind tema değişkenleri kullanılmalıdır
+- **Responsive Design:** Mobil öncelikli tasarım yapılmalıdır
+

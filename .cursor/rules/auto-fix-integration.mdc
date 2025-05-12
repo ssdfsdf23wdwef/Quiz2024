@@ -1,0 +1,75 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Otomatik Hata Tespiti ve Kod Kalitesi
+
+Bu projede kod kalitesini sürekli olarak yüksek tutmak ve frontend-backend entegrasyonunu sağlamak için aşağıdaki otomatik düzeltme ve kontrol süreçleri uygulanmalıdır.
+
+## Kod Kalite Kontrolleri
+
+### ESLint ile Hata Tespiti ve Düzeltme
+- Herhangi bir kod değişikliği sonrası ESLint ile kod kontrolü yapılmalıdır
+- Frontend kontrolü: `cd frontend; npx eslint --fix ./src`
+- Backend kontrolü: `cd backend; npx eslint --fix ./src`
+- Otomatik düzeltilemeyen hatalar manuel olarak incelenmelidir
+
+### TypeScript Tip Kontrolleri
+- `cd frontend; npx tsc --noEmit` ile tip hatalarını kontrol et
+- `cd backend; npx tsc --noEmit` ile tip hatalarını kontrol et
+- Tip hataları, özellikle DTO ve model uyumsuzlukları kritik öneme sahiptir
+
+## Frontend-Backend Entegrasyonu
+
+### DTO (Data Transfer Object) Uyumu
+- Frontend ve backend arasındaki DTO'lar birebir uyumlu olmalıdır
+- Backend DTO değişiklikleri frontend'e de yansıtılmalıdır
+- API yanıtlarını doğrulamak için zod veya joi gibi şema doğrulayıcıları kullanılabilir
+
+### API Endpoint Kontrolü
+- Backend'deki endpoint değişiklikleri frontend servislerine yansıtılmalıdır
+- Frontend'deki tüm API çağrıları `api.service.ts` üzerinden yapılmalıdır
+
+## Düzenli Kalite Kontrolleri
+
+### Ön-commit Kontrolleri
+Her kod değişikliği öncesinde:
+1. ESLint ile statik kod analizi yap
+2. TypeScript tip kontrolü yap
+3. Unit ve entegrasyon testlerini çalıştır
+
+### Adım-Adım Kalite Kontrol İş Akışı
+1. Kodu değiştir
+2. `npx eslint --fix ./src` ile düzeltmeleri uygula
+3. `npx tsc --noEmit` ile tip kontrolü yap
+4. Testleri çalıştır
+5. DTO uyumunu kontrol et
+6. Değişikliği commit et
+
+## Yaygın Hata Türleri ve Çözümleri
+
+### Tip Hataları
+- `any` tipini kesinlikle kullanma, bunun yerine doğru tipleri tanımla
+- Optional özellikler için `?` operatörünü kullan
+- Null/undefined kontrolünü `if (value)` yerine `if (value !== undefined)` şeklinde yap
+
+### ESLint Hataları
+- Gereksiz importları kaldır: `import { X } from 'y'` X kullanılmıyorsa
+- React hook dependency array'lerini doğru şekilde doldur
+- Promise'lerde `await` kullanmayı unutma
+
+### API Entegrasyon Hataları
+- Backend endpoint değişikliklerini frontend servis katmanına yansıt
+- API yanıt yapısı değişikliklerini frontend tiplerinde güncelle
+- Error handling için TanStack Query'nin `error` ve `isError` değerlerini kullan
+
+---
+
+> **Not:** Komut zincirlerinde `&&` yerine `;` kullanılmalıdır: Örn. `cd frontend; npx tsc --noEmit`
+
+
+
+
+
+

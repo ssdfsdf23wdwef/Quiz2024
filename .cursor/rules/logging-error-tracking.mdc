@@ -1,0 +1,316 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Loglama, Durum Akışı ve Hata İzleme Rehberi
+
+Bu projede loglama, durum akışı ve hata izleme için belirli standartlar kullanılmaktadır. Bu standartlar, uygulamanın davranışını anlamak, hataları tespit etmek ve performans sorunlarını izlemek açısından kritik öneme sahiptir.
+
+## Loglama Servisleri
+
+### LoggerService
+
+- [backend/src/common/services/logger.service.ts](mdc:backend/src/common/services/logger.service.ts) - Merkezi loglama servisi
+- Farklı log seviyeleri: `error`, `warn`, `info`, `debug`
+- Log mesajları dosyaya yazılır, terminale yazdırılmaz
+- Hata tiplerine göre ayrıntılı loglama
+- JSON formatında yapılandırılmış loglar
+
+```typescript
+// LoggerService kullanım örneği
+this.logger.info(
+  'Kurslar başarıyla getirildi',
+  'CoursesService.findAll',
+  __filename,
+  146,
+  { userId, courseCount: courses.length },
+);
+
+// Hata durumunda
+this.logger.logError(error, 'CoursesService.findAll', {
+  userId,
+  additionalInfo: 'Kurslar getirilirken hata oluştu',
+});
+```
+
+### FlowTrackerService
+
+- [backend/src/common/services/flow-tracker.service.ts](mdc:backend/src/common/services/flow-tracker.service.ts) - Akış izleme servisi
+- Program akışını terminale yazdırır, dosyaya yazmaz
+- Emoji ve renklerle zenginleştirilmiş terminal çıktısı
+- Farklı işlem tipleri: metot başlangıç/bitiş, adım, API istekleri, veritabanı işlemleri
+- Performans izleme için çalışma süresi ölçümü
+
+```typescript
+// FlowTrackerService kullanım örneği
+this.flowTracker.trackStep('Kurslar getiriliyor', 'CoursesService');
+this.flowTracker.trackMethodStart('findAll', 'CoursesService', { userId });
+this.flowTracker.trackMethodEnd('findAll', 'CoursesService', executionTime);
+this.flowTracker.trackApiRequest('GET', '/api/courses', 'CoursesController');
+this.flowTracker.trackDbOperation('QUERY', 'courses', 25, 'CoursesService');
+```
+
+## LogMethod Dekoratörü
+
+- [backend/src/common/decorators/log-method.decorator.ts](mdc:backend/src/common/decorators/log-method.decorator.ts)
+- Metotların otomatik olarak loglanması için kullanılır
+- Başlangıç, bitiş, parametreler ve dönüş değerlerini loglar
+- Çalışma süresini ölçer
+- Opsiyonel yapılandırma ile esneklik sağlar
+
+```typescript
+// LogMethod dekoratörü kullanımı
+@LogMethod({ trackParams: true, trackResult: true })
+async findAll(userId: string): Promise<Course[]> {
+  // Metot içeriği
+}
+
+// Parametre izlemeyi kapatma
+@LogMethod({ trackParams: false })
+async processPayment(paymentInfo: PaymentInfo): Promise<void> {
+  // Hassas bilgi içeren metot
+}
+```
+
+## Loglama Yardımcı Fonksiyonları
+
+- [backend/src/common/utils/logger.utils.ts](mdc:backend/src/common/utils/logger.utils.ts)
+- Kolaylaştırılmış loglama için yardımcı fonksiyonlar
+- Hata ve akış loglaması için merkezi işlevler
+- Stack trace ve çağıran metot bilgisini otomatik çıkarma
+- Büyük nesneleri güvenli bir şekilde loglamak için `safeStringify` fonksiyonu
+
+```typescript
+// Yardımcı fonksiyonları doğrudan kullanma
+import { logError, logFlow, safeStringify } from '../common/utils/logger.utils';
+
+logError(error, 'methodName', __filename, __line, { context: 'additional info' });
+logFlow('İşlem başlatılıyor', 'ContextName');
+const safeObj = safeStringify(largeObject, 500); // 500 karakter ile sınırla
+```
+
+## Durum Akışı İzleme (State Flow Tracking)
+
+Uygulama içindeki durum değişimlerini ve veri akışını izlemek, davranışları anlamak ve hataları bulmak için kritiktir. Frontend ve backend'de farklı durum izleme stratejileri uygulanmaktadır.
+
+### Backend Durum Akışı İzleme
+
+1. **İşlem Aşamalarını İzleme:**
+```typescript
+// İşlem başlangıcı
+this.flowTracker.trackStep('Kullanıcı doğrulama başlatıldı', 'AuthService');
+
+// Ara aşamalar
+this.flowTracker.trackStep('Kullanıcı veritabanında bulundu', 'AuthService');
+this.flowTracker.trackStep('Token oluşturuluyor', 'AuthService');
+
+// İşlem sonucu
+this.flowTracker.trackStep('Kullanıcı başarıyla doğrulandı', 'AuthService');
+```
+
+2. **Durum Değişimlerini Loglama:**
+```typescript
+this.logger.info(
+  `Öğrenme hedefi durumu: ${oldStatus} -> ${newStatus}`,
+  'LearningTargetsService.updateStatus',
+  __filename, 
+  lineNumber,
+  { targetId, oldStatus, newStatus, userId }
+);
+```
+
+3. **Veri Akışını İzleme:**
+```typescript
+// Veri normalize edildiğinde
+this.flowTracker.trackStep('Belgeden konular çıkarılıyor', 'DocumentsService');
+this.logger.debug(
+  `${extractedTopics.length} konu tespit edildi`,
+  'DocumentsService.extractTopics',
+  __filename,
+  lineNumber,
+  { documentId, topicCount: extractedTopics.length }
+);
+```
+
+### Frontend Durum Akışı İzleme (Zustand ile)
+
+- [frontend/src/store/middlewares/logger.middleware.ts](mdc:frontend/src/store/middlewares/logger.middleware.ts)
+- Store durum değişimlerini konsolda izlemek için middleware kullanımı
+- Durum geçişlerini gösterme ve değişiklikleri vurgulama
+- Performans etkisi nedeniyle sadece development modunda aktif olmalı
+
+```typescript
+// Zustand middleware örneği
+const loggerMiddleware = (config) => (set, get, api) => config(
+  (...args) => {
+    const prevState = get();
+    set(...args);
+    const nextState = get();
+    console.log('🔄 Durum değişti:', {
+      prev: prevState,
+      next: nextState,
+      action: args[0],
+    });
+  },
+  get,
+  api
+);
+
+// Store tanımında kullanımı
+export const useAuthStore = create(
+  process.env.NODE_ENV === 'development' 
+    ? loggerMiddleware(authStoreImpl) 
+    : authStoreImpl
+);
+```
+
+## Loglama Standartları
+
+1. **Her serviste logger ve flowTracker nesneleri tanımlanmalıdır:**
+```typescript
+private readonly logger: LoggerService;
+private readonly flowTracker: FlowTrackerService;
+
+constructor() {
+  this.logger = LoggerService.getInstance();
+  this.flowTracker = FlowTrackerService.getInstance();
+}
+```
+
+2. **Tüm public metotlarda `@LogMethod` dekoratörü kullanılmalıdır.**
+
+3. **İşlem adımları flowTracker.trackStep ile izlenmelidir:**
+```typescript
+this.flowTracker.trackStep(`${id} ID'li kurs getiriliyor`, 'CoursesService');
+```
+
+4. **Önemli işlemler info seviyesinde loglanmalıdır:**
+```typescript
+this.logger.info(`${id} ID'li kurs başarıyla güncellendi`, 'method', __filename, lineNumber);
+```
+
+5. **Tüm hatalar catch bloklarında loglanmalıdır:**
+```typescript
+try {
+  // İşlem
+} catch (error) {
+  this.logger.logError(error, 'CoursesService.method', { additionalInfo: '...' });
+  throw error;
+}
+```
+
+6. **Hassas bilgiler kesinlikle loglanmamalıdır:** 
+   Şifreler, tokenlar, kişisel bilgiler vs. loglara dahil edilmemelidir.
+
+7. **API istekleri ve yanıtları izlenmelidir:**
+```typescript
+// İstek başlangıcı
+this.flowTracker.trackApiRequest('POST', '/api/auth/login', 'AuthController');
+
+// İstek sonucu
+this.flowTracker.trackApiResponse('POST', '/api/auth/login', 200, responseTime, 'AuthController');
+```
+
+8. **Veritabanı işlemleri izlenmelidir:**
+```typescript
+const startTime = Date.now();
+const result = await this.firebaseService.findMany(...);
+const endTime = Date.now();
+this.flowTracker.trackDbOperation('QUERY', 'courses', endTime - startTime, 'CoursesService');
+```
+
+9. **Büyük nesneler loglanırken `safeStringify` kullanılmalıdır:**
+```typescript
+this.logger.debug(
+  'API yanıtı alındı',
+  'ApiService.fetch',
+  __filename,
+  lineNumber,
+  { response: safeStringify(response, 500) }
+);
+```
+
+10. **Durum değişimleri açıkça belirtilmelidir:**
+```typescript
+this.logger.info(
+  `Quiz durumu değişti: ${oldStatus} -> ${newStatus}`,
+  'QuizzesService.updateStatus',
+  __filename,
+  lineNumber,
+  { quizId, oldStatus, newStatus }
+);
+```
+
+## Hata Yönetimi
+
+1. **Hata mesajları Türkçe olmalıdır.**
+
+2. **Kullanıcıya gösterilecek hatalar ve iç hatalar ayrılmalıdır:**
+```typescript
+// Kullanıcıya gösterilecek hata
+throw new BadRequestException('Geçersiz dosya formatı. Lütfen PDF veya DOCX dosyası yükleyin.');
+
+// İç hata (loglanır ama kullanıcıya detaylar gösterilmez)
+this.logger.error(
+  `Dosya işlenirken hata oluştu: ${error.message}`,
+  'DocumentsService.processFile',
+  __filename,
+  lineNumber,
+  { fileId, error: error.stack }
+);
+throw new InternalServerErrorException('Dosya işlenemedi. Lütfen daha sonra tekrar deneyin.');
+```
+
+3. **Tüm beklenmeyen hatalar loglanmalıdır.**
+
+4. **HTTP yanıtlarında anlamlı hata kodları kullanılmalıdır:**
+   - 400: Bad Request - İstemci hatası
+   - 401: Unauthorized - Kimlik doğrulama gerekli
+   - 403: Forbidden - Yetkilendirme hatası
+   - 404: Not Found - Kaynak bulunamadı
+   - 409: Conflict - Kaynak çakışması
+   - 422: Unprocessable Entity - Doğrulama hatası
+   - 500: Internal Server Error - Sunucu hatası
+
+5. **Özel hata filtreleri kullanılmalıdır:**
+   - [backend/src/common/filters/http-exception.filter.ts](mdc:backend/src/common/filters/http-exception.filter.ts)
+   - Tüm hatalar tutarlı bir formatta istemciye döndürülmelidir
+   - Hata detayları production ortamında gizlenmelidir
+
+## Loglama ve İzleme Best Practices
+
+1. **Geliştirme aşamasında ayrıntılı loglar kullanın, production'da kritik logları etkinleştirin.**
+
+2. **Her önemli işlem için hem başlangıç hem de bitiş mesajları loglanmalıdır.**
+
+3. **Log mesajları anlamlı ve bağlamı yansıtmalıdır. "Hata oluştu" gibi belirsiz mesajlardan kaçının.**
+
+4. **Loglarda tutarlı format kullanın: tarih-saat, loglama seviyesi, mesaj, bağlam, dosya/satır bilgisi.**
+
+5. **İşlem tanımlayıcıları (correlation IDs) ile ilişkili logları gruplandırın:**
+```typescript
+// İstek başında correlation ID oluştur
+const correlationId = uuid();
+this.logger.info(
+  'İstek alındı',
+  'RequestMiddleware',
+  __filename,
+  lineNumber,
+  { correlationId, path: req.path, method: req.method }
+);
+
+// Tüm loglara correlation ID ekle
+this.logger.info(
+  'İşlem tamamlandı',
+  'Service.method',
+  __filename,
+  lineNumber,
+  { correlationId, result: 'success' }
+);
+```
+
+6. **Metrikler ve loglama arasında bağlantı kurun - aynı correlation ID'leri kullanın.**
+
+
+
