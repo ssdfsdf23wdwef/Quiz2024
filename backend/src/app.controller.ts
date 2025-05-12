@@ -4,7 +4,9 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LoggerService } from './common/services/logger.service';
 import { FlowTrackerService } from './common/services/flow-tracker.service';
 import { LogMethod } from './common/decorators';
+import { Public } from './common/decorators/public.decorator';
 
+@ApiTags('App')
 @Controller()
 export class AppController {
   private readonly logger: LoggerService;
@@ -41,6 +43,7 @@ export class AppController {
     }
   }
 
+  @Public()
   @Get('health')
   @ApiTags('System')
   @ApiOperation({ summary: 'API sağlık durumu kontrol endpoint' })

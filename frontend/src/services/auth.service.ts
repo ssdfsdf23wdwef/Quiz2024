@@ -599,20 +599,25 @@ class AuthService {
       // withCredentials: true sayesinde browser otomatik olarak cookie'yi gönderir
       console.log("🔄 Token yenileme işlemi başlatılıyor...");
       
-      const response = await apiService.post<{token: string}>("/auth/refresh-token", {}, {
-        withCredentials: true, // HTTP-only cookie'lerin gönderilmesi için gerekli
-      });
+      const response = await apiService.post<{success: boolean, token: string, expiresIn?: number}>(
+        "/auth/refresh-token", 
+        {}, 
+        {
+          withCredentials: true, // HTTP-only cookie'lerin gönderilmesi için gerekli
+        }
+      );
       
       // Yeni token'ı döndür
-      if (response.token) {
+      if (response && response.token) {
         console.log("✅ Token başarıyla yenilendi");
         
         // Yeni token'ı localStorage ve cookie'ye kaydet
         localStorage.setItem("auth_token", response.token);
         setAuthCookie(response.token);
         
-        return response;
+        return { token: response.token };
       } else {
+        console.error("❌ Refresh token yanıtında token bulunamadı:", response);
         throw new Error("Refresh token yanıtında token bulunamadı");
       }
     } catch (error) {
@@ -660,17 +665,48 @@ class AuthService {
   }
 
   private getFirebaseErrorMessage(code: string): string {
-    // Bu metod, Firebase hata kodlarına göre uygun mesajı döndürmelidir.
-    // Bu örnekte, basit bir switch-case kullanılmıştır.
+    // Firebase hata kodlarına göre kullanıcı dostu Türkçe mesajlar
     switch (code) {
+      // Kimlik doğrulama hataları
       case 'auth/user-not-found':
-        return 'Kullanıcı bulunamadı';
+        return 'Bu e-posta adresine sahip bir kullanıcı bulunamadı';
       case 'auth/wrong-password':
-        return 'Şifre yanlış';
+        return 'Hatalı şifre girdiniz';
       case 'auth/invalid-email':
-        return 'Geçersiz e-posta';
+        return 'Geçersiz e-posta formatı';
+      case 'auth/invalid-credential':
+        return 'Geçersiz kimlik bilgileri. Lütfen e-posta ve şifrenizi kontrol edin';
+      case 'auth/email-already-in-use':
+        return 'Bu e-posta adresi zaten kullanımda';
+      case 'auth/weak-password':
+        return 'Şifre çok zayıf. En az 6 karakter uzunluğunda bir şifre kullanın';
+      case 'auth/too-many-requests':
+        return 'Çok fazla başarısız giriş nedeniyle hesabınız geçici olarak engellendi. Lütfen daha sonra tekrar deneyin veya şifrenizi sıfırlayın';
+      case 'auth/popup-closed-by-user':
+        return 'Giriş işlemi iptal edildi';
+      case 'auth/network-request-failed':
+        return 'Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin';
+      case 'auth/operation-not-allowed':
+        return 'Bu giriş yöntemi etkin değil';
+      case 'auth/requires-recent-login':
+        return 'Bu işlem hassas bir işlem olduğu için yeniden giriş yapmanız gerekiyor';
+      case 'auth/account-exists-with-different-credential':
+        return 'Bu e-posta adresi farklı bir giriş yöntemi ile zaten kullanılıyor';
+      case 'auth/user-disabled':
+        return 'Bu kullanıcı hesabı yönetici tarafından devre dışı bırakılmıştır';
+      case 'auth/timeout':
+        return 'İşlem zaman aşımına uğradı. Lütfen tekrar deneyin';
+      case 'auth/invalid-login-credentials':
+        return 'Giriş bilgileri hatalı. Lütfen e-posta ve şifrenizi kontrol edin';
+      case 'auth/missing-password':
+        return 'Lütfen şifrenizi girin';
+      case 'auth/missing-email':
+        return 'Lütfen e-posta adresinizi girin';
+      
+      // Genel/diğer hatalar
       default:
-        return 'Bilinmeyen hata';
+        console.warn(`Tanımlanmamış Firebase hata kodu: ${code}`);
+        return `Kimlik doğrulama hatası: ${code}`;
     }
   }
 }

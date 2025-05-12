@@ -410,19 +410,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(backendResponse.user);
       return backendResponse;
     } catch (error: unknown) { 
-      const errorMessage = authService.formatAuthError(error);
-      trackFlow('Giriş hatası', 'AuthContext.login', FlowCategory.Error, { error: errorMessage });
+      // Hata detaylarını ayrıştır
+      let errorMessage: string;
+
+      // FirebaseError tipinde hata gelirse, detaylı ayrıştırma yapalım
+      if (error instanceof FirebaseError) {
+        errorMessage = authService.formatAuthError(error);
+        
+        // Detaylı hata logu
+        logger.error(
+          `Firebase login hatası: ${error.code}`, 
+          'AuthContext.login', 
+          'AuthContext.tsx', 
+          187, 
+          { 
+            errorCode: error.code,
+            errorMessage: errorMessage, 
+            email,
+            originalError: error.message
+          }
+        );
+      } else if (axios.isAxiosError(error)) {
+        // API hatalarını detaylı logla
+        const axiosError = error as AxiosError;
+        errorMessage = authService.formatAuthError(error);
+        
+        logger.error(
+          `API login hatası: ${axiosError.response?.status}`, 
+          'AuthContext.login', 
+          'AuthContext.tsx', 
+          199, 
+          { 
+            statusCode: axiosError.response?.status, 
+            statusText: axiosError.response?.statusText,
+            url: axiosError.config?.url,
+            errorData: axiosError.response?.data,
+            email
+          }
+        );
+      } else {
+        // Diğer hata tipleri için genel işleme
+        errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+        
+        logger.error(
+          'Login hatası', 
+          'AuthContext.login', 
+          'AuthContext.tsx', 
+          213, 
+          { error: errorMessage, email }
+        );
+      }
       
-      logger.error(
-        'Login hatası', 
-        'AuthContext.login', 
-        'AuthContext.tsx', 
-        187, 
-        { error: error instanceof Error ? error.message : String(error), email }
-      );
-      
+      trackFlow('Giriş hatası', 'AuthContext.login', FlowCategory.Error, { errorMessage });
       setAuthError(errorMessage);
-      throw new Error(errorMessage);
+      throw error instanceof Error ? error : new Error(errorMessage);
     } finally {
       setLoading(false);
     }

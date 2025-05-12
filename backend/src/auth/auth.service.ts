@@ -90,10 +90,11 @@ export class AuthService {
   /**
    * Firebase ID token ile giriş yapar ve kullanıcıyı sisteme kaydeder
    * @param idToken Firebase ID token
-   * @param ipAddress Kullanıcının IP adresi (isteğe bağlı)
-   * @param userAgent Kullanıcının tarayıcı bilgisi (isteğe bağlı)
-   * @param res HTTP yanıt nesnesi (cookie ayarlamak için)
-   * @param additionalData İsteğe bağlı ek veri (ilk ve soyadı)
+   * @param ipAddress Kullanıcı IP adresi
+   * @param userAgent Kullanıcı tarayıcı bilgisi
+   * @param res Express yanıt nesnesi (cookie'ler için)
+   * @param additionalData Ek kullanıcı verileri
+   * @returns Kullanıcı ve token bilgileri
    */
   @LogMethod({ trackParams: false })
   async loginWithIdToken(
@@ -101,7 +102,11 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
     res?: any,
-    additionalData?: { firstName?: string; lastName?: string },
+    additionalData?: {
+      firstName?: string;
+      lastName?: string;
+      password?: string;
+    },
   ): Promise<{ user: any; token?: string; refreshToken?: string }> {
     logFlow('ID token ile giriş yapılıyor', 'AuthService.loginWithIdToken');
     try {
@@ -397,6 +402,11 @@ export class AuthService {
       const validationResult =
         await this.validateAndGetUserByRefreshToken(refreshToken);
       if (!validationResult) {
+        this.logger.warn(
+          'Geçersiz refresh token veya eşleşen kayıt bulunamadı',
+          'AuthService.refreshToken',
+          __filename,
+        );
         throw new UnauthorizedException(
           'Geçersiz veya süresi dolmuş refresh token',
         );
@@ -404,14 +414,30 @@ export class AuthService {
 
       const { user, storedTokenId } = validationResult; // Artık null değil, güvenle erişebiliriz
 
-      // Firebase'den yeni bir özel token (custom token) oluştur
-      const customToken = await this.firebaseService.auth.createCustomToken(
-        user.firebaseUid,
-      );
+      if (!user || !user.firebaseUid) {
+        this.logger.error(
+          `Refresh token doğrulandı fakat kullanıcı veya firebaseUid bulunamadı: ${JSON.stringify(user)}`,
+          'AuthService.refreshToken',
+          __filename,
+        );
+        throw new UnauthorizedException('Kullanıcı verisi bulunamadı');
+      }
 
-      // İsteğe bağlı: Refresh token rotasyonu
-      // await this.removeRefreshTokenById(storedTokenId);
-      // const newRefreshTokenString = await this.createRefreshToken(user.id, /* ip */, /* agent */);
+      // Firebase'den yeni bir özel token (custom token) oluştur
+      let customToken;
+      try {
+        customToken = await this.firebaseService.auth.createCustomToken(
+          user.firebaseUid,
+          { role: user.role || 'USER' }, // Role bilgisini token claims'e ekle
+        );
+      } catch (firebaseError) {
+        this.logger.error(
+          `Custom token oluşturma hatası: ${firebaseError instanceof Error ? firebaseError.message : String(firebaseError)}`,
+          'AuthService.refreshToken',
+          __filename,
+        );
+        throw new InternalServerErrorException('Token oluşturulamadı');
+      }
 
       this.logger.info(
         `Kullanıcı ${user.id} için token yenilendi`,

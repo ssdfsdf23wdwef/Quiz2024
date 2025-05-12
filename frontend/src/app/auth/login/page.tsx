@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaGoogle } from "react-icons/fa";
 import { ErrorService } from "@/services/errorService";
+import { FirebaseError } from "firebase/app";
+import axios from "axios";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -80,6 +82,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
+      // Temel validasyonlar
       if (!email.trim()) {
         throw new Error("E-posta adresi boş olamaz");
       }
@@ -88,18 +91,63 @@ const LoginPage = () => {
         throw new Error("Şifre boş olamaz");
       }
 
+      // Login işlemi
       await login(email, password);
 
       // Başarılı giriş sonrası yönlendirme
       router.push(returnUrl);
     } catch (err: unknown) {
-      console.error("Giriş hatası:", err);
-
-      // Hata mesajını göster
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.";
+      // Firebase veya API hatalarını daha detaylı işle
+      let errorMessage: string;
+      
+      if (err instanceof FirebaseError) {
+        console.error("Firebase giriş hatası:", err.code, err.message);
+        
+        // Özel hata mesajları
+        switch(err.code) {
+          case 'auth/invalid-credential':
+          case 'auth/invalid-login-credentials':
+            errorMessage = "E-posta adresi veya şifre hatalı. Lütfen kontrol edip tekrar deneyin.";
+            break;
+          case 'auth/user-not-found':
+            errorMessage = "Bu e-posta adresine sahip bir kullanıcı bulunamadı.";
+            break;
+          case 'auth/wrong-password':
+            errorMessage = "Şifre hatalı. Lütfen tekrar deneyin.";
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = "Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin veya şifrenizi sıfırlayın.";
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = "Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.";
+            break;
+          case 'auth/user-disabled':
+            errorMessage = "Bu hesap devre dışı bırakılmıştır. Destek ekibiyle iletişime geçin.";
+            break;
+          default:
+            errorMessage = err.message || "Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.";
+        }
+      } else if (axios.isAxiosError(err)) {
+        // API hatalarını işle
+        const statusCode = err.response?.status;
+        console.error("API giriş hatası:", statusCode, err.response?.data);
+        
+        if (statusCode === 400) {
+          errorMessage = "Geçersiz kimlik bilgileri";
+        } else if (statusCode === 401) {
+          errorMessage = "Oturum açma yetkiniz yok";
+        } else if (statusCode === 500) {
+          errorMessage = "Sunucu hatası. Lütfen daha sonra tekrar deneyin";
+        } else {
+          errorMessage = err.response?.data?.message || "API hatası: Giriş yapılamadı";
+        }
+      } else {
+        // Diğer hatalar
+        console.error("Giriş hatası:", err);
+        errorMessage = err instanceof Error 
+          ? err.message 
+          : "Giriş yapılırken bilinmeyen bir hata oluştu. Lütfen tekrar deneyin.";
+      }
 
       setError(errorMessage);
       ErrorService.showToast(errorMessage, "error");

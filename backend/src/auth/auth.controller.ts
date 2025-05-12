@@ -66,8 +66,8 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Yeni kullanıcı kaydı' })
   @ApiBody({ type: RegisterDto })
-  @ApiResponse({ status: 201, description: 'Kullanıcı başarıyla oluşturuldu' })
-  @ApiResponse({ status: 400, description: 'Geçersiz istek verisi' })
+  @ApiResponse({ status: 201, description: 'Kayıt başarılı' })
+  @ApiResponse({ status: 400, description: 'Geçersiz istek' })
   @LogMethod()
   async register(
     @Body() registerDto: RegisterDto,
@@ -75,34 +75,9 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Ip() ipAddress: string,
   ) {
-    this.flowTracker.trackStep(
-      `${registerDto.email} için kayıt işlemi başlatıldı`,
-      'AuthController',
-    );
-
-    this.logger.debug(
-      `Kayıt yapılan kullanıcı bilgileri: ${JSON.stringify({
-        email: registerDto.email,
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-      })}`,
-      'AuthController.register',
-      __filename,
-      93,
-    );
-
-    this.logger.debug(
-      'Kayıt işlemi başlatılıyor',
-      'AuthController.register',
-      __filename,
-      95,
-      {
-        hasFirstName: !!registerDto.firstName,
-        hasLastName: !!registerDto.lastName,
-      },
-    );
-
+    this.flowTracker.trackStep('Kayıt işlemi başlatılıyor', 'AuthController');
     try {
+      // Kayıt işlemi için ID token kullanılıyor
       const { user } = await this.authService.loginWithIdToken(
         registerDto.idToken,
         ipAddress,
@@ -111,26 +86,36 @@ export class AuthController {
         {
           firstName: registerDto.firstName,
           lastName: registerDto.lastName,
+          password: registerDto.password, // Şifreyi additionalData olarak ilet
         },
       );
 
       this.logger.info(
-        `Yeni kullanıcı kaydedildi ve giriş yaptı: ${user.email} (ID: ${user.id})`,
+        `Kullanıcı kaydı başarılı: ${user.email} (ID: ${user.id})`,
         'AuthController.register',
         __filename,
+        '84',
       );
+
       return {
-        message: 'Kullanıcı başarıyla kaydedildi',
-        email: user.email,
-        id: user.id,
+        message: 'Kayıt başarılı',
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          role: user.role, // Rol bilgisini de döndür
+          onboarded: user.onboarded,
+        },
       };
     } catch (error) {
-      this.logger.logError(error, 'AuthController.register', __filename, '130');
+      this.logger.logError(error, 'AuthController.register', __filename, '100');
       this.logger.error(
-        `Kayıt işlemi hatası: ${error.message}`,
+        `Kayıt hatası: ${error.message}`,
         'AuthController.register',
         __filename,
-        124,
+        '102',
         error,
       );
       throw error;
@@ -229,9 +214,8 @@ export class AuthController {
   @Post('refresh-token')
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Access token yenileme' })
-  @ApiCookieAuth('refresh_token')
-  @ApiResponse({ status: 200, description: 'Token yenilendi' })
+  @ApiOperation({ summary: 'Refresh token ile yeni access token al' })
+  @ApiResponse({ status: 200, description: 'Token başarıyla yenilendi' })
   @ApiResponse({
     status: 401,
     description: 'Geçersiz veya süresi dolmuş refresh token',
@@ -269,7 +253,13 @@ export class AuthController {
       // Cookie'lere yeni token'ları kaydet
       this.setAuthCookies(res, accessToken, newRefreshToken);
 
-      return { success: true, accessToken };
+      // ÖNEMLİ: Yanıtta token'ı gönder (frontend'in alabilmesi için)
+      return {
+        success: true,
+        token: accessToken,
+        // Diğer bilgileri de ekleyebiliriz, örneğin:
+        expiresIn: this.authService.getAccessTokenExpiresInMs(),
+      };
     } catch (error) {
       this.logger.logError(
         error,

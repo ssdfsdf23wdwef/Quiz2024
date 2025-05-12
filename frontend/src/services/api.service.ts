@@ -364,56 +364,62 @@ axiosInstance.interceptors.response.use(
           try {
             // authService üzerinden token yenileme
             const authService = (await import("./auth.service")).default;
-            const response = await authService.refreshToken();
+            try {
+              const response = await authService.refreshToken();
 
-            // Yeni token'ı kullanarak bekleyen tüm istekleri tekrar dene
-            if (response.token) {
-              console.log("✅ Token yenilendi, bekleyen istekler tekrar deneniyor...");
-              
-              // Bekleyen tüm istekleri yeni token ile tekrar dene
-              pendingRequests.forEach(({ config, resolve, reject }) => {
-                if (config.headers) {
-                  config.headers.Authorization = `Bearer ${response.token}`;
+              // Yeni token'ı kullanarak bekleyen tüm istekleri tekrar dene
+              if (response && response.token) {
+                console.log("✅ Token yenilendi, bekleyen istekler tekrar deneniyor...");
+                
+                // Bekleyen tüm istekleri yeni token ile tekrar dene
+                pendingRequests.forEach(({ config, resolve, reject }) => {
+                  if (config.headers) {
+                    config.headers.Authorization = `Bearer ${response.token}`;
+                  }
+                  axiosInstance(config).then(resolve).catch(reject);
+                });
+                
+                // Kuyruk temizle
+                pendingRequests.length = 0;
+
+                // Mevcut isteği yeni token ile tekrar dene
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${response.token}`;
                 }
-                axiosInstance(config).then(resolve).catch(reject);
+                (originalRequest as { _retry?: boolean })._retry = true;
+                return axiosInstance(originalRequest);
+              } else {
+                throw new Error("Token yanıtında geçerli token bulunamadı");
+              }
+            } catch (refreshError) {
+              console.error("❌ Token yenilemesi başarısız:", refreshError);
+              
+              // Bekleyen tüm istekleri reddet
+              pendingRequests.forEach(({ reject }) => {
+                reject(new Error("Oturum süresi doldu - yeniden giriş yapmanız gerekiyor"));
               });
               
               // Kuyruk temizle
               pendingRequests.length = 0;
 
-              // Mevcut isteği yeni token ile tekrar dene
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${response.token}`;
+              // Kullanıcıyı logout yap ve login sayfasına yönlendir
+              try {
+                await authService.signOut();
+                
+                // Zustand store'dan kullanıcıyı çıkış yap
+                const { useAuthStore } = await import("@/store/auth.store");
+                useAuthStore.getState().logoutUser();
+                
+                // Login sayfasına yönlendir
+                if (typeof window !== 'undefined') {
+                  window.location.href = "/auth/login";
+                }
+              } catch (logoutError) {
+                console.error("❌ Çıkış işlemi başarısız:", logoutError);
               }
-              (originalRequest as { _retry?: boolean })._retry = true;
-              return axiosInstance(originalRequest);
-            }
-          } catch (refreshError) {
-            console.error("❌ Token yenilemesi başarısız:", refreshError);
-            
-            // Bekleyen tüm istekleri reddet
-            pendingRequests.forEach(({ reject }) => {
-              reject(new Error("Oturum süresi doldu - yeniden giriş yapmanız gerekiyor"));
-            });
-            
-            // Kuyruk temizle
-            pendingRequests.length = 0;
-
-            // Kullanıcıyı logout yap ve login sayfasına yönlendir
-            try {
-              const authService = (await import("./auth.service")).default;
-              await authService.signOut();
               
-              // Zustand store'dan kullanıcıyı çıkış yap
-              const { useAuthStore } = await import("@/store/auth.store");
-              useAuthStore.getState().logoutUser();
-              
-              // Login sayfasına yönlendir
-              if (typeof window !== 'undefined') {
-                window.location.href = "/auth/login";
-              }
-            } catch (logoutError) {
-              console.error("❌ Çıkış işlemi başarısız:", logoutError);
+              // Orijinal hatayı döndür
+              return Promise.reject(error);
             }
           } finally {
             isRefreshingToken = false;

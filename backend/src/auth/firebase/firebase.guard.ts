@@ -13,6 +13,7 @@ import { ROLES_KEY } from '../../common/decorators/roles.decorator';
 import { LoggerService } from '../../common/services/logger.service';
 import { FlowTrackerService } from '../../common/services/flow-tracker.service';
 import { LogMethod } from '../../common/decorators/log-method.decorator';
+import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
 
 @Injectable()
 export class FirebaseGuard implements CanActivate {
@@ -47,6 +48,16 @@ export class FirebaseGuard implements CanActivate {
       'FirebaseGuard',
     );
 
+    // Public dekoratörü ile işaretlenmiş endpointleri kontrol et
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     if (!authHeader) {
       this.logger.warn(
         'Authorization başlığı eksik',
@@ -74,11 +85,37 @@ export class FirebaseGuard implements CanActivate {
         'Firebase token doğrulanıyor',
         'FirebaseGuard',
       );
+
+      // Token formatını kontrol et
+      if (token.length < 50) {
+        this.logger.warn(
+          `Token çok kısa: ${token.length} karakter`,
+          'FirebaseGuard.canActivate',
+          __filename,
+          58,
+        );
+        throw new UnauthorizedException('Invalid token format');
+      }
+
       // Verify the token with Firebase
-      const decodedToken = await this.firebaseService.auth.verifyIdToken(
-        token,
-        true,
-      ); // true parametresi token'ın süresi dolmuşsa hata fırlatmasını sağlar
+      let decodedToken;
+      try {
+        decodedToken = await this.firebaseService.auth.verifyIdToken(
+          token,
+          true,
+        );
+      } catch (verifyError) {
+        this.logger.error(
+          `Token doğrulama hatası: ${verifyError.message}`,
+          'FirebaseGuard.canActivate',
+          __filename,
+          68,
+        );
+        throw new UnauthorizedException(
+          'Firebase token doğrulaması başarısız oldu',
+        );
+      }
+
       const uid = decodedToken.uid;
 
       // Şu anki zaman damgasını al
@@ -100,7 +137,29 @@ export class FirebaseGuard implements CanActivate {
         'Firebase kullanıcı bilgisi alınıyor',
         'FirebaseGuard',
       );
-      const firebaseUser = await this.firebaseService.auth.getUser(uid);
+
+      let firebaseUser;
+      try {
+        firebaseUser = await this.firebaseService.auth.getUser(uid);
+      } catch (userError) {
+        this.logger.error(
+          `Firebase kullanıcı bilgisi alınamadı: ${userError.message}`,
+          'FirebaseGuard.canActivate',
+          __filename,
+          84,
+        );
+
+        // Refresh token endpoint'i için özel işlem
+        if (path.includes('refresh-token')) {
+          this.logger.warn(
+            `Refresh token isteği için eksik kullanıcı atlandı: ${uid}`,
+            'FirebaseGuard.canActivate',
+          );
+          throw new UnauthorizedException('User not found for refresh token');
+        }
+
+        throw new UnauthorizedException('Firebase kullanıcısı bulunamadı');
+      }
 
       if (!firebaseUser) {
         this.logger.warn(
@@ -179,6 +238,15 @@ export class FirebaseGuard implements CanActivate {
         method,
         additionalInfo: 'Firebase kimlik doğrulama hatası',
       });
+
+      // Daha açıklayıcı hata mesajları döndür
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
       throw new UnauthorizedException(
         'Invalid or expired authentication token',
       );

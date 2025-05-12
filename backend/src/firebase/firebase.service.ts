@@ -24,8 +24,7 @@ export class FirebaseService implements OnModuleInit {
     );
 
     // Ortam değişkeni yerine doğrudan yolu kullan ve path.join ile çöz
-    const serviceAccountFileName =
-      'my-app-71530-firebase-adminsdk-fbsvc-1183a244eb.json';
+    const serviceAccountFileName = 'firebase-service-account.json';
     // __dirname, çalışan JS dosyasının olduğu dizindir (dist/firebase)
     // ../../secrets/ yoluna ulaşmak için
     const absolutePath = path.join(

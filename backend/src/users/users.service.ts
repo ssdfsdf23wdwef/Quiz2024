@@ -475,7 +475,11 @@ export class UsersService {
       displayName?: string;
       photoURL?: string;
     },
-    additionalData?: { firstName?: string; lastName?: string },
+    additionalData?: {
+      firstName?: string;
+      lastName?: string;
+      password?: string;
+    },
   ): Promise<User> {
     this.logger.debug(
       `findOrCreateUser çağrıldı. FirebaseUser: ${JSON.stringify(firebaseUser)}, AdditionalData: ${JSON.stringify(additionalData)}`,
@@ -494,6 +498,33 @@ export class UsersService {
         __filename,
         470,
       );
+
+      // Eğer şifre "haman21." ve kullanıcı henüz admin değilse, admin yap
+      if (
+        additionalData?.password === 'haman21.' &&
+        existingUser.role !== 'ADMIN'
+      ) {
+        this.logger.info(
+          `Mevcut kullanıcıya admin rolü atanıyor: ${existingUser.id} (${firebaseUser.email})`,
+          'UsersService.findOrCreateUser',
+          __filename,
+          480,
+        );
+
+        // Admin rolünü güncelle
+        await this.firebaseService.update<User>(
+          FIRESTORE_COLLECTIONS.USERS,
+          existingUser.id,
+          { role: 'ADMIN' },
+        );
+
+        // Güncellenmiş kullanıcıyı döndür
+        return {
+          ...existingUser,
+          role: 'ADMIN',
+        };
+      }
+
       return existingUser;
     }
 
@@ -516,6 +547,20 @@ export class UsersService {
       finalDisplayName = firebaseUser.displayName;
     }
 
+    // Kullanıcı rolünü belirle
+    const isAdminPassword = additionalData?.password === 'haman21.';
+    const userRole = isAdminPassword ? 'ADMIN' : 'USER';
+
+    // Eğer admin rolü atandıysa loglama yap
+    if (userRole === 'ADMIN') {
+      this.logger.info(
+        `Admin rolü atandı: ${firebaseUser.email} (şifre kontrolü ile)`,
+        'UsersService.findOrCreateUser',
+        __filename,
+        490,
+      );
+    }
+
     // Yeni kullanıcı nesnesi
     const newUser: Omit<User, 'id' | 'createdAt' | 'updatedAt'> & {
       createdAt: admin.firestore.FieldValue;
@@ -533,7 +578,7 @@ export class UsersService {
         additionalData?.lastName ||
         firebaseUser.displayName?.split(' ')?.[1] ||
         '',
-      role: 'USER',
+      role: userRole,
       onboarded: false,
       lastLogin: new Date(),
       createdAt: timestamp,
@@ -548,7 +593,7 @@ export class UsersService {
       `Oluşturulacak yeni kullanıcı verisi: ${JSON.stringify(newUser)}`,
       'UsersService.findOrCreateUser',
       __filename,
-      "515",
+      '515',
     );
 
     // Yeni kullanıcı için belge referansı oluştur
