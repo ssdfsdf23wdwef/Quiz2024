@@ -61,3 +61,11 @@ src/auth/*.json
 
 .env*
 .env.*
+
+# Secrets
+backend/secrets/
+*.json
+
+# Firebase/Google Cloud gizli anahtarları
+*.json.key
+*firebase-adminsdk*.json 
