@@ -2,6 +2,22 @@ import { Injectable } from '@nestjs/common';
 import chalk from 'chalk';
 
 /**
+ * Akış kategorileri
+ */
+export enum FlowCategory {
+  API = 'API', // API çağrıları
+  Auth = 'Auth', // Kimlik doğrulama işlemleri
+  DB = 'DB', // Veritabanı işlemleri
+  Render = 'Render', // Render işlemleri
+  Navigation = 'Navigation', // Sayfa gezintileri
+  Component = 'Component', // Bileşen yaşam döngüsü
+  State = 'State', // Durum değişiklikleri
+  User = 'User', // Kullanıcı etkileşimleri
+  Error = 'Error', // Hata izleme
+  Custom = 'Custom', // Özel kategoriler
+}
+
+/**
  * Program akışı izleme servisi
  * Bu servis, uygulama içindeki işlem akışını terminalde görüntüler.
  * Sadece akış bilgisi terminale yazdırılır, hata mesajları terminale yazdırılmaz.
@@ -10,10 +26,15 @@ import chalk from 'chalk';
 export class FlowTrackerService {
   private static instance: FlowTrackerService;
   private readonly isEnabled: boolean;
+  private readonly enabledCategories: Set<FlowCategory>;
 
   constructor() {
     // Geliştirme ortamında akış izlemeyi etkinleştir
     this.isEnabled = process.env.NODE_ENV !== 'production';
+
+    // Tüm kategorileri varsayılan olarak etkinleştir
+    this.enabledCategories = new Set(Object.values(FlowCategory));
+
     FlowTrackerService.instance = this;
   }
 
@@ -28,21 +49,81 @@ export class FlowTrackerService {
   }
 
   /**
-   * Program akışını terminale yazdırır
+   * Belirtilen kategorileri etkinleştirir/devre dışı bırakır
+   * @param categories Kategori listesi
+   * @param enabled Etkinleştirme durumu
+   */
+  setCategories(categories: FlowCategory[], enabled: boolean = true): void {
+    if (!this.isEnabled) return;
+
+    categories.forEach((category) => {
+      if (enabled) {
+        this.enabledCategories.add(category);
+      } else {
+        this.enabledCategories.delete(category);
+      }
+    });
+  }
+
+  /**
+   * Program akışını kategoriye göre terminale yazdırır
+   * @param category Akış kategorisi
    * @param message Akış mesajı
    * @param context Akışın gerçekleştiği bağlam (sınıf/metod adı)
    */
-  track(message: string, context: string): void {
-    if (!this.isEnabled) {
+  trackCategory(
+    category: FlowCategory,
+    message: string,
+    context: string,
+  ): void {
+    if (!this.isEnabled || !this.enabledCategories.has(category)) {
       return;
     }
 
     const timestamp = new Date().toISOString();
+    let categoryColor;
+
+    // Kategoriye göre farklı renkler kullan
+    switch (category) {
+      case FlowCategory.API:
+        categoryColor = chalk.magenta;
+        break;
+      case FlowCategory.Auth:
+        categoryColor = chalk.cyan;
+        break;
+      case FlowCategory.DB:
+        categoryColor = chalk.yellow;
+        break;
+      case FlowCategory.Error:
+        categoryColor = chalk.red;
+        break;
+      default:
+        categoryColor = chalk.blue;
+    }
+
     console.log(
-      `[${timestamp}] ${chalk.blue('[AKIŞ]')} ${chalk.yellow(
+      `[${timestamp.split('T')[1].slice(0, -1)}] ${categoryColor(`[${category}]`)} ${chalk.yellow(
         `[${context}]`,
       )} ${message}`,
     );
+  }
+
+  /**
+   * Program akışını terminale yazdırır (Eski metod, geriye dönük uyumluluk için)
+   * @param message Akış mesajı
+   * @param context Akışın gerçekleştiği bağlam (sınıf/metod adı)
+   */
+  track(message: string, context: string): void {
+    this.trackCategory(FlowCategory.Custom, message, context);
+  }
+
+  /**
+   * Hata akışını izler
+   * @param message Hata mesajı
+   * @param context Hatanın gerçekleştiği bağlam (sınıf/metod adı)
+   */
+  trackError(message: string, context: string): void {
+    this.trackCategory(FlowCategory.Error, message, context);
   }
 
   /**
@@ -74,7 +155,7 @@ export class FlowTrackerService {
       message += ` - Parametreler: ${JSON.stringify(safeParams)}`;
     }
 
-    this.track(message, context);
+    this.trackCategory(FlowCategory.Custom, message, context);
   }
 
   /**
@@ -108,7 +189,7 @@ export class FlowTrackerService {
       }
     }
 
-    this.track(message, context);
+    this.trackCategory(FlowCategory.Custom, message, context);
   }
 
   /**
@@ -117,12 +198,11 @@ export class FlowTrackerService {
    * @param context Bağlam (sınıf/metod adı)
    */
   trackStep(step: string, context: string): void {
-    if (!this.isEnabled) {
-      return;
-    }
-
-    const message = `${chalk.cyan('🔹')} ${step}`;
-    this.track(message, context);
+    this.trackCategory(
+      FlowCategory.Custom,
+      `${chalk.cyan('🔹')} ${step}`,
+      context,
+    );
   }
 
   /**
@@ -132,12 +212,11 @@ export class FlowTrackerService {
    * @param context Bağlam (sınıf/metod adı)
    */
   trackApiRequest(method: string, url: string, context: string): void {
-    if (!this.isEnabled) {
-      return;
-    }
-
-    const message = `${chalk.magenta('🌐')} ${method.toUpperCase()} ${url}`;
-    this.track(message, context);
+    this.trackCategory(
+      FlowCategory.API,
+      `${chalk.magenta('🌐')} ${method.toUpperCase()} ${url}`,
+      context,
+    );
   }
 
   /**
@@ -171,7 +250,7 @@ export class FlowTrackerService {
       `[${statusCode}]`,
     )} (${responseTime}ms)`;
 
-    this.track(message, context);
+    this.trackCategory(FlowCategory.API, message, context);
   }
 
   /**
@@ -187,13 +266,11 @@ export class FlowTrackerService {
     executionTimeMs: number,
     context: string,
   ): void {
-    if (!this.isEnabled) {
-      return;
-    }
-
-    const message = `${chalk.yellow('🗃️')} ${operation.toUpperCase()} ${entity} (${executionTimeMs}ms)`;
-
-    this.track(message, context);
+    this.trackCategory(
+      FlowCategory.DB,
+      `${chalk.yellow('🗃️')} ${operation.toUpperCase()} ${entity} (${executionTimeMs}ms)`,
+      context,
+    );
   }
 
   /**

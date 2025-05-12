@@ -3,14 +3,22 @@
  * Bu dosya, uygulama genelinde kolay loglama için yardımcı fonksiyonlar içerir
  */
 
-import { LoggerService } from '../services/logger.service';
+import { LoggerService, LogLevel } from '../services/logger.service';
+import {
+  FlowTrackerService,
+  FlowCategory,
+} from '../services/flow-tracker.service';
 import * as path from 'path';
-import { FlowTrackerService } from '../services/flow-tracker.service';
+import * as fs from 'fs';
 
 const logger = LoggerService.getInstance();
 const flowTracker = FlowTrackerService.getInstance();
 
-flowTracker.track('Logger utils yükleniyor', 'logger.utils');
+flowTracker.trackCategory(
+  FlowCategory.Custom,
+  'Logger utils yükleniyor',
+  'logger.utils',
+);
 
 // Singleton logger instance
 let loggerInstance: LoggerService | null = null;
@@ -58,27 +66,85 @@ export function logError(
     errorMessage,
     context,
     fileName,
-    lineNumber,
+    lineNumber?.toString(),
     typeof error === 'object' ? error : undefined,
     additionalInfo,
   );
+
+  // Hata akışını takip et
+  flowTracker.trackCategory(FlowCategory.Error, errorMessage, context);
 }
 
 /**
  * Program akışı izleme - SADECE terminale yazılır, dosyaya yazılmaz
  * @param message Akış mesajı
  * @param context Bağlam (sınıf, metod)
+ * @param category Akış kategorisi
  */
-export function logFlow(message: string, context: string): void {
-  if (!loggerInstance) {
+export function logFlow(
+  message: string,
+  context: string,
+  category: FlowCategory = FlowCategory.Custom,
+): void {
+  if (!flowTracker) {
     console.log(
-      `[AKIŞ] [${context}] ${message} (Logger servisi başlatılmamış)`,
+      `[AKIŞ] [${category}] [${context}] ${message} (FlowTracker servisi başlatılmamış)`,
     );
     return;
   }
 
-  // flow metodu yerine info metodunu kullanıyoruz
-  loggerInstance.info(`[AKIŞ] ${message}`, context);
+  // Akışı izle
+  flowTracker.trackCategory(category, message, context);
+}
+
+/**
+ * Log dosyasını temizle
+ */
+export function clearLogFile(): void {
+  if (!loggerInstance) {
+    console.warn('Logger servisi başlatılmamış! Log dosyası temizlenemedi.');
+    return;
+  }
+
+  loggerInstance.clearLogFile();
+  flowTracker.trackCategory(
+    FlowCategory.Custom,
+    'Log dosyası temizlendi',
+    'logger.utils',
+  );
+}
+
+/**
+ * Log dosyasının içeriğini getirir
+ * @returns Log dosyası içeriği
+ */
+export function getLogFileContent(): string {
+  if (!loggerInstance) {
+    console.warn(
+      'Logger servisi başlatılmamış! Log dosyası içeriği alınamadı.',
+    );
+    return '';
+  }
+
+  return loggerInstance.getLogFileContent();
+}
+
+/**
+ * Log dosyasını indirir
+ * @param filename İndirilecek dosya adı
+ */
+export function downloadLogFile(filename: string = 'backend-logs.log'): Buffer {
+  if (!loggerInstance) {
+    console.warn('Logger servisi başlatılmamış! Log dosyası indirilemedi.');
+    return Buffer.from('');
+  }
+
+  flowTracker.trackCategory(
+    FlowCategory.Custom,
+    `Log dosyası indiriliyor: ${filename}`,
+    'logger.utils',
+  );
+  return loggerInstance.getLogFileBuffer();
 }
 
 /**
@@ -120,7 +186,11 @@ export function getCallerInfo(): {
   methodName: string;
 } {
   try {
-    flowTracker.trackStep('Çağrı bilgileri alınıyor', 'logger.utils');
+    flowTracker.trackCategory(
+      FlowCategory.Custom,
+      'Çağrı bilgileri alınıyor',
+      'logger.utils',
+    );
 
     // Hata oluştur ve stack'i al
     const err = new Error();
@@ -144,7 +214,7 @@ export function getCallerInfo(): {
         'Çağrı bilgileri başarıyla alındı',
         'logger.utils.getCallerInfo',
         __filename,
-        38,
+        186,
         { fileName, lineNumber, methodName },
       );
 
@@ -156,7 +226,7 @@ export function getCallerInfo(): {
       'Çağrı bilgileri alınamadı, varsayılan değerler kullanılıyor',
       'logger.utils.getCallerInfo',
       __filename,
-      49,
+      198,
     );
 
     return {
@@ -165,9 +235,14 @@ export function getCallerInfo(): {
       methodName: 'unknown',
     };
   } catch (error) {
-    logger.logError(error, 'logger.utils.getCallerInfo', {
-      additionalInfo: 'Çağrı bilgileri alınırken hata oluştu',
-    });
+    logger.error(
+      'Çağrı bilgileri alınırken hata oluştu',
+      'logger.utils.getCallerInfo',
+      __filename,
+      210,
+      error instanceof Error ? error : new Error(String(error)),
+      { additionalInfo: 'Stack trace parse hatası' },
+    );
 
     return {
       fileName: 'error',
@@ -186,7 +261,8 @@ export function getCallerInfo(): {
  */
 export function safeStringify(obj: any, maxLength: number = 1000): string {
   try {
-    flowTracker.trackStep(
+    flowTracker.trackCategory(
+      FlowCategory.Custom,
       "Nesne güvenli biçimde string'e çevriliyor",
       'logger.utils',
     );
@@ -229,7 +305,7 @@ export function safeStringify(obj: any, maxLength: number = 1000): string {
         'Nesne uzunluğu kısaltıldı',
         'logger.utils.safeStringify',
         __filename,
-        112,
+        268,
         {
           originalLength: stringified.length,
           truncatedLength: maxLength,
@@ -241,10 +317,17 @@ export function safeStringify(obj: any, maxLength: number = 1000): string {
 
     return stringified || '{}';
   } catch (error) {
-    logger.logError(error, 'logger.utils.safeStringify', {
-      additionalInfo: "Nesne string'e çevrilirken hata oluştu",
-      object: typeof obj,
-    });
+    logger.error(
+      "Nesne string'e çevrilirken hata oluştu",
+      'logger.utils.safeStringify',
+      __filename,
+      282,
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        objectType: typeof obj,
+        isArray: Array.isArray(obj),
+      },
+    );
 
     return '[Stringify Hatası]';
   }

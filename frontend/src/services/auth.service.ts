@@ -15,7 +15,7 @@ import { setAuthCookie, removeAuthCookie } from "@/lib/utils";
 import { User } from "@/types";
 import { adaptUserFromBackend, adaptUserToBackend } from "@/lib/adapters";
 import axios, { AxiosError } from "axios";
-import { getLogger, getFlowTracker } from "../lib/logger.utils";
+import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "../lib/logger.utils";
 
 // API yanıt tipleri
 interface AuthResponse {
@@ -39,6 +39,56 @@ export interface AuthState {
  * Auth ile ilgili tüm API çağrılarını ve işlemleri yönetir
  */
 class AuthService {
+  /**
+   * ID token ile giriş işlemi - Firebase tarafından alınan token ile backend'e doğrulama yapar
+   * @param idToken Firebase'den alınan kimlik doğrulama token'ı
+   * @returns Backend yanıtı (kullanıcı bilgileri ve session token)
+   */
+  async loginWithIdToken(idToken: string): Promise<AuthResponse> {
+    try {
+      trackFlow(
+        'ID Token ile giriş başlatıldı',
+        'AuthService.loginWithIdToken',
+        FlowCategory.Auth
+      );
+      
+      this.logger.debug(
+        'ID Token ile backend login isteği gönderiliyor',
+        'AuthService.loginWithIdToken',
+        __filename,
+        141
+      );
+      
+      const response = await apiService.post<AuthResponse>("/auth/login-via-idtoken", {
+        idToken,
+      });
+
+      this.logger.info(
+        'ID Token ile login başarılı',
+        'AuthService.loginWithIdToken',
+        __filename,
+        149,
+        { userId: response.user.id }
+      );
+
+      // User tipini dönüştür
+      return {
+        ...response,
+        user: adaptUserFromBackend(response.user),
+      };
+    } catch (error: unknown) {
+      this.logger.error(
+        'ID Token ile giriş hatası',
+        'AuthService.loginWithIdToken',
+        __filename,
+        166,
+        { error: this.formatFirebaseError(error) }
+      );
+      
+      throw error;
+    }
+  }
+
   private readonly logger = getLogger();
   private readonly flowTracker = getFlowTracker();
   
@@ -65,15 +115,30 @@ class AuthService {
   ): Promise<AuthResponse> {
     try {
       // Şifre kontrolü
-      console.log("🔄 [AuthService] register() çağrıldı:", {
-        email,
-        password: password ? "Şifre girilmiş" : "Şifre eksik",
-        passwordLength: password?.length,
-      });
+      this.logger.info(
+        'Kullanıcı kaydı başlatılıyor',
+        'AuthService.register',
+        __filename,
+        50,
+        { email }
+      );
+      
+      trackFlow(
+        'Kullanıcı kaydı başlatıldı',
+        'AuthService.register',
+        FlowCategory.Auth,
+        { email }
+      );
 
       if (!password || password.trim() === "") {
         const error = new Error("auth/missing-password");
-        console.error("❌ [AuthService] Şifre eksik:", error);
+        this.logger.error(
+          'Şifre eksik',
+          'AuthService.register',
+          __filename,
+          64,
+          { error }
+        );
         throw error;
       }
 
@@ -93,19 +158,22 @@ class AuthService {
         ...userData,
       });
 
-      // Token'ı localStorage'a kaydet
-      if (response.token) {
-        localStorage.setItem("auth_token", response.token);
-        setAuthCookie(response.token);
-      }
-
+      // Token artık backend tarafından HttpOnly cookie olarak yönetiliyor
+      // localStorage kullanımını kaldırıyoruz
+      
       // User tipini dönüştür
       return {
         ...response,
         user: adaptUserFromBackend(response.user),
       };
     } catch (error: unknown) {
-      console.error("❌ [AuthService] Kayıt hatası:", error);
+      this.logger.error(
+        'Kayıt hatası',
+        'AuthService.register',
+        __filename,
+        92,
+        { error: this.formatFirebaseError(error) }
+      );
       throw error;
     }
   }
@@ -118,10 +186,10 @@ class AuthService {
    */
   async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      this.flowTracker.trackStep(
-        'Auth',
+      trackFlow(
         'Kullanıcı girişi başlatıldı',
         'AuthService.login',
+        FlowCategory.Auth,
         { email }
       );
       this.flowTracker.markStart('login');
@@ -130,39 +198,52 @@ class AuthService {
         `Kullanıcı girişi deneniyor: ${email}`,
         'AuthService.login',
         __filename,
-        30
+        116
       );
       
       const result = await signInWithEmailAndPassword(auth, email, password);
       
       // Ölç ve logla
-      const duration = this.flowTracker.markEnd('login', 'Auth', 'AuthService.login');
+      const duration = this.flowTracker.markEnd('login', FlowCategory.Auth, 'AuthService.login');
       this.logger.info(
         `Kullanıcı girişi başarılı: ${email}`,
         'AuthService.login',
         __filename,
-        39,
+        126,
         { duration, uid: result.user.uid }
       );
       
       // ID token al
       const idToken = await result.user.getIdToken();
-      console.log("🔑 [AuthService] Firebase ID token alındı");
+      this.logger.debug(
+        'Firebase ID token alındı',
+        'AuthService.login',
+        __filename,
+        135
+      );
 
       // Backend'e giriş için API çağrısı yap
-      console.log("🔄 [AuthService] Backend login isteği gönderiliyor");
+      this.logger.debug(
+        'Backend login isteği gönderiliyor',
+        'AuthService.login',
+        __filename,
+        141
+      );
+      
       const response = await apiService.post<AuthResponse>("/auth/login-via-idtoken", {
         idToken,
       });
 
-      console.log("✅ [AuthService] Backend login başarılı:", response);
+      this.logger.info(
+        'Backend login başarılı',
+        'AuthService.login',
+        __filename,
+        149,
+        { userId: response.user.id }
+      );
 
-      // Token'ı localStorage'a kaydet
-      if (response.token) {
-        localStorage.setItem("auth_token", response.token);
-        setAuthCookie(response.token);
-        console.log("💾 [AuthService] Token localStorage ve cookie'ye kaydedildi");
-      }
+      // Token artık backend tarafından HttpOnly cookie olarak yönetiliyor
+      // localStorage kullanımını kaldırıyoruz
 
       // User tipini dönüştür
       return {
@@ -170,15 +251,29 @@ class AuthService {
         user: adaptUserFromBackend(response.user),
       };
     } catch (error: unknown) {
-      console.error("❌ [AuthService] Giriş hatası:", error);
+      this.logger.error(
+        'Giriş hatası',
+        'AuthService.login',
+        __filename,
+        166,
+        { error: this.formatFirebaseError(error) }
+      );
       
       // Hata tipini kontrol et ve daha detaylı logla
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
-        console.error(`❌ [AuthService] API Hatası: ${axiosError.code}, Yanıt:`, axiosError.response?.data);
-        console.error(`❌ [AuthService] İstek URL: ${axiosError.config?.url}, Metod: ${axiosError.config?.method}`);
-      } else if (error instanceof Error) {
-        console.error(`❌ [AuthService] Hata mesajı: ${error.message}`);
+        this.logger.error(
+          'API Hatası',
+          'AuthService.login',
+          __filename,
+          176,
+          { 
+            code: axiosError.code, 
+            response: axiosError.response?.data,
+            url: axiosError.config?.url, 
+            method: axiosError.config?.method 
+          }
+        );
       }
       
       throw error;
@@ -187,36 +282,50 @@ class AuthService {
 
   /**
    * Google ile giriş
+   * @param idToken Firebase'den alınan ID token
    * @returns Giriş yanıtı
    */
-  async loginWithGoogle(): Promise<GoogleAuthResponse> {
+  async loginWithGoogle(idToken?: string): Promise<GoogleAuthResponse> {
     try {
-      const provider = new GoogleAuthProvider();
-
-      // Google ile popup üzerinden giriş yap
-      const result = await signInWithPopup(auth, provider);
-
-      // ID token al
-      const idToken = await result.user.getIdToken();
-
-      // Backend'e Google giriş için API çağrısı yap
-      const response = await apiService.post<GoogleAuthResponse>("/auth/google-sign-in", {
+      trackFlow(
+        'Google ile giriş başlatıldı',
+        'AuthService.loginWithGoogle',
+        FlowCategory.Auth
+      );
+      
+      // idToken parametresi verilmediyse, Google popup ile giriş yap
+      if (!idToken) {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        idToken = await result.user.getIdToken();
+      }
+      
+      // Backend'e giriş için API çağrısı yap
+      const response = await apiService.post<GoogleAuthResponse>("/auth/login-via-google", {
         idToken,
       });
-
-      // Token'ı localStorage'a kaydet
-      if (response.token) {
-        localStorage.setItem("auth_token", response.token);
-        setAuthCookie(response.token);
-      }
-
+      
+      this.logger.info(
+        'Google ile giriş başarılı',
+        'AuthService.loginWithGoogle',
+        __filename,
+        228,
+        { userId: response.user.id, isNewUser: response.isNewUser }
+      );
+      
       // User tipini dönüştür
       return {
         ...response,
         user: adaptUserFromBackend(response.user),
       };
     } catch (error: unknown) {
-      console.error("Google giriş hatası:", error);
+      this.logger.error(
+        'Google ile giriş hatası',
+        'AuthService.loginWithGoogle',
+        __filename,
+        242,
+        { error: this.formatFirebaseError(error) }
+      );
       throw error;
     }
   }
@@ -227,10 +336,10 @@ class AuthService {
    */
   async signOut(): Promise<void> {
     try {
-      this.flowTracker.trackStep(
-        'Auth',
+      trackFlow(
         'Kullanıcı çıkışı başlatıldı',
-        'AuthService.signOut'
+        'AuthService.signOut',
+        FlowCategory.Auth
       );
       this.flowTracker.markStart('logout');
       
@@ -238,26 +347,40 @@ class AuthService {
         'Kullanıcı çıkışı yapılıyor',
         'AuthService.signOut',
         __filename,
-        67
+        246
       );
       
+      // Backend'e çıkış isteği yaparak cookie'yi temizle
+      await apiService.post('/auth/logout', {});
+      
+      // Ardından Firebase'den çıkış yap
       await firebaseSignOut(auth);
 
-      // localStorage'dan token'ı temizle
-      localStorage.removeItem("auth_token");
-      removeAuthCookie();
+      // localStorage'dan token'ı temizle - cookie tamamen kaldırıldı, ancak localStorage'da varsa temizle
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("auth_token");
+        removeAuthCookie();
+      }
       
-      // Ölç ve logla
-      const duration = this.flowTracker.markEnd('logout', 'Auth', 'AuthService.signOut');
+      // Çıkış işlemi başarılı
+      const duration = this.flowTracker.markEnd('logout', FlowCategory.Auth, 'AuthService.signOut');
       this.logger.info(
-        'Kullanıcı çıkışı başarılı',
+        'Kullanıcı çıkışı tamamlandı',
         'AuthService.signOut',
         __filename,
-        76,
+        266,
         { duration }
       );
-    } catch (error: unknown) {
-      console.error("Çıkış hatası:", error);
+      
+      return;
+    } catch (error) {
+      this.logger.error(
+        'Çıkış hatası',
+        'AuthService.signOut',
+        __filename,
+        274,
+        { error: this.formatFirebaseError(error) }
+      );
       throw error;
     }
   }
@@ -475,6 +598,24 @@ class AuthService {
       removeAuthCookie();
       
       throw error;
+    }
+  }
+
+  /**
+   * Hata mesajlarını formatlar - Firebase ve diğer hatalar için tutarlı bir format sağlar
+   * @param error Hata nesnesi
+   * @returns Formatlanmış hata mesajı
+   */
+  formatAuthError(error: unknown): string {
+    if (error instanceof FirebaseError) {
+      return this.formatFirebaseError(error).message;
+    } else if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      return `API hatası: ${axiosError.response?.statusText || axiosError.message}`;
+    } else if (error instanceof Error) {
+      return error.message;
+    } else {
+      return 'Bilinmeyen bir hata oluştu';
     }
   }
 

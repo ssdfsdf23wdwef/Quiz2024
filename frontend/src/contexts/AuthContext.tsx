@@ -9,14 +9,20 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { useRouter } from "next/navigation";
 import authService from "@/services/auth.service";
 import { User } from "@/types";
-import { User as FirebaseUser, sendPasswordResetEmail } from "firebase/auth";
-import { useAuthStore } from "@/store/auth.store";
+import { 
+  User as FirebaseUser, 
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider
+} from "firebase/auth";
+import { useAuthStore, AuthState } from "@/store/auth.store";
 import { auth } from "@/app/firebase/config";
 import axios, { AxiosError } from "axios";
-import { getLogger, getFlowTracker } from "@/lib/logger.utils";
+import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
+import { FirebaseError } from "firebase/app";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
@@ -87,44 +93,21 @@ const AuthContext = createContext<AuthContextType>({
 // Hook
 export const useAuth = () => useContext(AuthContext);
 
-// Provider
+/**
+ * AuthContext oturum açma/kapatma işlemlerini ve kullanıcı durumunu yönetir
+ */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // State yönetimi - sadece yerel durumlar için
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const router = useRouter();
-  
-  // Uygulamanın client-side render edildiğinden emin olarak hook kullanımı
-  // Hook'ları koşulsuz bir şekilde en üst seviyede çağır
-  const store = useAuthStore();
-  
-  // Store fonksiyonlarına güvenli erişim
-  const setUser = useCallback((user: User | null) => {
-    if (isBrowser) {
-      // Doğrudan store'dan method çağırma
-      store.getState().setUser(user);
-    }
-  }, [store]);
-  
-  const setFirebaseUser = useCallback((user: FirebaseUser | null) => {
-    if (isBrowser) {
-      store.getState().setFirebaseUser(user);
-    }
-  }, [store]);
-  
-  const setLoading = useCallback((loading: boolean) => {
-    if (isBrowser) {
-      store.getState().setLoading(loading);
-    }
-  }, [store]);
-  
-  const logoutUser = useCallback(() => {
-    if (isBrowser) {
-      store.getState().logoutUser();
-    }
-  }, [store]);
 
-  // Oturum durumunu izle
+  // Zustand Store'dan doğrudan ve doğru şekilde fonksiyonları al
+  const setUser = useAuthStore((state: AuthState) => state.setUser);
+  const setFirebaseUser = useAuthStore((state: AuthState) => state.setFirebaseUser);
+  const setLoading = useAuthStore((state: AuthState) => state.setLoading);
+  const logoutUser = useAuthStore((state: AuthState) => state.logoutUser);
+
+  // Auth değişikliklerini izleme
   useEffect(() => {
     // SSR sırasında çalıştırma
     if (!isBrowser) {
@@ -161,10 +144,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = authService.onAuthStateChange(async (firebaseUser: FirebaseUser | null) => {
       try {
         // Firebase durumunu izleme
-        flowTracker.trackStep(
-          'Auth', 
+        trackFlow(
           firebaseUser ? 'Kullanıcı oturumu açık' : 'Kullanıcı oturumu değişikliği algılandı', 
           'AuthContext.onAuthStateChange',
+          FlowCategory.Auth,
           firebaseUser ? { email: firebaseUser.email } : undefined
         );
         
@@ -181,10 +164,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               287
             );
             
-            flowTracker.trackStep(
-              'API', 
+            trackFlow(
               'Profil bilgileri isteniyor', 
-              'AuthContext.onAuthStateChange'
+              'AuthContext.onAuthStateChange',
+              FlowCategory.API
             );
             
             const userProfile = await authService.getProfile();
@@ -197,8 +180,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               { userId: userProfile.id }
             );
             
-            // Zustand store'u güncelle
+            // Zustand store'a kullanıcı bilgilerini ayarla
             setUser(userProfile);
+
+            // Yükleme durumları güncelleme
+            setIsInitializing(false);
+            setLoading(false);
+            setAuthError(null);
           } catch (error) {
             logger.error(
               'Profil bilgileri alınamadı',
@@ -211,579 +199,424 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // API hatası ise ve bağlantı hatası varsa
             if (axios.isAxiosError(error)) {
               const axiosError = error as AxiosError;
-              if (axiosError.code === 'ECONNABORTED' || axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ERR_NETWORK') {
-                logger.warn(
-                  `Backend bağlantı hatası: ${axiosError.code}`,
+              
+              // Backend bağlantı hatası durumunda
+              if (axiosError.code === 'ECONNABORTED' || 
+                  axiosError.code === 'ECONNREFUSED' || 
+                  axiosError.code === 'ERR_NETWORK') {
+                handleConnectionError(firebaseUser);
+              } 
+              // Yetkilendirme hatası durumunda oturumu kapat
+              else if (axiosError.response?.status === 401) {
+                handleUnauthorizedError();
+              }
+              // Diğer API hataları 
+              else {
+                logger.error(
+                  `API hatası: ${axiosError.response?.status}`,
                   'AuthContext.onAuthStateChange',
                   'AuthContext.tsx',
-                  320
+                  330,
+                  { error: axiosError.response?.data }
                 );
-                
-                flowTracker.trackStep(
-                  'API', 
-                  'Backend bağlantı hatası - oturum korunuyor', 
-                  'AuthContext.onAuthStateChange',
-                  { errorCode: axiosError.code }
-                );
-                
-                // Offline modda kullanıcı bilgilerini korumak için token'ı localStorage'dan kontrol et
-                const token = localStorage.getItem("auth_token");
-                if (!token) {
-                  // Token yoksa ve offline modda ise, en azından firebase kullanıcısını koru
-                  // Burada tam logout yapmıyoruz, sadece API'den gelen bilgileri temizliyoruz
-                  logger.warn('Token bulunamadı, ancak Firebase kullanıcısı korunuyor', 'AuthContext', 'AuthContext.tsx', 338);
-                }
-              } else {
-                // Diğer API hatalarında durumu değerlendir
-                if (axiosError.response?.status === 401) {
-                  logger.warn(
-                    'API 401 hatası - Firebase oturumu geçersiz',
-                    'AuthContext.onAuthStateChange',
-                    'AuthContext.tsx',
-                    346
-                  );
-                  
-                  // 401 hatası, oturumun backend tarafında geçersiz olduğunu gösterir
-                  await authService.signOut();
-                  logoutUser();
-                } else {
-                  // Diğer API hatalarında sadece log tut, oturumu sonlandırma
-                  logger.warn(
-                    `API ${axiosError.response?.status || 'bilinmeyen'} hatası - oturum korunuyor`,
-                    'AuthContext.onAuthStateChange',
-                    'AuthContext.tsx',
-                    356
-                  );
-                }
+
+                setUser(null);
+                setAuthError(`API hatası: ${axiosError.response?.statusText || 'Bilinmeyen hata'}`);
               }
             } else {
-              // Kritik hata değilse oturumu korumaya çalış
-              logger.warn(
-                'API hatası nedeniyle profil bilgileri alınamadı, ancak Firebase oturumu korunuyor',
+              // Diğer hatalar
+              logger.error(
+                'Beklenmeyen bir hata oluştu',
                 'AuthContext.onAuthStateChange',
                 'AuthContext.tsx',
-                365
+                341,
+                { error }
               );
+              
+              setUser(null);
+              setAuthError('Oturum bilgileri alınırken beklenmeyen bir hata oluştu.');
             }
+            
+            setIsInitializing(false);
+            setLoading(false);
           }
-        } else if (firebaseUser === null) {
-          // Kullanıcı bilinçli olarak oturumu kapattıysa (null)
-          logger.debug(
-            'Firebase tarafından kullanıcı oturumu kapalı olarak bildirildi',
+        } else {
+          // Kullanıcı oturumu kapalı
+          logoutUser();
+          setIsInitializing(false);
+          setLoading(false);
+          setAuthError(null);
+          
+          logger.info(
+            'Kullanıcı oturumu kapalı',
             'AuthContext.onAuthStateChange',
             'AuthContext.tsx',
-            374
+            360
           );
-          
-          // Kullanıcı açık bir şekilde oturumu kapattıysa Zustand durumunu temizle
-          logoutUser();
         }
       } catch (error) {
-        // onAuthStateChange içindeki ana hatalar
         logger.error(
-          'Oturum değişikliği işlenirken hata',
+          'Oturum durumu değişikliği işlenirken hata oluştu',
           'AuthContext.onAuthStateChange',
           'AuthContext.tsx',
-          385,
+          367,
           { error }
         );
         
-        // Kritik bir hata durumunda kullanıcı durumunu sıfırla
-        logoutUser();
-      } finally {
-        // Başlatma işlemi tamamlandı
         setIsInitializing(false);
         setLoading(false);
-        
-        logger.debug(
-          'Auth durumu başlatma tamamlandı',
-          'AuthContext.onAuthStateChange',
-          'AuthContext.tsx',
-          398
-        );
+        setAuthError('Oturum durumu değişikliği işlenirken bir hata oluştu.');
       }
     });
-
+    
     // Temizleme fonksiyonu
     return () => {
-      logger.debug(
-        'Oturum izleyici temizleniyor',
-        'AuthContext.onAuthStateChange',
-        'AuthContext.tsx',
-        407
-      );
-      
-      unsubscribe();
       flowTracker.endSequence(seqId);
+      unsubscribe();
     };
-  }, [setFirebaseUser, setUser, setLoading, logoutUser]);
+  }, []);
+
+  // Bağlantı hataları için yardımcı fonksiyon
+  const handleConnectionError = (firebaseUser: FirebaseUser) => {
+    logger.warn(
+      'Backend bağlantı hatası - minimum kullanıcı bilgileri ile devam ediliyor',
+      'AuthContext.handleConnectionError',
+      'AuthContext.tsx',
+      388
+    );
+    
+    // Offline modda - Firebase kullanıcı bilgilerinden minimum bir kullanıcı profili oluştur
+    const minimalUserProfile: User = {
+      id: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      firstName: firebaseUser.displayName?.split(' ')[0] || '',
+      lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+      profileImageUrl: firebaseUser.photoURL || '',
+      role: 'user',
+      onboarded: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    setUser(minimalUserProfile);
+    setAuthError('Sunucu bağlantısı kurulamadı. Çevrimdışı modda sınırlı işlemler yapabilirsiniz.');
+    
+    trackFlow(
+      'Backend bağlantı hatası - offline mod etkin', 
+      'AuthContext.handleConnectionError',
+      FlowCategory.Error
+    );
+  };
+
+  // Yetkisiz erişim hataları için yardımcı fonksiyon
+  const handleUnauthorizedError = async () => {
+    logger.warn(
+      'API 401 hatası - Firebase oturumu geçersiz',
+      'AuthContext.handleUnauthorizedError',
+      'AuthContext.tsx',
+      418
+    );
+    
+    try {
+      await authService.signOut();
+    } catch (error) {
+      logger.error(
+        'Oturum kapatılırken hata oluştu',
+        'AuthContext.handleUnauthorizedError',
+        'AuthContext.tsx',
+        426,
+        { error }
+      );
+    }
+    
+    logoutUser();
+    setAuthError('Oturumunuz sona erdi, lütfen tekrar giriş yapın.');
+    
+    trackFlow(
+      '401 hatası - oturum sonlandırıldı', 
+      'AuthContext.handleUnauthorizedError',
+      FlowCategory.Auth
+    );
+  };
 
   // Oturum durumunu kontrol et
   const checkSession = useCallback(async (): Promise<boolean> => {
-    const seqId = flowTracker.startSequence('CheckSession');
-    
-    logger.debug(
-      'Oturum kontrolü yapılıyor',
-      'AuthContext.checkSession',
-      'AuthContext.tsx',
-      60
-    );
-    
     try {
-      // Mevcut kullanıcı var mı kontrol et
-      const currentUser = authService.getCurrentUser();
+      if (!isBrowser) return false;
       
-      if (!currentUser) {
-        logger.debug(
-          'Aktif oturum bulunamadı',
-          'AuthContext.checkSession',
-          'AuthContext.tsx',
-          71
-        );
-        flowTracker.endSequence(seqId);
+      if (!auth.currentUser) return false;
+      
+      // Profil bilgilerini getirerek oturumun geçerli olup olmadığını kontrol et
+      await authService.getProfile();
+      return true;
+    } catch (error) {
+      trackFlow('Oturum kontrolü hatası', 'AuthContext.checkSession', FlowCategory.Error, { error });
+      logger.error('Oturum kontrolü hatası', 'AuthContext.checkSession', 'AuthContext.tsx', 330, { error });
+      
+      // 401 hatası alındıysa
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        // Oturumu kapat
+        await handleUnauthorizedError();
         return false;
       }
       
-      flowTracker.trackStep(
-        'Auth', 
-        'Kullanıcı oturumu kontrolü başarılı', 
-        'AuthContext.checkSession',
-        { email: currentUser.email }
-      );
-
-      // Profil bilgilerini al - HttpOnly cookie sayesinde backend'e authentication yapılacak
-      const userProfile = await authService.getProfile();
+      // Bağlantı hatası durumunda (offline), mevcut durumu koru (true dönebilir)
+      if (axios.isAxiosError(error) && 
+          (error.code === 'ECONNABORTED' || error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK')) {
+        trackFlow('Oturum kontrolü bağlantı hatası (offline?)', 'AuthContext.checkSession', FlowCategory.Error);
+        return true; // Kullanıcı hala oturum açık sayılabilir
+      }
       
-      flowTracker.trackStep(
-        'Auth', 
-        'Kullanıcı profili alındı', 
-        'AuthContext.checkSession'
-      );
-
-      // Zustand store'u güncelle
-      setUser(userProfile);
-      setFirebaseUser(currentUser);
-      setLoading(false);
-      
-      logger.info(
-        `Oturum kontrolü başarılı: ${userProfile.email}`,
-        'AuthContext.checkSession',
-        'AuthContext.tsx',
-        97,
-        { userId: userProfile.id }
-      );
-
-      flowTracker.endSequence(seqId);
-      return true;
-    } catch (error) {
-      logger.error(
-        'Oturum kontrolü hatası',
-        'AuthContext.checkSession',
-        'AuthContext.tsx',
-        107,
-        { error }
-      );
-
-      // Hata durumunda oturumu kapat
-      await authService.signOut();
-      logoutUser();
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Oturum kontrolü hatası - kullanıcı çıkış yapıldı', 
-        'AuthContext.checkSession',
-        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
-      );
-
-      flowTracker.endSequence(seqId);
       return false;
-    }
-  }, [setUser, setFirebaseUser, setLoading, logoutUser]);
-
-  // Çıkış fonksiyonu
-  const signOut = useCallback(async () => {
-    const seqId = flowTracker.startSequence('UserSignOut');
-    
-    logger.info(
-      'Kullanıcı çıkışı başlatıldı',
-      'AuthContext.signOut',
-      'AuthContext.tsx',
-      134
-    );
-    
-    try {
-      await authService.signOut();
-      
-      // Zustand store'daki kullanıcı bilgilerini temizle
-      logoutUser();
-      
-      flowTracker.trackStep('Navigation', 'Giriş sayfasına yönlendiriliyor', 'AuthContext.signOut');
-      router.push("/auth/login");
-      
-      logger.info(
-        'Kullanıcı çıkışı başarılı',
-        'AuthContext.signOut',
-        'AuthContext.tsx',
-        149
-      );
-      
-      flowTracker.endSequence(seqId);
-      return true;
-    } catch (error) {
-      logger.error(
-        'Çıkış yapılırken hata oluştu',
-        'AuthContext.signOut',
-        'AuthContext.tsx',
-        158,
-        { error }
-      );
-      
-      setAuthError("Çıkış yapılırken bir hata oluştu.");
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Çıkış hatası', 
-        'AuthContext.signOut',
-        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
-      );
-      
-      flowTracker.endSequence(seqId);
-      throw error;
-    }
-  }, [router, logoutUser]);
-
-  // Şifre sıfırlama fonksiyonu
-  const resetPassword = useCallback(async (email: string): Promise<boolean> => {
-    const seqId = flowTracker.startSequence('PasswordReset');
-    
-    logger.info(
-      `Şifre sıfırlama başlatıldı: ${email}`,
-      'AuthContext.resetPassword',
-      'AuthContext.tsx',
-      184
-    );
-    
-    try {
+    } finally {
       setAuthError(null);
+    }
+  }, []);
+
+  // E-posta ve şifre ile giriş
+  const login = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
+    logger.debug(`Login isteği başlatıldı: ${email}`, 'AuthContext.login', 'AuthContext.tsx', 160);
+    setAuthError(null);
+    setLoading(true);
+    
+    try {
+      trackFlow('Firebase ile giriş yapılıyor', 'AuthContext.login', FlowCategory.Auth);
       
-      if (!email || !email.includes("@")) {
-        const errorMessage = "Geçerli bir email adresi girmelisiniz.";
-        setAuthError(errorMessage);
-        
-        logger.warn(
-          `Geçersiz e-posta adresi ile şifre sıfırlama denemesi: ${email}`,
-          'AuthContext.resetPassword',
-          'AuthContext.tsx',
-          196
-        );
-        
-        flowTracker.trackStep(
-          'Auth', 
-          'Şifre sıfırlama - geçersiz e-posta', 
-          'AuthContext.resetPassword',
-          { email }
-        );
-        
-        flowTracker.endSequence(seqId);
-        return false;
-      }
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Firebase şifre sıfırlama isteği gönderiliyor', 
-        'AuthContext.resetPassword'
+      // Firebase ile giriş
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
       
-      // Firebase'in şifre sıfırlama API'sini kullan
-      await sendPasswordResetEmail(auth, email);
+      trackFlow('Backend ile ID token doğrulanıyor', 'AuthContext.login', FlowCategory.Auth);
+      
+      // Kimlik doğrulandıktan sonra backend'e token gönder
+      const idToken = await userCredential.user.getIdToken();
+      const backendResponse = await authService.loginWithIdToken(idToken);
+      
+      trackFlow('Backend doğrulaması başarılı', 'AuthContext.login', FlowCategory.Auth);
       
       logger.info(
-        `Şifre sıfırlama e-postası gönderildi: ${email}`,
-        'AuthContext.resetPassword',
+        `Backend doğrulaması başarılı: ${backendResponse.user.email}`,
+        'AuthContext.login',
         'AuthContext.tsx',
-        219
+        180,
+        { userId: backendResponse.user.id }
       );
       
-      flowTracker.trackStep(
-        'Auth', 
-        'Şifre sıfırlama e-postası gönderildi', 
-        'AuthContext.resetPassword'
-      );
+      setUser(backendResponse.user);
+      return backendResponse;
+    } catch (error: unknown) { 
+      const errorMessage = authService.formatAuthError(error);
+      trackFlow('Giriş hatası', 'AuthContext.login', FlowCategory.Error, { error: errorMessage });
       
-      flowTracker.endSequence(seqId);
-      return true;
-    } catch (error) {
-      const firebaseError = error as { code?: string };
-      const errorMessage = firebaseError.code 
-        ? `Şifre sıfırlama sırasında hata: ${firebaseError.code}`
-        : "Şifre sıfırlama işlemi sırasında bir hata oluştu.";
+      logger.error(
+        'Login hatası', 
+        'AuthContext.login', 
+        'AuthContext.tsx', 
+        187, 
+        { error: error instanceof Error ? error.message : String(error), email }
+      );
       
       setAuthError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Google ile giriş
+  const loginWithGoogle = useCallback(async (): Promise<GoogleAuthResponse> => {
+    logger.debug('Google ile login isteği başlatıldı', 'AuthContext.loginWithGoogle', 'AuthContext.tsx', 276);
+    setAuthError(null);
+    setLoading(true);
+    
+    try {
+      trackFlow('Google popup açılıyor', 'AuthContext.loginWithGoogle', FlowCategory.Auth);
       
-      logger.error(
-        `Şifre sıfırlama hatası: ${email}`,
-        'AuthContext.resetPassword',
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      trackFlow('Backend\'e ID token gönderiliyor', 'AuthContext.loginWithGoogle', FlowCategory.Auth);
+      
+      // Backend ile doğrula ve kullanıcıyı al/oluştur
+      const idToken = await result.user.getIdToken();
+      const backendUser = await authService.loginWithGoogle(idToken);
+      
+      trackFlow('Google ile giriş backend doğrulaması başarılı', 'AuthContext.loginWithGoogle', FlowCategory.Auth);
+      
+      logger.info(
+        `Google ile giriş backend doğrulaması başarılı: ${backendUser.user.email}`,
+        'AuthContext.loginWithGoogle',
         'AuthContext.tsx',
-        240,
-        { email, error: firebaseError.code || 'unknown' }
+        296,
+        { userId: backendUser.user.id, isNewUser: backendUser.isNewUser }
       );
       
-      flowTracker.trackStep(
-        'Auth', 
-        'Şifre sıfırlama hatası', 
-        'AuthContext.resetPassword',
-        { email, errorCode: firebaseError.code }
+      setUser(backendUser.user);
+      return backendUser;
+    } catch (error: unknown) {
+      const errorMessage = authService.formatAuthError(error);
+      trackFlow('Google ile giriş hatası', 'AuthContext.loginWithGoogle', FlowCategory.Error, { error: errorMessage });
+      
+      // FirebaseError tipini kullanarak daha güvenli kontrol yap
+      if (error instanceof FirebaseError && error.code === 'auth/popup-closed-by-user') {
+        logger.warn('Google login popup kullanıcı tarafından kapatıldı', 'AuthContext.loginWithGoogle', 'AuthContext.tsx', 307);
+        setAuthError("Google ile giriş iptal edildi.");
+        throw new Error("Google ile giriş iptal edildi."); // Hata fırlat
+      } else {
+        logger.error(
+          'Google login hatası', 
+          'AuthContext.loginWithGoogle', 
+          'AuthContext.tsx', 
+          311, 
+          { error: error instanceof Error ? error.message : String(error) }
+        );
+        setAuthError(errorMessage);
+        throw new Error(errorMessage); // Diğer hataları fırlat
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Oturumu kapat
+  const signOut = useCallback(async (): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      logger.info(
+        'Oturum kapatma başlatılıyor',
+        'AuthContext.signOut',
+        'AuthContext.tsx',
+        551
       );
       
-      flowTracker.endSequence(seqId);
+      // AuthService üzerinden oturumu kapat
+      await authService.signOut();
+      
+      // Store durumunu temizle
+      logoutUser();
+      
+      trackFlow('SignOut başarılı', 'AuthContext.signOut', FlowCategory.Auth);
+      return true;
+    } catch (error) {
+      // mapFirebaseAuthError yerine genel hata mesajı
+      const errorMessage = error instanceof Error ? error.message : 'Oturum kapatılırken bilinmeyen bir hata oluştu';
+      trackFlow('SignOut hatası', 'AuthContext.signOut', FlowCategory.Error, { error });
+      logger.error('SignOut hatası', 'AuthContext.signOut', 'AuthContext.tsx', 452, { error });
+      // Hata olsa bile store'u temizlemeyi dene (onAuthStateChanged tetiklenmeyebilir)
+      logoutUser(); 
+      setAuthError(errorMessage);
       return false;
+    } finally {
+      setLoading(false);
+      setAuthError(null);
     }
   }, []);
 
-  // Login fonksiyonu
-  const login = useCallback(async (email: string, password: string) => {
-    const seqId = flowTracker.startSequence('UserLogin');
-    
-    logger.info(
-      `Kullanıcı girişi başlatıldı: ${email}`,
-      'AuthContext.login',
-      'AuthContext.tsx',
-      413
-    );
-    
-    setAuthError(null);
+  // Profil güncelleme
+  const updateProfile = useCallback(async (profileData: Partial<User>): Promise<User> => {
     try {
-      flowTracker.trackStep('Auth', 'Giriş isteği başlatıldı', 'AuthContext.login', { email });
-      
-      // AuthService üzerinden Firebase ile giriş yap
-      const response = await authService.login(email, password);
-      
-      flowTracker.trackStep('Auth', 'Giriş başarılı', 'AuthContext.login');
+      setLoading(true);
       
       logger.info(
-        `Kullanıcı girişi başarılı: ${email}`,
-        'AuthContext.login',
+        'Profil güncelleme başlatılıyor',
+        'AuthContext.updateProfile',
         'AuthContext.tsx',
-        426,
-        { userId: response.user.id }
-      );
-      
-      flowTracker.endSequence(seqId);
-      return response;
-    } catch (error) {
-      logger.error(
-        `Kullanıcı girişi başarısız: ${email}`,
-        'AuthContext.login',
-        'AuthContext.tsx',
-        436,
-        { error }
-      );
-      
-      // Kullanıcı dostu hata mesajı
-      setAuthError("Giriş yapılırken bir hata oluştu. Lütfen e-posta ve şifrenizi kontrol ediniz.");
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Giriş hatası', 
-        'AuthContext.login',
-        { email, error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
-      );
-      
-      flowTracker.endSequence(seqId);
-      throw error;
-    }
-  }, []);
-
-  // Register fonksiyonu
-  const register = useCallback(async (
-    email: string,
-    password: string,
-    userData: { firstName?: string; lastName?: string },
-  ) => {
-    const seqId = flowTracker.startSequence('UserRegistration');
-    
-    logger.info(
-      `Kullanıcı kaydı başlatıldı: ${email}`,
-      'AuthContext.register',
-      'AuthContext.tsx',
-      465
-    );
-    
-    setAuthError(null);
-    try {
-      flowTracker.trackStep('Auth', 'Kayıt isteği başlatıldı', 'AuthContext.register', { email });
-      
-      // AuthService üzerinden kayıt işlemi
-      const response = await authService.register(email, password, userData);
-      
-      flowTracker.trackStep('Auth', 'Kayıt başarılı', 'AuthContext.register');
-      
-      logger.info(
-        `Kullanıcı kaydı başarılı: ${email}`,
-        'AuthContext.register',
-        'AuthContext.tsx',
-        478,
-        { userId: response.user.id }
-      );
-      
-      flowTracker.endSequence(seqId);
-      return response;
-    } catch (error) {
-      logger.error(
-        `Kullanıcı kaydı başarısız: ${email}`,
-        'AuthContext.register',
-        'AuthContext.tsx',
-        488,
-        { error }
-      );
-      
-      // Kullanıcı dostu hata mesajı
-      setAuthError("Kayıt yapılırken bir hata oluştu. Lütfen bilgilerinizi kontrol edip tekrar deneyiniz.");
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Kayıt hatası', 
-        'AuthContext.register',
-        { email, error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
-      );
-      
-      flowTracker.endSequence(seqId);
-      throw error;
-    }
-  }, []);
-
-  // Google ile giriş fonksiyonu
-  const loginWithGoogle = useCallback(async () => {
-    const seqId = flowTracker.startSequence('GoogleLogin');
-    
-    logger.info(
-      'Google ile giriş başlatıldı',
-      'AuthContext.loginWithGoogle',
-      'AuthContext.tsx',
-      514
-    );
-    
-    setAuthError(null);
-    try {
-      flowTracker.trackStep('Auth', 'Google giriş popup açılıyor', 'AuthContext.loginWithGoogle');
-      
-      // AuthService üzerinden Google ile giriş
-      const response = await authService.loginWithGoogle();
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Google giriş başarılı', 
-        'AuthContext.loginWithGoogle',
-        { isNewUser: response.isNewUser }
-      );
-      
-      logger.info(
-        `Google ile giriş başarılı: ${response.user.email}`,
-        'AuthContext.loginWithGoogle',
-        'AuthContext.tsx',
-        531,
-        { 
-          userId: response.user.id, 
-          isNewUser: response.isNewUser
-        }
-      );
-      
-      flowTracker.endSequence(seqId);
-      return response;
-    } catch (error) {
-      logger.error(
-        'Google ile giriş başarısız',
-        'AuthContext.loginWithGoogle',
-        'AuthContext.tsx',
-        544,
-        { error }
-      );
-      
-      // Kullanıcı dostu hata mesajı
-      setAuthError("Google ile giriş yapılırken bir hata oluştu. Lütfen tekrar deneyiniz.");
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Google giriş hatası', 
-        'AuthContext.loginWithGoogle',
-        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
-      );
-      
-      flowTracker.endSequence(seqId);
-      throw error;
-    }
-  }, []);
-
-  // Profil güncelleme fonksiyonu
-  const updateProfile = useCallback(async (profileData: Partial<User>) => {
-    const seqId = flowTracker.startSequence('UpdateProfile');
-    
-    logger.info(
-      'Profil güncellemesi başlatıldı',
-      'AuthContext.updateProfile',
-      'AuthContext.tsx',
-      571,
-      { updatedFields: Object.keys(profileData) }
-    );
-    
-    setAuthError(null);
-    try {
-      flowTracker.trackStep(
-        'API', 
-        'Profil güncelleme isteği başlatıldı', 
-        'AuthContext.updateProfile'
+        587
       );
       
       // AuthService üzerinden profil güncelleme
-      const updatedProfile = await authService.updateProfile(profileData);
+      const updatedUser = await authService.updateProfile(profileData);
       
-      flowTracker.trackStep(
-        'Auth', 
-        'Profil güncelleme başarılı', 
-        'AuthContext.updateProfile'
-      );
+      // Güncel kullanıcı bilgilerini store'a kaydet
+      setUser(updatedUser);
       
-      logger.info(
-        `Profil güncelleme başarılı: ${updatedProfile.email}`,
-        'AuthContext.updateProfile',
-        'AuthContext.tsx',
-        591,
-        { userId: updatedProfile.id }
-      );
-      
-      flowTracker.endSequence(seqId);
-      return updatedProfile;
+      trackFlow('UpdateProfile başarılı', 'AuthContext.updateProfile', FlowCategory.User, { userId: updatedUser.id });
+      return updatedUser;
     } catch (error) {
-      logger.error(
-        'Profil güncelleme başarısız',
-        'AuthContext.updateProfile',
-        'AuthContext.tsx',
-        601,
-        { error }
-      );
-      
-      // Kullanıcı dostu hata mesajı
-      setAuthError("Profil güncellenirken bir hata oluştu. Lütfen tekrar deneyiniz.");
-      
-      flowTracker.trackStep(
-        'Auth', 
-        'Profil güncelleme hatası', 
-        'AuthContext.updateProfile',
-        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
-      );
-      
-      flowTracker.endSequence(seqId);
-      throw error;
+      // mapFirebaseAuthError yerine genel hata mesajı
+      const errorMessage = error instanceof Error ? error.message : 'Profil güncellenirken bilinmeyen bir hata oluştu';
+      trackFlow('UpdateProfile hatası', 'AuthContext.updateProfile', FlowCategory.Error, { error });
+      logger.error('UpdateProfile hatası', 'AuthContext.updateProfile', 'AuthContext.tsx', 485, { error });
+      setAuthError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  // Context provider değeri
-  const contextValue = useMemo(
+  // Şifre sıfırlama
+  const resetPassword = useCallback(async (email: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      logger.info(
+        'Şifre sıfırlama başlatılıyor',
+        'AuthContext.resetPassword',
+        'AuthContext.tsx',
+        624,
+        { email }
+      );
+      
+      // Firebase şifre sıfırlama e-postası gönder
+      await sendPasswordResetEmail(auth, email);
+      
+      logger.info(
+        'Şifre sıfırlama e-postası gönderildi',
+        'AuthContext.resetPassword',
+        'AuthContext.tsx',
+        633,
+        { email }
+      );
+      
+      return true;
+    } catch (error) {
+      // mapFirebaseAuthError yerine genel hata mesajı
+      const errorMessage = error instanceof Error ? error.message : 'Şifre sıfırlama sırasında bilinmeyen bir hata oluştu';
+      trackFlow('ResetPassword hatası', 'AuthContext.resetPassword', FlowCategory.Error, { error, email });
+      logger.error('ResetPassword hatası', 'AuthContext.resetPassword', 'AuthContext.tsx', 510, { error, email });
+      setAuthError(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Context değerini oluştur
+  const value = useMemo(
     () => ({
       isInitializing,
       authError,
       login,
-      register,
+      register: async (
+        email: string, 
+        password: string, 
+        userData: { firstName?: string; lastName?: string }
+      ) => {
+        try {
+          setLoading(true);
+          setAuthError(null);
+          
+          trackFlow('Kayıt işlemi başlatılıyor', 'AuthContext.register', FlowCategory.Auth);
+          
+          const response = await authService.register(email, password, userData);
+          setUser(response.user);
+          
+          trackFlow('Kayıt işlemi başarılı', 'AuthContext.register', FlowCategory.Auth);
+          
+          return response;
+        } catch (error) {
+          const errorMessage = authService.formatAuthError(error);
+          setAuthError(errorMessage);
+          trackFlow('Kayıt hatası', 'AuthContext.register', FlowCategory.Error, { error: errorMessage });
+          throw error;
+        } finally {
+          setLoading(false);
+        }
+      },
       loginWithGoogle,
       signOut,
       updateProfile,
@@ -794,7 +627,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isInitializing,
       authError,
       login,
-      register,
       loginWithGoogle,
       signOut,
       updateProfile,
@@ -803,11 +635,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ],
   );
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthContext;

@@ -100,8 +100,20 @@ export class UsersService {
       `Firebase UID ile kullanıcı aranıyor: ${firebaseUid}`,
       'UsersService',
     );
+    this.logger.debug(
+      `findByFirebaseUid çağrıldı. Aranan Firebase UID: ${firebaseUid}`,
+      'UsersService.findByFirebaseUid',
+      __filename,
+      70,
+    );
 
     try {
+      this.logger.debug(
+        `Firestore sorgusu: collection=${FIRESTORE_COLLECTIONS.USERS}, field=firebaseUid, value=${firebaseUid}`,
+        'UsersService.findByFirebaseUid',
+        __filename,
+        78,
+      );
       const user = await this.firebaseService.findOne<User>(
         FIRESTORE_COLLECTIONS.USERS,
         'firebaseUid',
@@ -111,17 +123,17 @@ export class UsersService {
 
       if (user) {
         this.logger.debug(
-          `Kullanıcı bulundu: ${firebaseUid}`,
+          `Kullanıcı bulundu (findByFirebaseUid): ${firebaseUid}, Kullanıcı ID: ${user.id}`,
           'UsersService.findByFirebaseUid',
           __filename,
-          82,
+          90,
         );
       } else {
         this.logger.debug(
-          `Kullanıcı bulunamadı: ${firebaseUid}`,
+          `Kullanıcı bulunamadı (findByFirebaseUid): ${firebaseUid}`,
           'UsersService.findByFirebaseUid',
           __filename,
-          88,
+          96,
         );
       }
 
@@ -456,16 +468,32 @@ export class UsersService {
    * Firebase Auth'dan gelen kullanıcı bilgilerine göre kullanıcıyı bulur veya oluşturur
    * Transaction kullanarak yarış koşullarını (race condition) önler
    */
-  async findOrCreateUser(firebaseUser: {
-    uid: string;
-    email: string;
-    displayName?: string;
-    photoURL?: string;
-  }): Promise<User> {
+  async findOrCreateUser(
+    firebaseUser: {
+      uid: string;
+      email: string;
+      displayName?: string;
+      photoURL?: string;
+    },
+    additionalData?: { firstName?: string; lastName?: string },
+  ): Promise<User> {
+    this.logger.debug(
+      `findOrCreateUser çağrıldı. FirebaseUser: ${JSON.stringify(firebaseUser)}, AdditionalData: ${JSON.stringify(additionalData)}`,
+      'UsersService.findOrCreateUser',
+      __filename,
+      460,
+    );
+
     // Önce kullanıcıyı kontrol et
     const existingUser = await this.findByFirebaseUid(firebaseUser.uid);
 
     if (existingUser) {
+      this.logger.debug(
+        `Mevcut kullanıcı bulundu (findOrCreateUser): ${existingUser.id}, Firebase UID: ${firebaseUser.uid}`,
+        'UsersService.findOrCreateUser',
+        __filename,
+        470,
+      );
       return existingUser;
     }
 
@@ -480,24 +508,48 @@ export class UsersService {
     // Firestore timestamp oluştur
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
+    // displayName'i oluştur: additionalData'dan al, yoksa Firebase'den, o da yoksa boş bırak
+    let finalDisplayName = '';
+    if (additionalData?.firstName && additionalData?.lastName) {
+      finalDisplayName = `${additionalData.firstName} ${additionalData.lastName}`;
+    } else if (firebaseUser.displayName) {
+      finalDisplayName = firebaseUser.displayName;
+    }
+
     // Yeni kullanıcı nesnesi
     const newUser: Omit<User, 'id' | 'createdAt' | 'updatedAt'> & {
       createdAt: admin.firestore.FieldValue;
       updatedAt: admin.firestore.FieldValue;
     } = {
       firebaseUid: firebaseUser.uid,
-      uid: firebaseUser.uid, // firebaseUid alanını uid'e kopyala
+      uid: firebaseUser.uid,
       email: firebaseUser.email,
-      displayName: firebaseUser.displayName,
+      displayName: finalDisplayName,
+      firstName:
+        additionalData?.firstName ||
+        firebaseUser.displayName?.split(' ')?.[0] ||
+        '',
+      lastName:
+        additionalData?.lastName ||
+        firebaseUser.displayName?.split(' ')?.[1] ||
+        '',
       role: 'USER',
       onboarded: false,
-      lastLogin: new Date(), // Şimdi giriş yapmış kabul et
+      lastLogin: new Date(),
       createdAt: timestamp,
       updatedAt: timestamp,
+      settings: { theme: ThemeType.LIGHT },
     };
 
     // Opsiyonel alanları sadece değerleri varsa ekle
     if (firebaseUser.photoURL) newUser.profileImageUrl = firebaseUser.photoURL;
+
+    this.logger.debug(
+      `Oluşturulacak yeni kullanıcı verisi: ${JSON.stringify(newUser)}`,
+      'UsersService.findOrCreateUser',
+      __filename,
+      515,
+    );
 
     // Yeni kullanıcı için belge referansı oluştur
     const newUserRef = this.firebaseService.firestore

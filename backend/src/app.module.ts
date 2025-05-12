@@ -1,23 +1,22 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { FirebaseModule } from './firebase/firebase.module';
-import { SharedModule } from './common/shared.module';
 import { UsersModule } from './users/users.module';
 import { CoursesModule } from './courses/courses.module';
 import { DocumentsModule } from './documents/documents.module';
-import { LearningTargetsModule } from './learning-targets/learning-targets.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
-import { AiModule } from './ai/ai.module';
-import { SentryModule } from '@ntegral/nestjs-sentry';
-import { CacheModule } from '@nestjs/cache-manager';
-import { JwtAuthGuard } from './auth/guards';
-import { Logger } from '@nestjs/common';
-import { CommonServicesModule } from './common/services/common-services.module';
+import { LearningTargetsModule } from './learning-targets/learning-targets.module';
+import { FirebaseModule } from './firebase/firebase.module';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { CommonServicesModule } from './common/services/common-services.module';
+import { SharedModule as CommonSharedModule } from './common/shared.module';
+import { SharedModule } from './shared/shared.module';
+import { AiModule } from './ai/ai.module';
+import { LoggerService } from './common/services/logger.service';
 import { FlowTrackerService } from './common/services/flow-tracker.service';
 
 @Module({
@@ -26,25 +25,36 @@ import { FlowTrackerService } from './common/services/flow-tracker.service';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    SharedModule,
-    FirebaseModule,
     AuthModule,
     UsersModule,
     CoursesModule,
     DocumentsModule,
-    LearningTargetsModule,
     QuizzesModule,
-    AiModule,
-    SentryModule,
-    CacheModule.register(),
+    LearningTargetsModule,
+    FirebaseModule,
     CommonServicesModule,
+    CommonSharedModule,
+    SharedModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      provide: LoggerService,
+      useFactory: () => LoggerService.getInstance(),
+    },
+    {
+      provide: FlowTrackerService,
+      useFactory: () => FlowTrackerService.getInstance(),
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
     {
       provide: APP_INTERCEPTOR,
@@ -52,22 +62,33 @@ import { FlowTrackerService } from './common/services/flow-tracker.service';
     },
   ],
 })
-export class AppModule implements OnModuleInit {
-  private readonly logger = new Logger(AppModule.name);
-  private readonly flowTracker: FlowTrackerService;
-
+export class AppModule {
   constructor(private readonly configService: ConfigService) {
-    this.flowTracker = FlowTrackerService.getInstance();
+    const logger = LoggerService.getInstance();
+    logger.info(
+      `JWT_SECRET yüklendi mi? ${configService.get('JWT_SECRET') ? 'Evet' : 'Hayır'}`,
+      'AppModule',
+      __filename,
+    );
+    FlowTrackerService.getInstance().track(
+      'Uygulama başlatılıyor...',
+      'AppModule',
+    );
+  }
+
+  configure(consumer: MiddlewareConsumer) {
+    FlowTrackerService.getInstance().track(
+      'Tüm modüller yüklendi',
+      'AppModule',
+    );
   }
 
   onModuleInit() {
-    const jwtSecret = this.configService.get('JWT_SECRET');
-    this.logger.log(`JWT_SECRET yüklendi mi? ${jwtSecret ? 'Evet' : 'Hayır'}`);
-
-    this.flowTracker.track('Uygulama başlatılıyor...', 'AppModule');
-    this.flowTracker.track('Tüm modüller yüklendi', 'AppModule');
-    this.flowTracker.track('Uygulama hazır', 'AppModule');
-
-    this.logger.log('Modül başlatma tamamlandı');
+    FlowTrackerService.getInstance().track('Uygulama hazır', 'AppModule');
+    LoggerService.getInstance().info(
+      'Modül başlatma tamamlandı',
+      'AppModule',
+      __filename,
+    );
   }
 }

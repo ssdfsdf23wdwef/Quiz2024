@@ -4,7 +4,7 @@ import React, { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthUser, useAuthStatus } from "@/store/auth.store";
-import { getLogger, getFlowTracker } from "@/lib/logger.utils";
+import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
 import type { User } from "@/types/user";
 
 // Logger ve flowTracker nesnelerini elde et
@@ -95,10 +95,10 @@ export default function ProtectedRoute({
                 }
               );
               
-              flowTracker.trackStep(
-                'Auth', 
+              trackFlow(
                 'Rol yetkisi reddedildi', 
                 'ProtectedRoute.verifyAuth',
+                FlowCategory.Auth,
                 { 
                   path: pathname,
                   requiredRoles, 
@@ -150,10 +150,10 @@ export default function ProtectedRoute({
             122
           );
           
-          flowTracker.trackStep(
-            'Auth', 
+          trackFlow(
             'Oturum kontrolü başarılı', 
-            'ProtectedRoute.verifyAuth'
+            'ProtectedRoute.verifyAuth',
+            FlowCategory.Auth
           );
           
           // Zustand store'u auth context tarafından zaten güncellendi
@@ -166,10 +166,10 @@ export default function ProtectedRoute({
             136
           );
           
-          flowTracker.trackStep(
-            'Auth', 
+          trackFlow(
             'Oturum kontrolü başarısız, yönlendiriliyor', 
             'ProtectedRoute.verifyAuth',
+            FlowCategory.Auth,
             { redirectTo: redirectUrl }
           );
           

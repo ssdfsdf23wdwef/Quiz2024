@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { useAuthStore } from "@/store/auth.store";
-import { getLogger, getFlowTracker } from "@/lib/logger.utils";
-import { firebaseApp } from "@/app/firebase/config";
+import { useAuthStore, AuthState } from "@/store/auth.store";
+import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
+import { app } from "@/app/firebase/config";
+import { FirebaseError } from "firebase/app";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
@@ -16,7 +17,8 @@ const flowTracker = getFlowTracker();
  * App kök bileşenine eklenmelidir
  */
 export default function FirebaseAuthInitializer() {
-  const { setFirebaseUser, setLoading } = useAuthStore();
+  const authStore = useAuthStore();
+  const { setFirebaseUser, setLoading } = authStore as unknown as AuthState;
   
   useEffect(() => {
     const seqId = flowTracker.startSequence('FirebaseAuthInitialization');
@@ -31,7 +33,7 @@ export default function FirebaseAuthInitializer() {
     setLoading(true);
     
     // Firebase Auth nesnesini al
-    const auth = getAuth(firebaseApp);
+    const auth = getAuth(app);
     
     // Auth değişikliklerini izleyen unsubscribe fonksiyonu
     const unsubscribe = onAuthStateChanged(
@@ -51,10 +53,10 @@ export default function FirebaseAuthInitializer() {
         
         // Akış izleme
         if (firebaseUser) {
-          flowTracker.trackStep(
-            'Auth', 
+          trackFlow(
             'Firebase kullanıcısı algılandı', 
             'FirebaseAuthInitializer',
+            FlowCategory.Auth,
             { 
               email: firebaseUser.email,
               emailVerified: firebaseUser.emailVerified,
@@ -62,10 +64,10 @@ export default function FirebaseAuthInitializer() {
             }
           );
         } else {
-          flowTracker.trackStep(
-            'Auth', 
+          trackFlow(
             'Firebase kullanıcısı bulunamadı', 
-            'FirebaseAuthInitializer'
+            'FirebaseAuthInitializer',
+            FlowCategory.Auth
           );
         }
       },
@@ -82,11 +84,17 @@ export default function FirebaseAuthInitializer() {
         setLoading(false);
         setFirebaseUser(null);
         
-        flowTracker.trackStep(
-          'Auth', 
+        // FirebaseError kontrolü ekleyerek 'code' özelliğine güvenli erişim
+        let errorCode = 'unknown';
+        if (error instanceof FirebaseError) {
+          errorCode = error.code;
+        }
+        
+        trackFlow(
           'Firebase Auth hatası', 
           'FirebaseAuthInitializer',
-          { errorCode: error.code, errorMessage: error.message }
+          FlowCategory.Auth,
+          { errorCode: errorCode, errorMessage: error.message }
         );
       }
     );

@@ -9,7 +9,14 @@ import { FlowTrackerService } from './flow-tracker.service';
  */
 @Global()
 @Module({
-  providers: [ErrorService, LoggerService, FlowTrackerService],
-  exports: [ErrorService, LoggerService, FlowTrackerService],
+  providers: [
+    ErrorService,
+    FlowTrackerService,
+    {
+      provide: LoggerService, // LoggerService token'ı
+      useFactory: () => LoggerService.getInstance(), // Singleton instance'ı döndüren fabrika
+    },
+  ],
+  exports: [ErrorService, FlowTrackerService, LoggerService], // LoggerService'i export etmeyi unutma
 })
 export class CommonServicesModule {}

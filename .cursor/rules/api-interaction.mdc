@@ -1,6 +1,9 @@
 ---
-description: 
-globs: 
+description: "api-interaction kuralları" 
+globs:
+  - "frontend/src/services/**/*"
+  - "frontend/src/hooks/use*Query.ts"
+  - "frontend/src/hooks/use*Mutation.ts" 
 alwaysApply: false
 ---
 # API Etkileşimi ve Veri Yönetimi

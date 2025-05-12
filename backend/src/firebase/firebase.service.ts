@@ -1,21 +1,21 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as admin from 'firebase-admin';
-import { ConfigService } from '@nestjs/config';
 import { ServiceAccount } from 'firebase-admin';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
+import * as path from 'path';
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
+  public auth: admin.auth.Auth;
+  public firestore: admin.firestore.Firestore;
+  public db: admin.firestore.Firestore;
+  public storage: admin.storage.Storage;
   private readonly logger: LoggerService;
   private readonly flowTracker: FlowTrackerService;
-  public readonly auth: admin.auth.Auth;
-  public readonly firestore: admin.firestore.Firestore;
-  public readonly db: admin.firestore.Firestore;
-  public readonly storage: admin.storage.Storage;
 
-  constructor(private configService: ConfigService) {
+  constructor() {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
     this.flowTracker.trackStep(
@@ -23,193 +23,107 @@ export class FirebaseService implements OnModuleInit {
       'FirebaseService',
     );
 
-    // Firebase Admin SDK'yı başlat
-    if (!admin.apps.length) {
-      try {
-        // Ortam değişkenlerini kontrol et
-        const projectId =
-          this.configService.get<string>('FIREBASE_PROJECT_ID') ||
-          'my-app-71530';
-        const privateKey =
-          this.configService.get<string>('FIREBASE_PRIVATE_KEY') ||
-          '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCwM9f7msv0Cafc\nrzaWYtbgQC8VOUWPam72ga1NEIH+8yB9k7AOZ/3T7xSNouUPN+KZcOdmJu/RmONJ\nOwIAcVzvzPBJyRH36D6mq7Y21wyTGZ4EgVlqQijDytnaNblvdT5lDGontaFIJjBB\nBKdDd85zVj448IxbZiOc3nabneIZuEHopqGbQDDhW+QEiK2uCDJQADbVCRMNfAN4\n3hF/DpYk19IY+FzIhkLAoBCWzqztdBlEYjbMlFjLjO/XXi9TV+GhV93Nt3ynCy7g\nAV+X6DPcXvEEgbmssZOh7yzxxaJWcr8YC1A4vjJARUJoWNNVddBEIIOg85lGQIfM\nM4nirAVBAgMBAAECggEAQuCikQ5ba/hAPLxKCUFhkkL6O+F9e+YnUKu+hboGxSgt\nhExKbeVdi5O6ZtnVe/W3rYqTYYvUyWZwmgpqA5YDcscDytWk2sXNBcC1y9HKpYh7\nF/WqZPDQfSPglPiANgQ3lu3j2seO/A32ka7891ghRViODFmMxGIbkT5EoWMG/sB0\nNXJZZc2RAiilvsf0TH1V74cusKNsqJ4KFm6+mzTNIJW4J2cR7ODSd92DEJhLR8zd\nd7i6w3CobCgL2XO2L33bg+E1RX8fILkZklhj8l++vSW0sVzz+Io9gfr3IOOJTajw\n+mPkgLkthJdvKmxfBTciRDyq9or8Q7zNK3D33j+/MwKBgQD3Xyh0H9sy+gOgBtz6\nIqrQIFaLBsnZdEnwerF7Y9HHXWpM9zNT5wA2LKMqZwPUfe6hbAzrcyq3lf+6zDKj\njPq3E9/Nn1RG690Lu+4u43STyqxKQ3/C8SJTjywOsqwtEAgdP+H8SC8JkrlfFSct\nFMR6H4tds6i6BIINeauKj2CDawKBgQC2WTLaxX//w6A/GRNKkJoTAjf+BxDqItRC\nJ5rgZwVqILGzKk83rXyGmWlrm1I1NXhAOl6acbEDnWZjEWas4t3Cr8tnTu5OO2l5\n2Ufa1ryCef/R5qnSkq3M9B/Jz13FrouJ00t4ud4RWAyGp7gQdOaXRRbp511ws5MH\nAca6HekxAwKBgDQxu9NktVd4MTOevxl4Hxpy+E+1Svm6867t9GzYjvbF2xwKPKZD\nY2QK3xKfUcuQFr2wkrlLP4Qk/iRn2Xdw06W1Z893As1EDwvex07VZ0+Xv+qbe2Wi\ng1+mIeGoCXQooc2qIQCeKm6Wqs5JJE76xsoNxdYrhjpZoSc+uNcvkWmpAoGAWgPu\ndtDIPxnzITLfsw9u/7M4sM4MK4jF/2JNsjkpExrQngFk2bdqoYdZ4yTpkBq1If+u\nc89r8rzgrkcIyI+1qUXew0DTowrxJpV8Qyt+I2rWPmf/rVN7OJHKn3UedVeUypTj\nzNT0KtusU0y4MGeE7WfNx+nO1rPPAMZ/s6DQXMECgYEA7RZZDEq5C2ZOPZNxAIpp\nc9F9+QO9Iu7ZncaNSJieN9PsC46tddyAdwY4YfMhk0PYJV9Iy0QGt0TT84vzR7cx\nrdnABxR/IpvdPpmB11lFCB5j6NVSy6wU8h32B5K7qY/A0wliIO7fyJyQisFmcwBC\nGh7t9fXPHYoUrf84aVkJp/c=\n-----END PRIVATE KEY-----';
-        const clientEmail =
-          this.configService.get<string>('FIREBASE_CLIENT_EMAIL') ||
-          'firebase-adminsdk-fbsvc@my-app-71530.iam.gserviceaccount.com';
-        const databaseURL =
-          this.configService.get<string>('FIREBASE_DATABASE_URL') ||
-          'https://my-app-71530-default-rtdb.firebaseio.com';
-        const storageBucket =
-          this.configService.get<string>('FIREBASE_STORAGE_BUCKET') ||
-          'my-app-71530.appspot.com';
-
-        // Gerekli değişkenlerin kontrolü - validasyonu geçici olarak kaldırıldı
-        /*if (!projectId || !privateKey || !clientEmail) {
-          throw new Error(
-            'Firebase yapılandırma bilgileri eksik. FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY ve FIREBASE_CLIENT_EMAIL ortam değişkenleri gereklidir.',
-          );
-        }*/
-
-        // privateKey'deki tırnak işaretleri ve escape karakterlerle ilgili sorunları gider
-        const formattedPrivateKey = privateKey
-          .replace(/\\n/g, '\n')
-          .replace(/^"/, '')
-          .replace(/"$/, '');
-
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId,
-            privateKey: formattedPrivateKey,
-            clientEmail,
-          } as ServiceAccount),
-          databaseURL,
-          storageBucket,
-        });
-        this.logger.info(
-          'Firebase Admin başarıyla başlatıldı',
-          'FirebaseService.constructor',
-          __filename,
-          67,
-        );
-      } catch (error) {
-        this.logger.error(
-          `Firebase Admin başlatılamadı: ${error.message}`,
-          'FirebaseService.constructor',
-          __filename,
-          72,
-        );
-        this.logger.error(
-          'Lütfen .env dosyasındaki Firebase yapılandırma bilgilerini kontrol edin.',
-          'FirebaseService.constructor',
-          __filename,
-          77,
-        );
-        // Kritik bir hata, uygulamanın düzgün çalışması için bu servisin başarıyla başlatılması gerekli
-        throw error;
-      }
-    }
-
-    this.auth = admin.auth();
-    this.firestore = admin.firestore();
-    this.db = admin.firestore();
-    this.storage = admin.storage();
-  }
-
-  @LogMethod()
-  async onModuleInit() {
-    this.logger.info(
-      'FirebaseService başlatıldı',
-      'FirebaseService.onModuleInit',
-      __filename,
-      93,
-    );
-    this.flowTracker.trackStep(
-      'Firebase servisi başlatıldı',
-      'FirebaseService',
+    // Ortam değişkeni yerine doğrudan yolu kullan ve path.join ile çöz
+    const serviceAccountFileName =
+      'my-app-71530-firebase-adminsdk-fbsvc-1183a244eb.json';
+    // __dirname, çalışan JS dosyasının olduğu dizindir (dist/firebase)
+    // ../../secrets/ yoluna ulaşmak için
+    const absolutePath = path.join(
+      __dirname,
+      '../../secrets',
+      serviceAccountFileName,
     );
 
     try {
-      // Firebase servis hesabı anahtarını ortam değişkeninden oku
-      const serviceAccountJsonString = this.configService.get<string>(
-        'FIREBASE_SERVICE_ACCOUNT_KEY_JSON',
+      // Servis anahtarı dosyasının varlığını kontrol et (isteğe bağlı ama önerilir)
+      // const serviceAccount = require(absolutePath); // Bu da bir yöntemdir
+      // Veya fs modülü kullanılabilir: import * as fs from 'fs'; fs.existsSync(absolutePath)
+
+      this.logger.info(
+        `Firebase servis anahtarı yolu deneniyor: ${absolutePath}`,
+        'FirebaseService.constructor',
       );
-      const storageBucket = this.configService.get<string>(
-        'FIREBASE_STORAGE_BUCKET',
+
+      // admin.apps kontrolünü initializeApp'ten önce yapmaya gerek yok,
+      // initializeApp zaten tekrar başlatmayı engeller.
+      admin.initializeApp({
+        credential: admin.credential.cert(absolutePath),
+        // Storage bucket'ı da burada veya .env'den alıp ekleyebiliriz. Şimdilik kaldıralım.
+        // storageBucket: this.configService.get<string>('FIREBASE_STORAGE_BUCKET')
+      });
+
+      this.logger.info(
+        'Firebase Admin başarıyla başlatıldı (Doğrudan Yol ile)',
+        'FirebaseService.constructor',
+        __filename,
+        67, // Satır numarası yaklaşık
       );
 
-      // Servis hesabı JSON stringi kontrolü
-      if (!serviceAccountJsonString) {
-        this.logger.warn(
-          'Firebase servis hesabı anahtarı JSON stringi tanımlanmamış. Geliştirme modu kullanılıyor.',
-          'FirebaseService.onModuleInit',
-          __filename,
-          110,
-        );
-
-        // Geliştirme ortamında mı?
-        const isDevelopment =
-          this.configService.get<string>('NODE_ENV') !== 'production';
-
-        if (!isDevelopment) {
-          // Üretim ortamında ise hata fırlat
-          throw new Error(
-            'Firebase servis hesabı anahtarı JSON stringi tanımlanmamış.',
-          );
-        } else {
-          // Geliştirme ortamında ise uyarı ver ve devam et
-          this.logger.warn(
-            'Geliştirme modu: Firebase kimlik doğrulama ve veritabanı işlemleri sınırlı olacak',
-            'FirebaseService.onModuleInit',
-            __filename,
-            125,
-          );
-          return; // Burada metoddan çık, dummy hesap kullanma
-        }
-      }
-
-      // Storage bucket kontrolü
-      if (!storageBucket) {
-        this.logger.warn(
-          'Firebase storage bucket tanımlanmamış.',
-          'FirebaseService.onModuleInit',
-          __filename,
-          136,
-        );
-      }
-
-      // JSON stringi parse et
-      const serviceAccount = JSON.parse(
-        serviceAccountJsonString,
-      ) as ServiceAccount;
-
-      // Eğer zaten başlatılmışsa yeniden başlatmayı atla
-      if (admin.apps.length === 0) {
-        const appOptions: admin.AppOptions = {
-          credential: admin.credential.cert(serviceAccount),
-        };
-
-        if (storageBucket) {
-          appOptions.storageBucket = storageBucket;
-        }
-
-        // Firebase Admin SDK'yı başlat
-        admin.initializeApp(appOptions);
-
-        // Await için bir Promise kullanıyoruz (linter hatasını gidermek için)
-        await Promise.resolve();
-
+      // Başlatma başarılıysa servisleri ata
+      this.auth = admin.auth();
+      this.firestore = admin.firestore();
+      this.db = this.firestore;
+      // Storage için bucket adı lazım olacak, şimdilik yorumda bırakalım veya varsayılanı kullanır
+      try {
+        this.storage = admin.storage(); // Varsayılan bucket'ı kullanmayı dener
         this.logger.info(
-          'Firebase Admin SDK initialized successfully.',
-          'FirebaseService.onModuleInit',
-          __filename,
-          161,
+          'Storage servisi (varsayılan bucket) atandı.',
+          'FirebaseService.constructor',
+        );
+      } catch (storageError) {
+        this.logger.warn(
+          `Varsayılan Storage bucket'ı başlatılamadı: ${storageError.message}. Storage işlemleri için bucket adı yapılandırılmalı.`,
+          'FirebaseService.constructor',
         );
       }
     } catch (error) {
       this.logger.error(
-        `Firebase servis hesabı anahtarı yapılandırması sırasında hata: ${error.message}`,
-        'FirebaseService.onModuleInit',
+        `Firebase Admin başlatılamadı (Doğrudan Yol ile): ${error.message}`,
+        'FirebaseService.constructor',
         __filename,
-        168,
+        72, // Satır numarası yaklaşık
       );
-
-      // Geliştirme ortamında mı?
-      const isDevelopment =
-        this.configService.get<string>('NODE_ENV') !== 'production';
-
-      if (isDevelopment) {
-        // Geliştirme ortamında hataları göster ama uygulamayı çökertme
-        this.logger.warn(
-          'Geliştirme modu: Firebase hatası görmezden geliniyor',
-          'FirebaseService.onModuleInit',
-          __filename,
-          179,
-        );
-      } else {
-        // Üretim ortamında kritik hata olduğu için hatayı yeniden fırlat
-        throw error;
-      }
+      this.logger.error(
+        `Lütfen ${absolutePath} yolunu ve dosya içeriğini kontrol edin. Kodun çalıştığı dizin: ${process.cwd()}, __dirname: ${__dirname}`,
+        'FirebaseService.constructor',
+        __filename,
+        85, // Satır numarası yaklaşık
+      );
+      // Hata durumunda servislerin null/undefined kalmasını sağla
+      // ve uygulamanın başlamasını engellemek isteyebilirsin: throw error;
     }
+  }
+
+  @LogMethod()
+  async onModuleInit() {
+    const startTime = Date.now();
+    this.logger.info(
+      'FirebaseService onModuleInit başlıyor',
+      'FirebaseService.onModuleInit',
+      __filename,
+      93, // Satır numarası yaklaşık
+    );
+
+    // Bu kısım constructor'a taşındığı için kaldırıldı.
+    // Gerekirse başka onModuleInit işlemleri buraya eklenebilir.
+
+    // Servislerin constructor'da atanıp atanmadığını kontrol et (opsiyonel loglama)
+    if (this.auth && this.firestore) {
+      this.logger.info(
+        'Firebase servisleri (Auth, Firestore) onModuleInit sırasında mevcut.',
+        'FirebaseService.onModuleInit',
+      );
+    } else {
+      this.logger.error(
+        'Firebase servisleri onModuleInit sırasında EKSİK! Constructor başlatması başarısız olmuş olabilir.',
+        'FirebaseService.onModuleInit',
+      );
+    }
+
+    this.logger.info(
+      `FirebaseService onModuleInit tamamlandı (${Date.now() - startTime}ms)`,
+      'FirebaseService.onModuleInit',
+    );
   }
 
   // Kullanıcı doğrulama yardımcı metodu
@@ -275,10 +189,12 @@ export class FirebaseService implements OnModuleInit {
       );
       const startTime = Date.now();
 
-      const bucketName = this.configService.get<string>(
-        'FIREBASE_STORAGE_BUCKET',
-      );
-      const bucket = admin.storage().bucket(bucketName);
+      if (!this.storage) {
+        throw new Error(
+          'Firebase Storage servisi başlatılamadı veya mevcut değil.',
+        );
+      }
+      const bucket = this.storage.bucket();
       const file = bucket.file(destination);
       await file.save(buffer, {
         metadata: { contentType },
@@ -290,7 +206,7 @@ export class FirebaseService implements OnModuleInit {
         `Dosya yükleme tamamlandı (${endTime - startTime}ms)`,
         'FirebaseService',
       );
-      return `https://storage.googleapis.com/${bucketName}/${destination}`;
+      return `https://storage.googleapis.com/${bucket.name}/${destination}`;
     } catch (error) {
       this.logger.logError(error, 'FirebaseService.uploadFile', {
         destination,
@@ -311,10 +227,12 @@ export class FirebaseService implements OnModuleInit {
       );
       const startTime = Date.now();
 
-      const bucketName = this.configService.get<string>(
-        'FIREBASE_STORAGE_BUCKET',
-      );
-      const bucket = admin.storage().bucket(bucketName);
+      if (!this.storage) {
+        throw new Error(
+          'Firebase Storage servisi başlatılamadı veya mevcut değil.',
+        );
+      }
+      const bucket = this.storage.bucket();
       const file = bucket.file(storagePath);
       await file.delete();
 
@@ -515,50 +433,67 @@ export class FirebaseService implements OnModuleInit {
    * @param value Değer
    * @returns İlk eşleşen belge
    */
-  @LogMethod({ trackParams: true })
+  @LogMethod()
   async findOne<T>(
     collection: string,
     field: string,
     operator: FirebaseFirestore.WhereFilterOp,
     value: any,
   ): Promise<(T & { id: string }) | null> {
-    try {
-      this.flowTracker.trackStep(
-        `${collection} koleksiyonundan ${field} ${operator} ${value} için döküman alınıyor`,
-        'FirebaseService',
-      );
-      const startTime = Date.now();
+    const startTime = Date.now();
+    const logContext = 'FirebaseService.findOne';
+    const operationDesc = `${collection} koleksiyonundan ${field} ${operator} ${value} için döküman alınıyor`;
 
-      const querySnapshot = await this.firestore
-        .collection(collection)
+    this.flowTracker.trackStep(operationDesc, 'FirebaseService');
+
+    try {
+      const collectionRef = this.firestore.collection(collection);
+      const querySnapshot = await collectionRef
         .where(field, operator, value)
         .limit(1)
         .get();
 
-      if (querySnapshot.empty) {
-        return null;
-      }
-
-      const doc = querySnapshot.docs[0];
       const endTime = Date.now();
       this.flowTracker.trackDbOperation(
         'READ',
         collection,
         endTime - startTime,
-        'FirebaseService',
+        'FirebaseService.findOne',
+      );
+
+      if (querySnapshot.empty) {
+        this.logger.debug(
+          `Döküman bulunamadı: ${operationDesc}`,
+          logContext,
+          __filename,
+          455,
+        );
+        return null;
+      }
+
+      const doc = querySnapshot.docs[0];
+      const data = doc.data() as T;
+
+      this.logger.debug(
+        `Döküman bulundu: ${doc.id}`,
+        logContext,
+        __filename,
+        468,
+        { documentId: doc.id },
       );
 
       return {
-        ...(doc.data() as T),
         id: doc.id,
+        ...data,
       };
     } catch (error) {
-      this.logger.error(
-        `Firestore sorgu hatası: ${error.message}`,
-        'FirebaseService.findOne',
-        __filename,
-        541,
-      );
+      this.logger.logError(error, logContext, {
+        collection,
+        field,
+        operator,
+        value,
+        additionalInfo: 'findOne işlemi sırasında hata oluştu',
+      });
       throw error;
     }
   }

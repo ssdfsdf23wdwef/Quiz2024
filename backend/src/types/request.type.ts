@@ -1,7 +1,9 @@
+import { Request } from 'express';
+
 /**
  * Kimlik bilgisine sahip istek
  */
-export interface RequestWithUser {
+export interface RequestWithUser extends Request {
   user: {
     id: string;
     uid: string;

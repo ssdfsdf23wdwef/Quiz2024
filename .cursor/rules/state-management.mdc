@@ -1,6 +1,7 @@
 ---
-description: 
-globs: 
+description: "State yönetimi kuralları ve standartları"
+globs:
+  - "frontend/src/store/**/*" 
 alwaysApply: true
 ---
 # State Yönetimi

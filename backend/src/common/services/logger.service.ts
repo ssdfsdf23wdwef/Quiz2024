@@ -22,9 +22,22 @@ interface LogEntry {
   message: string;
   context: string;
   filePath?: string;
-  lineNumber?: number;
+  lineNumber?: string;
   stack?: string;
   additionalInfo?: Record<string, any>;
+}
+
+/**
+ * Logger yapılandırma seçenekleri
+ */
+export interface LoggerOptions {
+  enabled?: boolean;
+  logToConsole?: boolean;
+  logToFile?: boolean;
+  logDir?: string;
+  errorLogPath?: string;
+  clearLogsOnStartup?: boolean;
+  minLevel?: LogLevel;
 }
 
 /**
@@ -37,19 +50,35 @@ export class LoggerService {
   private readonly logDir: string;
   private readonly errorLogPath: string;
   private static instance: LoggerService;
+  private readonly enabled: boolean;
+  private readonly logToConsole: boolean;
+  private readonly logToFile: boolean;
+  private readonly minLevel: LogLevel;
 
-  constructor() {
+  constructor(options?: LoggerOptions) {
+    // Seçenekleri başlat
+    this.enabled = options?.enabled ?? true;
+    this.logToConsole =
+      options?.logToConsole ?? process.env.NODE_ENV !== 'production';
+    this.logToFile = options?.logToFile ?? true; // Dosya loglaması varsayılan olarak aktif
+    this.minLevel =
+      options?.minLevel ??
+      (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG);
+
     // Log dizini oluşturma
-    this.logDir = path.join(process.cwd(), 'logs');
+    this.logDir = options?.logDir ?? path.join(process.cwd(), 'logs');
 
     if (!fs.existsSync(this.logDir)) {
       fs.mkdirSync(this.logDir, { recursive: true });
     }
 
-    this.errorLogPath = path.join(this.logDir, 'error.log');
+    this.errorLogPath =
+      options?.errorLogPath ?? path.join(this.logDir, 'error.log');
 
     // Uygulama başlatıldığında log dosyasını temizle
-    this.clearLogFile();
+    if (this.logToFile && (options?.clearLogsOnStartup ?? true)) {
+      this.clearLogFile();
+    }
 
     LoggerService.instance = this;
   }
@@ -57,9 +86,9 @@ export class LoggerService {
   /**
    * Singleton pattern ile logger instance'ı döndürür
    */
-  public static getInstance(): LoggerService {
+  public static getInstance(options?: LoggerOptions): LoggerService {
     if (!LoggerService.instance) {
-      LoggerService.instance = new LoggerService();
+      LoggerService.instance = new LoggerService(options);
     }
     return LoggerService.instance;
   }
@@ -67,8 +96,50 @@ export class LoggerService {
   /**
    * Log dosyasını temizler
    */
-  private clearLogFile(): void {
-    fs.writeFileSync(this.errorLogPath, '', { encoding: 'utf8' });
+  clearLogFile(): void {
+    if (this.logToFile) {
+      try {
+        fs.writeFileSync(this.errorLogPath, '', { encoding: 'utf8' });
+        if (this.logToConsole) {
+          console.log(`🧹 Log dosyası temizlendi: ${this.errorLogPath}`);
+        }
+      } catch (err) {
+        console.error('Log dosyası temizlenirken hata oluştu:', err);
+      }
+    }
+  }
+
+  /**
+   * Log dosyasının içeriğini getirir
+   */
+  getLogFileContent(): string {
+    if (!this.logToFile) {
+      return '';
+    }
+
+    try {
+      return fs.readFileSync(this.errorLogPath, { encoding: 'utf8' });
+    } catch (err) {
+      console.error('Log dosyası okunurken hata oluştu:', err);
+      return '';
+    }
+  }
+
+  /**
+   * Log dosyasını indirmek için içeriğini döndürür
+   * @returns Buffer olarak log dosyası içeriği
+   */
+  getLogFileBuffer(): Buffer {
+    if (!this.logToFile) {
+      return Buffer.from('');
+    }
+
+    try {
+      return fs.readFileSync(this.errorLogPath);
+    } catch (err) {
+      console.error('Log dosyası okunurken hata oluştu:', err);
+      return Buffer.from('');
+    }
   }
 
   /**
@@ -86,10 +157,22 @@ export class LoggerService {
     message: string,
     context: string,
     filePath?: string,
-    lineNumber?: number,
+    lineNumber?: string,
     stack?: string,
     additionalInfo?: Record<string, any>,
   ): void {
+    // Log seviyeleri için minimum seviye kontrolü
+    const levelValues: Record<LogLevel, number> = {
+      [LogLevel.ERROR]: 3,
+      [LogLevel.WARN]: 2,
+      [LogLevel.INFO]: 1,
+      [LogLevel.DEBUG]: 0,
+    };
+
+    if (!this.enabled || levelValues[level] < levelValues[this.minLevel]) {
+      return;
+    }
+
     const timestamp = new Date().toISOString();
 
     const logEntry: LogEntry = {
@@ -103,15 +186,73 @@ export class LoggerService {
       additionalInfo,
     };
 
-    const logString = `${JSON.stringify(logEntry)}\n`;
+    // Konsola log
+    if (this.logToConsole) {
+      this.logToConsoleFormatted(logEntry);
+    }
 
-    // Log dosyasına asenkron olarak yaz
-    fs.appendFile(this.errorLogPath, logString, (err) => {
-      if (err) {
-        // Burada console.error kullanıyoruz çünkü log mekanizmasının kendisi çalışmıyor
-        console.error('Log dosyasına yazılırken hata oluştu:', err);
-      }
-    });
+    // Dosyaya log
+    if (this.logToFile) {
+      // Geliştirilmiş log formatı
+      const formattedEntry = this.formatLogEntryForFile(logEntry);
+      // Log dosyasına asenkron olarak yaz
+      fs.appendFile(this.errorLogPath, formattedEntry, (err) => {
+        if (err) {
+          // Burada console.error kullanıyoruz çünkü log mekanizmasının kendisi çalışmıyor
+          console.error('Log dosyasına yazılırken hata oluştu:', err);
+        }
+      });
+    }
+  }
+
+  /**
+   * Log girdisini konsola formatlanmış şekilde yazar
+   */
+  private logToConsoleFormatted(entry: LogEntry): void {
+    const { timestamp, level, message, context, filePath, lineNumber } = entry;
+    const time = timestamp.split('T')[1].slice(0, -1);
+    let logFn = console.log;
+
+    // Renk ve log fonksiyonu seçimi
+    switch (level) {
+      case LogLevel.ERROR:
+        logFn = console.error;
+        break;
+      case LogLevel.WARN:
+        logFn = console.warn;
+        break;
+      case LogLevel.INFO:
+        logFn = console.info;
+        break;
+      case LogLevel.DEBUG:
+        logFn = console.debug;
+        break;
+    }
+
+    const locationInfo = filePath
+      ? ` (${filePath}${lineNumber ? `:${lineNumber}` : ''})`
+      : '';
+    logFn(
+      `[${time}] [${level.toUpperCase()}] [${context}]${locationInfo} ${message}`,
+    );
+
+    // Eğer ek bilgiler varsa onları da yazdır
+    if (entry.additionalInfo && Object.keys(entry.additionalInfo).length > 0) {
+      logFn('Additional Info:', entry.additionalInfo);
+    }
+
+    // Eğer stack bilgisi varsa onu da yazdır
+    if (entry.stack) {
+      logFn('Stack Trace:', entry.stack);
+    }
+  }
+
+  /**
+   * Log girdisini dosya için formatlar
+   */
+  private formatLogEntryForFile(entry: LogEntry): string {
+    // JSON formatında log kayıtları
+    return JSON.stringify(entry) + '\n';
   }
 
   /**
@@ -127,7 +268,7 @@ export class LoggerService {
     message: string,
     context: string,
     filePath?: string,
-    lineNumber?: number,
+    lineNumber?: string,
     error?: Error,
     additionalInfo?: Record<string, any>,
   ): void {
@@ -138,7 +279,9 @@ export class LoggerService {
       filePath,
       lineNumber,
       error?.stack,
-      additionalInfo,
+      additionalInfo
+        ? { ...additionalInfo, errorName: error?.name }
+        : { errorName: error?.name },
     );
   }
 
@@ -154,7 +297,10 @@ export class LoggerService {
     message: string,
     context: string,
     filePath?: string,
-    lineNumber?: number,
+    p0?: string,
+    p1?: string,
+    __filename?: string,
+    lineNumber?: string,
     additionalInfo?: Record<string, any>,
   ): void {
     this.log(
@@ -180,7 +326,7 @@ export class LoggerService {
     message: string,
     context: string,
     filePath?: string,
-    lineNumber?: number,
+    lineNumber?: string,
     additionalInfo?: Record<string, any>,
   ): void {
     this.log(
@@ -206,7 +352,7 @@ export class LoggerService {
     message: string,
     context: string,
     filePath?: string,
-    lineNumber?: number,
+    lineNumber?: string,
     additionalInfo?: Record<string, any>,
   ): void {
     this.log(
@@ -234,14 +380,14 @@ export class LoggerService {
     // Hata yığınından dosya yolu ve satır numarası çıkarma
     const stackLines = error.stack?.split('\n') || [];
     let filePath: string | undefined;
-    let lineNumber: number | undefined;
+    let lineNumber: string | undefined;
 
     if (stackLines.length > 1) {
       // İlk satır hata mesajı, ikinci satır çağrı yığını
       const match = stackLines[1].match(/at\s+(.+)\s+\((.+):(\d+):(\d+)\)/);
       if (match) {
         filePath = match[2];
-        lineNumber = parseInt(match[3], 10);
+        lineNumber = match[3];
       }
     }
 

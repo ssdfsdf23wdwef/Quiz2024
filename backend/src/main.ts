@@ -36,15 +36,30 @@ async function bootstrap() {
 
   // CORS ayarları - Frontend ile iletişim için daha açık yapılandırma
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      configService.get('CORS_ORIGIN', '*'),
-    ],
+    origin: (origin, callback) => {
+      // Geliştirme ortamında daha geniş izin ver
+      const whitelist = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:4000',
+        'http://localhost:5000',
+        configService.get('CORS_ORIGIN'),
+      ].filter(Boolean);
+
+      // Eğer origin null ise (örn. Postman isteği) veya izin verilen listede ise
+      if (!origin || whitelist.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        const msg = `CORS politikası bu kaynağa erişimi reddetti: ${origin}`;
+        loggerService.warn(msg, 'CORS.check', __filename);
+        callback(new Error(msg), false);
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     exposedHeaders: ['Authorization'],
+    maxAge: 3600, // 1 saat önbellek
   });
 
   flowTracker.track('CORS ayarları yapılandırıldı', 'Bootstrap');

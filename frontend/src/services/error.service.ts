@@ -1,9 +1,9 @@
-import { getLogger, getFlowTracker } from "@/lib/logger.utils";
+import { getLogger, FlowCategory, trackFlow } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
+import { ErrorService as ErrorToastService } from "./errorService";
 
-// Logger ve flowTracker nesnelerini elde et
+// Logger nesnesi elde et
 const logger = getLogger();
-const flowTracker = getFlowTracker();
 
 // Hata tipleri
 export enum ErrorSeverity {
@@ -31,8 +31,18 @@ export interface ErrorInfo {
   severity: ErrorSeverity;
   timestamp: number;
   userId?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   stack?: string;
+}
+
+// XMLHttpRequest için tip tanımı genişletmesi
+declare global {
+  interface XMLHttpRequest {
+    _requestInfo?: {
+      method: string;
+      url: string | URL;
+    };
+  }
 }
 
 /**
@@ -63,6 +73,171 @@ class ErrorService {
         reportingEnabled: !!this.reportingEndpoint 
       }
     );
+    
+    // Global hata yakalayıcıları kurulumu
+    this.setupGlobalErrorHandlers();
+    
+    console.log('⚠️ Hata servisi başlatıldı - Tüm hatalar log dosyasına kaydedilecek');
+  }
+  
+  /**
+   * Global hata yakalayıcıları kur
+   */
+  private setupGlobalErrorHandlers(): void {
+    if (typeof window !== 'undefined') {
+      // Javascript hataları için
+      window.addEventListener('error', (event) => {
+        this.handleUIError(event);
+      });
+      
+      // Promise hataları için
+      window.addEventListener('unhandledrejection', (event) => {
+        this.handlePromiseError(event);
+      });
+      
+      // Fetch API için orijinal fetch'i override et
+      this.interceptFetchAPI();
+      
+      // XHR istekleri için orijinal XHR'ı override et
+      this.interceptXHR();
+      
+      // Akış izleme - trackFlow fonksiyonunu kullan
+      trackFlow('Global hata yakalayıcıları kuruldu', 'ErrorService.setupGlobalErrorHandlers', FlowCategory.Custom);
+    }
+  }
+  
+  /**
+   * UI hatalarını yakala ve işle
+   */
+  private handleUIError(event: ErrorEvent): void {
+    this.captureException(
+      event.error || new Error(event.message),
+      ErrorSource.UI,
+      ErrorSeverity.HIGH,
+      {
+        fileName: event.filename,
+        lineNumber: event.lineno,
+        columnNumber: event.colno
+      }
+    );
+    
+    // Akış izleme - trackFlow fonksiyonunu kullan
+    trackFlow(`UI Hatası: ${event.message}`, 'ErrorService.handleUIError', FlowCategory.Error);
+  }
+  
+  /**
+   * Promise hatalarını yakala ve işle
+   */
+  private handlePromiseError(event: PromiseRejectionEvent): void {
+    this.captureException(
+      event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
+      ErrorSource.UI,
+      ErrorSeverity.HIGH,
+      { type: 'unhandledRejection' }
+    );
+    
+    // Akış izleme - trackFlow fonksiyonunu kullan
+    trackFlow(
+      `Promise Hatası: ${event.reason instanceof Error ? event.reason.message : String(event.reason)}`,
+      'ErrorService.handlePromiseError', 
+      FlowCategory.Error
+    );
+  }
+  
+  /**
+   * Fetch API isteklerini izle
+   */
+  private interceptFetchAPI(): void {
+    const originalFetch = window.fetch;
+    
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        
+        // 400 ve 500 statü kodlarını hata olarak işle
+        if (!response.ok) {
+          try {
+            const clonedResponse = response.clone();
+            const errorData = await clonedResponse.json().catch(() => ({}));
+            
+            this.captureNetworkError({
+              response: { 
+                status: response.status, 
+                statusText: response.statusText,
+                data: errorData
+              },
+              request: { url: args[0], options: args[1] }
+            });
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_unused) {
+            // JSON parse hatası olursa sessizce geç
+          }
+        }
+        
+        return response;
+      } catch (error) {
+        // Ağ hatası
+        this.captureNetworkError({
+          error,
+          request: { url: args[0], options: args[1] }
+        });
+        throw error;
+      }
+    };
+  }
+  
+  /**
+   * XHR isteklerini izle
+   */
+  private interceptXHR(): void {
+    const originalOpen = XMLHttpRequest.prototype.open;
+    const originalSend = XMLHttpRequest.prototype.send;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const errorService = this; // this'i kaybetmemek için gerekli
+    
+    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, async: boolean = true, username?: string | null, password?: string | null): void {
+      this._requestInfo = { method, url };
+      return originalOpen.call(this, method, url, async, username || null, password || null);
+    };
+    
+    XMLHttpRequest.prototype.send = function(body?: Document | XMLHttpRequestBodyInit | null): void {
+      // Arrow fonksiyonlar kullanarak this bağlamını koruyoruz
+      this.addEventListener('load', () => {
+        if (this.status >= 400) {
+          let errorData = {};
+          try {
+            errorData = JSON.parse(this.responseText);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_unused) {
+            // JSON parse hatası sessizce geçilir
+          }
+          
+          errorService.captureNetworkError({
+            response: {
+              status: this.status,
+              statusText: this.statusText,
+              data: errorData
+            },
+            request: { 
+              url: this._requestInfo?.url,
+              method: this._requestInfo?.method
+            }
+          });
+        }
+      });
+      
+      this.addEventListener('error', () => {
+        errorService.captureNetworkError({
+          error: new Error('XHR Network Error'),
+          request: { 
+            url: this._requestInfo?.url,
+            method: this._requestInfo?.method
+          }
+        });
+      });
+      
+      return originalSend.call(this, body);
+    };
   }
   
   /**
@@ -104,16 +279,25 @@ class ErrorService {
       }
     );
     
-    // Akış izleme
-    flowTracker.trackStep(
-      'Error', 
+    // Akış izleme - trackFlow fonksiyonunu kullan
+    trackFlow(
       `Hata: ${errorInfo.message}`, 
       `ErrorService.${errorInfo.source}`,
+      FlowCategory.Error,
       {
         severity: errorInfo.severity,
         code: errorInfo.code
       }
     );
+    
+    // Hata dosyasına kaydet
+    this.logErrorToFile(fullErrorInfo);
+    
+    // Kritik hatalar için kullanıcıya bildirim göster
+    if (errorInfo.severity === ErrorSeverity.HIGH || 
+        errorInfo.severity === ErrorSeverity.CRITICAL) {
+      this.showErrorToUser(fullErrorInfo);
+    }
     
     // Kritik hatalar için uzak sunucuya bildirim
     if (errorInfo.severity === ErrorSeverity.HIGH || 
@@ -122,6 +306,57 @@ class ErrorService {
     }
     
     return fullErrorInfo;
+  }
+  
+  /**
+   * Hatayı log dosyasına yaz
+   */
+  private logErrorToFile(errorInfo: ErrorInfo): void {
+    try {
+      const { message, source, severity, code, stack } = errorInfo;
+      const timestamp = new Date(errorInfo.timestamp).toISOString();
+      
+      const errorFormatted = {
+        timestamp,
+        level: this.mapSeverityToLogLevel(severity),
+        message: `[${source.toUpperCase()}] ${message}`,
+        context: `ErrorService.${source}`,
+        metadata: {
+          errorCode: code,
+          severity,
+          ...errorInfo.context
+        },
+        stack
+      };
+      
+      // Logger servisini kullanarak dosyaya kaydet
+      logger.error(
+        errorFormatted.message,
+        errorFormatted.context,
+        undefined,
+        undefined,
+        errorFormatted.metadata
+      );
+    } catch (err) {
+      console.error('Hata log dosyasına yazılırken sorun oluştu:', err);
+    }
+  }
+  
+  /**
+   * Hata şiddetini log seviyesine dönüştürür
+   */
+  private mapSeverityToLogLevel(severity: ErrorSeverity): string {
+    switch (severity) {
+      case ErrorSeverity.CRITICAL:
+      case ErrorSeverity.HIGH:
+        return 'error';
+      case ErrorSeverity.MEDIUM:
+        return 'warn';
+      case ErrorSeverity.LOW:
+        return 'info';
+      default:
+        return 'error';
+    }
   }
   
   /**
@@ -136,7 +371,7 @@ class ErrorService {
     error: Error | unknown, 
     source: ErrorSource = ErrorSource.UNKNOWN,
     severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): ErrorInfo {
     // Error nesnesi mi kontrol et
     const isErrorObject = error instanceof Error;
@@ -144,7 +379,7 @@ class ErrorService {
     // Hata bilgilerini oluştur
     const errorInfo: Omit<ErrorInfo, 'timestamp'> = {
       message: isErrorObject ? error.message : String(error),
-      code: isErrorObject && 'code' in error ? (error as any).code : undefined,
+      code: isErrorObject && 'code' in error ? (error as { code?: string | number }).code : undefined,
       source,
       severity,
       context,
@@ -160,7 +395,8 @@ class ErrorService {
           errorInfo.userId = userData.state.user.id;
         }
       }
-    } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_unused) {
       // localStorage erişimi sırasında hata olursa sessizce devam et
     }
     
@@ -173,7 +409,7 @@ class ErrorService {
    * @param context Ek bağlam bilgileri
    */
   @LogMethod('ErrorService', 'Error')
-  captureNetworkError(error: any, context?: Record<string, any>): ErrorInfo {
+  captureNetworkError(error: Record<string, unknown>, context?: Record<string, unknown>): ErrorInfo {
     // Axios hatası mı kontrol et
     const isAxiosError = error && error.isAxiosError;
     
@@ -184,9 +420,10 @@ class ErrorService {
     
     if (isAxiosError) {
       // Axios hata detayları
-      const status = error.response?.status;
-      code = status || error.code;
-      message = error.response?.data?.message || error.message || message;
+      const response = error.response as { status?: number; data?: { message?: string } } | undefined;
+      const status = response?.status;
+      code = status || (error.code as string | number | undefined);
+      message = response?.data?.message || (error.message as string) || message;
       
       // Durum koduna göre ciddiyet belirle
       if (status) {
@@ -203,9 +440,9 @@ class ErrorService {
       if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
         severity = ErrorSeverity.HIGH;
       }
-    } else if (error instanceof TypeError && error.message.includes('fetch')) {
+    } else if ((error.error instanceof TypeError) && (error.error as TypeError).message.includes('fetch')) {
       // Fetch API hatası
-      message = `Fetch hatası: ${error.message}`;
+      message = `Fetch hatası: ${(error.error as TypeError).message}`;
       severity = ErrorSeverity.HIGH;
     }
     
@@ -216,9 +453,9 @@ class ErrorService {
       severity,
       context: {
         ...context,
-        url: isAxiosError ? error.config?.url : undefined,
-        method: isAxiosError ? error.config?.method : undefined,
-        status: isAxiosError ? error.response?.status : undefined
+        url: isAxiosError ? (error.config as { url?: string })?.url : undefined,
+        method: isAxiosError ? (error.config as { method?: string })?.method : undefined,
+        status: isAxiosError ? (error.response as { status?: number })?.status : undefined
       }
     });
   }
@@ -244,11 +481,84 @@ class ErrorService {
   }
   
   /**
+   * Belirli bir kaynaktan gelen hataları getirir
+   * @param source Hata kaynağı
+   * @param limit Maksimum hata sayısı
+   */
+  getErrorsBySource(source: ErrorSource, limit = 10): ErrorInfo[] {
+    return this.errors
+      .filter(error => error.source === source)
+      .slice(-limit);
+  }
+  
+  /**
    * Tüm hata geçmişini temizler
    */
   clearErrorHistory(): void {
     this.errors = [];
     logger.debug('Hata geçmişi temizlendi', 'ErrorService.clearErrorHistory', __filename, 220);
+  }
+  
+  /**
+   * Hata dosyasını indirme
+   */
+  downloadErrorLog(): void {
+    logger.downloadLogFile('error-logs.log');
+    logger.debug('Hata log dosyası indirildi', 'ErrorService.downloadErrorLog', __filename);
+  }
+  
+  /**
+   * Kullanıcıya hata bildirimi göster
+   * @param errorInfo Hata bilgileri
+   */
+  private showErrorToUser(errorInfo: ErrorInfo): void {
+    try {
+      // Toast bildirimini göster
+      ErrorToastService.showToast(
+        this.formatUserErrorMessage(errorInfo), 
+        "error"
+      );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_unused) {
+      // Toast servisi hataları sessizce ele al
+      logger.warn(
+        'Hata bildirimi gösterilirken sorun oluştu',
+        'ErrorService.showErrorToUser',
+        __filename,
+        247
+      );
+    }
+  }
+  
+  /**
+   * Kullanıcıya gösterilecek hata mesajını formatlar
+   * @param errorInfo Hata bilgileri
+   * @returns Formatlanmış hata mesajı
+   */
+  private formatUserErrorMessage(errorInfo: ErrorInfo): string {
+    // Hata kodunu ekle
+    const errorMessage = errorInfo.message;
+    
+    // Çok teknik mesajları basitleştir
+    if (errorInfo.source === ErrorSource.NETWORK) {
+      if (errorInfo.code === 'ECONNABORTED' || errorInfo.code === 'ERR_NETWORK') {
+        return 'Sunucuya bağlanılamıyor. Lütfen internet bağlantınızı kontrol edin.';
+      }
+      
+      if (errorInfo.code === 401 || errorInfo.code === 403) {
+        return 'Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.';
+      }
+      
+      if (errorInfo.code === 404) {
+        return 'İstediğiniz kaynak bulunamadı.';
+      }
+      
+      if (Number(errorInfo.code) >= 500) {
+        return 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+      }
+    }
+    
+    return errorMessage;
   }
   
   /**
@@ -275,20 +585,112 @@ class ErrorService {
           'ErrorService.reportError',
           __filename,
           245,
-          { status: response.status, errorInfo }
+          { status: response.status }
         );
       }
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_unused) {
       // Raporlama sırasındaki hatalar sessizce ele alınır
       logger.warn(
         'Hata raporlama sırasında hata oluştu',
         'ErrorService.reportError',
         __filename, 
-        255,
-        { error }
+        255
       );
     }
   }
+  
+  /**
+   * Tüm hataları bir log dosyasına kaydeder
+   */
+  saveErrorsToLogFile(): void {
+    try {
+      logger.debug(
+        'Hata kayıtları log dosyasına yazılıyor',
+        'ErrorService.saveErrorsToLogFile',
+        __filename,
+        267
+      );
+      
+      // Her hatayı log servisine yaz
+      for (const error of this.errors) {
+        const logMessage = `${error.source.toUpperCase()} HATASI: ${error.message}`;
+        const context = `ErrorService.${error.source}.${error.severity}`;
+        
+        // Severity'ye göre uygun log metodunu kullan
+        switch (error.severity) {
+          case ErrorSeverity.CRITICAL:
+          case ErrorSeverity.HIGH:
+            logger.error(logMessage, context, __filename, undefined, {
+              code: error.code,
+              userId: error.userId,
+              timestamp: new Date(error.timestamp).toISOString(),
+              context: error.context,
+              stack: error.stack
+            });
+            break;
+          case ErrorSeverity.MEDIUM:
+            logger.warn(logMessage, context, __filename, undefined, {
+              code: error.code,
+              userId: error.userId,
+              timestamp: new Date(error.timestamp).toISOString(),
+              context: error.context
+            });
+            break;
+          case ErrorSeverity.LOW:
+            logger.debug(logMessage, context, __filename, undefined, {
+              code: error.code,
+              userId: error.userId,
+              timestamp: new Date(error.timestamp).toISOString(),
+              context: error.context
+            });
+            break;
+        }
+      }
+      
+      trackFlow(
+        `${this.errors.length} hata kaydı dosyaya yazıldı`,
+        'ErrorService.saveErrorsToLogFile',
+        FlowCategory.Custom
+      );
+      
+    } catch (error) {
+      logger.error(
+        'Hataları log dosyasına kaydetme hatası',
+        'ErrorService.saveErrorsToLogFile',
+        __filename,
+        309,
+        { error: error instanceof Error ? error.message : String(error) }
+      );
+    }
+  }
+}
+
+// Otomatik olarak hataları loglama işlevi ekle
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    const errorService = new ErrorService();
+    errorService.captureException(
+      event.error || new Error(event.message),
+      ErrorSource.UI,
+      ErrorSeverity.HIGH,
+      {
+        fileName: event.filename,
+        lineNumber: event.lineno,
+        columnNumber: event.colno
+      }
+    );
+  });
+  
+  window.addEventListener('unhandledrejection', (event) => {
+    const errorService = new ErrorService();
+    errorService.captureException(
+      event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
+      ErrorSource.UI,
+      ErrorSeverity.HIGH,
+      { type: 'unhandledRejection' }
+    );
+  });
 }
 
 // Singleton instance oluştur ve export et

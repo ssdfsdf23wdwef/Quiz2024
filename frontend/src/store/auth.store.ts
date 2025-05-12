@@ -1,10 +1,11 @@
 'use client';
 
 import { type StateCreator, create } from "zustand";
-import { persist, createJSONStorage, StorePersist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "@/types/user";
 import { User as FirebaseUser } from "firebase/auth";
 import { getLogger, getFlowTracker } from "../lib/logger.utils";
+import { FlowCategory } from "../services/flow-tracker.service";
 
 // AuthState tipini dışa aktarıyoruz, böylece diğer dosyalardan kullanılabilir
 export interface AuthState {
@@ -56,7 +57,7 @@ const createAuthSlice: StateCreator<AuthState> = (set, get) => ({
     });
     
     if (isBrowser && user) {
-      flowTracker.trackStep('Auth', 'Kullanıcı oturumu kuruldu', 'AuthStore', {
+      flowTracker.trackStep(FlowCategory.Auth, 'Kullanıcı oturumu kuruldu', 'AuthStore', {
         userId: user.id,
         email: user.email
       });
@@ -121,7 +122,7 @@ const createAuthSlice: StateCreator<AuthState> = (set, get) => ({
         87
       );
       
-      flowTracker.trackStep('Auth', 'Kullanıcı oturumu kapatıldı', 'AuthStore');
+      flowTracker.trackStep(FlowCategory.Auth, 'Kullanıcı oturumu kapatıldı', 'AuthStore');
     }
     
     set({
@@ -133,70 +134,39 @@ const createAuthSlice: StateCreator<AuthState> = (set, get) => ({
   },
 });
 
-// Next.js ile uyumlu Zustand store
-const createStore = () => {
-  return create<AuthState>()(
-    persist(
-      createAuthSlice,
-      {
-        name: "auth-storage",
-        storage: createJSONStorage(() => (isBrowser ? localStorage : { 
-          getItem: () => null, 
-          setItem: () => {}, 
-          removeItem: () => {} 
-        })),
-        partialize: (state) => ({
-          // Sadece güvenli verileri localStorage'a kaydet
-          user: state.user ? {
-            id: state.user.id,
-            email: state.user.email,
-            firstName: state.user.firstName,
-            lastName: state.user.lastName,
-            profileImageUrl: state.user.profileImageUrl,
-            role: state.user.role,
-            onboarded: state.user.onboarded,
-            createdAt: state.user.createdAt,
-            updatedAt: state.user.updatedAt
-          } : null,
-          isAuthenticated: state.isAuthenticated,
-          lastAuthenticatedAt: state.lastAuthenticatedAt
-        }),
-      }
-    )
-  );
-};
-
-// SSR için güvenli singleton pattern
-// https://docs.pmnd.rs/zustand/guides/nextjs
-let store: ReturnType<typeof createStore>;
-
-// Global store tipini dışa aktar
-export type AuthStore = ReturnType<ReturnType<typeof createStore>>;
-
-// İhraç edilen useAuthStore hook'u
-export const useAuthStore = (): AuthStore => {
-  // Sadece client-side'da çalıştığından emin ol
-  if (typeof window === 'undefined') {
-    // Server-side için her seferinde yeni bir store oluştur
-    return createStore();
-  }
-  
-  // Client-side singleton pattern
-  if (!store) {
-    if (isBrowser) {
-      logger.info('AuthStore başlatıldı (client-side)', 'AuthStore', 'auth.store.ts', 150);
+// Doğrudan hook'u oluştur ve ihraç et
+export const useAuthStore = create<AuthState>()(
+  persist(
+    createAuthSlice,
+    {
+      name: "auth-storage",
+      storage: createJSONStorage(() => (isBrowser ? localStorage : {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {},
+      })),
+      partialize: (state) => ({
+        user: state.user ? {
+          id: state.user.id,
+          email: state.user.email,
+          firstName: state.user.firstName,
+          lastName: state.user.lastName,
+          profileImageUrl: state.user.profileImageUrl,
+          role: state.user.role,
+          onboarded: state.user.onboarded,
+        } : null,
+        isAuthenticated: state.isAuthenticated,
+        lastAuthenticatedAt: state.lastAuthenticatedAt
+      }),
     }
-    store = createStore();
-  }
-  
-  return store;
-};
+  )
+);
 
-// Tip güvenli selektörler
+// İsteğe bağlı: Tip güvenli selektörleri koru
 export const useAuthUser = () => useAuthStore((state) => state.user);
 export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
 export const useAuthStatus = () => useAuthStore((state) => ({
   isAuthenticated: state.isAuthenticated,
-  isLoading: state.isLoading
+  isLoading: state.isLoading,
 }));
-export const useLogoutUser = () => useAuthStore((state) => state.logoutUser);
+export const useLogoutUserAction = () => useAuthStore((state) => state.logoutUser);

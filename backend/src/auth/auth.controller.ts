@@ -2,354 +2,432 @@ import {
   Controller,
   Post,
   Body,
-  HttpCode,
-  HttpStatus,
-  ValidationPipe,
-  UsePipes,
-  Get,
-  Req,
   UseGuards,
+  Request,
+  Get,
+  Res,
+  UnauthorizedException,
+  HttpStatus,
+  HttpCode,
+  Logger,
+  Req,
+  Param,
+  NotFoundException,
+  Query,
+  ValidationPipe,
+  Ip,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
-import { FirebaseGuard } from './firebase/firebase.guard';
-import { GoogleLoginDto, RefreshTokenDto } from './dto';
+import { RegisterDto, LoginDto, RefreshTokenDto, GoogleLoginDto } from './dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Public } from './decorators/public.decorator';
+import { RequestWithUser } from '../types/request.type';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators/log-method.decorator';
-import { Public } from './decorators/public.decorator';
+import { FirebaseGuard } from './firebase/firebase.guard';
 
 @ApiTags('Kimlik Doğrulama')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly logger: LoggerService,
-    private readonly flowTracker: FlowTrackerService,
-  ) {
+  private readonly logger: LoggerService;
+  private readonly flowTracker: FlowTrackerService;
+
+  constructor(private authService: AuthService) {
+    this.logger = LoggerService.getInstance();
+    this.flowTracker = FlowTrackerService.getInstance();
     this.logger.info(
       'AuthController başlatıldı',
       'AuthController.constructor',
       __filename,
-      22,
+      29,
     );
   }
 
-  @Public()
   @Get('health')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Kimlik doğrulama servisinin sağlık kontrolü' })
-  @ApiResponse({ status: 200, description: 'Auth servisi çalışıyor' })
-  @LogMethod()
-  healthCheck(): { status: string; timestamp: string } {
-    this.flowTracker.trackStep('Auth health check yapılıyor', 'AuthController');
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    };
+  @Public()
+  @ApiOperation({ summary: 'Auth modülü sağlık kontrolü' })
+  getHealth(): string {
+    return 'Auth Service is healthy!';
   }
 
   @Public()
   @Post('register')
-  @ApiOperation({ summary: 'Yeni kullanıcı kaydı oluşturur' })
-  @ApiResponse({
-    status: 201,
-    description: 'Kullanıcı başarıyla oluşturuldu',
-    schema: {
-      type: 'object',
-      properties: {
-        user: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            email: { type: 'string', example: 'kullanici@example.com' },
-            displayName: { type: 'string', example: 'Ahmet Yılmaz' },
-            firstName: { type: 'string', example: 'Ahmet' },
-            lastName: { type: 'string', example: 'Yılmaz' },
-            profileImageUrl: {
-              type: 'string',
-              example: 'https://example.com/photo.jpg',
-            },
-            role: { type: 'string', enum: ['USER', 'ADMIN'], example: 'USER' },
-            createdAt: { type: 'string', format: 'date-time' },
-            lastLogin: { type: 'string', format: 'date-time' },
-          },
-        },
-        token: { type: 'string', example: 'firebase_id_token' },
-        refreshToken: { type: 'string', example: 'refresh_token_id' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Geçersiz veri veya kullanıcı zaten kayıtlı',
-  })
-  @ApiResponse({ status: 500, description: 'Sunucu hatası' })
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Yeni kullanıcı kaydı' })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({ status: 201, description: 'Kullanıcı başarıyla oluşturuldu' })
+  @ApiResponse({ status: 400, description: 'Geçersiz istek verisi' })
   @LogMethod()
   async register(
-    @Body('idToken') idToken: string,
-    @Body() userData: { firstName?: string; lastName?: string },
-  ): Promise<{ user: any; token: string; refreshToken?: string }> {
-    // Request IP ve User-Agent bilgisi
-    const req = { ip: '0.0.0.0', headers: { 'user-agent': 'Unknown' } };
-
+    @Body() registerDto: RegisterDto,
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ipAddress: string,
+  ) {
     this.flowTracker.trackStep(
-      'Kullanıcı kaydı başlatılıyor',
+      `${registerDto.email} için kayıt işlemi başlatıldı`,
       'AuthController',
     );
 
-    // Burada userData doğrudan kullanılmıyor ama ilerde kullanılabilir
-    // İlk etapta basitçe logda gösterelim, linter hatasını çözelim
     this.logger.debug(
-      `Kayıt yapılan kullanıcı bilgileri: ${JSON.stringify(userData)}`,
+      `Kayıt yapılan kullanıcı bilgileri: ${JSON.stringify({
+        email: registerDto.email,
+        firstName: registerDto.firstName,
+        lastName: registerDto.lastName,
+      })}`,
       'AuthController.register',
       __filename,
-      85,
-      { hasFirstName: !!userData.firstName, hasLastName: !!userData.lastName },
+      93,
     );
 
-    return this.authService.loginWithIdToken(
-      idToken,
-      req.ip,
-      req.headers['user-agent'],
+    this.logger.debug(
+      'Kayıt işlemi başlatılıyor',
+      'AuthController.register',
+      __filename,
+      95,
+      {
+        hasFirstName: !!registerDto.firstName,
+        hasLastName: !!registerDto.lastName,
+      },
     );
+
+    try {
+      const { user } = await this.authService.loginWithIdToken(
+        registerDto.idToken,
+        ipAddress,
+        req.headers['user-agent'],
+        res,
+        {
+          firstName: registerDto.firstName,
+          lastName: registerDto.lastName,
+        },
+      );
+
+      this.logger.info(
+        `Yeni kullanıcı kaydedildi ve giriş yaptı: ${user.email} (ID: ${user.id})`,
+        'AuthController.register',
+        __filename,
+      );
+      return {
+        message: 'Kullanıcı başarıyla kaydedildi',
+        email: user.email,
+        id: user.id,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Kayıt işlemi hatası: ${error.message}`,
+        'AuthController.register',
+        __filename,
+        124,
+        error,
+      );
+      throw error;
+    }
   }
 
   @Public()
   @Post('login-via-idtoken')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Firebase ID Token ile kullanıcı girişi yapar' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        idToken: {
-          type: 'string',
-          example: 'firebase_id_token_here',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Giriş başarılı',
-    schema: {
-      type: 'object',
-      properties: {
-        user: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            email: { type: 'string', example: 'kullanici@example.com' },
-            displayName: { type: 'string', example: 'Ahmet Yılmaz' },
-            firstName: { type: 'string', example: 'Ahmet' },
-            lastName: { type: 'string', example: 'Yılmaz' },
-            profileImageUrl: {
-              type: 'string',
-              example: 'https://example.com/photo.jpg',
-            },
-            role: { type: 'string', enum: ['USER', 'ADMIN'], example: 'USER' },
-            createdAt: { type: 'string', format: 'date-time' },
-            lastLogin: { type: 'string', format: 'date-time' },
-          },
-        },
-        token: { type: 'string', example: 'firebase_id_token' },
-        refreshToken: { type: 'string', example: 'refresh_token_id' },
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'Kimlik doğrulama başarısız' })
-  @ApiResponse({ status: 500, description: 'Sunucu hatası' })
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  @LogMethod({ trackParams: false }) // Token bilgisini loglamıyoruz
+  @ApiOperation({ summary: 'Firebase ID Token ile giriş' })
+  @ApiBody({ schema: { properties: { idToken: { type: 'string' } } } })
+  @ApiResponse({ status: 200, description: 'Giriş başarılı' })
+  @ApiResponse({ status: 401, description: 'Geçersiz token' })
+  @LogMethod()
   async loginWithIdToken(
     @Body('idToken') idToken: string,
-  ): Promise<{ user: any; token: string; refreshToken?: string }> {
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ipAddress: string,
+  ) {
     this.flowTracker.trackStep(
       'ID Token ile giriş başlatılıyor',
       'AuthController',
     );
-    return this.authService.loginWithIdToken(idToken);
+    try {
+      const { user } = await this.authService.loginWithIdToken(
+      idToken,
+        ipAddress,
+        req.headers['user-agent'],
+        res,
+        undefined,
+      );
+      this.logger.info(
+        `Kullanıcı giriş yaptı: ${user.email} (ID: ${user.id})`,
+        'AuthController.loginWithIdToken',
+        __filename,
+      );
+      return { user };
+    } catch (error) {
+      this.logger.error(
+        `ID Token ile giriş hatası: ${error.message}`,
+        'AuthController.loginWithIdToken',
+        __filename,
+        174,
+        error,
+        {
+          hasToken: !!idToken,
+          additionalInfo: 'ID Token ile giriş hatası',
+        },
+      );
+      throw error;
+    }
   }
 
+  @Post('google-login')
   @Public()
-  @Post('google-sign-in')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Google hesabı ile kullanıcı girişi yapar' })
+  @ApiOperation({ summary: 'Google ile giriş yap' })
   @ApiBody({ type: GoogleLoginDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Google ile giriş başarılı',
-    schema: {
-      type: 'object',
-      properties: {
-        user: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-            email: { type: 'string', example: 'kullanici@example.com' },
-            displayName: { type: 'string', example: 'Ahmet Yılmaz' },
-            firstName: { type: 'string', example: 'Ahmet' },
-            lastName: { type: 'string', example: 'Yılmaz' },
-            profileImageUrl: {
-              type: 'string',
-              example: 'https://example.com/photo.jpg',
-            },
-            role: { type: 'string', enum: ['USER', 'ADMIN'], example: 'USER' },
-            createdAt: { type: 'string', format: 'date-time' },
-            lastLogin: { type: 'string', format: 'date-time' },
-          },
-        },
-        isNewUser: { type: 'boolean', example: true },
-        token: { type: 'string', example: 'firebase_id_token' },
-        refreshToken: { type: 'string', example: 'refresh_token_id' },
-      },
-    },
-  })
-  @ApiResponse({ status: 400, description: 'Geçersiz token' })
-  @ApiResponse({
-    status: 401,
-    description: 'Google kimlik doğrulama başarısız',
-  })
-  @ApiResponse({ status: 500, description: 'Sunucu hatası' })
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  @LogMethod({ trackParams: false }) // Token bilgisini loglamıyoruz
-  async googleSignIn(@Body() googleLoginDto: GoogleLoginDto): Promise<{
-    user: any;
-    token: string;
-    refreshToken?: string;
-    isNewUser: boolean;
-  }> {
-    this.flowTracker.trackStep(
-      'Google ile giriş başlatılıyor',
-      'AuthController',
+  @ApiResponse({ status: 200, description: 'Giriş başarılı' })
+  @ApiResponse({ status: 400, description: 'Geçersiz istek' })
+  @ApiResponse({ status: 401, description: 'Kimlik doğrulama başarısız' })
+  async loginWithGoogle(
+    @Body() loginDto: GoogleLoginDto,
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+    @Ip() ipAddress: string,
+  ) {
+    const { user } = await this.authService.loginWithIdToken(
+      loginDto.idToken,
+      ipAddress,
+      req.headers['user-agent'],
+      res,
     );
-    const result = await this.authService.loginWithIdToken(
-      googleLoginDto.idToken,
-    );
+
     return {
-      ...result,
-      isNewUser: false, // Şimdilik tüm Google girişleri için varsayılan false
+      message: 'Google ile giriş başarılı',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        onboarded: user.onboarded,
+      },
     };
   }
 
-  @Public()
   @Post('refresh-token')
+  @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refresh token ile yeni token alır' })
-  @ApiBody({ type: RefreshTokenDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Token başarıyla yenilendi',
-    schema: {
-      type: 'object',
-      properties: {
-        token: { type: 'string', example: 'new_firebase_id_token' },
-      },
-    },
-  })
+  @ApiOperation({ summary: 'Access token yenileme' })
+  @ApiCookieAuth('refresh_token')
+  @ApiResponse({ status: 200, description: 'Token yenilendi' })
   @ApiResponse({
     status: 401,
     description: 'Geçersiz veya süresi dolmuş refresh token',
   })
-  @ApiResponse({ status: 500, description: 'Sunucu hatası' })
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  @LogMethod({ trackParams: false }) // Token bilgisini loglamıyoruz
+  @LogMethod()
   async refreshToken(
-    @Body() refreshTokenDto: RefreshTokenDto,
-  ): Promise<{ token: string }> {
-    this.flowTracker.trackStep('Token yenileme başlatılıyor', 'AuthController');
-    // Using a fixed userId string to ensure type safety
-    const dummyUserId: string = '00000000-0000-0000-0000-000000000000';
-    return this.authService.refreshToken(
-      refreshTokenDto.refreshToken,
-      dummyUserId,
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    this.logger.debug(
+      `Refresh token isteği alındı.`,
+      'AuthController.refreshToken',
+      __filename,
+      240,
+    );
+
+    try {
+      // Cookie'den refresh token alma
+      const refreshTokenFromCookie = req.cookies?.refresh_token;
+
+      if (!refreshTokenFromCookie) {
+        this.logger.warn(
+          'Refresh token cookie bulunamadı',
+          'AuthController.refreshToken',
+          __filename,
+          250,
+        );
+        throw new UnauthorizedException('Refresh token bulunamadı');
+      }
+
+      // Token yenileme
+      const { accessToken, newRefreshToken } =
+        await this.authService.refreshToken(refreshTokenFromCookie);
+
+      // Cookie'lere yeni token'ları kaydet
+      this.setAuthCookies(res, accessToken, newRefreshToken);
+
+      return { success: true, accessToken };
+    } catch (error) {
+      this.logger.error(
+        `Token yenileme hatası: ${error.message}`,
+        'AuthController.refreshToken',
+        __filename,
+        265,
+        error,
+      );
+      if (error instanceof UnauthorizedException) {
+        // Kimlik doğrulama hatası durumunda cookie'leri temizle
+        this.clearAuthCookies(res);
+        throw error;
+      }
+      throw new UnauthorizedException('Token yenileme başarısız oldu');
+    }
+  }
+
+  @Post('logout')
+  @UseGuards(FirebaseGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Kullanıcı çıkışı' })
+  @ApiBearerAuth('Firebase JWT')
+  @ApiResponse({ status: 200, description: 'Çıkış başarılı' })
+  @ApiResponse({ status: 401, description: 'Yetkisiz' })
+  @LogMethod()
+  async logout(
+    @Req() req: RequestWithUser,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    this.flowTracker.trackStep('Çıkış işlemi başlatılıyor', 'AuthController');
+    const userId = req.user?.uid;
+    const refreshTokenFromCookie = req.cookies?.refresh_token;
+
+    this.logger.debug(
+      `Logout isteği: Kullanıcı ID: ${userId || 'Yok'}, Refresh Token Var mı: ${!!refreshTokenFromCookie}`,
+      'AuthController.logout',
+      __filename,
+      300,
+    );
+
+    try {
+      if (!userId || !refreshTokenFromCookie) {
+        this.logger.warn(
+          'Çıkış yapılırken kullanıcı/token bilgisi bulunamadı',
+          'AuthController.logout',
+          __filename,
+          308,
+        );
+        throw new UnauthorizedException('Çıkış için oturum gereklidir');
+      }
+
+      // Cookie'leri temizle
+      this.clearAuthCookies(res);
+
+      // Çıkış işlemini yap
+      const result = await this.authService.logout(
+        userId,
+        refreshTokenFromCookie,
+      );
+
+      if (!result.success) {
+        this.logger.warn(
+          'Çıkış işlemi tamamlandı ama backend token silme başarısız olabilir',
+          'AuthController.logout',
+          __filename,
+          324,
+        );
+      }
+
+      return { message: 'Başarıyla çıkış yapıldı' };
+    } catch (error) {
+      this.logger.error(
+        `Çıkış işlemi hatası: ${error.message}`,
+        'AuthController.logout',
+        __filename,
+        333,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  @Get('profile')
+  @UseGuards(FirebaseGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Kullanıcı profil bilgilerini getir' })
+  @ApiBearerAuth('Firebase JWT')
+  @ApiResponse({ status: 200, description: 'Profil bilgileri' })
+  @ApiResponse({ status: 401, description: 'Yetkisiz' })
+  @ApiResponse({ status: 404, description: 'Kullanıcı bulunamadı' })
+  @LogMethod()
+  async getProfile(@Req() req: RequestWithUser) {
+    this.flowTracker.trackStep('Profil endpoint çağrıldı', 'AuthController');
+    if (!req.user) {
+      this.logger.error(
+        'FirebaseGuard çalışmasına rağmen req.user bulunamadı!',
+        'AuthController.getProfile',
+        __filename,
+      );
+      throw new UnauthorizedException('Kullanıcı bilgisi alınamadı');
+    }
+    this.logger.debug(
+      `Profil isteği alındı: Kullanıcı ID ${req.user.uid}`,
+      'AuthController.getProfile',
+      __filename,
+    );
+    return {
+      id: req.user.uid,
+      email: req.user.email,
+      displayName: req.user.displayName,
+    };
+  }
+
+  private setAccessTokenCookie(res: Response, token: string) {
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: this.authService.isProduction(),
+      sameSite: 'lax',
+      maxAge: this.authService.getAccessTokenExpiresInMs(),
+      path: '/',
+    });
+  }
+
+  private setRefreshTokenCookie(res: Response, token: string) {
+    res.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure: this.authService.isProduction(),
+      sameSite: 'strict',
+      maxAge: this.authService.getRefreshTokenExpiresInMs(),
+      path: '/api/auth/refresh-token',
+    });
+  }
+
+  private clearAuthCookies(res: Response) {
+      res.clearCookie('access_token', {
+        httpOnly: true,
+      secure: this.authService.isProduction(),
+        sameSite: 'lax',
+        path: '/',
+      });
+      res.clearCookie('refresh_token', {
+        httpOnly: true,
+      secure: this.authService.isProduction(),
+      sameSite: 'strict',
+      path: '/api/auth/refresh-token',
+    });
+      res.clearCookie('auth_session', {
+      httpOnly: false,
+      secure: this.authService.isProduction(),
+        sameSite: 'lax',
+        path: '/',
+      });
+      this.logger.debug(
+      `Auth cookie'leri temizlendi`,
+        'AuthController.clearAuthCookies',
+        __filename,
     );
   }
 
-  @UseGuards(FirebaseGuard)
-  @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Kullanıcı oturumunu sonlandırır' })
-  @ApiResponse({
-    status: 200,
-    description: 'Çıkış başarılı',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'Kimlik doğrulama başarısız' })
-  @ApiResponse({ status: 500, description: 'Sunucu hatası' })
-  @LogMethod()
-  async logout(@Req() req): Promise<{ success: boolean }> {
-    this.flowTracker.trackStep('Kullanıcı çıkışı yapılıyor', 'AuthController');
-    if (!req.user || !req.user.id) {
-      this.logger.warn(
-        'Kullanıcı bilgisi olmadan çıkış yapılmaya çalışıldı',
-        'AuthController.logout',
-        __filename,
-        226,
-      );
-      return { success: false };
+  private setAuthCookies(
+    res: Response,
+    accessToken: string,
+    newRefreshToken?: string,
+  ) {
+    this.setAccessTokenCookie(res, accessToken);
+    if (newRefreshToken) {
+      this.setRefreshTokenCookie(res, newRefreshToken);
     }
-
-    const dummyRefreshToken = 'dummy-refresh-token';
-
-    try {
-      await this.authService.logout(req.user.id, dummyRefreshToken);
-      this.logger.info(
-        `Kullanıcı başarıyla çıkış yaptı: ${req.user.id}`,
-        'AuthController.logout',
-        __filename,
-        238,
-      );
-      return { success: true };
-    } catch (error) {
-      this.logger.logError(error, 'AuthController.logout', {
-        userId: req.user.id,
-        additionalInfo: 'Çıkış sırasında hata oluştu',
-      });
-      return { success: false };
-    }
-  }
-
-  @UseGuards(FirebaseGuard)
-  @Get('profile')
-  @ApiOperation({ summary: 'Kullanıcı profil bilgilerini döndürür' })
-  @ApiResponse({
-    status: 200,
-    description: 'Profil bilgileri başarıyla alındı',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-        email: { type: 'string', example: 'kullanici@example.com' },
-        displayName: { type: 'string', example: 'Ahmet Yılmaz' },
-        role: { type: 'string', enum: ['USER', 'ADMIN'], example: 'USER' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Yetkilendirme hatası - token geçersiz veya eksik',
-  })
-  @LogMethod()
-  getProfile(@Req() req): Record<string, any> {
-    this.flowTracker.trackStep('Kullanıcı profili alınıyor', 'AuthController');
-    if (!req.user) {
-      this.logger.warn(
-        'Kullanıcı bilgisi olmadan profil alınmaya çalışıldı',
-        'AuthController.getProfile',
-        __filename,
-        272,
-      );
-      return { error: 'Kullanıcı bulunamadı' };
-    }
-
-    return req.user;
   }
 }

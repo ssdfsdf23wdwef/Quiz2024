@@ -1,6 +1,7 @@
 ---
-description: 
-globs: 
+description: "component-organization kuralları" 
+globs:
+  - "frontend/src/components/**/*" 
 alwaysApply: false
 ---
 # Bileşen Organizasyonu ve Yapısı

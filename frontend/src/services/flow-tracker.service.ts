@@ -6,17 +6,19 @@
 import { LoggerService } from './logger.service';
 
 /**
- * İzlenebilecek izleme kategori türleri
+ * İzlenebilecek akış kategorileri
  */
-export type FlowCategory = 
-  | 'Navigation'  // Sayfa gezintileri
-  | 'Component'   // Bileşen yaşam döngüsü
-  | 'State'       // Durum değişiklikleri
-  | 'API'         // API çağrıları
-  | 'Auth'        // Kimlik doğrulama işlemleri
-  | 'Render'      // Render performansı
-  | 'User'        // Kullanıcı etkileşimleri
-  | 'Custom';     // Özel kategoriler
+export enum FlowCategory {
+  Navigation = 'Navigation',  // Sayfa gezintileri
+  Component = 'Component',    // Bileşen yaşam döngüsü
+  State = 'State',            // Durum değişiklikleri
+  API = 'API',                // API çağrıları
+  Auth = 'Auth',              // Kimlik doğrulama işlemleri
+  Render = 'Render',          // Render performansı
+  User = 'User',              // Kullanıcı etkileşimleri
+  Error = 'Error',            // Hata izleme
+  Custom = 'Custom'           // Özel kategoriler
+}
 
 /**
  * Akış izleme seçenekleri
@@ -58,10 +60,61 @@ interface FlowSequence {
 }
 
 /**
+ * Bir akış izleyici - startFlow ile oluşturulan ve trackStep'i yöneten sınıf
+ */
+export class FlowTracker {
+  constructor(
+    private service: FlowTrackerService,
+    private id: string,
+    private category: FlowCategory,
+    private name: string
+  ) {}
+
+  /**
+   * Bir akış adımı izler ve aynı flow context'inde kaydeder
+   */
+  trackStep(step: string, metadata?: Record<string, unknown>): FlowTracker {
+    this.service.trackStep(
+      this.category,
+      step,
+      `Flow:${this.name}`,
+      {
+        flowId: this.id,
+        flowName: this.name,
+        ...metadata
+      }
+    );
+    return this;
+  }
+
+  /**
+   * Akışı sonlandırır ve özet bilgiyi döndürür
+   */
+  end(summary?: string): void {
+    this.service.trackStep(
+      this.category,
+      summary || `Flow tamamlandı: ${this.name}`,
+      `Flow:${this.name}`,
+      {
+        flowId: this.id,
+        flowName: this.name,
+        status: 'completed'
+      }
+    );
+  }
+}
+
+/**
  * Frontend Akış İzleme Servisi
  * Uygulama içindeki akışları, bileşen yaşam döngülerini ve performans metriklerini izler
  */
 export class FlowTrackerService {
+  startFlow(category: FlowCategory, name: string): FlowTracker {
+    const flowId = `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.trackStep(category, `Flow başlatıldı: ${name}`, 'FlowTracker');
+    return new FlowTracker(this, flowId, category, name);
+  }
+
   private static instance: FlowTrackerService;
   private enabled: boolean;
   private enabledCategories: Set<FlowCategory>;
@@ -81,7 +134,14 @@ export class FlowTrackerService {
   private constructor(options: FlowTrackerOptions = {}) {
     this.enabled = options.enabled ?? process.env.NODE_ENV !== 'production';
     this.enabledCategories = new Set(options.categories || [
-      'Navigation', 'Component', 'State', 'API', 'Auth', 'User', 'Custom' 
+      FlowCategory.Navigation,
+      FlowCategory.Component,
+      FlowCategory.State,
+      FlowCategory.API,
+      FlowCategory.Auth,
+      FlowCategory.User,
+      FlowCategory.Error,
+      FlowCategory.Custom
     ]);
     this.traceRenders = options.traceRenders ?? false;
     this.traceStateChanges = options.traceStateChanges ?? true;
@@ -99,6 +159,8 @@ export class FlowTrackerService {
     if (typeof window !== 'undefined') {
       this.setupNavigationTracking();
     }
+
+    console.log('🔍 Akış izleyici başlatıldı - Tüm program akışı terminalda görüntülenecek');
   }
   
   /**
@@ -120,7 +182,7 @@ export class FlowTrackerService {
         list.getEntries().forEach((entry) => {
           if (entry.entryType === 'measure' && entry.name.startsWith('render_')) {
             const componentName = entry.name.replace('render_', '');
-            this.trackTiming('Render', `${componentName} bileşeni render edildi`, componentName, entry.duration);
+            this.trackTiming(FlowCategory.Render, `${componentName} bileşeni render edildi`, componentName, entry.duration);
           }
         });
       });
@@ -137,7 +199,7 @@ export class FlowTrackerService {
   private setupNavigationTracking(): void {
     // Sayfa yüklendiğinde
     window.addEventListener('load', () => {
-      this.trackStep('Navigation', 'Sayfa yüklendi', 'Browser', {
+      this.trackStep(FlowCategory.Navigation, 'Sayfa yüklendi', 'Browser', {
         url: window.location.href,
         title: document.title
       });
@@ -152,13 +214,13 @@ export class FlowTrackerService {
     };
     
     window.addEventListener('pushstate', () => {
-      this.trackStep('Navigation', 'Sayfa geçişi yapıldı', 'History', {
+      this.trackStep(FlowCategory.Navigation, 'Sayfa geçişi yapıldı', 'History', {
         url: window.location.href
       });
     });
     
     window.addEventListener('popstate', () => {
-      this.trackStep('Navigation', 'Geri/ileri tuşu kullanıldı', 'History', {
+      this.trackStep(FlowCategory.Navigation, 'Geri/ileri tuşu kullanıldı', 'History', {
         url: window.location.href
       });
     });
@@ -201,7 +263,7 @@ export class FlowTrackerService {
     
     // Konsola log
     if (this.consoleOutput) {
-      this.consoleLogStep(step);
+      this.consoleLogStepWithColor(step);
     }
     
     // Logger servisine gönder
@@ -259,13 +321,17 @@ export class FlowTrackerService {
     }
     
     // Logger servisine gönder
-    if (this.logger) {
+    if (this.logger && timing > 0) {
       this.logger.info(
-        `Flow Timing: ${message} (${timing.toFixed(2)}ms)`,
-        `FlowTracker.${category}.${context}`,
+        `Timing: ${message} (${timing.toFixed(2)}ms)`,
+        `FlowTracker.Timing.${context}`,
         undefined,
         undefined,
-        { flowCategory: category, timing, ...metadata }
+        { 
+          flowCategory: category,
+          timing,
+          ...metadata
+        }
       );
     }
   }
@@ -281,7 +347,7 @@ export class FlowTrackerService {
     const message = `Bileşen ${lifecycle === 'mount' ? 'monte edildi' : 
       lifecycle === 'update' ? 'güncellendi' : 'kaldırıldı'}`;
     
-    this.trackStep('Component', message, componentName, {
+    this.trackStep(FlowCategory.Component, message, componentName, {
       lifecycle,
       props: props ? this.safeStringify(props) : undefined
     });
@@ -300,7 +366,7 @@ export class FlowTrackerService {
       return;
     }
     
-    this.trackStep('State', `${stateName} durumu değişti`, context, {
+    this.trackStep(FlowCategory.State, `${stateName} durumu değişti`, context, {
       stateName,
       oldValue: this.safeStringify(oldValue),
       newValue: this.safeStringify(newValue)
@@ -320,7 +386,7 @@ export class FlowTrackerService {
       return;
     }
     
-    this.trackStep('API', `${method} ${endpoint}`, context, {
+    this.trackStep(FlowCategory.API, `${method} ${endpoint}`, context, {
       endpoint,
       method,
       ...metadata
@@ -336,7 +402,7 @@ export class FlowTrackerService {
     context: string,
     metadata?: Record<string, unknown>
   ): void {
-    this.trackStep('User', `Kullanıcı ${action} - ${element}`, context, metadata);
+    this.trackStep(FlowCategory.User, `Kullanıcı ${action} - ${element}`, context, metadata);
   }
   
   /**
@@ -486,17 +552,71 @@ export class FlowTrackerService {
   }
   
   /**
-   * Adımı konsola yazar
+   * Adımı renkli olarak konsola yazdırır
    */
-  private consoleLogStep(step: FlowStep): void {
+  private consoleLogStepWithColor(step: FlowStep): void {
     const timestamp = new Date(step.timestamp).toISOString().split('T')[1].slice(0, -1);
+    let categoryStyle = 'color: #3498db'; // Varsayılan mavi renk
+    let icon = '🔹';
+    
+    // Kategoriye göre renk ve ikon belirle
+    switch (step.category) {
+      case FlowCategory.Navigation:
+        categoryStyle = 'color: #2ecc71; font-weight: bold'; // Yeşil
+        icon = '🧭';
+        break;
+      case FlowCategory.Component:
+        categoryStyle = 'color: #9b59b6'; // Mor
+        icon = '🧩';
+        break;
+      case FlowCategory.State:
+        categoryStyle = 'color: #f39c12; font-weight: bold'; // Turuncu
+        icon = '📊';
+        break;
+      case FlowCategory.API:
+        categoryStyle = 'color: #3498db; font-weight: bold'; // Mavi
+        icon = '🌐';
+        break;
+      case FlowCategory.Auth:
+        categoryStyle = 'color: #1abc9c; font-weight: bold'; // Turkuaz
+        icon = '🔐';
+        break;
+      case FlowCategory.User:
+        categoryStyle = 'color: #27ae60'; // Yeşil
+        icon = '👤';
+        break;
+      case FlowCategory.Error:
+        categoryStyle = 'color: #e74c3c; font-weight: bold'; // Kırmızı
+        icon = '❌';
+        break;
+      case FlowCategory.Render:
+        categoryStyle = 'color: #8e44ad'; // Koyu mor
+        icon = '🎨';
+        break;
+      case FlowCategory.Custom:
+        categoryStyle = 'color: #34495e'; // Gri
+        icon = '✨';
+        break;
+    }
+    
+    // Eğer zamanlama bilgisi varsa ekle
+    const timingStr = step.timing ? ` (${step.timing.toFixed(1)}ms)` : '';
+    
     console.log(
-      `[${timestamp}] %c${step.category}%c ${step.message} %c${step.context}`,
-      'color: #3498db; font-weight: bold',
-      'color: #000',
-      'color: #7f8c8d; font-style: italic',
-      step.metadata
+      `%c${timestamp} %c${icon} [${step.category}]%c [${step.context}] ${step.message}${timingStr}`,
+      'color: #7f8c8d', // Zaman damgası gri
+      categoryStyle,
+      'color: #2c3e50' // Mesaj koyu gri
     );
+    
+    // Metadata varsa ekstra bilgileri de göster
+    if (step.metadata && Object.keys(step.metadata).length > 0) {
+      console.log(
+        '%c├─ Detaylar:',
+        'color: #7f8c8d',
+        step.metadata
+      );
+    }
   }
   
   /**

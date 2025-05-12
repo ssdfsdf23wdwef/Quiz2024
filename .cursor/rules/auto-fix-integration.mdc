@@ -1,6 +1,8 @@
 ---
-description: 
-globs: 
+description: "auto-fix-integration kuralları" 
+globs:
+  - "frontend/src/components/**/*"
+  - "frontend/src/lib/**/*" 
 alwaysApply: false
 ---
 # Otomatik Hata Tespiti ve Kod Kalitesi

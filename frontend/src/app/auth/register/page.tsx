@@ -143,10 +143,12 @@ export default function RegisterPage() {
       });
 
       // Firebase kullanarak kayıt işlemini gerçekleştir
-      const displayName = `${formData.firstName} ${formData.lastName}`;
 
-      // register çağrısında email, password ve displayName parametrelerini doğru sırayla gönder
-      await register(formData.email, formData.password, displayName);
+      // register çağrısında email, password ve userData parametrelerini doğru sırayla ve formatta gönder
+      await register(formData.email, formData.password, { 
+        firstName: formData.firstName, 
+        lastName: formData.lastName 
+      });
 
       // Başarılı kayıt sonrası router üzerinden yönlendirme yapılacak
     } catch (error: unknown) {

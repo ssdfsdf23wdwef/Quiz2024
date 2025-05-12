@@ -4,10 +4,54 @@
  */
 
 import { LoggerService } from '../services/logger.service';
-import { FlowTrackerService } from '../services/flow-tracker.service';
+import { FlowTrackerService, FlowCategory as TrackerFlowCategory } from '../services/flow-tracker.service';
 
 let loggerInstance: LoggerService | null = null;
 let flowTrackerInstance: FlowTrackerService | null = null;
+
+// Flow kategorileri tipi - LoggerService ve FlowTracker için
+export enum FlowCategory {
+  API = 'API',                // API çağrıları
+  Auth = 'Auth',              // Kimlik doğrulama işlemleri
+  UI = 'UI',                  // Kullanıcı arayüzü
+  Error = 'Error',            // Hata izleme
+  Custom = 'Custom',          // Özel kategoriler
+  Firebase = 'Firebase',      // Firebase işlemleri
+  Navigation = 'Navigation',  // Gezinti işlemleri
+  Component = 'Component',    // Bileşen işlemleri
+  State = 'State',            // Durum değişiklikleri
+  Render = 'Render',          // Render işlemleri
+  User = 'User'               // Kullanıcı işlemleri
+}
+
+// FlowCategory'yi TrackerFlowCategory'ye eşleştiren yardımcı fonksiyon
+function mapToTrackerCategory(category: FlowCategory): TrackerFlowCategory {
+  switch(category) {
+    case FlowCategory.API:
+      return TrackerFlowCategory.API;
+    case FlowCategory.Auth:
+      return TrackerFlowCategory.Auth;
+    case FlowCategory.Error:
+      return TrackerFlowCategory.Error;
+    case FlowCategory.Navigation:
+      return TrackerFlowCategory.Navigation;
+    case FlowCategory.Component:
+      return TrackerFlowCategory.Component;
+    case FlowCategory.State:
+      return TrackerFlowCategory.State;
+    case FlowCategory.Render:
+      return TrackerFlowCategory.Render;
+    case FlowCategory.User:
+      return TrackerFlowCategory.User;
+    case FlowCategory.Firebase:
+      return TrackerFlowCategory.Custom; // Firebase'i Custom olarak eşleştir
+    case FlowCategory.UI:
+      return TrackerFlowCategory.User; // UI'ı User olarak eşleştir
+    case FlowCategory.Custom:
+    default:
+      return TrackerFlowCategory.Custom;
+  }
+}
 
 /**
  * Dosya adını yoldan çıkarır
@@ -26,7 +70,10 @@ export function extractFileName(filePath: string): string {
  * @returns LoggerService instance
  */
 export function setupLogger(options?: Parameters<typeof LoggerService.getInstance>[0]): LoggerService {
-  loggerInstance = LoggerService.getInstance(options);
+  loggerInstance = LoggerService.getInstance({
+    ...options,
+    enableFileLogging: true // Tüm hata loglarını dosyaya yazma özelliğini etkinleştir
+  });
   return loggerInstance;
 }
 
@@ -67,7 +114,10 @@ export function setupLogging(options?: {
  */
 export function getLogger(): LoggerService {
   if (!loggerInstance) {
-    loggerInstance = LoggerService.getInstance();
+    loggerInstance = LoggerService.getInstance({
+      enableFileLogging: true, // Dosya loglamayı varsayılan olarak etkinleştir
+      logFilePath: 'frontend-logs.log'
+    });
   }
   return loggerInstance;
 }
@@ -177,7 +227,7 @@ export function logDebug(
 export function trackFlow(
   message: string,
   context: string,
-  category: Parameters<FlowTrackerService['trackStep']>[0] = 'Custom',
+  category: FlowCategory = FlowCategory.Custom,
   metadata?: Record<string, unknown>
 ): void {
   if (!flowTrackerInstance) {
@@ -185,7 +235,9 @@ export function trackFlow(
     return;
   }
   
-  flowTrackerInstance.trackStep(category, message, context, metadata);
+  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
+  const trackerCategory = mapToTrackerCategory(category);
+  flowTrackerInstance.trackStep(trackerCategory, message, context, metadata);
 }
 
 /**
@@ -197,7 +249,7 @@ export function getLogFileContent(): string {
     return '';
   }
   
-  return (loggerInstance as any).getLogFileContent?.() || '';
+  return loggerInstance.getLogFileContent();
 }
 
 /**
@@ -208,7 +260,38 @@ export function clearLogFile(): void {
     return;
   }
   
-  (loggerInstance as any).clearLogFile?.();
+  loggerInstance.clearLogFile();
+}
+
+/**
+ * Log dosyasını indir
+ * @param fileName İndirilen dosya adı
+ */
+export function downloadLogFile(fileName: string = 'app-logs.log'): void {
+  if (!loggerInstance) {
+    return;
+  }
+  
+  const logContent = getLogFileContent();
+  if (!logContent || typeof window === 'undefined') {
+    return;
+  }
+  
+  try {
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    logInfo('Log dosyası indirildi', 'logger.utils.downloadLogFile', __filename);
+  } catch (error) {
+    logError(error instanceof Error ? error : String(error), 'logger.utils.downloadLogFile');
+  }
 }
 
 // React bileşenleri için yardımcı işlevler
@@ -296,7 +379,7 @@ export function markStart(name: string): void {
  */
 export function markEnd(
   name: string,
-  category: Parameters<FlowTrackerService['markEnd']>[1] = 'Custom',
+  category: FlowCategory = FlowCategory.Custom,
   context: string
 ): number {
   if (!flowTrackerInstance) {
@@ -304,7 +387,9 @@ export function markEnd(
     return 0;
   }
   
-  return flowTrackerInstance.markEnd(name, category, context);
+  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
+  const trackerCategory = mapToTrackerCategory(category);
+  return flowTrackerInstance.markEnd(name, trackerCategory, context);
 }
 
 /**
@@ -317,7 +402,7 @@ export function markEnd(
  */
 export async function measureAsync<T>(
   name: string,
-  category: Parameters<FlowTrackerService['measureAsync']>[1] = 'Custom',
+  category: FlowCategory = FlowCategory.Custom,
   context: string,
   fn: () => Promise<T>
 ): Promise<T> {
@@ -331,7 +416,9 @@ export async function measureAsync<T>(
     }
   }
   
-  return flowTrackerInstance.measureAsync(name, category, context, fn);
+  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
+  const trackerCategory = mapToTrackerCategory(category);
+  return flowTrackerInstance.measureAsync(name, trackerCategory, context, fn);
 }
 
 /**
@@ -344,7 +431,7 @@ export async function measureAsync<T>(
  */
 export function measure<T>(
   name: string,
-  category: Parameters<FlowTrackerService['measure']>[1] = 'Custom',
+  category: FlowCategory = FlowCategory.Custom,
   context: string,
   fn: () => T
 ): T {
@@ -358,5 +445,67 @@ export function measure<T>(
     }
   }
   
-  return flowTrackerInstance.measure(name, category, context, fn);
+  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
+  const trackerCategory = mapToTrackerCategory(category);
+  return flowTrackerInstance.measure(name, trackerCategory, context, fn);
+}
+
+/**
+ * Flow akış izleyici sınıfı
+ */
+export class FlowTracker {
+  constructor(
+    private readonly id: string,
+    private readonly category: FlowCategory,
+    private readonly name: string
+  ) {}
+
+  /**
+   * Akış adımı kaydeder
+   * @param step Adım açıklaması
+   * @param metadata Ek bilgiler
+   * @returns FlowTracker instance (zincir için)
+   */
+  trackStep(step: string, metadata?: Record<string, unknown>): FlowTracker {
+    trackFlow(
+      step,
+      `Flow:${this.name}`,
+      this.category,
+      {
+        flowId: this.id,
+        flowName: this.name,
+        ...metadata
+      }
+    );
+    return this;
+  }
+
+  /**
+   * Akışı sonlandırır
+   * @param summary Özet mesaj
+   */
+  end(summary?: string): void {
+    trackFlow(
+      summary || `Flow tamamlandı: ${this.name}`,
+      `Flow:${this.name}`,
+      this.category,
+      {
+        flowId: this.id,
+        flowName: this.name,
+        status: 'completed'
+      }
+    );
+  }
+}
+
+/**
+ * Yeni bir akış başlatır
+ * @param category Akış kategorisi
+ * @param name Akış adı
+ * @returns FlowTracker instance
+ */
+export function startFlow(category: FlowCategory, name: string): FlowTracker {
+  const flowId = `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  trackFlow(`Flow başlatıldı: ${name}`, 'FlowTracker', category);
+  return new FlowTracker(flowId, category, name);
 } 

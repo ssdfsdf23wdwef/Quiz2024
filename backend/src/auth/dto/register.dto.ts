@@ -41,6 +41,14 @@ export class RegisterDto {
   password: string;
 
   @ApiProperty({
+    description: 'Firebase ID Token',
+    required: true,
+  })
+  @IsString({ message: 'ID Token metin formatında olmalıdır' })
+  @IsNotEmpty({ message: 'ID Token zorunludur' })
+  idToken: string;
+
+  @ApiProperty({
     description: 'Kullanıcının adı',
     example: 'Ahmet',
     required: false,
