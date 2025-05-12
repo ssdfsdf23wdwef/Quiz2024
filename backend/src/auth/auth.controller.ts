@@ -142,7 +142,7 @@ export class AuthController {
   @ApiBody({ schema: { properties: { idToken: { type: 'string' } } } })
   @ApiResponse({ status: 200, description: 'Giriş başarılı' })
   @ApiResponse({ status: 401, description: 'Geçersiz token' })
-  @LogMethod()
+  @LogMethod({ trackParams: false })
   async loginWithIdToken(
     @Body('idToken') idToken: string,
     @Req() req: ExpressRequest,
@@ -155,7 +155,7 @@ export class AuthController {
     );
     try {
       const { user } = await this.authService.loginWithIdToken(
-      idToken,
+        idToken,
         ipAddress,
         req.headers['user-agent'],
         res,
@@ -165,6 +165,7 @@ export class AuthController {
         `Kullanıcı giriş yaptı: ${user.email} (ID: ${user.id})`,
         'AuthController.loginWithIdToken',
         __filename,
+        '174',
       );
       return { user };
     } catch (error) {
@@ -172,7 +173,7 @@ export class AuthController {
         `ID Token ile giriş hatası: ${error.message}`,
         'AuthController.loginWithIdToken',
         __filename,
-        174,
+        '174',
         error,
         {
           hasToken: !!idToken,
@@ -395,28 +396,28 @@ export class AuthController {
   }
 
   private clearAuthCookies(res: Response) {
-      res.clearCookie('access_token', {
-        httpOnly: true,
+    res.clearCookie('access_token', {
+      httpOnly: true,
       secure: this.authService.isProduction(),
-        sameSite: 'lax',
-        path: '/',
-      });
-      res.clearCookie('refresh_token', {
-        httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+    });
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
       secure: this.authService.isProduction(),
       sameSite: 'strict',
       path: '/api/auth/refresh-token',
     });
-      res.clearCookie('auth_session', {
+    res.clearCookie('auth_session', {
       httpOnly: false,
       secure: this.authService.isProduction(),
-        sameSite: 'lax',
-        path: '/',
-      });
-      this.logger.debug(
+      sameSite: 'lax',
+      path: '/',
+    });
+    this.logger.debug(
       `Auth cookie'leri temizlendi`,
-        'AuthController.clearAuthCookies',
-        __filename,
+      'AuthController.clearAuthCookies',
+      __filename,
     );
   }
 

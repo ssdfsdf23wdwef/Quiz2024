@@ -373,9 +373,7 @@ export class LoggerService {
    * @param additionalInfo Ek bilgiler
    */
   logError(
-    error: Error,
-    context: string,
-    additionalInfo?: Record<string, any>,
+error: Error, context: string, __filename: string, p0: string, additionalInfo?: Record<string, any>,
   ): void {
     // Hata yığınından dosya yolu ve satır numarası çıkarma
     const stackLines = error.stack?.split('\n') || [];

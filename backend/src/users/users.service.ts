@@ -548,7 +548,7 @@ export class UsersService {
       `Oluşturulacak yeni kullanıcı verisi: ${JSON.stringify(newUser)}`,
       'UsersService.findOrCreateUser',
       __filename,
-      515,
+      "515",
     );
 
     // Yeni kullanıcı için belge referansı oluştur
@@ -563,7 +563,7 @@ export class UsersService {
         `Yeni kullanıcı oluşturuldu: ${firebaseUser.uid} (${newUserRef.id})`,
         'UsersService.findOrCreateUser',
         __filename,
-        506,
+        '506',
       );
       return Promise.resolve(); // Return a promise explicitly
     });

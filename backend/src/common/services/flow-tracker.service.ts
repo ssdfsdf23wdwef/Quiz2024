@@ -14,7 +14,8 @@ export enum FlowCategory {
   State = 'State', // Durum değişiklikleri
   User = 'User', // Kullanıcı etkileşimleri
   Error = 'Error', // Hata izleme
-  Custom = 'Custom', // Özel kategoriler
+  Custom = 'Custom',
+  Method = "Method", // Özel kategoriler
 }
 
 /**

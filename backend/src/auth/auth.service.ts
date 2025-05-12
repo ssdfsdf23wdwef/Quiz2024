@@ -95,7 +95,7 @@ export class AuthService {
    * @param res HTTP yanıt nesnesi (cookie ayarlamak için)
    * @param additionalData İsteğe bağlı ek veri (ilk ve soyadı)
    */
-  @LogMethod({ trackParams: true })
+  @LogMethod({ trackParams: false })
   async loginWithIdToken(
     idToken: string,
     ipAddress?: string,
@@ -111,7 +111,7 @@ export class AuthService {
         `ID token doğrulanıyor: ${idToken.substring(0, 30)}...`,
         'AuthService.loginWithIdToken',
         __filename,
-        46, // Satır numarasını kontrol et
+        '46', // String olarak satır numarası
       );
       const decodedToken =
         await this.firebaseService.auth.verifyIdToken(idToken);
@@ -119,7 +119,7 @@ export class AuthService {
         `ID token doğrulandı. UID: ${decodedToken.uid}`,
         'AuthService.loginWithIdToken',
         __filename,
-        53, // Satır numarasını kontrol et
+        '53', // String olarak satır numarası
       );
 
       if (!decodedToken.uid) {
@@ -136,7 +136,7 @@ export class AuthService {
         `Firebase'den kullanıcı bilgisi alınıyor: ${decodedToken.uid}`,
         'AuthService.loginWithIdToken',
         __filename,
-        67, // Satır numarasını kontrol et
+        '67', // String olarak satır numarası
       );
       const firebaseUser = await this.firebaseService.auth.getUser(
         decodedToken.uid,
@@ -145,7 +145,7 @@ export class AuthService {
         `Firebase kullanıcı bilgisi alındı: ${firebaseUser.email}`,
         'AuthService.loginWithIdToken',
         __filename,
-        74, // Satır numarasını kontrol et
+        '74', // String olarak satır numarası
       );
 
       if (!firebaseUser.email) {
@@ -153,7 +153,7 @@ export class AuthService {
         const error = new Error(
           `Firebase user has no email: ${firebaseUser.uid}`,
         );
-        logError(error, 'AuthService.loginWithIdToken', __filename, undefined, {
+        logError(error, 'AuthService.loginWithIdToken', __filename, '83', {
           userId: firebaseUser.uid,
           stack: error.stack,
           context: 'Email validation',
@@ -172,14 +172,14 @@ export class AuthService {
         `Yerel kullanıcı bulunuyor veya oluşturuluyor: ${firebaseUser.email}, Ek Veri: ${JSON.stringify(additionalData)}`,
         'AuthService.loginWithIdToken',
         __filename,
-        92, // Satır numarasını kontrol et
+        '92', // String olarak satır numarası
       );
       const user = await this.usersService.findOrCreateUser(
         {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        displayName: firebaseUser.displayName,
-        photoURL: firebaseUser.photoURL,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
         },
         additionalData,
       );
@@ -541,7 +541,6 @@ export class AuthService {
           'Veritabanında geçerli refresh token bulunamadı',
           'AuthService.validateAndGetUserByRefreshToken',
           __filename,
-          328,
         );
         return null;
       }
@@ -573,7 +572,6 @@ export class AuthService {
             `bcrypt.compare hatası: ${compareError.message}`,
             'AuthService.validateAndGetUserByRefreshToken',
             __filename,
-            359,
           );
           continue; // Diğer tokenları kontrol etmeye devam et
         }
@@ -584,7 +582,6 @@ export class AuthService {
           'Sağlanan refresh token ile eşleşen geçerli token bulunamadı',
           'AuthService.validateAndGetUserByRefreshToken',
           __filename,
-          368,
         );
         return null;
       }
@@ -592,8 +589,6 @@ export class AuthService {
       this.logger.debug(
         `Refresh token başarıyla doğrulandı: Kullanıcı ID ${validTokenInfo.user.id}`,
         'AuthService.validateAndGetUserByRefreshToken',
-        __filename,
-        376,
       );
       return validTokenInfo;
     } catch (error) {
