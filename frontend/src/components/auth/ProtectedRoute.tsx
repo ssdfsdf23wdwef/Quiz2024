@@ -3,7 +3,7 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuthUser, useAuthStatus } from "@/store/auth.store";
+import { useAuthUser, useAuthIsAuthenticated, useAuthIsLoading } from "@/store/auth.store";
 import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
 import type { User } from "@/types/user";
 
@@ -33,11 +33,9 @@ export default function ProtectedRoute({
   const { checkSession } = useAuth();
   
   // Zustand selektörleri
-  const user = useAuthUser() as User | null;
-  const { isAuthenticated, isLoading } = useAuthStatus() as { 
-    isAuthenticated: boolean; 
-    isLoading: boolean 
-  };
+  const user = useAuthUser();
+  const isAuthenticated = useAuthIsAuthenticated();
+  const isLoading = useAuthIsLoading();
   
   const [isVerifying, setIsVerifying] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);

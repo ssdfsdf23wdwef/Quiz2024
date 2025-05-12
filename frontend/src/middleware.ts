@@ -34,19 +34,29 @@ export function middleware(request: NextRequest) {
 
   // Yerel depodan token (fallback olarak)
   const localStorageToken = request.cookies.get("auth_token")?.value;
+  
+  // Oturum cookie kontrolü
+  const authSessionCookie = request.cookies.get("auth_session")?.value;
+  
+  // Herhangi bir kimlik doğrulama işareti var mı?
+  const hasToken = !!(firebaseToken || bearerToken || localStorageToken || authSessionCookie);
 
-  // Token'ları birleştir ve geçerli bir token var mı kontrol et
-  const token = firebaseToken || bearerToken || localStorageToken;
-
-  // Token varsa kullanıcının giriş yaptığını kabul et
-  const hasToken = !!token;
-
+  // Debug log için URL ve token durumu
+  console.log(`[Middleware] URL: ${pathname}, HasToken: ${hasToken}`);
+  
   // Kullanıcı giriş yapmış ve kimlik doğrulama sayfalarından birine erişmeye çalışıyorsa
   if (hasToken && authRoutes.some((route) => pathname.startsWith(route))) {
+    console.log(`[Middleware] Kullanıcı giriş yapmış, ${pathname} sayfasından yönlendiriliyor`);
     // Kullanıcı zaten oturum açmışsa, ana sayfaya veya dashboard'a yönlendir
     const redirectPath =
       request.nextUrl.searchParams.get("returnUrl") || "/dashboard";
     return NextResponse.redirect(new URL(redirectPath, request.url));
+  }
+  
+  // Kullanıcı giriş yapmış ve ana sayfada ise dashboard'a yönlendir
+  if (hasToken && pathname === "/") {
+    console.log("[Middleware] Kullanıcı giriş yapmış, ana sayfadan dashboard'a yönlendiriliyor");
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Kullanıcı giriş yapmamış ve korumalı bir sayfaya erişmeye çalışıyorsa
@@ -54,6 +64,7 @@ export function middleware(request: NextRequest) {
     !hasToken &&
     protectedRoutes.some((route) => pathname.startsWith(route))
   ) {
+    console.log(`[Middleware] Kullanıcı giriş yapmamış, ${pathname} sayfası korumalı - login sayfasına yönlendiriliyor`);
     // Token yoksa, giriş sayfasına yönlendir ve dönüş URL'ini kaydet
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("returnUrl", pathname);
