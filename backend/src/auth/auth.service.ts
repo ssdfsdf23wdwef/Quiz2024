@@ -452,7 +452,7 @@ export class AuthService {
       `createRefreshToken çağrıldı: Kullanıcı ID: ${userId}`,
       'AuthService.createRefreshToken',
       __filename,
-      250, // Satır numarasını kontrol et
+      // Satır numarasını kontrol et
     );
     try {
       // Benzersiz bir token oluştur

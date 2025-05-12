@@ -16,6 +16,7 @@ import {
   Query,
   ValidationPipe,
   Ip,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
@@ -124,6 +125,7 @@ export class AuthController {
         id: user.id,
       };
     } catch (error) {
+      this.logger.logError(error, 'AuthController.register', __filename, '130');
       this.logger.error(
         `Kayıt işlemi hatası: ${error.message}`,
         'AuthController.register',
@@ -169,6 +171,12 @@ export class AuthController {
       );
       return { user };
     } catch (error) {
+      this.logger.logError(
+        error,
+        'AuthController.loginWithIdToken',
+        __filename,
+        '174',
+      );
       this.logger.error(
         `ID Token ile giriş hatası: ${error.message}`,
         'AuthController.loginWithIdToken',
@@ -263,12 +271,11 @@ export class AuthController {
 
       return { success: true, accessToken };
     } catch (error) {
-      this.logger.error(
-        `Token yenileme hatası: ${error.message}`,
+      this.logger.logError(
+        error,
         'AuthController.refreshToken',
         __filename,
-        265,
-        error,
+        '265',
       );
       if (error instanceof UnauthorizedException) {
         // Kimlik doğrulama hatası durumunda cookie'leri temizle
@@ -333,13 +340,7 @@ export class AuthController {
 
       return { message: 'Başarıyla çıkış yapıldı' };
     } catch (error) {
-      this.logger.error(
-        `Çıkış işlemi hatası: ${error.message}`,
-        'AuthController.logout',
-        __filename,
-        333,
-        error,
-      );
+      this.logger.logError(error, 'AuthController.logout', __filename, '333');
       throw error;
     }
   }

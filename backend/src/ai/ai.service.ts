@@ -746,8 +746,7 @@ ${
   "feedback": "Genel geri bildirim buraya yazılacak",
   "recommendations": ["Öneri 1", "Öneri 2", "Öneri 3"],
   "focusAreas": ["Odak alanı 1", "Odak alanı 2"],
-  "strengthAreas": ["Güçlü alan 1", "Güçlü alan 2"]
-}`;
+  "strengthAreas": ["Güçlü alan 1", "Güçlü alan 2"]}`;
 
       // p-retry ile gelişmiş yeniden deneme mekanizması
       const result = await pRetry(async () => {

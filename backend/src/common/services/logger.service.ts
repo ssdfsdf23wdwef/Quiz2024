@@ -156,8 +156,8 @@ export class LoggerService {
     level: LogLevel,
     message: string,
     context: string,
-    filePath?: string,
-    lineNumber?: string,
+    filePath?: string | number,
+    lineNumber?: string | number,
     stack?: string,
     additionalInfo?: Record<string, any>,
   ): void {
@@ -175,13 +175,18 @@ export class LoggerService {
 
     const timestamp = new Date().toISOString();
 
+    // Number tipindeki değerleri string'e çevir
+    const filePathStr = filePath !== undefined ? String(filePath) : undefined;
+    const lineNumberStr =
+      lineNumber !== undefined ? String(lineNumber) : undefined;
+
     const logEntry: LogEntry = {
       timestamp,
       level,
       message,
       context,
-      filePath,
-      lineNumber,
+      filePath: filePathStr,
+      lineNumber: lineNumberStr,
       stack,
       additionalInfo,
     };
@@ -267,8 +272,8 @@ export class LoggerService {
   error(
     message: string,
     context: string,
-    filePath?: string,
-    lineNumber?: string,
+    filePath?: string | number,
+    lineNumber?: string | number,
     error?: Error,
     additionalInfo?: Record<string, any>,
   ): void {
@@ -296,11 +301,8 @@ export class LoggerService {
   warn(
     message: string,
     context: string,
-    filePath?: string,
-    p0?: string,
-    p1?: string,
-    __filename?: string,
-    lineNumber?: string,
+    filePath?: string | number,
+    lineNumber?: string | number,
     additionalInfo?: Record<string, any>,
   ): void {
     this.log(
@@ -325,8 +327,8 @@ export class LoggerService {
   info(
     message: string,
     context: string,
-    filePath?: string,
-    lineNumber?: string,
+    filePath?: string | number,
+    lineNumber?: string | number,
     additionalInfo?: Record<string, any>,
   ): void {
     this.log(
@@ -351,8 +353,8 @@ export class LoggerService {
   debug(
     message: string,
     context: string,
-    filePath?: string,
-    lineNumber?: string,
+    filePath?: string | number,
+    lineNumber?: string | number,
     additionalInfo?: Record<string, any>,
   ): void {
     this.log(
@@ -370,32 +372,90 @@ export class LoggerService {
    * Hata nesnesinden otomatik olarak log kaydı oluşturur
    * @param error Hata nesnesi
    * @param context Hatanın oluştuğu bağlam (sınıf/metod adı)
-   * @param additionalInfo Ek bilgiler
+   * @param filePathOrAdditionalInfo Hatanın oluştuğu dosya yolu veya ek bilgiler (opsiyonel)
+   * @param lineNumberOrAdditionalInfo Hatanın oluştuğu satır numarası veya ek bilgiler (opsiyonel)
+   * @param additionalInfo Ek bilgiler (opsiyonel)
    */
   logError(
-error: Error, context: string, __filename: string, p0: string, additionalInfo?: Record<string, any>,
+    error: Error,
+    context: string,
+    filePathOrAdditionalInfo?: string | number | Record<string, any>,
+    lineNumberOrAdditionalInfo?: string | number | Record<string, any>,
+    additionalInfo?: Record<string, any>,
   ): void {
     // Hata yığınından dosya yolu ve satır numarası çıkarma
     const stackLines = error.stack?.split('\n') || [];
     let filePath: string | undefined;
-    let lineNumber: string | undefined;
+    let extractedLineNumber: string | undefined;
 
     if (stackLines.length > 1) {
       // İlk satır hata mesajı, ikinci satır çağrı yığını
       const match = stackLines[1].match(/at\s+(.+)\s+\((.+):(\d+):(\d+)\)/);
       if (match) {
         filePath = match[2];
-        lineNumber = match[3];
+        extractedLineNumber = match[3];
       }
     }
+
+    // Parametreleri doğru tipe dönüştürme
+    let filePathStr: string | number | undefined;
+    let lineNumberStr: string | number | undefined;
+    let mergedAdditionalInfo: Record<string, any> = {};
+
+    // filePathOrAdditionalInfo parametresini işle
+    if (filePathOrAdditionalInfo !== undefined) {
+      if (
+        typeof filePathOrAdditionalInfo === 'string' ||
+        typeof filePathOrAdditionalInfo === 'number'
+      ) {
+        // String veya sayı ise dosya yolu olarak kullan
+        filePathStr = filePathOrAdditionalInfo;
+      } else if (typeof filePathOrAdditionalInfo === 'object') {
+        // Obje ise ek bilgi olarak kullan
+        mergedAdditionalInfo = {
+          ...mergedAdditionalInfo,
+          ...filePathOrAdditionalInfo,
+        };
+      }
+    }
+
+    // lineNumberOrAdditionalInfo parametresini işle
+    if (lineNumberOrAdditionalInfo !== undefined) {
+      if (
+        typeof lineNumberOrAdditionalInfo === 'string' ||
+        typeof lineNumberOrAdditionalInfo === 'number'
+      ) {
+        // String veya sayı ise satır numarası olarak kullan
+        lineNumberStr = lineNumberOrAdditionalInfo;
+      } else if (typeof lineNumberOrAdditionalInfo === 'object') {
+        // Obje ise ek bilgi olarak kullan
+        mergedAdditionalInfo = {
+          ...mergedAdditionalInfo,
+          ...lineNumberOrAdditionalInfo,
+        };
+      }
+    }
+
+    // Son ek bilgileri ekle
+    if (additionalInfo) {
+      mergedAdditionalInfo = { ...mergedAdditionalInfo, ...additionalInfo };
+    }
+
+    // Dosya yolu olarak önce parametre olarak gelen, yoksa stackten çıkarılan değeri kullan
+    const finalFilePath = filePathStr || filePath;
+
+    // Satır numarası olarak önce parametre olarak gelen, yoksa stackten çıkarılan değeri kullan
+    const finalLineNumber = lineNumberStr || extractedLineNumber;
 
     this.error(
       error.message,
       context,
-      filePath,
-      lineNumber,
+      finalFilePath,
+      finalLineNumber,
       error,
-      additionalInfo,
+      Object.keys(mergedAdditionalInfo).length > 0
+        ? mergedAdditionalInfo
+        : undefined,
     );
   }
 }
