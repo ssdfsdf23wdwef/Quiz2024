@@ -9,6 +9,9 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   updateProfile as firebaseUpdateProfile,
+  AuthError,
+  UserCredential,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { setAuthCookie, removeAuthCookie } from "@/lib/utils";
@@ -33,6 +36,16 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
 }
+
+// Kimlik API URL'leri
+const API_URLS = {
+  LOGIN: "/api/auth/login-via-idtoken",
+  REGISTER: "/api/auth/register",
+  GOOGLE_LOGIN: "/api/auth/login-with-google",
+  LOGOUT: "/api/auth/logout",
+  PROFILE: "/api/users/profile",
+  UPDATE_PROFILE: "/api/users/profile",
+};
 
 /**
  * Kimlik doğrulama hizmet sınıfı
@@ -586,52 +599,6 @@ class AuthService {
   }
 
   /**
-   * Access token'ı yenile
-   * Backend'in /auth/refresh-token endpoint'ini çağırarak HttpOnly cookie içindeki
-   * refresh token ile yeni bir access token alır.
-   * 
-   * @returns {Promise<{token: string}>} Başarılı olursa yeni access token
-   * @throws {Error} Token yenilenemezse hata fırlatır
-   */
-  async refreshToken(): Promise<{token: string}> {
-    try {
-      // Backend'in refresh token endpoint'ine, HTTP-only cookie içindeki refresh token'ı kullanarak istek at
-      // withCredentials: true sayesinde browser otomatik olarak cookie'yi gönderir
-      console.log("🔄 Token yenileme işlemi başlatılıyor...");
-      
-      const response = await apiService.post<{success: boolean, token: string, expiresIn?: number}>(
-        "/auth/refresh-token", 
-        {}, 
-        {
-          withCredentials: true, // HTTP-only cookie'lerin gönderilmesi için gerekli
-        }
-      );
-      
-      // Yeni token'ı döndür
-      if (response && response.token) {
-        console.log("✅ Token başarıyla yenilendi");
-        
-        // Yeni token'ı localStorage ve cookie'ye kaydet
-        localStorage.setItem("auth_token", response.token);
-        setAuthCookie(response.token);
-        
-        return { token: response.token };
-      } else {
-        console.error("❌ Refresh token yanıtında token bulunamadı:", response);
-        throw new Error("Refresh token yanıtında token bulunamadı");
-      }
-    } catch (error) {
-      console.error("❌ Token yenileme hatası:", error);
-      
-      // Tüm token'ları temizle
-      localStorage.removeItem("auth_token");
-      removeAuthCookie();
-      
-      throw error;
-    }
-  }
-
-  /**
    * Hata mesajlarını formatlar - Firebase ve diğer hatalar için tutarlı bir format sağlar
    * @param error Hata nesnesi
    * @returns Formatlanmış hata mesajı
@@ -641,7 +608,47 @@ class AuthService {
       return this.formatFirebaseError(error).message;
     } else if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
-      return `API hatası: ${axiosError.response?.statusText || axiosError.message}`;
+      
+      // API hatalarını daha detaylı inceleme
+      if (axiosError.response) {
+        const statusCode = axiosError.response.status;
+        const responseData = axiosError.response.data as any;
+        
+        // Durum kodlarına göre anlamlı mesajlar
+        switch (statusCode) {
+          case 400:
+            return responseData?.message || 'Geçersiz istek. Lütfen bilgilerinizi kontrol edin.';
+          case 401:
+            return 'Oturum süresi dolmuş veya geçersiz. Lütfen tekrar giriş yapın.';
+          case 403:
+            return 'Bu işlemi yapmak için yetkiniz yok.';
+          case 404:
+            return 'İstenen kaynak bulunamadı.';
+          case 429:
+            return 'Çok fazla istek gönderdiniz. Lütfen birkaç dakika bekleyip tekrar deneyin.';
+          case 500:
+            return 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+          case 503:
+            return 'Servis şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.';
+          default:
+            return `API hatası: ${axiosError.response.statusText || `Hata kodu: ${statusCode}`}`;
+        }
+      } 
+      // Bağlantı hataları
+      else if (axiosError.code === 'ECONNABORTED') {
+        return 'İstek zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.';
+      } else if (axiosError.code === 'ECONNREFUSED') {
+        return 'Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.';
+      } else if (axiosError.code === 'ERR_NETWORK') {
+        return 'Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.';
+      }
+      
+      // Token yenilemesi ile ilgili hatalar için özel mesaj
+      if (axiosError.config?.url?.includes('refresh-token')) {
+        return 'Oturum yenilenemedi. Lütfen tekrar giriş yapın.';
+      }
+      
+      return `API hatası: ${axiosError.message}`;
     } else if (error instanceof Error) {
       return error.message;
     } else {
@@ -675,6 +682,7 @@ class AuthService {
       case 'auth/invalid-email':
         return 'Geçersiz e-posta formatı';
       case 'auth/invalid-credential':
+      case 'auth/invalid-login-credentials':
         return 'Geçersiz kimlik bilgileri. Lütfen e-posta ve şifrenizi kontrol edin';
       case 'auth/email-already-in-use':
         return 'Bu e-posta adresi zaten kullanımda';
@@ -696,17 +704,162 @@ class AuthService {
         return 'Bu kullanıcı hesabı yönetici tarafından devre dışı bırakılmıştır';
       case 'auth/timeout':
         return 'İşlem zaman aşımına uğradı. Lütfen tekrar deneyin';
-      case 'auth/invalid-login-credentials':
-        return 'Giriş bilgileri hatalı. Lütfen e-posta ve şifrenizi kontrol edin';
       case 'auth/missing-password':
         return 'Lütfen şifrenizi girin';
       case 'auth/missing-email':
         return 'Lütfen e-posta adresinizi girin';
+      case 'auth/argument-error':
+        return 'Giriş parametrelerinde hata. Lütfen tüm alanları doğru doldurduğunuzdan emin olun';
+      case 'auth/invalid-api-key':
+        return 'Uygulama kimlik doğrulama hatası. Lütfen daha sonra tekrar deneyin veya yöneticiye bildirin';
+      case 'auth/app-deleted':
+        return 'Firebase uygulaması bulunamadı. Lütfen daha sonra tekrar deneyin';
+      case 'auth/app-not-authorized':
+        return 'Firebase uygulaması yetkili değil. Yönetici ile iletişime geçin';
+      case 'auth/invalid-user-token':
+      case 'auth/user-token-expired':
+        return 'Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın';
+      case 'auth/invalid-verification-code':
+        return 'Geçersiz doğrulama kodu. Lütfen tekrar deneyin';
+      case 'auth/invalid-verification-id':
+        return 'Geçersiz doğrulama kimliği. Tekrar giriş yapmayı deneyin';
+      case 'auth/missing-verification-code':
+        return 'Doğrulama kodu eksik. Lütfen kodu girin';
+      case 'auth/missing-verification-id':
+        return 'Doğrulama kimliği eksik. Lütfen tekrar giriş yapın';
+      case 'auth/quota-exceeded':
+        return 'Kimlik doğrulama kotası aşıldı. Lütfen daha sonra tekrar deneyin';
+      case 'auth/cancelled-popup-request':
+        return 'Sadece bir popup isteği çalıştırılabilir';
+      case 'auth/popup-blocked':
+        return 'Popup penceresi tarayıcınız tarafından engellendi. Lütfen popup\'lara izin verin ve tekrar deneyin';
+      case 'auth/unauthorized-domain':
+        return 'Bu alan adı Firebase Auth için yetkilendirilmemiş';
+      case 'auth/webStorage-unsupported':
+        return 'Tarayıcınız webstorage\'ı desteklemiyor. Tarayıcınızı güncelleyin veya başka bir tarayıcı kullanın';
+      case 'auth/redirect-cancelled-by-user':
+        return 'Yönlendirme işlemi kullanıcı tarafından iptal edildi';
+      case 'auth/redirect-operation-pending':
+        return 'Zaten bir yönlendirme işlemi bekliyor';
       
       // Genel/diğer hatalar
       default:
-        console.warn(`Tanımlanmamış Firebase hata kodu: ${code}`);
+        this.logger.warn(
+          `Tanımlanmamış Firebase hata kodu: ${code}`,
+          'AuthService.getFirebaseErrorMessage',
+          __filename,
+          703
+        );
         return `Kimlik doğrulama hatası: ${code}`;
+    }
+  }
+
+  /**
+   * Access token'ı yenile
+   * Backend'in /auth/refresh-token endpoint'ini çağırarak HttpOnly cookie içindeki
+   * refresh token ile yeni bir access token alır.
+   * 
+   * @returns {Promise<{token: string}>} Başarılı olursa yeni access token
+   * @throws {Error} Token yenilenemezse hata fırlatır
+   */
+  async refreshToken(): Promise<{token: string}> {
+    try {
+      // Backend'in refresh token endpoint'ine, HTTP-only cookie içindeki refresh token'ı kullanarak istek at
+      // withCredentials: true sayesinde browser otomatik olarak cookie'yi gönderir
+      this.logger.info(
+        'Token yenileme işlemi başlatılıyor',
+        'AuthService.refreshToken',
+        __filename,
+        725
+      );
+      
+      trackFlow(
+        'Token yenileme işlemi başlatıldı',
+        'AuthService.refreshToken',
+        FlowCategory.Auth
+      );
+      
+      // Timeout'u artırarak bağlantı sorunlarına karşı biraz daha tolerans göster
+      const response = await apiService.post<{success: boolean, token: string, expiresIn?: number}>(
+        "/auth/refresh-token", 
+        {}, 
+        {
+          withCredentials: true, // HTTP-only cookie'lerin gönderilmesi için gerekli
+          timeout: 10000, // 10 saniye timeout
+        }
+      );
+      
+      // Yeni token'ı döndür
+      if (response && response.token) {
+        this.logger.info(
+          'Token başarıyla yenilendi',
+          'AuthService.refreshToken',
+          __filename,
+          748
+        );
+        
+        trackFlow(
+          'Token yenileme başarılı',
+          'AuthService.refreshToken',
+          FlowCategory.Auth
+        );
+        
+        // Yeni token'ı localStorage ve cookie'ye kaydet
+        localStorage.setItem("auth_token", response.token);
+        setAuthCookie(response.token);
+        
+        return { token: response.token };
+      } else {
+        this.logger.error(
+          'Refresh token yanıtında token bulunamadı',
+          'AuthService.refreshToken',
+          __filename,
+          764,
+          { response }
+        );
+        
+        trackFlow(
+          'Token yenileme yanıtında token bulunamadı',
+          'AuthService.refreshToken',
+          FlowCategory.Error
+        );
+        
+        throw new Error("Refresh token yanıtında token bulunamadı");
+      }
+    } catch (error) {
+      this.logger.error(
+        'Token yenileme hatası',
+        'AuthService.refreshToken',
+        __filename,
+        779,
+        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
+      );
+      
+      trackFlow(
+        'Token yenileme hatası',
+        'AuthService.refreshToken',
+        FlowCategory.Error,
+        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
+      );
+      
+      // Tüm token'ları temizle
+      localStorage.removeItem("auth_token");
+      removeAuthCookie();
+      
+      // Firebase'den çıkış yapmayı dene (token geçersiz olduğundan)
+      try {
+        await firebaseSignOut(auth);
+      } catch (signOutError) {
+        this.logger.warn(
+          'Token yenileme sonrası Firebase çıkış hatası',
+          'AuthService.refreshToken',
+          __filename,
+          799,
+          { error: signOutError }
+        );
+      }
+      
+      throw error;
     }
   }
 }

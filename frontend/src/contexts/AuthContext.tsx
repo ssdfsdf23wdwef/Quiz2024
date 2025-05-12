@@ -46,6 +46,8 @@ interface GoogleAuthResponse extends AuthResponse {
 interface AuthContextType {
   isInitializing: boolean; // Auth başlatılma durumu
   authError: string | null; // Kimlik doğrulama hatası
+  user: User | null; // Giriş yapmış kullanıcı bilgisi
+  isAuthenticated: boolean; // Kullanıcının giriş yapmış olup olmadığı
   login: (email: string, password: string) => Promise<AuthResponse>;
   register: (
     email: string,
@@ -63,6 +65,8 @@ interface AuthContextType {
 const initialState = {
   isInitializing: true,
   authError: null,
+  user: null,
+  isAuthenticated: false,
 };
 
 // Context oluşturma
@@ -102,6 +106,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // State yönetimi - sadece yerel durumlar için
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Zustand Store'dan kullanıcı durumunu alalım
+  const user = useAuthStore((state: AuthState) => state.user);
+  const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
 
   // Zustand Store'dan doğrudan ve doğru şekilde fonksiyonları al
   const setUser = useAuthStore((state: AuthState) => state.setUser);
@@ -633,6 +641,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       isInitializing,
       authError,
+      user,
+      isAuthenticated,
       login,
       register: async (
         email: string, 
@@ -673,6 +683,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [
       isInitializing,
       authError,
+      user,
+      isAuthenticated,
       login,
       loginWithGoogle,
       signOut,
