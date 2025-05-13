@@ -536,9 +536,29 @@ class AuthService {
    */
   async updateProfile(profileData: Partial<User>): Promise<User> {
     try {
+      trackFlow(
+        'Profil güncelleme işlemi başlatıldı',
+        'AuthService.updateProfile',
+        FlowCategory.User
+      );
+      
+      this.logger.debug(
+        'Profil güncelleme başlatılıyor',
+        'AuthService.updateProfile',
+        __filename,
+        540,
+        { updateData: JSON.stringify(profileData) }
+      );
+      
       // Firebase kullanıcısını al
       const currentUser = auth.currentUser;
       if (!currentUser) {
+        this.logger.error(
+          'Kullanıcı oturumu bulunamadı',
+          'AuthService.updateProfile',
+          __filename,
+          550
+        );
         throw new Error("Kullanıcı oturumu bulunamadı");
       }
 
@@ -551,30 +571,158 @@ class AuthService {
           .filter(Boolean)
           .join(" ");
 
-        await firebaseUpdateProfile(currentUser, {
-          displayName: displayName || null,
-        });
+        this.logger.debug(
+          'Firebase displayName güncelleniyor',
+          'AuthService.updateProfile',
+          __filename,
+          564,
+          { displayName }
+        );
+        
+        try {
+          await firebaseUpdateProfile(currentUser, {
+            displayName: displayName || null,
+          });
+          
+          this.logger.debug(
+            'Firebase displayName güncellendi',
+            'AuthService.updateProfile',
+            __filename,
+            574
+          );
+        } catch (firebaseError) {
+          this.logger.warn(
+            'Firebase displayName güncellenemedi',
+            'AuthService.updateProfile',
+            __filename,
+            580,
+            { error: firebaseError }
+          );
+          // Firebase güncellemesi başarısız olsa bile devam et
+        }
       }
 
       if (profileData.profileImageUrl) {
-        await firebaseUpdateProfile(currentUser, {
-          photoURL: profileData.profileImageUrl,
-        });
+        this.logger.debug(
+          'Firebase photoURL güncelleniyor',
+          'AuthService.updateProfile',
+          __filename,
+          591,
+          { photoURL: profileData.profileImageUrl }
+        );
+        
+        try {
+          await firebaseUpdateProfile(currentUser, {
+            photoURL: profileData.profileImageUrl,
+          });
+          
+          this.logger.debug(
+            'Firebase photoURL güncellendi',
+            'AuthService.updateProfile',
+            __filename,
+            601
+          );
+        } catch (firebaseError) {
+          this.logger.warn(
+            'Firebase photoURL güncellenemedi',
+            'AuthService.updateProfile',
+            __filename,
+            607,
+            { error: firebaseError }
+          );
+          // Firebase güncellemesi başarısız olsa bile devam et
+        }
       }
 
       // Backend'e uygun formata dönüştür
       const backendProfileData = adaptUserToBackend(profileData);
-
-      // Backend'e profil güncellemesi için API çağrısı yap
-      const updatedBackendUser = await apiService.put<User>(
-        "/users/profile",
-        backendProfileData,
+      
+      this.logger.debug(
+        'Backend profil güncelleme isteği gönderiliyor',
+        'AuthService.updateProfile',
+        __filename,
+        618,
+        { backendData: JSON.stringify(backendProfileData) }
       );
 
-      // Frontend tipine dönüştür
-      return adaptUserFromBackend(updatedBackendUser);
+      // Backend'e profil güncellemesi için API çağrısı yap
+      try {
+        const updatedBackendUser = await apiService.put<User>(
+          "/users/profile",
+          backendProfileData,
+        );
+        
+        this.logger.info(
+          'Profil başarıyla güncellendi',
+          'AuthService.updateProfile',
+          __filename,
+          629,
+          { userId: updatedBackendUser.id }
+        );
+        
+        trackFlow(
+          'Profil güncelleme başarılı',
+          'AuthService.updateProfile',
+          FlowCategory.User
+        );
+
+        // Frontend tipine dönüştür
+        return adaptUserFromBackend(updatedBackendUser);
+      } catch (apiError) {
+        this.logger.error(
+          'Backend profil güncelleme hatası',
+          'AuthService.updateProfile',
+          __filename,
+          644,
+          { 
+            error: apiError instanceof Error ? apiError.message : 'Bilinmeyen hata',
+            requestData: backendProfileData,
+            isAxiosError: axios.isAxiosError(apiError)
+          }
+        );
+        
+        // Daha detaylı axios hatası yakalama
+        if (axios.isAxiosError(apiError)) {
+          const axiosError = apiError as AxiosError;
+          this.logger.error(
+            'Axios hatası detayları',
+            'AuthService.updateProfile',
+            __filename, 
+            656,
+            {
+              status: axiosError.response?.status,
+              statusText: axiosError.response?.statusText,
+              data: axiosError.response?.data,
+              url: axiosError.config?.url,
+              method: axiosError.config?.method
+            }
+          );
+          
+          trackFlow(
+            `Profil güncelleme hatası: HTTP ${axiosError.response?.status || 'Unknown'}`,
+            'AuthService.updateProfile',
+            FlowCategory.Error
+          );
+        }
+        
+        throw apiError;
+      }
     } catch (error: unknown) {
-      console.error("Profil güncelleme hatası:", error);
+      this.logger.error(
+        'Profil güncelleme hatası',
+        'AuthService.updateProfile',
+        __filename,
+        677,
+        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
+      );
+      
+      trackFlow(
+        'Profil güncelleme hatası',
+        'AuthService.updateProfile',
+        FlowCategory.Error,
+        { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
+      );
+      
       throw error;
     }
   }

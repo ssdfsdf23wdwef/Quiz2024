@@ -20,11 +20,11 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { RequestWithUser } from '../types/request.type';
+import { RequestWithUser } from '../common/types/request.type';
 import { FirebaseGuard } from '../auth/firebase/firebase.guard';
 import { FirebaseService } from '../firebase/firebase.service';
-import { ThemeType } from '../types/theme.type';
-import { Course } from '../types/course.type';
+import { ThemeType } from '../common/types/theme.type';
+import { Course } from '../common/types/course.type';
 import * as admin from 'firebase-admin';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';

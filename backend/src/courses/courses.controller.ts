@@ -18,9 +18,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { RequestWithUser } from '../types/request.type';
-import { Course } from '../types/course.type';
-import { LearningTarget } from '../types/learning-target.type';
+import { RequestWithUser } from '../common/types/request.type';
+import { Course } from '../common/types/course.type';
+import { LearningTarget } from '../common/types/learning-target.type';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';

@@ -8,4 +8,4 @@ export {
   UserQuizProgress,
   UserProgress,
   UpdateUserDto,
-} from '../../types/user.type';
+} from '../../common/types/user.type';

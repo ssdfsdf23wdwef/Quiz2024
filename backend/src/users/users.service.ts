@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { UpdateUserDto, User } from './dto';
-import { ThemeType } from '../types/theme.type';
+import { ThemeType } from '../common/types/theme.type';
 import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTIONS } from '../common/constants';
 import { LoggerService } from '../common/services/logger.service';
@@ -763,7 +763,7 @@ export class UsersService {
   }
 
   @LogMethod({ trackParams: true })
-  async update(id: string, updateUserDto: any) {
+  async update(id: string) {
     try {
       this.flowTracker.trackStep(
         `${id} ID'li kullanıcı güncelleniyor`,

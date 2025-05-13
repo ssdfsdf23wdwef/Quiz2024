@@ -13,10 +13,10 @@ import {
 } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { CreateCourseDto, UpdateCourseDto } from './dto';
-import { Course } from '../types/course.type';
-import { LearningTarget } from '../types/learning-target.type';
-import { Document } from '../types/document.type';
-import { Quiz } from '../types/quiz.type';
+import { Course } from '../common/types/course.type';
+import { LearningTarget } from '../common/types/learning-target.type';
+import { Document } from '../common/types/document.type';
+import { Quiz } from '../common/types/quiz.type';
 import { FIRESTORE_COLLECTIONS } from '../common/constants';
 import { cascadeDelete } from '../common/utils/firestore.utils';
 import { LoggerService } from '../common/services/logger.service';

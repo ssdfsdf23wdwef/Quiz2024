@@ -338,8 +338,18 @@ export class FirebaseService implements OnModuleInit {
       const startTime = Date.now();
 
       const docRef = this.firestore.collection(collection).doc(id);
+
+      // Undefined değerleri filtreleme işlemi
+      const filteredData = Object.entries(data).reduce((acc, [key, value]) => {
+        // Undefined değilse değeri ekle
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+
       const dataWithTimestamp = {
-        ...data,
+        ...filteredData,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 

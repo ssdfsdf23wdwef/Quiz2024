@@ -168,6 +168,7 @@ export const checkApiAvailability = async (
 
               return testUrl;
             }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (innerError) {
             // İç döngüde hataları yut ve devam et
             continue;

@@ -1,6 +1,6 @@
 import * as net from 'net';
-import { LoggerService } from './common/services/logger.service';
-import { FlowTrackerService } from './common/services/flow-tracker.service';
+import { LoggerService } from '../services/logger.service';
+import { FlowTrackerService } from '../services/flow-tracker.service';
 
 // Servisleri başlat
 const logger = LoggerService.getInstance();
