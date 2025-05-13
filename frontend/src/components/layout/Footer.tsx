@@ -11,6 +11,7 @@ export interface FooterProps {
 
 /**
  * Tüm sayfalarda kullanılan alt bilgi bileşeni
+ * Yeni stil sistemine uygun olarak güncellenmiştir
  */
 export const Footer: React.FC<FooterProps> = ({
   copyrightYear = new Date().getFullYear(),
@@ -34,17 +35,17 @@ export const Footer: React.FC<FooterProps> = ({
   ];
 
   return (
-    <footer className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 mt-auto">
+    <footer className="bg-light-background dark:bg-dark-bg-primary border-t border-light-border dark:border-dark-border mt-auto">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Sol kısım - Logo ve Açıklama */}
           <div className="space-y-4">
             <div className="flex items-center">
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text">
+              <span className="text-xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 text-transparent bg-clip-text">
                 {companyName}
               </span>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
+            <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary max-w-md">
               Kişiselleştirilmiş öğrenme deneyimi sunan yapay zeka destekli
               eğitim platformu. Hedeflerinize ulaşmanıza yardımcı oluyoruz.
             </p>
@@ -52,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Orta kısım - Hızlı Linkler */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="text-sm font-semibold text-light-text-primary dark:text-dark-text-primary mb-4">
               Hızlı Linkler
             </h3>
             <ul className="space-y-2">
@@ -60,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    className="text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -71,7 +72,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Sağ kısım - Sosyal Medya ve İletişim */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="text-sm font-semibold text-light-text-primary dark:text-dark-text-primary mb-4">
               Bize Ulaşın
             </h3>
             <ul className="space-y-3">
@@ -79,7 +80,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center space-x-2 transition-colors"
+                    className="text-sm text-light-text-secondary dark:text-dark-text-secondary hover:text-primary-600 dark:hover:text-primary-400 flex items-center space-x-2 transition-colors"
                     target={link.href.startsWith("http") ? "_blank" : undefined}
                     rel={
                       link.href.startsWith("http")
@@ -87,7 +88,7 @@ export const Footer: React.FC<FooterProps> = ({
                         : undefined
                     }
                   >
-                    <span className="text-indigo-500">{link.icon}</span>
+                    <span className="text-primary-500">{link.icon}</span>
                     <span>{link.label}</span>
                   </Link>
                 </li>
@@ -97,8 +98,8 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Alt kısım - Telif hakkı */}
-        <div className="border-t border-gray-100 dark:border-gray-800 mt-8 pt-6 text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-500">
+        <div className="border-t border-light-border dark:border-dark-border mt-8 pt-6 text-center">
+          <p className="text-xs text-light-text-tertiary dark:text-dark-text-tertiary">
             &copy; {copyrightYear} {companyName}. Tüm hakları saklıdır.
           </p>
         </div>

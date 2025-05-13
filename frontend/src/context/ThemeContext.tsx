@@ -9,6 +9,8 @@ import React, {
   ReactNode,
 } from "react";
 import { getLogger, getFlowTracker } from "@/lib/logger.utils";
+import theme, { ThemeMode, ThemePreferences, defaultThemePreferences } from "@/style/theme";
+import { useTheme as useNextTheme } from "next-themes";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
@@ -32,60 +34,32 @@ const trackThemeStep = (message: string, context: string, metadata?: Record<stri
   }
 };
 
-// Tema seçenekleri
-export type ThemeMode = "light" | "dark" | "system";
-
-// Tema renkleri
-export type ThemeColors = {
-  primary: string;
-  secondary: string;
-  accent: string;
-  // Diğer tema renkleri...
-};
-
-// Tema özellikleri
-export type ThemePreferences = {
-  mode: ThemeMode;
-  fontSize: "small" | "medium" | "large";
-  reducedMotion: boolean;
-  highContrast: boolean;
-  colors: ThemeColors;
-};
-
 // Context tipi
 interface ThemeContextType {
-  theme: ThemePreferences;
-  currentMode: ThemeMode; // Gerçek uygulanan mod (system seçildiğinde bile)
+  preferences: ThemePreferences;
   isDarkMode: boolean; // Kolay erişim için dark mode durumu
+  currentAppearance: "light" | "dark"; // Gerçek görünüm (system seçiliyse bile)
   setThemeMode: (mode: ThemeMode) => void;
   setFontSize: (size: "small" | "medium" | "large") => void;
   toggleReducedMotion: () => void;
   toggleHighContrast: () => void;
   resetTheme: () => void;
+  getTransparentColor: (color: string, opacity: number) => string;
+  getColorShade: (color: string, percentage: number) => string;
 }
-
-// Tema için varsayılan değerler
-const defaultThemePreferences: ThemePreferences = {
-  mode: "system",
-  fontSize: "medium",
-  reducedMotion: false,
-  highContrast: false,
-  colors: {
-    primary: "#3B82F6", // Mavi
-    secondary: "#8B5CF6", // Mor
-    accent: "#10B981", // Yeşil
-  }
-};
 
 // Context oluşturma
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // Provider bileşeni
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  // Next-themes ile entegrasyon
+  const { resolvedTheme, setTheme } = useNextTheme();
+  
   // Tema durumu
-  const [theme, setTheme] = useState<ThemePreferences>(defaultThemePreferences);
-  const [currentMode, setCurrentMode] = useState<ThemeMode>("system");
+  const [preferences, setPreferences] = useState<ThemePreferences>(defaultThemePreferences);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [currentAppearance, setCurrentAppearance] = useState<"light" | "dark">("light");
   
   // Akış izleme
   useEffect(() => {
@@ -120,7 +94,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       
       if (savedTheme) {
         const parsedTheme = JSON.parse(savedTheme) as ThemePreferences;
-        setTheme(parsedTheme);
+        setPreferences(parsedTheme);
+        
+        // Next-themes ile senkronize et
+        setTheme(parsedTheme.mode);
         
         logger.debug(
           'Kaydedilmiş tema tercihleri yüklendi',
@@ -141,58 +118,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         { error }
       );
     }
-  }, []);
+  }, [setTheme]);
   
-  // Gerçek tema modunu belirle
+  // Resolved tema değişikliklerini izle
   useEffect(() => {
-    // Tarayıcı ortamı kontrolü
-    const isBrowser = typeof window !== 'undefined';
-    if (!isBrowser) return;
-    
-    const updateActualMode = () => {
-      if (theme.mode === "system") {
-        // Sistem teması için medya sorgusunu kontrol et
-        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        setCurrentMode(isDark ? "dark" : "light");
-        setIsDarkMode(isDark);
-        
-        logger.debug(
-          `Sistem teması kullanılıyor: ${isDark ? "dark" : "light"}`,
-          'ThemeContext.updateActualMode',
-          'ThemeContext.tsx',
-          94,
-          { systemPreference: isDark ? "dark" : "light" }
-        );
-      } else {
-        // Kullanıcı teması
-        setCurrentMode(theme.mode);
-        setIsDarkMode(theme.mode === "dark");
-      }
-    };
-    
-    // İlk yükleme
-    updateActualMode();
-    
-    // Sistem teması değişikliklerini izle
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      if (theme.mode === "system") {
-        updateActualMode();
-        
-        trackThemeStep('Sistem teması değişti', 'ThemeContext.mediaQuery', { 
-          isDarkMode: mediaQuery.matches 
-        });
-      }
-    };
-    
-    // Olay dinleyici ekle
-    mediaQuery.addEventListener("change", handleChange);
-    
-    // Temizleme
-    return () => {
-      mediaQuery.removeEventListener("change", handleChange);
-    };
-  }, [theme.mode]);
+    if (resolvedTheme) {
+      const isCurrentlyDark = resolvedTheme === 'dark';
+      setIsDarkMode(isCurrentlyDark);
+      setCurrentAppearance(isCurrentlyDark ? "dark" : "light");
+      
+      logger.debug(
+        `Gerçek tema: ${resolvedTheme}`,
+        'ThemeContext.resolvedTheme',
+        'ThemeContext.tsx',
+        95,
+        { resolvedTheme }
+      );
+    }
+  }, [resolvedTheme]);
   
   // Tema modunu değiştir
   const setThemeMode = useCallback((mode: ThemeMode) => {
@@ -200,27 +143,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       `Tema modu değiştiriliyor: ${mode}`,
       'ThemeContext.setThemeMode',
       'ThemeContext.tsx',
-      136
+      106
     );
     
     trackThemeStep('Tema modu değiştiriliyor', 'ThemeContext', { mode });
     
-    setTheme(prev => ({ ...prev, mode }));
+    // Next-themes ile senkronize et
+    setTheme(mode);
+    
+    setPreferences(prev => ({ ...prev, mode }));
     
     // localStorage'a kaydet
     try {
-      const updatedTheme = { ...theme, mode };
-      localStorage.setItem('theme-preferences', JSON.stringify(updatedTheme));
+      const updatedPrefs = { ...preferences, mode };
+      localStorage.setItem('theme-preferences', JSON.stringify(updatedPrefs));
     } catch (error) {
       logger.warn(
         'Tema tercihleri kaydedilirken hata oluştu',
         'ThemeContext.setThemeMode',
         'ThemeContext.tsx',
-        150,
+        122,
         { error }
       );
     }
-  }, [theme]);
+  }, [preferences, setTheme]);
   
   // Font boyutunu değiştir
   const setFontSize = useCallback((fontSize: "small" | "medium" | "large") => {
@@ -228,17 +174,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       `Font boyutu değiştiriliyor: ${fontSize}`,
       'ThemeContext.setFontSize',
       'ThemeContext.tsx',
-      161
+      133
     );
     
     trackThemeStep('Font boyutu değiştiriliyor', 'ThemeContext', { fontSize });
     
-    setTheme(prev => ({ ...prev, fontSize }));
+    setPreferences(prev => ({ ...prev, fontSize }));
     
     // localStorage'a kaydet
     try {
-      const updatedTheme = { ...theme, fontSize };
-      localStorage.setItem('theme-preferences', JSON.stringify(updatedTheme));
+      const updatedPrefs = { ...preferences, fontSize };
+      localStorage.setItem('theme-preferences', JSON.stringify(updatedPrefs));
       
       // HTML kök elemanına font boyutu sınıfını ekle
       document.documentElement.classList.remove('text-sm', 'text-base', 'text-lg');
@@ -255,39 +201,41 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         'Font boyutu ayarlanırken hata oluştu',
         'ThemeContext.setFontSize',
         'ThemeContext.tsx',
-        184,
+        156,
         { error }
       );
     }
-  }, [theme]);
+  }, [preferences]);
   
   // Azaltılmış hareket özelliğini değiştir
   const toggleReducedMotion = useCallback(() => {
+    const newValue = !preferences.reducedMotion;
+    
     logger.debug(
-      `Azaltılmış hareket değiştiriliyor: ${!theme.reducedMotion}`,
+      `Azaltılmış hareket değiştiriliyor: ${newValue}`,
       'ThemeContext.toggleReducedMotion',
       'ThemeContext.tsx',
-      195
+      168
     );
     
-    trackThemeStep('Azaltılmış hareket değiştiriliyor', 'ThemeContext', { reducedMotion: !theme.reducedMotion });
+    trackThemeStep('Azaltılmış hareket değiştiriliyor', 'ThemeContext', { reducedMotion: newValue });
     
-    setTheme(prev => ({ 
+    setPreferences(prev => ({ 
       ...prev, 
-      reducedMotion: !prev.reducedMotion 
+      reducedMotion: newValue 
     }));
     
     // localStorage'a kaydet
     try {
-      const updatedTheme = { 
-        ...theme, 
-        reducedMotion: !theme.reducedMotion 
+      const updatedPrefs = { 
+        ...preferences, 
+        reducedMotion: newValue 
       };
       
-      localStorage.setItem('theme-preferences', JSON.stringify(updatedTheme));
+      localStorage.setItem('theme-preferences', JSON.stringify(updatedPrefs));
       
       // Azaltılmış hareket sınıfını değiştir
-      if (!theme.reducedMotion) {
+      if (newValue) {
         document.documentElement.classList.add('reduce-motion');
       } else {
         document.documentElement.classList.remove('reduce-motion');
@@ -297,39 +245,41 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         'Azaltılmış hareket ayarlanırken hata oluştu',
         'ThemeContext.toggleReducedMotion',
         'ThemeContext.tsx',
-        226,
+        195,
         { error }
       );
     }
-  }, [theme]);
+  }, [preferences]);
   
   // Yüksek kontrast özelliğini değiştir
   const toggleHighContrast = useCallback(() => {
+    const newValue = !preferences.highContrast;
+    
     logger.debug(
-      `Yüksek kontrast değiştiriliyor: ${!theme.highContrast}`,
+      `Yüksek kontrast değiştiriliyor: ${newValue}`,
       'ThemeContext.toggleHighContrast',
       'ThemeContext.tsx',
-      237
+      207
     );
     
-    trackThemeStep('Yüksek kontrast değiştiriliyor', 'ThemeContext', { highContrast: !theme.highContrast });
+    trackThemeStep('Yüksek kontrast değiştiriliyor', 'ThemeContext', { highContrast: newValue });
     
-    setTheme(prev => ({ 
+    setPreferences(prev => ({ 
       ...prev, 
-      highContrast: !prev.highContrast 
+      highContrast: newValue 
     }));
     
     // localStorage'a kaydet
     try {
-      const updatedTheme = { 
-        ...theme, 
-        highContrast: !theme.highContrast 
+      const updatedPrefs = { 
+        ...preferences, 
+        highContrast: newValue 
       };
       
-      localStorage.setItem('theme-preferences', JSON.stringify(updatedTheme));
+      localStorage.setItem('theme-preferences', JSON.stringify(updatedPrefs));
       
       // Yüksek kontrast sınıfını değiştir
-      if (!theme.highContrast) {
+      if (newValue) {
         document.documentElement.classList.add('high-contrast');
       } else {
         document.documentElement.classList.remove('high-contrast');
@@ -339,11 +289,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         'Yüksek kontrast ayarlanırken hata oluştu',
         'ThemeContext.toggleHighContrast',
         'ThemeContext.tsx',
-        268,
+        234,
         { error }
       );
     }
-  }, [theme]);
+  }, [preferences]);
   
   // Tema tercihlerini sıfırla
   const resetTheme = useCallback(() => {
@@ -351,13 +301,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       'Tema tercihleri sıfırlanıyor',
       'ThemeContext.resetTheme',
       'ThemeContext.tsx',
-      279
+      245
     );
     
     trackThemeStep('Tema sıfırlanıyor', 'ThemeContext');
     
     // Varsayılan değerlere geri dön
-    setTheme(defaultThemePreferences);
+    setPreferences(defaultThemePreferences);
+    
+    // Next-themes ile senkronize et
+    setTheme(defaultThemePreferences.mode);
     
     // localStorage'dan tema tercihlerini kaldır
     try {
@@ -378,87 +331,83 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         'Tema tercihleri sıfırlandı',
         'ThemeContext.resetTheme',
         'ThemeContext.tsx',
-        301
+        272
       );
     } catch (error) {
       logger.warn(
         'Tema tercihleri sıfırlanırken hata oluştu',
         'ThemeContext.resetTheme',
         'ThemeContext.tsx',
-        307,
+        278,
         { error }
       );
     }
-  }, []);
+  }, [setTheme]);
   
   // Tema değişikliklerini DOM'a uygula
   useEffect(() => {
-    // Dark/Light modu ayarla
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-    }
-    
     // Font boyutunu ayarla
     document.documentElement.classList.remove('text-sm', 'text-base', 'text-lg');
     
-    if (theme.fontSize === 'small') {
+    if (preferences.fontSize === 'small') {
       document.documentElement.classList.add('text-sm');
-    } else if (theme.fontSize === 'large') {
+    } else if (preferences.fontSize === 'large') {
       document.documentElement.classList.add('text-lg');
     } else {
       document.documentElement.classList.add('text-base');
     }
     
     // Azaltılmış hareket ve kontrast ayarları
-    if (theme.reducedMotion) {
+    if (preferences.reducedMotion) {
       document.documentElement.classList.add('reduce-motion');
     } else {
       document.documentElement.classList.remove('reduce-motion');
     }
     
-    if (theme.highContrast) {
+    if (preferences.highContrast) {
       document.documentElement.classList.add('high-contrast');
     } else {
       document.documentElement.classList.remove('high-contrast');
     }
     
-    // CSS değişkenlerini ayarla
-    const root = document.documentElement;
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      root.style.setProperty(`--color-${key}`, value);
-    });
-    
     logger.debug(
-      'Tema DOM\'a uygulandı',
+      'Tema tercihleri DOM\'a uygulandı',
       'ThemeContext.applyTheme',
       'ThemeContext.tsx',
-      356,
+      311,
       { 
-        mode: currentMode, 
-        isDarkMode,
-        fontSize: theme.fontSize,
-        reducedMotion: theme.reducedMotion,
-        highContrast: theme.highContrast
+        mode: preferences.mode,
+        appearance: currentAppearance,
+        fontSize: preferences.fontSize,
+        reducedMotion: preferences.reducedMotion,
+        highContrast: preferences.highContrast
       }
     );
     
-    trackThemeStep('Tema uygulandı', 'ThemeContext.applyTheme', { mode: currentMode });
-  }, [theme, currentMode, isDarkMode]);
+    trackThemeStep('Tema tercihleri uygulandı', 'ThemeContext.applyTheme', { mode: preferences.mode });
+  }, [preferences, currentAppearance]);
+  
+  // Tema yardımcı fonksiyonlarını dışa aktar
+  const getTransparentColor = useCallback((color: string, opacity: number): string => {
+    return theme.utils.getTransparentColor(color, opacity);
+  }, []);
+  
+  const getColorShade = useCallback((color: string, percentage: number): string => {
+    return theme.utils.getColorShade(color, percentage);
+  }, []);
   
   // Provider değeri
   const value = {
-    theme,
-    currentMode,
+    preferences,
     isDarkMode,
+    currentAppearance,
     setThemeMode,
     setFontSize,
     toggleReducedMotion,
     toggleHighContrast,
-    resetTheme
+    resetTheme,
+    getTransparentColor,
+    getColorShade
   };
   
   return (
@@ -479,7 +428,7 @@ export function useTheme() {
       'useTheme hook ThemeProvider dışında kullanıldı',
       'useTheme',
       'ThemeContext.tsx',
-      399,
+      363,
       { stack: error.stack }
     );
     

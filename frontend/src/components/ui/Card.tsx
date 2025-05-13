@@ -8,10 +8,10 @@ const cardVariants = cva("rounded-lg overflow-hidden transition-all", {
   variants: {
     variant: {
       default:
-        "bg-white dark:bg-dark-bg-secondary border border-gray-200 dark:border-gray-700 shadow-soft",
-      flat: "bg-white dark:bg-dark-bg-secondary",
-      outline: "bg-transparent border border-gray-200 dark:border-gray-700",
-      elevated: "bg-white dark:bg-dark-bg-secondary shadow-md",
+        "bg-light-background dark:bg-dark-bg-secondary border border-light-border dark:border-dark-border shadow-soft",
+      flat: "bg-light-background dark:bg-dark-bg-secondary",
+      outline: "bg-transparent border border-light-border dark:border-dark-border",
+      elevated: "bg-light-background dark:bg-dark-bg-secondary shadow-md",
     },
     padding: {
       none: "",
@@ -37,6 +37,7 @@ export interface CardProps
 
 /**
  * Yeniden kullanılabilir kart bileşeni
+ * Yeni stil sistemine uygun olarak güncellenmiştir
  */
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant, padding, hover, children, ...props }, ref) => {
@@ -87,7 +88,7 @@ const CardTitle = forwardRef<
     <h3
       ref={ref}
       className={twMerge(
-        "font-semibold text-lg text-gray-900 dark:text-gray-100",
+        "font-semibold text-lg text-light-text-primary dark:text-dark-text-primary",
         className,
       )}
       {...props}
@@ -109,7 +110,7 @@ const CardDescription = forwardRef<
   return (
     <p
       ref={ref}
-      className={twMerge("text-sm text-gray-500 dark:text-gray-400", className)}
+      className={twMerge("text-sm text-light-text-secondary dark:text-dark-text-secondary", className)}
       {...props}
     >
       {children}

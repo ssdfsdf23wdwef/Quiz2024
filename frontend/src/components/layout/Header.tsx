@@ -17,6 +17,7 @@ import {
   FiKey,
   FiLogOut,
   FiUserPlus,
+  FiSettings,
 } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/auth/useAuth";
@@ -37,6 +38,7 @@ interface HeaderProps {
 
 /**
  * Tüm sayfalarda kullanılan ana header bileşeni
+ * Yeni stil sistemi entegrasyonu ile güncellenmiştir
  */
 const HeaderComponent: React.FC<HeaderProps> = ({
   userName,
@@ -81,15 +83,15 @@ const HeaderComponent: React.FC<HeaderProps> = ({
   }, []);
 
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50">
+    <header className="bg-light-background dark:bg-dark-bg-primary border-b border-light-border dark:border-dark-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" prefetch={true} className="flex items-center">
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-transparent bg-clip-text mr-2">
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 text-transparent bg-clip-text mr-2">
               q
             </span>
-            <span className="text-xl text-purple-600 dark:text-purple-400 font-medium">
+            <span className="text-xl text-primary-600 dark:text-primary-400 font-medium">
               quiz
             </span>
           </Link>
@@ -103,8 +105,8 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 prefetch={true}
                 className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors ${
                   pathname === item.path
-                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
-                    : "text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
+                    : "text-light-text-primary dark:text-dark-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary"
                 }`}
               >
                 <span className="mr-1.5">{item.icon}</span>
@@ -118,22 +120,32 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             {/* Tema değiştirme butonu */}
             <button
               onClick={onToggleTheme}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-lg text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary transition-colors"
               aria-label={isDarkMode ? "Açık tema kullan" : "Koyu tema kullan"}
             >
               {isDarkMode ? <FiSun /> : <FiMoon />}
             </button>
 
+            {/* Ayarlar bağlantısı */}
+            <Link 
+              href="/settings" 
+              prefetch={true}
+              className="p-2 rounded-lg text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary transition-colors"
+              aria-label="Ayarlar"
+            >
+              <FiSettings />
+            </Link>
+
             {/* Kullanıcı Kimlik Doğrulama Bağlantıları */}
             {isLoading ? (
-              <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div className="h-8 w-24 bg-light-background-tertiary dark:bg-dark-bg-tertiary rounded animate-pulse"></div>
             ) : isAuthenticated ? (
               <>
                 <Link href="/profile" prefetch={true}>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-700 dark:text-gray-300 flex items-center"
+                    className="text-light-text-primary dark:text-dark-text-primary flex items-center"
                   >
                     <FiUser className="mr-1" />
                     {displayName}
@@ -142,7 +154,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-700 dark:text-gray-300 flex items-center"
+                  className="text-light-text-primary dark:text-dark-text-primary flex items-center"
                   onClick={handleLogout}
                 >
                   <FiLogOut className="mr-1" />
@@ -155,7 +167,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-700 dark:text-gray-300 flex items-center"
+                    className="text-light-text-primary dark:text-dark-text-primary flex items-center"
                   >
                     <FiLogIn className="mr-1" />
                     Giriş Yap
@@ -165,7 +177,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-700 dark:text-gray-300 flex items-center"
+                    className="text-light-text-primary dark:text-dark-text-primary flex items-center"
                   >
                     <FiUserPlus className="mr-1" />
                     Kayıt Ol
@@ -175,7 +187,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-700 dark:text-gray-300 flex items-center"
+                    className="text-light-text-primary dark:text-dark-text-primary flex items-center"
                   >
                     <FiKey className="mr-1" />
                     Şifremi Unuttum
@@ -186,7 +198,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
 
             {/* Mobil menü toggle */}
             <button
-              className="p-2 rounded-lg md:hidden text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-lg md:hidden text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary transition-colors"
               onClick={toggleMobileMenu}
               aria-label="Mobil menüyü aç/kapat"
             >
@@ -197,7 +209,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
 
         {/* Mobil menü */}
         {mobileMenuOpen && (
-          <nav className="mt-3 md:hidden border-t border-gray-100 dark:border-gray-800 pt-3 pb-2">
+          <nav className="mt-3 md:hidden border-t border-light-border dark:border-dark-border pt-3 pb-2">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -205,8 +217,8 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 prefetch={true}
                 className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 ${
                   pathname === item.path
-                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
+                    : "text-light-text-primary dark:text-dark-text-primary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary"
                 }`}
                 onClick={closeMobileMenu}
               >
@@ -221,7 +233,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 <Link
                   href="/auth/login"
                   prefetch={true}
-                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-light-text-primary dark:text-dark-text-primary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary"
                   onClick={closeMobileMenu}
                 >
                   <FiLogIn className="mr-2" />
@@ -230,7 +242,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 <Link
                   href="/auth/register"
                   prefetch={true}
-                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-light-text-primary dark:text-dark-text-primary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary"
                   onClick={closeMobileMenu}
                 >
                   <FiUserPlus className="mr-2" />
@@ -239,7 +251,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 <Link
                   href="/auth/forgot-password"
                   prefetch={true}
-                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-light-text-primary dark:text-dark-text-primary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary"
                   onClick={closeMobileMenu}
                 >
                   <FiKey className="mr-2" />
@@ -251,7 +263,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center justify-start w-full px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                className="flex items-center justify-start w-full px-3 py-2 rounded-lg text-sm font-medium my-1 text-light-text-primary dark:text-dark-text-primary hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary"
                 onClick={handleLogout}
               >
                 <FiLogOut className="mr-2" />

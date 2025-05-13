@@ -31,6 +31,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Uygulamanın kök layout bileşeni
+ * Yeni stil sistemine uygun olarak güncellenmiştir
+ */
 export default function RootLayout({
   children,
 }: {
@@ -47,7 +51,12 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={cn("min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased", fontSans.className)}>
+      <body className={cn(
+        "min-h-screen font-sans antialiased",
+        "bg-light-background dark:bg-dark-bg-primary",
+        "text-light-text-primary dark:text-dark-text-primary",
+        fontSans.className
+      )}>
         <Providers>
           <MainLayout>
             {children}

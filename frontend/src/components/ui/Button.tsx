@@ -14,9 +14,9 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary-600 text-white hover:bg-secondary-700 focus-visible:ring-secondary-500",
         outline:
-          "border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-gray-400",
+          "border border-light-border dark:border-dark-border bg-transparent hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary focus-visible:ring-neutral-400",
         ghost:
-          "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-gray-400",
+          "bg-transparent hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary focus-visible:ring-neutral-400",
         destructive:
           "bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger-500",
         success:
@@ -51,6 +51,7 @@ export interface ButtonProps
 
 /**
  * Yeniden kullanılabilir ve tüm varyantları destekleyen buton bileşeni
+ * Yeni stil sistemine uygun olarak güncellenmiştir
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (

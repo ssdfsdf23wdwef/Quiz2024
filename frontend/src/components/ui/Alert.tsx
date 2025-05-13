@@ -17,7 +17,7 @@ const alertVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gray-50 text-gray-900 border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 [&>svg]:text-gray-500 dark:[&>svg]:text-gray-400",
+          "bg-light-background-secondary text-light-text-primary border-light-border dark:bg-dark-bg-secondary dark:text-dark-text-primary dark:border-dark-border [&>svg]:text-light-text-secondary dark:[&>svg]:text-dark-text-secondary",
         info: "bg-primary-50 text-primary-900 border-primary-200 dark:bg-primary-950/30 dark:text-primary-100 dark:border-primary-900 [&>svg]:text-primary-500",
         success:
           "bg-success-50 text-success-900 border-success-200 dark:bg-success-950/30 dark:text-success-100 dark:border-success-900 [&>svg]:text-success-500",
@@ -45,6 +45,7 @@ export interface AlertProps
 
 /**
  * Kullanıcıya bildirim göstermek için kullanılan uyarı bileşeni
+ * Yeni stil sistemine uygun olarak güncellenmiştir
  */
 const Alert = forwardRef<HTMLDivElement, AlertProps>(
   ({ className, variant, dismissible, onDismiss, children, ...props }, ref) => {
@@ -69,7 +70,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
         {dismissible && onDismiss && (
           <button
             onClick={onDismiss}
-            className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+            className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2"
             aria-label="Uyarıyı kapat"
           >
             <RiCloseLine className="h-4 w-4" />
@@ -93,7 +94,7 @@ const AlertTitle = forwardRef<
     <h5
       ref={ref}
       className={twMerge(
-        "mb-1 font-medium leading-none tracking-tight",
+        "mb-1 font-medium leading-none tracking-tight text-light-text-primary dark:text-dark-text-primary",
         className,
       )}
       {...props}
@@ -115,7 +116,7 @@ const AlertDescription = forwardRef<
   return (
     <div
       ref={ref}
-      className={twMerge("text-sm [&_p]:leading-relaxed", className)}
+      className={twMerge("text-sm text-light-text-secondary dark:text-dark-text-secondary [&_p]:leading-relaxed", className)}
       {...props}
     >
       {children}

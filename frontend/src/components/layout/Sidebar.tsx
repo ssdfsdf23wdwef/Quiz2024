@@ -14,6 +14,10 @@ import {
   FiUserPlus,
 } from "react-icons/fi";
 
+/**
+ * Yan menü bileşeni
+ * Yeni stil sistemi ile güncellenmiştir
+ */
 export default function Sidebar() {
   const { isDarkMode } = useTheme();
   const { isAuthenticated, isInitializing } = useAuth();
@@ -72,17 +76,14 @@ export default function Sidebar() {
     : unauthenticatedMenuItems;
 
   return (
-    <aside
-      className={`hidden lg:block fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200
-        ${isDarkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
-    >
+    <aside className="hidden lg:block fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200 bg-light-background dark:bg-dark-bg-primary border-light-border dark:border-dark-border">
       {isInitializing ? (
         // Yükleme durumunda placeholder göster
         <div className="flex flex-col gap-2 p-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+              className="h-10 bg-light-background-tertiary dark:bg-dark-bg-tertiary rounded animate-pulse"
             ></div>
           ))}
         </div>
@@ -92,7 +93,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className="py-2 px-3 rounded flex items-center text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-800 transition-colors"
+              className="py-2 px-3 rounded flex items-center text-light-text-primary dark:text-dark-text-primary hover:bg-primary-50 dark:hover:bg-dark-bg-secondary transition-colors"
             >
               {item.icon}
               {item.label}

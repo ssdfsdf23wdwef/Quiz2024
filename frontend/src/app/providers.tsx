@@ -41,6 +41,15 @@ interface ProvidersProps {
 /**
  * Tüm uygulama sağlayıcılarını (providers) bir araya getiren bileşen
  * Bu bileşen, RootLayout içerisinde tüm uygulamayı sarmalar
+ * 
+ * Sağlanan özellikler:
+ * - Hata sınırlama (ErrorBoundary)
+ * - Kimlik doğrulama (AuthProvider)
+ * - Çoklu dil desteği (I18nextProvider)
+ * - API veri yönetimi (QueryClientProvider)
+ * - Tema yönetimi (ThemeProvider - yeni stil sistemi entegrasyonu)
+ * - Bildirim sistemi (ToastProvider)
+ * - Analitik izleme (AnalyticsComponent)
  */
 export function Providers({ children }: ProvidersProps) {
   // Tarayıcıda çalıştığında i18n'i başlat (SSR'daki uyumsuzluklardan kaçınmak için)
@@ -92,8 +101,7 @@ export function Providers({ children }: ProvidersProps) {
   }, []);
 
   return (
-    <ErrorBoundary 
-      >
+    <ErrorBoundary>
       <AuthProvider>
         <I18nextProvider i18n={i18n}>
           <QueryClientProvider client={queryClient}>
