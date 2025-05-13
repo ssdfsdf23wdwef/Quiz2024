@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ErrorService } from "@/services/errorService";
+import { ErrorService } from "@/services/error.service";
 import { useAuthStore } from "@/store/auth.store";
 import { checkApiAvailability } from "@/services/api.service";
 import { useAuth as useAuthContext } from "@/app/context/AuthContext";

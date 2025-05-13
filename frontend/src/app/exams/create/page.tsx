@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import courseService from "@/services/course.service";
-import quizService from "@/services/quizApiService";
+import quizService from "@/services/quiz.service";
 import { LearningTarget } from "@/types/learningTarget";
 import { FiArrowLeft, FiHelpCircle } from "react-icons/fi";
 import { motion } from "framer-motion";
@@ -17,7 +17,7 @@ import {
   PersonalizedQuizType,
   DifficultyLevel,
 } from "@/types/quiz";
-import ErrorService from "@/services/errorService";
+import ErrorService from "@/services/error.service";
 
 export default function CreateExamPage() {
   const router = useRouter();

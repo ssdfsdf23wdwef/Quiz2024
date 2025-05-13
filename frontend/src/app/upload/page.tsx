@@ -9,7 +9,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import courseService from "@/services/course.service";
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
-import ErrorService from "@/services/errorService";
+import ErrorService from "@/services/error.service";
 import { useAuth } from "@/hooks/auth/useAuth";
 
 export default function UploadPage() {

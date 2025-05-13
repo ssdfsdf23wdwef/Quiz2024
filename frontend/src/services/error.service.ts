@@ -1,9 +1,12 @@
 import { getLogger, FlowCategory, trackFlow } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
-import { ErrorService as ErrorToastService } from "./errorService";
+import { toast } from "react-hot-toast";
 
 // Logger nesnesi elde et
 const logger = getLogger();
+
+// Toast mesaj tipleri
+export type ToastType = "success" | "error" | "warning" | "info";
 
 // Hata tipleri
 export enum ErrorSeverity {
@@ -23,6 +26,17 @@ export enum ErrorSource {
   UNKNOWN = 'unknown'
 }
 
+// API hata seçenekleri
+export interface ApiErrorOptions {
+  status?: number;
+  code?: string;
+  original?: {
+    error: unknown;
+    context?: string;
+    [key: string]: unknown;
+  };
+}
+
 // Hata bilgileri arayüzü
 export interface ErrorInfo {
   message: string;
@@ -33,6 +47,25 @@ export interface ErrorInfo {
   userId?: string;
   context?: Record<string, unknown>;
   stack?: string;
+}
+
+/**
+ * API hatası oluşturmak için kullanılan sınıf
+ */
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  original?: unknown;
+  context?: string;
+
+  constructor(message: string, options?: ApiErrorOptions) {
+    super(message);
+    this.name = "ApiError";
+    this.status = options?.status || 500;
+    this.code = options?.code;
+    this.original = options?.original?.error;
+    this.context = options?.original?.context;
+  }
 }
 
 // XMLHttpRequest için tip tanımı genişletmesi
@@ -50,7 +83,7 @@ declare global {
  * Uygulama genelinde hata izleme ve raporlama yönetimi
  */
 @LogClass('ErrorService')
-class ErrorService {
+export class ErrorService {
   private errors: ErrorInfo[] = [];
   private readonly MAX_ERROR_HISTORY = 50;
   private reportingEndpoint?: string;
@@ -514,7 +547,7 @@ class ErrorService {
   private showErrorToUser(errorInfo: ErrorInfo): void {
     try {
       // Toast bildirimini göster
-      ErrorToastService.showToast(
+      this.showToast(
         this.formatUserErrorMessage(errorInfo), 
         "error"
       );
@@ -664,33 +697,83 @@ class ErrorService {
       );
     }
   }
-}
 
-// Otomatik olarak hataları loglama işlevi ekle
-if (typeof window !== 'undefined') {
-  window.addEventListener('error', (event) => {
-    const errorService = new ErrorService();
-    errorService.captureException(
-      event.error || new Error(event.message),
-      ErrorSource.UI,
-      ErrorSeverity.HIGH,
-      {
-        fileName: event.filename,
-        lineNumber: event.lineno,
-        columnNumber: event.colno
-      }
-    );
-  });
-  
-  window.addEventListener('unhandledrejection', (event) => {
-    const errorService = new ErrorService();
-    errorService.captureException(
-      event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
-      ErrorSource.UI,
-      ErrorSeverity.HIGH,
-      { type: 'unhandledRejection' }
-    );
-  });
+  /**
+   * Hata mesajını konsola loglar
+   */
+  static logError(error: unknown, context?: string): void {
+    if (error instanceof Error) {
+      console.error(`[${context || "ERROR"}]`, error.message, error);
+    } else {
+      console.error(`[${context || "ERROR"}]`, error);
+    }
+  }
+
+  /**
+   * API hatası oluşturur
+   */
+  static createApiError(
+    message: string,
+    code?: string,
+    options?: ApiErrorOptions,
+  ): ApiError {
+    return new ApiError(message, {
+      ...options,
+      code,
+    });
+  }
+
+  /**
+   * Toast mesajı gösterir
+   */
+  static showToast(message: string, type: ToastType = "info"): void {
+    switch (type) {
+      case "success":
+        toast.success(message);
+        break;
+      case "error":
+        toast.error(message);
+        break;
+      case "warning":
+        toast(message, {
+          icon: "⚠️",
+          style: {
+            background: "#FEF3C7",
+            color: "#92400E",
+            border: "1px solid #F59E0B",
+          },
+        });
+        break;
+      case "info":
+      default:
+        toast(message);
+        break;
+    }
+  }
+
+  /**
+   * Instance metod olarak toast mesaj göster
+   */
+  showToast(message: string, type: ToastType = "info"): void {
+    ErrorService.showToast(message, type);
+  }
+
+  /**
+   * Hata mesajını kullanıcıya gösterir
+   */
+  static handleError(error: unknown, context?: string): void {
+    ErrorService.logError(error, context);
+
+    let message = "Bir hata oluştu. Lütfen tekrar deneyin.";
+
+    if (error instanceof ApiError) {
+      message = error.message;
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
+
+    ErrorService.showToast(message, "error");
+  }
 }
 
 // Singleton instance oluştur ve export et

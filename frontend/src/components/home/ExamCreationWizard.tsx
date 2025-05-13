@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { QuizPreferences } from "@/app/types";
 import { DocumentUploader } from "../document";
 import TopicSelectionScreen from "./TopicSelectionScreen";
-import { ErrorService } from "@/services/errorService";
+import { ErrorService } from "@/services/error.service";
 import ExamCreationProgress from "./ExamCreationProgress";
 import CourseTopicSelector from "./CourseTopicSelector";
 import courseService from "@/services/course.service";

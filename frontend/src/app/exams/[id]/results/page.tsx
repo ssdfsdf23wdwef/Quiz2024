@@ -5,7 +5,7 @@ import { FiArrowLeft, FiDownload, FiShare2, FiRefreshCw } from "react-icons/fi";
 import MainLayout from "@/components/layout/MainLayout";
 import QuizAnalysis from "@/components/ui/QuizAnalysis";
 import Link from "next/link";
-import quizService from "@/services/quizApiService";
+import quizService from "@/services/quiz.service";
 import { Question, Quiz, QuizType, PersonalizedQuizType, DifficultyLevel } from "@/types/quiz";
 
 // API'dan gelen tipi Quiz tipine dönüştürmek için yardımcı bir tip tanımlıyorum

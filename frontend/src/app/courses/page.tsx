@@ -5,8 +5,6 @@ import {} from "react-icons/fi";
 import { useQuery } from "@tanstack/react-query";
 
 import courseService from "@/services/course.service";
-import learningTargetService from "@/services/learningTarget.service";
-import quizService from "@/services/quizApiService";
 import CourseList from "@/components/CourseList";
 import { Course } from "@/types/course";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -25,29 +23,6 @@ export default function CoursesPage() {
     queryKey: ["courses", user?.id],
     queryFn: () => courseService.getCourses(),
     enabled: !!user, // Kullanıcı varsa aktifleştir
-    staleTime: 5 * 60 * 1000, // 5 dakika
-  });
-
-  // Her kurs için alt konu ve sınav verilerini çekmek için TanStack Query
-  const { data: stats = {} } = useQuery({
-    queryKey: ["courses-stats", courses],
-    queryFn: async () => {
-      if (!courses.length) return {};
-
-      // Her kurs için alt konu ve sınav verilerini paralel çek
-      const statsEntries = await Promise.all(
-        courses.map(async (course: { id: string }) => {
-          const [learningTargets, quizzes] = await Promise.all([
-            learningTargetService.getLearningTargetsByCourse(course.id),
-            quizService.getQuizzes(course.id),
-          ]);
-          return [course.id, { learningTargets, quizzes }];
-        }),
-      );
-
-      return Object.fromEntries(statsEntries);
-    },
-    enabled: courses.length > 0, // Kurslar yüklendiyse aktifleştir
     staleTime: 5 * 60 * 1000, // 5 dakika
   });
 

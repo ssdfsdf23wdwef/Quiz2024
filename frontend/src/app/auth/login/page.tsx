@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import { FaGoogle } from "react-icons/fa";
-import { ErrorService } from "@/services/errorService";
+import { ErrorService } from "@/services/error.service";
 import { FirebaseError } from "firebase/app";
 import axios from "axios";
 

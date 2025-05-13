@@ -12,7 +12,7 @@ import {
   AnalysisResult,
   FailedQuestion,
 } from "../types/quiz";
-import quizService from "../services/quizApiService";
+import quizService from "../services/quiz.service";
 import adapterService from "../services/adapter.service";
 import {
   ApiQuiz,

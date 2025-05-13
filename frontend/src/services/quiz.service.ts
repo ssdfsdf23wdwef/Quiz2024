@@ -6,7 +6,7 @@ import {
   ApiQuizSubmissionPayloadDto,
 } from "./adapter.service";
 import apiService from "./api.service";
-import { ErrorService } from "./errorService";
+import { ErrorService } from "./error.service";
 import adapterService from "./adapter.service";
 import { QuizGenerationOptions, QuizSubmissionPayload } from "../types/quiz";
 import { getLogger, getFlowTracker } from "@/lib/logger.utils";

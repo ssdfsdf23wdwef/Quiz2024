@@ -20,7 +20,7 @@ import {
 import PageTransition from "@/components/transitions/PageTransition";
 import { useTheme } from "next-themes";
 import type { LearningTarget, LearningTargetStatus } from "@/app/types";
-import quizService from "@/services/quizApiService";
+import quizService from "@/services/quiz.service";
 import type { Quiz } from "@/types/quiz";
 import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";

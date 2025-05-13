@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosInstance } from "axios";
 import { auth } from "@/app/firebase/config";
-import { ErrorService } from "./errorService";
+import { ErrorService } from "./error.service";
 import { LoggerService } from "./logger.service";
 import { FlowTrackerService, FlowCategory } from "./flow-tracker.service";
 import { getLogger, getFlowTracker } from "../lib/logger.utils";
