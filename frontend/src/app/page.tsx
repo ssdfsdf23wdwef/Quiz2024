@@ -8,15 +8,9 @@ import {
   FiArrowRight,
   FiPlay,
   FiBook,
-  FiTarget,
-  FiFileText,
-  FiBarChart2,
-  FiStar,
 } from "react-icons/fi";
-import { BiBrain } from "react-icons/bi";
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
-import { useAuthStore } from "@/store/auth.store";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Lazy loading ile bileşenleri yükle
@@ -60,32 +54,9 @@ const buttonHover = {
   },
 };
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut",
-    },
-  },
-};
-
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const isLoading = useAuthStore((state) => state.isLoading);
   const [showExamCreationWizard, setShowExamCreationWizard] = useState(false);
 
   const handleStartExamCreation = () => {
@@ -113,24 +84,6 @@ export default function Home() {
       return;
     }
     router.push("/courses");
-  };
-
-  const handleViewLearningGoals = () => {
-    if (!isAuthenticated) {
-      // Giriş yapmamış kullanıcıları login sayfasına yönlendir
-      router.push("/auth/login?returnUrl=/learning-goals");
-      return;
-    }
-    router.push("/learning-goals");
-  };
-
-  const handleViewExams = () => {
-    if (!isAuthenticated) {
-      // Giriş yapmamış kullanıcıları login sayfasına yönlendir
-      router.push("/auth/login?returnUrl=/exams");
-      return;
-    }
-    router.push("/exams");
   };
 
   return (

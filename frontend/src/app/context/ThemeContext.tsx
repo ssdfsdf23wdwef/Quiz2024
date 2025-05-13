@@ -8,11 +8,29 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { getLogger, getFlowTracker, trackFlow } from "@/lib/logger.utils";
+import { getLogger, getFlowTracker } from "@/lib/logger.utils";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
 const flowTracker = getFlowTracker();
+
+// FlowTracker'ı sarmalayan basit bir fonksiyon
+const trackThemeStep = (message: string, context: string, metadata?: Record<string, unknown>) => {
+  // Loglama işlemini sadece logger ile yapalım, flowTracker ile değil
+  // Bu sayede tip uyumsuzluklarını önlemiş oluruz
+  logger.debug(
+    message,
+    context,
+    'ThemeContext.tsx',
+    undefined,
+    metadata
+  );
+  
+  // Development modunda konsola yazdır
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[THEME] ${context}: ${message}`, metadata);
+  }
+};
 
 // Tema seçenekleri
 export type ThemeMode = "light" | "dark" | "system";
@@ -112,11 +130,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           { theme: parsedTheme }
         );
         
-        flowTracker.trackStep(
-          'Theme', 
-          'Tema tercihleri yüklendi', 
-          'ThemeContext'
-        );
+        trackThemeStep('Tema tercihleri yüklendi', 'ThemeContext');
       }
     } catch (error) {
       logger.warn(
@@ -165,14 +179,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (theme.mode === "system") {
         updateActualMode();
         
-        flowTracker.trackStep(
-          'Theme', 
-          'Sistem teması değişti', 
-          'ThemeContext.mediaQuery',
-          { 
-            isDarkMode: mediaQuery.matches 
-          }
-        );
+        trackThemeStep('Sistem teması değişti', 'ThemeContext.mediaQuery', { 
+          isDarkMode: mediaQuery.matches 
+        });
       }
     };
     
@@ -194,7 +203,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       136
     );
     
-    flowTracker.trackStateChange('themeMode', 'ThemeContext', theme.mode, mode);
+    trackThemeStep('Tema modu değiştiriliyor', 'ThemeContext', { mode });
     
     setTheme(prev => ({ ...prev, mode }));
     
@@ -222,7 +231,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       161
     );
     
-    flowTracker.trackStateChange('fontSize', 'ThemeContext', theme.fontSize, fontSize);
+    trackThemeStep('Font boyutu değiştiriliyor', 'ThemeContext', { fontSize });
     
     setTheme(prev => ({ ...prev, fontSize }));
     
@@ -261,12 +270,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       195
     );
     
-    flowTracker.trackStateChange(
-      'reducedMotion', 
-      'ThemeContext', 
-      theme.reducedMotion, 
-      !theme.reducedMotion
-    );
+    trackThemeStep('Azaltılmış hareket değiştiriliyor', 'ThemeContext', { reducedMotion: !theme.reducedMotion });
     
     setTheme(prev => ({ 
       ...prev, 
@@ -308,12 +312,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       237
     );
     
-    flowTracker.trackStateChange(
-      'highContrast', 
-      'ThemeContext', 
-      theme.highContrast, 
-      !theme.highContrast
-    );
+    trackThemeStep('Yüksek kontrast değiştiriliyor', 'ThemeContext', { highContrast: !theme.highContrast });
     
     setTheme(prev => ({ 
       ...prev, 
@@ -355,7 +354,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       279
     );
     
-    flowTracker.trackStep('Theme', 'Tema sıfırlanıyor', 'ThemeContext');
+    trackThemeStep('Tema sıfırlanıyor', 'ThemeContext');
     
     // Varsayılan değerlere geri dön
     setTheme(defaultThemePreferences);
@@ -447,12 +446,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
     );
     
-    flowTracker.trackStep(
-      'Theme', 
-      'Tema uygulandı', 
-      'ThemeContext.applyTheme',
-      { mode: currentMode }
-    );
+    trackThemeStep('Tema uygulandı', 'ThemeContext.applyTheme', { mode: currentMode });
   }, [theme, currentMode, isDarkMode]);
   
   // Provider değeri

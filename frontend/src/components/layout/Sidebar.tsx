@@ -15,8 +15,7 @@ import {
 } from "react-icons/fi";
 
 export default function Sidebar() {
-  const themeContext = useTheme();
-  const isDarkMode = themeContext?.isDark || false;
+  const { isDarkMode } = useTheme();
   const { isAuthenticated, isInitializing } = useAuth();
 
   // Oturum durumuna göre farklı menü öğeleri

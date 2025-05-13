@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useAuthStore } from "@/store/auth.store";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface NavItem {
   path: string;
@@ -264,5 +265,13 @@ const HeaderComponent: React.FC<HeaderProps> = ({
   );
 };
 
-// Sadece render olması gereken durumlarda tekrar render olması için memo
-export const Header = memo(HeaderComponent);
+// Memo ile header bileşenini sarmak - gereksiz yeniden render'ları önler
+export const Header = memo(function Header() {
+  // Theme context'ten değerleri al
+  const { isDarkMode, toggleTheme } = useTheme();
+  
+  return <HeaderComponent 
+    isDarkMode={isDarkMode} 
+    onToggleTheme={toggleTheme} 
+  />;
+});

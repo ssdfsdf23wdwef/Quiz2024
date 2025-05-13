@@ -8,7 +8,6 @@ interface ThemeContextType {
   isDarkMode: boolean;
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  isDark: boolean;
   toggleTheme: () => void;
 }
 
@@ -16,7 +15,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("system");
-  const [isDark, setIsDark] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   // Sistem temasını izle
   const listenToSystemThemeChange = useCallback(() => {
@@ -24,7 +23,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const handleChange = () => {
       if (theme === "system") {
-        setIsDark(mediaQuery.matches);
+        setIsDarkMode(mediaQuery.matches);
         updateDocumentClass(mediaQuery.matches);
       }
     };
@@ -56,11 +55,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const systemIsDark = window.matchMedia(
         "(prefers-color-scheme: dark)",
       ).matches;
-      setIsDark(systemIsDark);
+      setIsDarkMode(systemIsDark);
       updateDocumentClass(systemIsDark);
     } else {
       const isDarkMode = theme === "dark";
-      setIsDark(isDarkMode);
+      setIsDarkMode(isDarkMode);
       updateDocumentClass(isDarkMode);
     }
 
@@ -78,17 +77,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Açık/koyu tema arasında geçiş yap
   const toggleTheme = useCallback(() => {
-    const newTheme = isDark ? "light" : "dark";
+    const newTheme = isDarkMode ? "light" : "dark";
     handleThemeChange(newTheme);
-  }, [isDark, handleThemeChange]);
+  }, [isDarkMode, handleThemeChange]);
 
   // Context değerini memoize et - gereksiz yeniden render'ları önlemek için
   const contextValue = useMemo(() => ({
     theme, 
     setTheme: handleThemeChange, 
-    isDark, 
+    isDarkMode,
     toggleTheme
-  }), [theme, handleThemeChange, isDark, toggleTheme]);
+  }), [theme, handleThemeChange, isDarkMode, toggleTheme]);
 
   return (
     <ThemeContext.Provider value={contextValue}>

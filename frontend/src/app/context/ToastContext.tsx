@@ -59,12 +59,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const dismissToast = (id: string) => {
     toast.dismiss(id);
   };
-
+    
   // Tüm toastları kapatma
   const dismissAllToasts = () => {
     toast.dismiss();
   };
-
+  
   return (
     <ToastContext.Provider
       value={{

@@ -21,13 +21,17 @@ interface MainLayoutProps {
 }
 
 function MainLayoutBase({ children }: MainLayoutProps) {
-  const themeContext = useTheme();
-  const isDarkMode = themeContext?.isDark || false;
+  // useTheme hook'undan isDarkMode değişkenini al
+  const { isDarkMode } = useTheme();
 
   return (
     <DevLoggerProvider>
       <div
-        className={`min-h-screen ${isDarkMode ? "bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-800"} transition-colors duration-200`}
+        className={`min-h-screen transition-colors duration-200 ${
+          isDarkMode 
+            ? "bg-gray-900 text-white" 
+            : "bg-gray-50 text-gray-900"
+        }`}
       >
         <Suspense fallback={<LoadingPlaceholder />}>
           <Header />
