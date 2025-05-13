@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
-import LoggerPanel from '@/components/ui/LoggerPanel';
+import LoggerPanel from '@/components/ui/LoggerPanel'; 
+
 
 interface DevLoggerContextType {
   isLoggerPanelOpen: boolean;
