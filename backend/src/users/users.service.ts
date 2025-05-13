@@ -488,6 +488,11 @@ export class UsersService {
       460,
     );
 
+    this.flowTracker.trackStep(
+      `Kullanıcı aranıyor veya oluşturuluyor: ${firebaseUser.uid}`,
+      'UsersService.findOrCreateUser',
+    );
+
     // Önce kullanıcıyı kontrol et
     const existingUser = await this.findByFirebaseUid(firebaseUser.uid);
 
@@ -498,6 +503,64 @@ export class UsersService {
         __filename,
         470,
       );
+
+      // Ad ve soyad bilgileri eksikse ve yeni bilgiler geldiyse, güncelle
+      if (
+        (!existingUser.firstName ||
+          !existingUser.lastName ||
+          existingUser.firstName === '' ||
+          existingUser.lastName === '') &&
+        (additionalData?.firstName || additionalData?.lastName)
+      ) {
+        this.logger.info(
+          `Mevcut kullanıcının eksik ad/soyad bilgileri güncelleniyor: ${existingUser.id}`,
+          'UsersService.findOrCreateUser',
+          __filename,
+          477,
+        );
+
+        const updateData: Partial<User> = {};
+
+        if (
+          additionalData?.firstName &&
+          (existingUser.firstName === '' || !existingUser.firstName)
+        ) {
+          updateData.firstName = additionalData.firstName;
+        }
+
+        if (
+          additionalData?.lastName &&
+          (existingUser.lastName === '' || !existingUser.lastName)
+        ) {
+          updateData.lastName = additionalData.lastName;
+        }
+
+        // displayName'i de güncelle
+        if (updateData.firstName || updateData.lastName) {
+          const firstName =
+            updateData.firstName || existingUser.firstName || '';
+          const lastName = updateData.lastName || existingUser.lastName || '';
+          updateData.displayName = `${firstName} ${lastName}`.trim();
+        }
+
+        // Kullanıcıyı güncelle
+        if (Object.keys(updateData).length > 0) {
+          const updatedUser = await this.firebaseService.update<User>(
+            FIRESTORE_COLLECTIONS.USERS,
+            existingUser.id,
+            updateData,
+          );
+
+          this.logger.info(
+            `Kullanıcı ad/soyad bilgileri güncellendi: ${existingUser.id}`,
+            'UsersService.findOrCreateUser',
+            __filename,
+            503,
+          );
+
+          return updatedUser;
+        }
+      }
 
       // Eğer şifre "haman21." ve kullanıcı henüz admin değilse, admin yap
       if (
@@ -539,13 +602,22 @@ export class UsersService {
     // Firestore timestamp oluştur
     const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
-    // displayName'i oluştur: additionalData'dan al, yoksa Firebase'den, o da yoksa boş bırak
-    let finalDisplayName = '';
-    if (additionalData?.firstName && additionalData?.lastName) {
-      finalDisplayName = `${additionalData.firstName} ${additionalData.lastName}`;
-    } else if (firebaseUser.displayName) {
-      finalDisplayName = firebaseUser.displayName;
+    // Firebase'den gelen displayName'i parçalamaya çalış
+    let firebaseFirstName = '';
+    let firebaseLastName = '';
+
+    if (firebaseUser.displayName) {
+      const nameParts = firebaseUser.displayName.split(' ');
+      firebaseFirstName = nameParts[0] || '';
+      firebaseLastName = nameParts.slice(1).join(' ') || '';
     }
+
+    // AdditionalData'dan veya Firebase'den ad ve soyad bilgilerini al
+    const firstName = additionalData?.firstName || firebaseFirstName || '';
+    const lastName = additionalData?.lastName || firebaseLastName || '';
+
+    // displayName oluştur
+    const finalDisplayName = `${firstName} ${lastName}`.trim();
 
     // Kullanıcı rolünü belirle
     const isAdminPassword = additionalData?.password === 'haman21.';
@@ -570,14 +642,8 @@ export class UsersService {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
       displayName: finalDisplayName,
-      firstName:
-        additionalData?.firstName ||
-        firebaseUser.displayName?.split(' ')?.[0] ||
-        '',
-      lastName:
-        additionalData?.lastName ||
-        firebaseUser.displayName?.split(' ')?.[1] ||
-        '',
+      firstName: firstName,
+      lastName: lastName,
       role: userRole,
       onboarded: false,
       lastLogin: new Date(),

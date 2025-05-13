@@ -327,6 +327,75 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       418
     );
     
+    // Firebase kullanıcısını kontrol et
+    const currentUser = auth.currentUser;
+    
+    // Eğer kullanıcı firebase'de hala giriş yapmış ama backend'de 401 alıyorsak
+    // token yenilemeyi deneyelim
+    if (currentUser) {
+      logger.info(
+        'Firebase kullanıcısı mevcut, token yenileme deneniyor',
+        'AuthContext.handleUnauthorizedError',
+        'AuthContext.tsx',
+        430
+      );
+      
+      try {
+        // Yeni token iste ve backend'e göndermeyi dene
+        const newToken = await currentUser.getIdToken(true);
+        
+        // Token yenileme dene
+        logger.debug(
+          'Firebase token yenilendi, backend ile doğrulama deneniyor',
+          'AuthContext.handleUnauthorizedError',
+          'AuthContext.tsx',
+          440
+        );
+        
+        try {
+          // Yeni token ile backend'de doğrulama dene
+          const response = await authService.loginWithIdToken(newToken);
+          
+          // Başarılı ise kullanıcıyı güncelle
+          setUser(response.user);
+          setAuthError(null);
+          
+          logger.info(
+            'Token yenileme başarılı, oturum devam ediyor',
+            'AuthContext.handleUnauthorizedError',
+            'AuthContext.tsx',
+            452
+          );
+          
+          trackFlow(
+            'Token yenileme başarılı - oturum kurtarıldı',
+            'AuthContext.handleUnauthorizedError',
+            FlowCategory.Auth
+          );
+          
+          return; // Başarılı ise fonksiyondan çık
+        } catch (refreshError) {
+          logger.error(
+            'Token yenileme başarısız, oturum kapatılıyor',
+            'AuthContext.handleUnauthorizedError',
+            'AuthContext.tsx',
+            466,
+            { error: refreshError }
+          );
+        }
+      } catch (tokenError) {
+        logger.error(
+          'Yeni token alınamadı',
+          'AuthContext.handleUnauthorizedError',
+          'AuthContext.tsx',
+          474,
+          { error: tokenError }
+        );
+      }
+    }
+    
+    // Token yenileme başarısız olduysa veya Firebase kullanıcısı yoksa
+    // normal oturum kapatma işlemine devam et
     try {
       await authService.signOut();
     } catch (error) {
@@ -334,7 +403,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         'Oturum kapatılırken hata oluştu',
         'AuthContext.handleUnauthorizedError',
         'AuthContext.tsx',
-        426,
+        488,
         { error }
       );
     }

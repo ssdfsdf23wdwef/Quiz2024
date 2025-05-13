@@ -55,9 +55,13 @@ class AuthService {
   /**
    * ID token ile giriş işlemi - Firebase tarafından alınan token ile backend'e doğrulama yapar
    * @param idToken Firebase'den alınan kimlik doğrulama token'ı
+   * @param userData İsteğe bağlı kullanıcı verileri (kayıt için)
    * @returns Backend yanıtı (kullanıcı bilgileri ve session token)
    */
-  async loginWithIdToken(idToken: string): Promise<AuthResponse> {
+  async loginWithIdToken(
+    idToken: string, 
+    userData?: { firstName?: string; lastName?: string }
+  ): Promise<AuthResponse> {
     try {
       trackFlow(
         'ID Token ile giriş başlatıldı',
@@ -72,9 +76,15 @@ class AuthService {
         141
       );
       
-      const response = await apiService.post<AuthResponse>("/auth/login-via-idtoken", {
-        idToken,
-      });
+      // İstek verisini hazırla
+      const requestData: Record<string, any> = { idToken };
+      
+      // Kullanıcı verileri varsa ekle
+      if (userData) {
+        requestData.userData = userData;
+      }
+      
+      const response = await apiService.post<AuthResponse>("/auth/login-via-idtoken", requestData);
 
       this.logger.info(
         'ID Token ile login başarılı',
@@ -168,7 +178,7 @@ class AuthService {
       // Bunun yerine loginWithIdToken çağır, bu metod backend'de kullanıcıyı oluşturacak/güncelleyecektir.
       // userData'nın (firstName, lastName) nasıl işleneceği ayrıca değerlendirilmeli.
       // Belki loginWithIdToken backend'de bu bilgileri Firebase'den alır veya ayrı bir updateProfile gerekir.
-      const loginResponse = await this.loginWithIdToken(idToken);
+      const loginResponse = await this.loginWithIdToken(idToken, userData);
 
       // Eğer Firebase'de displayName güncellenmemişse ve userData varsa güncelleyelim.
       // Bu, Firebase Console'da kullanıcının adının görünmesine yardımcı olabilir.
@@ -496,6 +506,8 @@ class AuthService {
     console.log("🎧 [AuthService] onAuthStateChange başlatılıyor");
     
     let previousAuthState: FirebaseUser | null = null;
+    let retryCount = 0;
+    const MAX_RETRY = 3;
     
     return onAuthStateChanged(auth, async (firebaseUser) => {
       // Başlangıçta ve durumda bir değişiklik olmadığında gereksiz log oluşturma
@@ -504,8 +516,16 @@ class AuthService {
       if (isLoginOrInitialState) {
         try {
           console.log("🔑 [AuthService] Token isteniyor");
-          // ID token al
-          const idToken = await firebaseUser.getIdToken();
+          
+          // Firebase kullanıcısına yapılan değişikliklerin işlenmesi için kısa bir bekleme
+          // Bu özellikle yeni kayıt olan kullanıcılar için önemli
+          if (retryCount === 0 && !previousAuthState) {
+            console.log("⏱️ [AuthService] Yeni kullanıcı kaydı için 1 saniye bekleniyor");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          
+          // ID token al - force refresh yaparak her zaman güncel token al
+          const idToken = await firebaseUser.getIdToken(true);
           console.log("✅ [AuthService] Token alındı, uzunluk:", idToken.length);
 
           // Backend'e giriş için API çağrısı yap
@@ -517,6 +537,7 @@ class AuthService {
             );
 
             console.log("✅ [AuthService] Backend oturum yenilemesi başarılı");
+            retryCount = 0; // Başarılı istek sonrası sayacı sıfırla
 
             // Token'ı localStorage'a kaydet
             if (response.token) {
@@ -526,11 +547,47 @@ class AuthService {
             }
           } catch (error) {
             console.error("❌ [AuthService] Backend oturum yenilemesi sırasında hata:", error);
+            
             if (axios.isAxiosError(error)) {
               const axiosError = error as AxiosError;
+              
+              // Bağlantı sorunları - offline mod
               if (axiosError.code === 'ECONNABORTED' || axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ERR_NETWORK') {
                 console.log("⚠️ [AuthService] Backend bağlantı hatası nedeniyle işleme devam ediliyor");
                 // Bağlantı hatası durumunda devam et, oturumu koru
+              } 
+              // 401 Unauthorized hatası - yeni kayıt olan kullanıcılar için yeniden deneme
+              else if (axiosError.response?.status === 401 && retryCount < MAX_RETRY) {
+                retryCount++;
+                console.log(`⚠️ [AuthService] 401 hatası alındı, yeniden deneme (${retryCount}/${MAX_RETRY})`);
+                
+                // Yeni kayıt durumunda zaman tanıyarak tekrar dene
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // ID token'ı yenile ve tekrar dene
+                try {
+                  const refreshedToken = await firebaseUser.getIdToken(true);
+                  console.log("🔄 [AuthService] Token yenilendi, tekrar deneniyor");
+                  
+                  const retryResponse = await apiService.post<AuthResponse>(
+                    "/auth/login-via-idtoken",
+                    { idToken: refreshedToken },
+                  );
+                  
+                  console.log("✅ [AuthService] Yeniden deneme başarılı");
+                  
+                  // Token'ı localStorage'a kaydet
+                  if (retryResponse.token) {
+                    localStorage.setItem("auth_token", retryResponse.token);
+                    setAuthCookie(retryResponse.token);
+                    console.log("💾 [AuthService] Token önbelleğe kaydedildi");
+                  }
+                  
+                  retryCount = 0; // Başarılı istek sonrası sayacı sıfırla
+                } catch (retryError) {
+                  console.error("❌ [AuthService] Yeniden deneme başarısız:", retryError);
+                  throw retryError; // Hatayı yukarı fırlat
+                }
               } else {
                 throw error; // Diğer hataları yukarıya fırlat
               }
@@ -672,85 +729,34 @@ class AuthService {
   }
 
   private getFirebaseErrorMessage(code: string): string {
-    // Firebase hata kodlarına göre kullanıcı dostu Türkçe mesajlar
     switch (code) {
-      // Kimlik doğrulama hataları
-      case 'auth/user-not-found':
-        return 'Bu e-posta adresine sahip bir kullanıcı bulunamadı';
-      case 'auth/wrong-password':
-        return 'Hatalı şifre girdiniz';
       case 'auth/invalid-email':
-        return 'Geçersiz e-posta formatı';
+        return 'Geçersiz e-posta formatı. Lütfen geçerli bir e-posta adresi girin.';
+      case 'auth/user-disabled':
+        return 'Bu kullanıcı hesabı devre dışı bırakılmış. Lütfen destek ekibimizle iletişime geçin.';
+      case 'auth/user-not-found':
+        return 'Bu e-posta adresine sahip bir kullanıcı bulunamadı. Lütfen kayıt olun.';
+      case 'auth/wrong-password':
+        return 'Hatalı şifre. Lütfen şifrenizi kontrol edin ve tekrar deneyin.';
+      case 'auth/email-already-in-use':
+        return 'Bu e-posta adresi zaten kullanımda. Lütfen farklı bir e-posta adresi deneyin.';
+      case 'auth/weak-password':
+        return 'Güvenli olmayan şifre. Şifreniz en az 6 karakterden oluşmalıdır.';
+      case 'auth/operation-not-allowed':
+        return 'Bu işlem şu anda devre dışı bırakılmış. Lütfen destek ekibimizle iletişime geçin.';
+      case 'auth/too-many-requests':
+        return 'Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin veya şifrenizi sıfırlayın.';
+      case 'auth/network-request-failed':
+        return 'Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.';
       case 'auth/invalid-credential':
       case 'auth/invalid-login-credentials':
-        return 'Geçersiz kimlik bilgileri. Lütfen e-posta ve şifrenizi kontrol edin';
-      case 'auth/email-already-in-use':
-        return 'Bu e-posta adresi zaten kullanımda';
-      case 'auth/weak-password':
-        return 'Şifre çok zayıf. En az 6 karakter uzunluğunda bir şifre kullanın';
-      case 'auth/too-many-requests':
-        return 'Çok fazla başarısız giriş nedeniyle hesabınız geçici olarak engellendi. Lütfen daha sonra tekrar deneyin veya şifrenizi sıfırlayın';
-      case 'auth/popup-closed-by-user':
-        return 'Giriş işlemi iptal edildi';
-      case 'auth/network-request-failed':
-        return 'Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin';
-      case 'auth/operation-not-allowed':
-        return 'Bu giriş yöntemi etkin değil';
-      case 'auth/requires-recent-login':
-        return 'Bu işlem hassas bir işlem olduğu için yeniden giriş yapmanız gerekiyor';
-      case 'auth/account-exists-with-different-credential':
-        return 'Bu e-posta adresi farklı bir giriş yöntemi ile zaten kullanılıyor';
-      case 'auth/user-disabled':
-        return 'Bu kullanıcı hesabı yönetici tarafından devre dışı bırakılmıştır';
-      case 'auth/timeout':
-        return 'İşlem zaman aşımına uğradı. Lütfen tekrar deneyin';
+        return 'E-posta adresi veya şifre hatalı. Lütfen tekrar deneyin.';
       case 'auth/missing-password':
-        return 'Lütfen şifrenizi girin';
-      case 'auth/missing-email':
-        return 'Lütfen e-posta adresinizi girin';
-      case 'auth/argument-error':
-        return 'Giriş parametrelerinde hata. Lütfen tüm alanları doğru doldurduğunuzdan emin olun';
-      case 'auth/invalid-api-key':
-        return 'Uygulama kimlik doğrulama hatası. Lütfen daha sonra tekrar deneyin veya yöneticiye bildirin';
-      case 'auth/app-deleted':
-        return 'Firebase uygulaması bulunamadı. Lütfen daha sonra tekrar deneyin';
-      case 'auth/app-not-authorized':
-        return 'Firebase uygulaması yetkili değil. Yönetici ile iletişime geçin';
-      case 'auth/invalid-user-token':
-      case 'auth/user-token-expired':
-        return 'Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın';
-      case 'auth/invalid-verification-code':
-        return 'Geçersiz doğrulama kodu. Lütfen tekrar deneyin';
-      case 'auth/invalid-verification-id':
-        return 'Geçersiz doğrulama kimliği. Tekrar giriş yapmayı deneyin';
-      case 'auth/missing-verification-code':
-        return 'Doğrulama kodu eksik. Lütfen kodu girin';
-      case 'auth/missing-verification-id':
-        return 'Doğrulama kimliği eksik. Lütfen tekrar giriş yapın';
-      case 'auth/quota-exceeded':
-        return 'Kimlik doğrulama kotası aşıldı. Lütfen daha sonra tekrar deneyin';
-      case 'auth/cancelled-popup-request':
-        return 'Sadece bir popup isteği çalıştırılabilir';
-      case 'auth/popup-blocked':
-        return 'Popup penceresi tarayıcınız tarafından engellendi. Lütfen popup\'lara izin verin ve tekrar deneyin';
-      case 'auth/unauthorized-domain':
-        return 'Bu alan adı Firebase Auth için yetkilendirilmemiş';
-      case 'auth/webStorage-unsupported':
-        return 'Tarayıcınız webstorage\'ı desteklemiyor. Tarayıcınızı güncelleyin veya başka bir tarayıcı kullanın';
-      case 'auth/redirect-cancelled-by-user':
-        return 'Yönlendirme işlemi kullanıcı tarafından iptal edildi';
-      case 'auth/redirect-operation-pending':
-        return 'Zaten bir yönlendirme işlemi bekliyor';
-      
-      // Genel/diğer hatalar
+        return 'Şifre girilmedi. Lütfen şifrenizi girin.';
+      case 'auth/popup-closed-by-user':
+        return 'Giriş penceresi kullanıcı tarafından kapatıldı. Lütfen tekrar deneyin.';
       default:
-        this.logger.warn(
-          `Tanımlanmamış Firebase hata kodu: ${code}`,
-          'AuthService.getFirebaseErrorMessage',
-          __filename,
-          703
-        );
-        return `Kimlik doğrulama hatası: ${code}`;
+        return `Bir kimlik doğrulama hatası oluştu: ${code}`;
     }
   }
 

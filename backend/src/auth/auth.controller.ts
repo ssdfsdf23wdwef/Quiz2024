@@ -126,12 +126,26 @@ export class AuthController {
   @Post('login-via-idtoken')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Firebase ID Token ile giriş' })
-  @ApiBody({ schema: { properties: { idToken: { type: 'string' } } } })
+  @ApiBody({
+    schema: {
+      properties: {
+        idToken: { type: 'string' },
+        userData: {
+          type: 'object',
+          properties: {
+            firstName: { type: 'string' },
+            lastName: { type: 'string' },
+          },
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Giriş başarılı' })
   @ApiResponse({ status: 401, description: 'Geçersiz token' })
   @LogMethod({ trackParams: false })
   async loginWithIdToken(
     @Body('idToken') idToken: string,
+    @Body('userData') userData: { firstName?: string; lastName?: string },
     @Req() req: ExpressRequest,
     @Res({ passthrough: true }) res: Response,
     @Ip() ipAddress: string,
@@ -140,33 +154,66 @@ export class AuthController {
       'ID Token ile giriş başlatılıyor',
       'AuthController',
     );
+
     try {
+      // Mevcut aktif refresh token'ı kontrol et ve kullan
+      const existingRefreshToken = req.cookies?.refresh_token;
+      let skipTokenCreation = false;
+
+      if (existingRefreshToken) {
+        try {
+          // Eğer geçerli bir oturum varsa, yeni token oluşturma
+          // RefreshToken fonksiyonunu çağırarak tokenin geçerliliğini kontrol et
+          await this.authService.refreshToken(existingRefreshToken);
+
+          // Eğer hata fırlatmadan buraya geldiyse token geçerlidir
+          this.logger.info(
+            `Geçerli bir refresh token zaten var. Yeni token oluşturulmayacak.`,
+            'AuthController.loginWithIdToken',
+            __filename,
+            150,
+          );
+          skipTokenCreation = true;
+        } catch (tokenError) {
+          this.logger.debug(
+            'Mevcut token geçersiz, yeni token oluşturulacak',
+            'AuthController.loginWithIdToken',
+            __filename,
+            160,
+          );
+          // Bu durumda yeni token oluşturmaya devam et
+        }
+      }
+
+      // Kullanıcı adı ve soyadı bilgilerini işlemek için loginWithIdToken çağrısı
       const { user } = await this.authService.loginWithIdToken(
         idToken,
         ipAddress,
         req.headers['user-agent'],
-        res,
-        undefined,
+        skipTokenCreation ? null : res, // Eğer token oluşturmayı atlıyorsak res parametresini null gönder
+        userData, // Kullanıcı verilerini ilet
       );
+
       this.logger.info(
         `Kullanıcı giriş yaptı: ${user.email} (ID: ${user.id})`,
         'AuthController.loginWithIdToken',
         __filename,
-        '174',
+        174,
       );
+
       return { user };
     } catch (error) {
       this.logger.logError(
         error,
         'AuthController.loginWithIdToken',
         __filename,
-        '174',
+        174,
       );
       this.logger.error(
         `ID Token ile giriş hatası: ${error.message}`,
         'AuthController.loginWithIdToken',
         __filename,
-        '174',
+        174,
         error,
         {
           hasToken: !!idToken,
@@ -399,12 +446,22 @@ export class AuthController {
       sameSite: 'strict',
       path: '/api/auth/refresh-token',
     });
+
+    // Ek olarak kök yolda da refresh_token'ı temizleyelim (tarayıcıda kalma sorunu için)
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: this.authService.isProduction(),
+      sameSite: 'lax',
+      path: '/',
+    });
+
     res.clearCookie('auth_session', {
       httpOnly: false,
       secure: this.authService.isProduction(),
       sameSite: 'lax',
       path: '/',
     });
+
     this.logger.debug(
       `Auth cookie'leri temizlendi`,
       'AuthController.clearAuthCookies',

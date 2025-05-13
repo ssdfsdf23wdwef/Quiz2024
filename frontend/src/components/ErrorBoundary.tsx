@@ -3,7 +3,8 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Alert, AlertTitle, AlertDescription } from "./ui/Alert";
 import { Button } from "./ui/Button";
-import { getLogger, getFlowTracker } from "../lib/logger.utils";
+import { getLogger, getFlowTracker } from "@/lib/logger.utils";
+import { FlowCategory } from "@/services/flow-tracker.service";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -29,7 +30,7 @@ interface ErrorBoundaryState {
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   private readonly logger = getLogger();
   private readonly flowTracker = getFlowTracker();
-  private readonly context: string;
+  public readonly _context: string;
   
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -40,7 +41,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       componentStack: undefined,
     };
     
-    this.context = props.context || 'ErrorBoundary';
+    this._context = props.context || 'ErrorBoundary';
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
@@ -62,7 +63,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     // Logger servisi ile hata logla
     this.logger.error(
       `Yakalanan hata: ${error.message}`,
-      this.context,
+      this._context,
       'ErrorBoundary.tsx',
       51,
       {
@@ -74,9 +75,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     
     // Akış izleme
     this.flowTracker.trackStep(
-      'Component',
+      FlowCategory.Component,
       `Hata yakalandı: ${error.message}`,
-      this.context,
+      this._context,
       {
         errorName: error.name,
         hasComponentStack: !!componentStack,
@@ -95,9 +96,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   resetErrorBoundary = (): void => {
     // Akış izleme
     this.flowTracker.trackStep(
-      'User',
+      FlowCategory.User,
       'Hata sınırını sıfırla',
-      this.context
+      this._context
     );
     
     // Özel sıfırlama işleyicisini çağır
@@ -116,7 +117,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     // Log
     this.logger.info(
       'Hata durumu sıfırlandı',
-      this.context,
+      this._context,
       'ErrorBoundary.tsx',
       102
     );

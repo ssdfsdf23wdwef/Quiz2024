@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   FiUser,
   FiMail,
@@ -8,11 +8,14 @@ import {
   FiSave,
   FiXCircle,
   FiCamera,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import axios from "axios";
+import authService from "@/services/auth.service";
 
 export default function ProfilePage() {
   const { user, updateProfile, checkSession } = useAuth();
@@ -22,18 +25,117 @@ export default function ProfilePage() {
 
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.email || "",
-    // Kullanıcı adı gösterme amacıyla kullanacağız
+    firstName: "",
+    lastName: "",
+    email: "",
     nickName: "",
   });
-  const [profileImage, setProfileImage] = useState<string | null>(user?.profileImageUrl || null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [tempProfileImage, setTempProfileImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Kullanıcı profilini yükle
+  const loadUserProfile = useCallback(async () => {
+    console.log("Profil bilgileri yükleniyor...");
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // AuthContext'teki kullanıcı verisi yoksa veya yetersizse, direkt API'den yükle
+      const userProfile = await authService.getProfile();
+      console.log("Profil bilgileri başarıyla yüklendi:", userProfile);
+      
+      // Form verilerini güncelle
+      setFormData({
+        firstName: userProfile.firstName || "",
+        lastName: userProfile.lastName || "",
+        email: userProfile.email || "",
+        nickName: "", // Kullanıcı adı gösterme amacıyla
+      });
+      
+      // Profil resmini ayarla (null değil, undefined veya string olarak)
+      setProfileImage(userProfile.profileImageUrl || null);
+      
+      showToast("Profil bilgileri yüklendi", "success");
+    } catch (error) {
+      console.error("Profil bilgileri yüklenirken hata:", error);
+      setError("Profil bilgileri yüklenemedi. Lütfen sayfayı yenileyin.");
+      showToast("Profil bilgileri yüklenemedi", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+  // Sayfa yüklendiğinde ve oturum değiştiğinde kullanıcı bilgilerini çek
+  useEffect(() => {
+    let isMounted = true; // Component unmount olduğunda işlemleri durdurmak için
+
+    const initializeProfile = async () => {
+      console.log("Profile sayfası başlatılıyor...");
+      
+      if (!isMounted) return; // Component unmount olduysa işlemleri durdur
+
+      try {
+        // Oturum durumunu kontrol et
+        const isSessionValid = await checkSession();
+        console.log("Oturum durumu:", isSessionValid);
+        
+        if (isSessionValid && isMounted) {
+          try {
+            // Her zaman API'den en güncel profil bilgilerini al
+            // AuthContext'ten gelen veri güncel olmayabilir
+            const userProfile = await authService.getProfile();
+            console.log("API'den alınan profil bilgileri:", userProfile);
+            
+            if (isMounted) {
+              // Form verilerini API'den gelen güncel bilgilerle doldur
+              setFormData({
+                firstName: userProfile.firstName || "",
+                lastName: userProfile.lastName || "",
+                email: userProfile.email || "",
+                nickName: "", // Kullanıcı adı gösterme amacıyla
+              });
+              
+              // Profil resmini ayarla
+              setProfileImage(userProfile.profileImageUrl || null);
+              setIsLoading(false);
+            }
+          } catch (profileError) {
+            console.error("Profil yükleme hatası:", profileError);
+            if (isMounted) {
+              setError("Profil bilgileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.");
+              setIsLoading(false);
+            }
+          }
+        } else if (isMounted) {
+          console.log("Geçerli oturum yok, profil bilgileri yüklenemiyor");
+          setError("Oturum bulunamadı. Lütfen yeniden giriş yapın.");
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Sayfa başlatılırken hata:", error);
+        if (isMounted) {
+          setError("Sayfa başlatılırken bir hata oluştu. Lütfen sayfayı yenileyin.");
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    initializeProfile();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, [checkSession]);
 
   // Kullanıcı bilgileri değiştiğinde form verilerini güncelle
   useEffect(() => {
     if (user) {
+      console.log("AuthContext'ten kullanıcı bilgileri alındı:", user);
       setFormData({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
@@ -41,16 +143,12 @@ export default function ProfilePage() {
         nickName: "", // Kullanıcı adı gösterme amacıyla kullanacağız
       });
       setProfileImage(user.profileImageUrl || null);
+      setTempProfileImage(null);
+      
+      // AuthContext'ten kullanıcı verisi alındıysa yükleme durumunu kapat
+      setIsLoading(false);
     }
   }, [user]);
-
-  // Oturum kontrolü
-  useEffect(() => {
-    const verifySession = async () => {
-      await checkSession();
-    };
-    verifySession();
-  }, [checkSession]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -60,7 +158,53 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Resim verilerini base64'den File nesnesine dönüştürür
+  const dataURLtoFile = (dataurl: string, filename: string): File => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // Profil resmini backend'e yükler
+  const uploadProfileImage = async (imageFile: File): Promise<string> => {
+    try {
+      setUploadingImage(true);
+      
+      const formData = new FormData();
+      formData.append('file', imageFile);
+      
+      // Backend'e profil resmi yükleme isteği gönder
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/users/profile-image`, 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          withCredentials: true  // Cookie tabanlı kimlik doğrulama için
+        }
+      );
+      
+      showToast("Profil resmi başarıyla yüklendi", "success");
+      return response.data.imageUrl;
+    } catch (error) {
+      console.error("Profil resmi yükleme hatası:", error);
+      showToast("Profil resmi yüklenirken bir hata oluştu", "error");
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
 
@@ -75,11 +219,35 @@ export default function ProfilePage() {
 
       reader.onload = (event) => {
         if (event.target && typeof event.target.result === "string") {
-          setProfileImage(event.target.result);
+          // Düzenleme modunda geçici olarak göster, düzenleme modu aktif değilse doğrudan yükle
+          if (editMode) {
+            setTempProfileImage(event.target.result);
+          } else {
+            handleProfileImageUpload(event.target.result, file.name);
+          }
         }
       };
 
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Profil resmini yükle ve güncelle
+  const handleProfileImageUpload = async (imageDataUrl: string, fileName: string) => {
+    try {
+      const imageFile = dataURLtoFile(imageDataUrl, fileName);
+      const imageUrl = await uploadProfileImage(imageFile);
+      
+      // Profil resmi URL'sini güncelle
+      await updateProfile({
+        profileImageUrl: imageUrl
+      });
+      
+      setProfileImage(imageUrl);
+      setTempProfileImage(null);
+    } catch (error) {
+      console.error("Profil resmi güncelleme hatası:", error);
+      showToast("Profil resmi güncellenirken bir hata oluştu", "error");
     }
   };
 
@@ -91,7 +259,7 @@ export default function ProfilePage() {
         email: user.email || "",
         nickName: "", 
       });
-      setProfileImage(user.profileImageUrl || null);
+      setTempProfileImage(null);
     }
     setEditMode(false);
     showToast("Değişiklikler iptal edildi.", "info");
@@ -109,15 +277,33 @@ export default function ProfilePage() {
         return;
       }
 
+      // Eğer yeni bir profil resmi yüklendiyse önce onu işle
+      let profileImageUrl: string | undefined = user?.profileImageUrl || undefined;
+      if (tempProfileImage) {
+        try {
+          const imageFile = dataURLtoFile(tempProfileImage, 'profile-image.jpg');
+          profileImageUrl = await uploadProfileImage(imageFile);
+        } catch (error) {
+          console.error("Profil resmi yükleme hatası:", error);
+          showToast("Profil resmi yüklenemedi, ancak diğer bilgileriniz güncellenecek", "warning");
+          // Hata durumunda profileImageUrl'i undefined olarak ayarla
+          profileImageUrl = undefined;
+        }
+      }
+
       // Profil bilgilerini güncelle
       await updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        // nickName backend'e gönderilmez çünkü User tipinde bu alan yok
+        profileImageUrl: profileImageUrl
       });
 
       setEditMode(false);
+      setTempProfileImage(null);
       showToast("Profil bilgileriniz başarıyla güncellendi.", "success");
+      
+      // Profil bilgilerini yeniden yükle
+      await loadUserProfile();
     } catch (error) {
       console.error("Profil güncelleme hatası:", error);
       showToast(
@@ -130,20 +316,38 @@ export default function ProfilePage() {
   };
 
   const getInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`;
+    if (formData.firstName && formData.lastName) {
+      return `${formData.firstName[0]}${formData.lastName[0]}`;
     }
-    return user?.email?.[0]?.toUpperCase() || "?";
+    return formData.email?.[0]?.toUpperCase() || "?";
   };
 
   const getDisplayName = () => {
-    return `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email || '';
+    return `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || formData.email || '';
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-pulse">Yükleniyor...</div>
+      <div className="flex flex-col justify-center items-center h-screen">
+        <div className="w-12 h-12 border-t-2 border-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p className={isDark ? "text-gray-300" : "text-gray-700"}>Profil bilgileri yükleniyor...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <div className={`p-4 rounded-lg ${isDark ? "bg-red-900" : "bg-red-100"} mb-4`}>
+          <p className={isDark ? "text-red-200" : "text-red-600"}>{error}</p>
+        </div>
+        <button 
+          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+          onClick={loadUserProfile}
+        >
+          <FiRefreshCw className="mr-2" />
+          Yeniden Dene
+        </button>
       </div>
     );
   }
@@ -171,11 +375,18 @@ export default function ProfilePage() {
           >
             <div className="flex flex-col items-center">
               <div className="relative">
-                {profileImage ? (
+                {(editMode ? tempProfileImage || profileImage : profileImage) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={profileImage}
+                    src={editMode && tempProfileImage 
+                      ? tempProfileImage 
+                      : profileImage ? profileImage : ''}
                     alt="Profile"
                     className="w-28 h-28 rounded-full object-cover border-4 border-indigo-100"
+                    onError={(e) => {
+                      console.error("Profil resmi yüklenemedi");
+                      e.currentTarget.src = '/images/default-profile.png'; // Yedek avatar resmi
+                    }}
                   />
                 ) : (
                   <div className="w-28 h-28 bg-indigo-600 text-white text-3xl font-bold rounded-full flex items-center justify-center">
@@ -183,27 +394,30 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {editMode && (
-                  <label
-                    htmlFor="profile-image"
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md cursor-pointer"
-                  >
+                <label
+                  htmlFor="profile-image"
+                  className={`absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md cursor-pointer ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {uploadingImage ? (
+                    <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
                     <FiCamera className="text-indigo-600" />
-                    <input
-                      type="file"
-                      id="profile-image"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
-                  </label>
-                )}
+                  )}
+                  <input
+                    type="file"
+                    id="profile-image"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={uploadingImage}
+                  />
+                </label>
               </div>
 
               <h2 className={`text-xl font-semibold mt-4 ${isDark ? "text-gray-100" : "text-gray-800"}`}>
                 {getDisplayName()}
               </h2>
-              <p className={isDark ? "text-gray-300" : "text-gray-600"}>{user.email}</p>
+              <p className={isDark ? "text-gray-300" : "text-gray-600"}>{formData.email}</p>
 
               {!editMode && (
                 <button
@@ -224,12 +438,11 @@ export default function ProfilePage() {
                 <div>
                   <p className={isDark ? "text-sm text-gray-400" : "text-sm text-gray-500"}>Oluşturulma Tarihi</p>
                   <p className={isDark ? "text-gray-300" : "text-gray-700"}>
-                    {user.createdAt 
+                    {user?.createdAt 
                       ? new Date(user.createdAt).toLocaleDateString("tr-TR") 
                       : "Bilgi yok"}
                   </p>
                 </div>
-                {/* lastLogin alanını kaldırdık çünkü User tipinde yok */}
               </div>
             </div>
           </motion.div>
