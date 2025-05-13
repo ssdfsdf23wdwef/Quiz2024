@@ -1,15 +1,16 @@
 "use client";
 
 import React, { ReactNode, useEffect } from "react";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { ToastProvider } from "../context/ToastContext";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import { I18nextProvider } from "react-i18next";
-import i18n from "@/lib/i18n/i18n";
 import dynamic from "next/dynamic";
 import { getLogger } from "@/lib/logger.utils";
+import { QueryClient } from "@tanstack/react-query";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/lib/i18n/i18n";
+import { AuthProvider } from "@/context/AuthContext";
+import { ToastProvider } from "@/context/ToastContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 // Loglama için
 const logger = getLogger();
