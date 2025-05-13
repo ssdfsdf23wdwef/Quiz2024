@@ -81,7 +81,7 @@ export class AuthController {
       const { user } = await this.authService.loginWithIdToken(
         registerDto.idToken,
         ipAddress,
-        req.headers['user-agent'],
+        req.headers['user-agent'] || 'unknown', // undefined olmaması için default değer
         res,
         {
           firstName: registerDto.firstName,
@@ -156,17 +156,16 @@ export class AuthController {
     );
 
     try {
-      // Mevcut aktif refresh token'ı kontrol et ve kullan
+      // Mevcut aktif refresh token'ı kontrol et
       const existingRefreshToken = req.cookies?.refresh_token;
       let skipTokenCreation = false;
 
       if (existingRefreshToken) {
         try {
           // Eğer geçerli bir oturum varsa, yeni token oluşturma
-          // RefreshToken fonksiyonunu çağırarak tokenin geçerliliğini kontrol et
           await this.authService.refreshToken(existingRefreshToken);
 
-          // Eğer hata fırlatmadan buraya geldiyse token geçerlidir
+          // Token geçerliyse, yeni token oluşturmayı atla
           this.logger.info(
             `Geçerli bir refresh token zaten var. Yeni token oluşturulmayacak.`,
             'AuthController.loginWithIdToken',
@@ -189,8 +188,8 @@ export class AuthController {
       const { user } = await this.authService.loginWithIdToken(
         idToken,
         ipAddress,
-        req.headers['user-agent'],
-        skipTokenCreation ? null : res, // Eğer token oluşturmayı atlıyorsak res parametresini null gönder
+        req.headers['user-agent'] || 'unknown', // undefined olmaması için default değer
+        skipTokenCreation ? null : res, // Token oluşturmayı atlayacaksak null gönder
         userData, // Kullanıcı verilerini ilet
       );
 
@@ -241,7 +240,7 @@ export class AuthController {
     const { user } = await this.authService.loginWithIdToken(
       loginDto.idToken,
       ipAddress,
-      req.headers['user-agent'],
+      req.headers['user-agent'] || 'unknown', // undefined olmaması için default değer
       res,
     );
 

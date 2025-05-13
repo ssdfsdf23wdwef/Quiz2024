@@ -478,9 +478,13 @@ export class AuthService {
       `createRefreshToken çağrıldı: Kullanıcı ID: ${userId}`,
       'AuthService.createRefreshToken',
       __filename,
-      // Satır numarasını kontrol et
+      474,
     );
     try {
+      // Önce aynı kullanıcı için mevcut tokenları temizle
+      // Bu sayede sürekli yeni tokenlar oluşturulmasını engelliyoruz
+      await this.cleanupOldRefreshTokens(userId, userAgent);
+
       // Benzersiz bir token oluştur
       const originalToken = uuidv4();
 
@@ -527,6 +531,69 @@ export class AuthService {
         error instanceof Error ? error : undefined,
       );
       throw new InternalServerErrorException('Refresh token oluşturulamadı');
+    }
+  }
+
+  /**
+   * Aynı kullanıcı ve tarayıcı/cihaz kombinasyonu için eski refresh tokenları temizler
+   * @param userId Kullanıcı ID'si
+   * @param userAgent Kullanıcının tarayıcı/cihaz bilgisi
+   */
+  private async cleanupOldRefreshTokens(
+    userId: string,
+    userAgent?: string,
+  ): Promise<void> {
+    try {
+      // Aynı kullanıcıya ait tüm tokenları bulalım
+      // Firebase WhereFilterOp tipine uygun olarak sorgu oluşturalım
+      let conditions: any[] = [
+        {
+          field: 'userId',
+          operator: '==',
+          value: userId,
+        },
+      ];
+
+      // Eğer userAgent belirtilmişse, aynı cihazdan gelen tokenları hedefle
+      if (userAgent) {
+        conditions.push({
+          field: 'userAgent',
+          operator: '==',
+          value: userAgent,
+        });
+      }
+
+      const existingTokens =
+        await this.firebaseService.findMany<UserRefreshToken>(
+          FIRESTORE_COLLECTIONS.REFRESH_TOKENS,
+          conditions,
+        );
+
+      // Bu kullanıcı için token varsa hepsini temizle
+      if (existingTokens && existingTokens.length > 0) {
+        this.logger.info(
+          `Kullanıcı ${userId} için ${existingTokens.length} eski token temizleniyor`,
+          'AuthService.cleanupOldRefreshTokens',
+          __filename,
+        );
+
+        // Tüm eski tokenları sil
+        const deletePromises = existingTokens.map((token) =>
+          this.firebaseService.delete(
+            FIRESTORE_COLLECTIONS.REFRESH_TOKENS,
+            token.id,
+          ),
+        );
+
+        await Promise.all(deletePromises);
+      }
+    } catch (error) {
+      // Hata olsa bile devam et, yeni token oluşturmayı engelleme
+      this.logger.warn(
+        `Eski token temizleme hatası: ${error instanceof Error ? error.message : String(error)}`,
+        'AuthService.cleanupOldRefreshTokens',
+        __filename,
+      );
     }
   }
 
