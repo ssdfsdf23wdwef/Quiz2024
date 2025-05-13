@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { setupLogging, getLogger, getFlowTracker } from "@/lib/logger.utils";
+import { setupLogging, getLogger, getFlowTracker, mapToTrackerCategory } from "@/lib/logger.utils";
 import { usePathname, useSearchParams } from "next/navigation";
+import { FlowCategory } from "@/constants/logging.constants";
 
 /**
  * Loglama servislerini başlatan bileşen
@@ -47,7 +48,7 @@ export default function LoggingInitializer() {
     );
     
     flowTracker.trackStep(
-      "Custom",
+      mapToTrackerCategory(FlowCategory.Custom),
       "Loglama servisleri başlatıldı",
       "LoggingInitializer"
     );
@@ -76,7 +77,7 @@ export default function LoggingInitializer() {
     );
     
     flowTracker.trackStep(
-      "Navigation",
+      mapToTrackerCategory(FlowCategory.Navigation),
       `Sayfa gezinildi: ${pathname}`,
       "RouteChange",
       { 

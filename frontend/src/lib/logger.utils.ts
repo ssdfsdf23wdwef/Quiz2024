@@ -5,24 +5,25 @@
 
 import { LoggerService } from '../services/logger.service';
 import { FlowTrackerService, FlowCategory as TrackerFlowCategory } from '../services/flow-tracker.service';
+import { FlowCategory } from "@/constants/logging.constants";
 
 let loggerInstance: LoggerService | null = null;
 let flowTrackerInstance: FlowTrackerService | null = null;
 
 // Flow kategorileri tipi - LoggerService ve FlowTracker için
-export enum FlowCategory {
-  API = 'API',                // API çağrıları
-  Auth = 'Auth',              // Kimlik doğrulama işlemleri
-  UI = 'UI',                  // Kullanıcı arayüzü
-  Error = 'Error',            // Hata izleme
-  Custom = 'Custom',          // Özel kategoriler
-  Firebase = 'Firebase',      // Firebase işlemleri
-  Navigation = 'Navigation',  // Gezinti işlemleri
-  Component = 'Component',    // Bileşen işlemleri
-  State = 'State',            // Durum değişiklikleri
-  Render = 'Render',          // Render işlemleri
-  User = 'User'               // Kullanıcı işlemleri
-}
+// export enum FlowCategory {
+//   API = 'API',                // API çağrıları
+//   Auth = 'Auth',              // Kimlik doğrulama işlemleri
+//   UI = 'UI',                  // Kullanıcı arayüzü
+//   Error = 'Error',            // Hata izleme
+//   Custom = 'Custom',          // Özel kategoriler
+//   Firebase = 'Firebase',      // Firebase işlemleri
+//   Navigation = 'Navigation',  // Gezinti işlemleri
+//   Component = 'Component',    // Bileşen işlemleri
+//   State = 'State',            // Durum değişiklikleri
+//   Render = 'Render',          // Render işlemleri
+//   User = 'User'               // Kullanıcı işlemleri
+// }
 
 // FlowCategory'yi TrackerFlowCategory'ye eşleştiren yardımcı fonksiyon
 export function mapToTrackerCategory(category: FlowCategory): TrackerFlowCategory {
@@ -43,10 +44,8 @@ export function mapToTrackerCategory(category: FlowCategory): TrackerFlowCategor
       return TrackerFlowCategory.Render;
     case FlowCategory.User:
       return TrackerFlowCategory.User;
-    case FlowCategory.Firebase:
-      return TrackerFlowCategory.Custom; // Firebase'i Custom olarak eşleştir
-    case FlowCategory.UI:
-      return TrackerFlowCategory.User; // UI'ı User olarak eşleştir
+    case FlowCategory.Business:
+      return TrackerFlowCategory.Custom;
     case FlowCategory.Custom:
     default:
       return TrackerFlowCategory.Custom;
@@ -235,7 +234,6 @@ export function trackFlow(
     return;
   }
   
-  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
   const trackerCategory = mapToTrackerCategory(category);
   flowTrackerInstance.trackStep(trackerCategory, message, context, metadata);
 }
@@ -387,7 +385,6 @@ export function markEnd(
     return 0;
   }
   
-  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
   const trackerCategory = mapToTrackerCategory(category);
   return flowTrackerInstance.markEnd(name, trackerCategory, context);
 }
@@ -416,7 +413,6 @@ export async function measureAsync<T>(
     }
   }
   
-  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
   const trackerCategory = mapToTrackerCategory(category);
   return flowTrackerInstance.measureAsync(name, trackerCategory, context, fn);
 }
@@ -445,7 +441,6 @@ export function measure<T>(
     }
   }
   
-  // FlowCategory değerini TrackerFlowCategory'ye dönüştür
   const trackerCategory = mapToTrackerCategory(category);
   return flowTrackerInstance.measure(name, trackerCategory, context, fn);
 }
@@ -456,7 +451,7 @@ export function measure<T>(
 export class FlowTracker {
   constructor(
     private readonly id: string,
-    private readonly category: FlowCategory,
+    private readonly category: TrackerFlowCategory,
     private readonly name: string
   ) {}
 
@@ -505,7 +500,9 @@ export class FlowTracker {
  * @returns FlowTracker instance
  */
 export function startFlow(category: FlowCategory, name: string): FlowTracker {
-  const flowId = `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  trackFlow(`Flow başlatıldı: ${name}`, 'FlowTracker', category);
-  return new FlowTracker(flowId, category, name);
+  if (!flowTrackerInstance) {
+    console.warn("FlowTrackerService başlatılmamış, dummy FlowTracker kullanılıyor.");
+    return new FlowTracker("dummy-id", mapToTrackerCategory(category), name);
+  }
+  return flowTrackerInstance.startFlow(mapToTrackerCategory(category), name);
 } 

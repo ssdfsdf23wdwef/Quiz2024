@@ -1,6 +1,9 @@
-import { getLogger, FlowCategory, trackFlow } from "@/lib/logger.utils";
+
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { toast } from "react-hot-toast";
+import { getLogger, trackFlow } from "@/lib/logger.utils";
+import { FlowCategory } from "@/constants/logging.constants";
+
 
 // Logger nesnesi elde et
 const logger = getLogger();

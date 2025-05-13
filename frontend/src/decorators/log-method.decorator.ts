@@ -3,7 +3,8 @@
  * @description Metot çağrılarını loglayan dekoratörler
  */
 
-import { getLogger, getFlowTracker } from '../lib/logger.utils';
+import { getLogger, getFlowTracker, mapToTrackerCategory } from '../lib/logger.utils';
+import { FlowCategory } from '@/constants/logging.constants';
 
 /**
  * Metot çağrılarını loglayan dekoratör
@@ -11,15 +12,15 @@ import { getLogger, getFlowTracker } from '../lib/logger.utils';
  * @param category Flow kategori adı (opsiyonel)
  * @returns Metot dekoratörü
  */
-export function LogMethod(context: string, category: string = 'Custom') {
+export function LogMethod(context: string, category: FlowCategory = FlowCategory.Custom) {
   return function (
-    target: any, 
+    target: object, 
     propertyKey: string, 
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
     
-    descriptor.value = function (...args: any[]) {
+    descriptor.value = function (...args: unknown[]) {
       const logger = getLogger();
       const flowTracker = getFlowTracker();
       const className = target.constructor.name;
@@ -46,7 +47,7 @@ export function LogMethod(context: string, category: string = 'Custom') {
           return result.then(
             (value) => {
               // Başarı durumunda
-              const duration = flowTracker.markEnd(methodSignature, category, context);
+              const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
               logger.debug(
                 `Metot tamamlandı: ${methodSignature}`,
                 context,
@@ -58,7 +59,7 @@ export function LogMethod(context: string, category: string = 'Custom') {
             },
             (error) => {
               // Hata durumunda
-              const duration = flowTracker.markEnd(methodSignature, category, context);
+              const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
               logger.error(
                 `Metot hatası: ${methodSignature}`,
                 context,
@@ -72,7 +73,7 @@ export function LogMethod(context: string, category: string = 'Custom') {
         }
         
         // Senkron tamamlanma
-        const duration = flowTracker.markEnd(methodSignature, category, context);
+        const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
         logger.debug(
           `Metot tamamlandı: ${methodSignature}`,
           context,
@@ -84,7 +85,7 @@ export function LogMethod(context: string, category: string = 'Custom') {
         return result;
       } catch (error) {
         // Hata durumunda (senkron)
-        const duration = flowTracker.markEnd(methodSignature, category, context);
+        const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
         logger.error(
           `Metot hatası: ${methodSignature}`,
           context,
@@ -106,8 +107,8 @@ export function LogMethod(context: string, category: string = 'Custom') {
  * @param category Flow kategori adı (opsiyonel)
  * @returns Sınıf dekoratörü 
  */
-export function LogClass(context: string, category: string = 'Custom') {
-  return function <T extends { new (...args: any[]): any }>(constructor: T) {
+export function LogClass(context: string, category: FlowCategory = FlowCategory.Custom) {
+  return function <T extends { new (...args: unknown[]): object }>(constructor: T) {
     const className = constructor.name;
     
     // Prototip üzerindeki tüm metotları bul
@@ -125,7 +126,7 @@ export function LogClass(context: string, category: string = 'Custom') {
       if (descriptor && typeof descriptor.value === 'function') {
         const originalMethod = descriptor.value;
         
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function (...args: unknown[]) {
           const logger = getLogger();
           const flowTracker = getFlowTracker();
           const methodSignature = `${className}.${propertyName}`;
@@ -151,7 +152,7 @@ export function LogClass(context: string, category: string = 'Custom') {
               return result.then(
                 (value) => {
                   // Başarı durumunda
-                  const duration = flowTracker.markEnd(methodSignature, category, context);
+                  const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
                   logger.debug(
                     `Metot tamamlandı: ${methodSignature}`,
                     context,
@@ -163,7 +164,7 @@ export function LogClass(context: string, category: string = 'Custom') {
                 },
                 (error) => {
                   // Hata durumunda
-                  const duration = flowTracker.markEnd(methodSignature, category, context);
+                  const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
                   logger.error(
                     `Metot hatası: ${methodSignature}`,
                     context,
@@ -177,7 +178,7 @@ export function LogClass(context: string, category: string = 'Custom') {
             }
             
             // Senkron tamamlanma
-            const duration = flowTracker.markEnd(methodSignature, category, context);
+            const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
             logger.debug(
               `Metot tamamlandı: ${methodSignature}`,
               context,
@@ -189,7 +190,7 @@ export function LogClass(context: string, category: string = 'Custom') {
             return result;
           } catch (error) {
             // Hata durumunda (senkron)
-            const duration = flowTracker.markEnd(methodSignature, category, context);
+            const duration = flowTracker.markEnd(methodSignature, mapToTrackerCategory(category), context);
             logger.error(
               `Metot hatası: ${methodSignature}`,
               context,
@@ -216,12 +217,12 @@ export function LogClass(context: string, category: string = 'Custom') {
  * @param hookFn Asıl hook fonksiyonu
  * @returns İzlenen hook
  */
-export function trackHook<T extends (...args: any[]) => any>(
+export function trackHook<T extends (...args: unknown[]) => unknown>(
   hookName: string,
   context: string,
   hookFn: T
 ): T {
-  return ((...args: any[]) => {
+  return ((...args: unknown[]) => {
     const logger = getLogger();
     const flowTracker = getFlowTracker();
     const hookSignature = `${context}/${hookName}`;
@@ -243,7 +244,7 @@ export function trackHook<T extends (...args: any[]) => any>(
       const result = hookFn(...args);
       
       // Senkron tamamlanma
-      const duration = flowTracker.markEnd(hookSignature, 'Component', context);
+      const duration = flowTracker.markEnd(hookSignature, mapToTrackerCategory(FlowCategory.Component), context);
       logger.debug(
         `Hook tamamlandı: ${hookName}`,
         context,
@@ -255,7 +256,7 @@ export function trackHook<T extends (...args: any[]) => any>(
       return result;
     } catch (error) {
       // Hata durumunda
-      const duration = flowTracker.markEnd(hookSignature, 'Component', context);
+      const duration = flowTracker.markEnd(hookSignature, mapToTrackerCategory(FlowCategory.Component), context);
       logger.error(
         `Hook hatası: ${hookName}`,
         context,

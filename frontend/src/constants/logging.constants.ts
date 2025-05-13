@@ -1,6 +1,6 @@
 // frontend/src/constants/logging.constants.ts
 
-// flow-tracker.service.ts'den taşınacak FlowCategory enum'u
+// Flow kategorileri enum'u
 export enum FlowCategory {
   Navigation = 'Navigation',
   Component = 'Component',
@@ -10,6 +10,7 @@ export enum FlowCategory {
   Render = 'Render',
   User = 'User',
   Error = 'Error',
+  Business = 'Business',
   Custom = 'Custom'
 }
 

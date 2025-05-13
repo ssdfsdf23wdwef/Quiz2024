@@ -21,9 +21,10 @@ import {
 import { useAuthStore, AuthState } from "@/store/auth.store";
 import { auth } from "@/app/firebase/config";
 import axios, { AxiosError } from "axios";
-import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
+import { getLogger, getFlowTracker, trackFlow } from "@/lib/logger.utils";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
+import { FlowCategory } from "@/constants/logging.constants";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();

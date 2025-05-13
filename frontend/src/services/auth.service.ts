@@ -15,7 +15,16 @@ import { setAuthCookie, removeAuthCookie } from "@/lib/utils";
 import { User } from "@/types";
 import { adaptUserFromBackend, adaptUserToBackend } from "@/lib/adapters";
 import axios, { AxiosError } from "axios";
-import { getLogger, getFlowTracker, FlowCategory, trackFlow, mapToTrackerCategory } from "../lib/logger.utils";
+import { getLogger, getFlowTracker, trackFlow, mapToTrackerCategory } from "../lib/logger.utils";
+import { FlowCategory } from "@/constants/logging.constants";
+
+// Hata yanıtı için arayüz
+interface ApiErrorResponse {
+  message?: string;
+  error?: string;
+  details?: unknown;
+  errorCode?: string;
+}
 
 // API yanıt tipleri
 interface AuthResponse {
@@ -33,16 +42,6 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
 }
-
-// Kimlik API URL'leri
-const API_URLS = {
-  LOGIN: "/api/auth/login-via-idtoken",
-  REGISTER: "/api/auth/register",
-  GOOGLE_LOGIN: "/api/auth/login-with-google",
-  LOGOUT: "/api/auth/logout",
-  PROFILE: "/api/users/profile",
-  UPDATE_PROFILE: "/api/users/profile",
-};
 
 /**
  * Kimlik doğrulama hizmet sınıfı
@@ -896,7 +895,7 @@ class AuthService {
       // API hatalarını daha detaylı inceleme
       if (axiosError.response) {
         const statusCode = axiosError.response.status;
-        const responseData = axiosError.response.data as any;
+        const responseData = axiosError.response.data as ApiErrorResponse;
         
         // Durum kodlarına göre anlamlı mesajlar
         switch (statusCode) {

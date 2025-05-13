@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { FiInfo, FiAlertCircle, FiChevronRight } from "react-icons/fi";
-import { DetectedSubTopic, LearningTargetStatus } from "@/app/types";
+import { LearningTargetStatusLiteral, DetectedSubTopic } from "@/types";
 import documentService from "@/services/document.service";
 
 interface TopicDetectorProps {
@@ -39,10 +39,34 @@ export default function TopicDetector({
         setError(null);
 
         // API'den konuları getir
-        const detectedTopics = await documentService.detectTopics(fileUrl);
-
-        // Konuları set et
-        setTopics(detectedTopics);
+        // Not: Bu metod şu anda implementasyonu olmadığından, hata fırlatır
+        // TODO: Gerçek API entegrasyonu tamamlandığında bu kısmı güncelle
+        try {
+          const detectedTopics = await documentService.detectTopics(fileUrl);
+          setTopics(detectedTopics);
+        } catch (e) {
+          // Geçici olarak sahte veri kullan
+          const mockTopics: DetectedSubTopic[] = [
+            { 
+              id: "topic1", 
+              subTopicName: "Geçici Konu 1",
+              normalizedSubTopicName: "gecici_konu_1",
+              isSelected: true, 
+              name: "Geçici Konu 1",
+              status: "pending", 
+              isNew: true 
+            },
+            { 
+              id: "topic2", 
+              subTopicName: "Geçici Konu 2",
+              normalizedSubTopicName: "gecici_konu_2",
+              isSelected: true,
+              name: "Geçici Konu 2",
+              status: "pending" 
+            }
+          ];
+          setTopics(mockTopics);
+        }
       } catch (error) {
         // Hata durumunu güncelle
         const errorMessage = (error as Error)?.message || "Bir hata oluştu.";
@@ -93,7 +117,7 @@ export default function TopicDetector({
   }, [topics, onTopicsSelected]);
 
   // Durum sınıfları
-  const getStatusClass = useCallback((status?: LearningTargetStatus) => {
+  const getStatusClass = useCallback((status?: LearningTargetStatusLiteral) => {
     switch (status) {
       case "failed":
         return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";

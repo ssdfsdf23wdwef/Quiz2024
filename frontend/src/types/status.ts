@@ -26,10 +26,10 @@ export const STATUS_SCORE_RANGES = {
  * Başarı yüzdesine göre durum belirleme yardımcı fonksiyonu
  */
 export function getStatusFromScore(scorePercent: number): LearningTargetStatus {
-  if (scorePercent >= STATUS_SCORE_RANGES.mastered.min) return "mastered";
-  if (scorePercent >= STATUS_SCORE_RANGES.medium.min) return "medium";
-  if (scorePercent >= STATUS_SCORE_RANGES.failed.min) return "failed";
-  return "pending";
+  if (scorePercent >= STATUS_SCORE_RANGES.mastered.min) return LearningTargetStatus.MASTERED;
+  if (scorePercent >= STATUS_SCORE_RANGES.medium.min) return LearningTargetStatus.MEDIUM; 
+  if (scorePercent >= STATUS_SCORE_RANGES.failed.min) return LearningTargetStatus.FAILED;
+  return LearningTargetStatus.PENDING;
 }
 
 // UI için yardımcı tipler ve fonksiyonlar (PRD dışı, UI amaçlı tutulabilir)

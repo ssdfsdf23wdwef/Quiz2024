@@ -4,12 +4,10 @@ import {
   DocumentDeleteResponse,
   DOCUMENT_UPLOAD_CONSTRAINTS,
 } from "@/types/document";
-import { getLogger, getFlowTracker } from "../lib/logger.utils";
+import { getLogger, getFlowTracker, trackFlow, startFlow as startAppFlow } from "../lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
-
-// Logger ve flowTracker nesnelerini elde et
-const logger = getLogger();
-const flowTracker = getFlowTracker();
+import { FlowCategory } from "@/constants/logging.constants";
+import { mapToTrackerCategory } from "../lib/logger.utils";
 
 /**
  * Belge servisi
@@ -17,48 +15,29 @@ const flowTracker = getFlowTracker();
  */
 @LogClass('DocumentService')
 class DocumentService {
+  detectTopics(fileUrl: string) {
+    throw new Error("Method not implemented.");
+  }
+  private readonly logger = getLogger();
+  private readonly flowTracker = getFlowTracker();
+
   /**
    * Tüm belgeleri veya bir derse ait belgeleri getirir
    * @param courseId Opsiyonel ders ID
    * @returns Belge listesi
    */
-  @LogMethod('DocumentService', 'API')
+  @LogMethod('DocumentService', FlowCategory.API)
   async getDocuments(courseId?: string): Promise<DocumentType[]> {
-    flowTracker.markStart('getDocuments');
-    
+    const flow = startAppFlow(FlowCategory.API, "DocumentService.getDocuments");
     try {
-      let url = "/documents";
-      if (courseId) {
-        url += `?courseId=${courseId}`;
-      }
-      
-      flowTracker.trackApiCall(url, 'GET', 'DocumentService.getDocuments', {
-        hasCourseId: !!courseId
-      });
-      
+      const url = courseId ? `/documents?courseId=${courseId}` : "/documents";
+      trackFlow(`Fetching documents. CourseId: ${courseId || 'all'}`, "DocumentService.getDocuments", FlowCategory.API);
       const documents = await apiService.get<DocumentType[]>(url);
-      
-      // Başarılı sonuç
-      const duration = flowTracker.markEnd('getDocuments', 'API', 'DocumentService');
-      logger.debug(
-        `${documents.length} belge getirildi`,
-        'DocumentService.getDocuments',
-        __filename,
-        30,
-        { courseId, count: documents.length, duration }
-      );
-      
+      flow.end("Successfully fetched documents");
       return documents;
     } catch (error) {
-      // Hata durumu
-      flowTracker.markEnd('getDocuments', 'API', 'DocumentService');
-      logger.error(
-        'Belgeler getirilirken hata oluştu',
-        'DocumentService.getDocuments',
-        __filename,
-        41,
-        { courseId, error }
-      );
+      this.logger.error('Error fetching documents', 'DocumentService.getDocuments', __filename, undefined, { courseId, error });
+      flow.end(`Error: ${(error as Error).message}`);
       throw error;
     }
   }
@@ -68,36 +47,17 @@ class DocumentService {
    * @param id Belge ID
    * @returns Belge detayları
    */
-  @LogMethod('DocumentService', 'API')
+  @LogMethod('DocumentService', FlowCategory.API)
   async getDocumentById(id: string): Promise<DocumentType> {
-    flowTracker.markStart(`getDocument_${id}`);
-    
+    const flow = startAppFlow(FlowCategory.API, "DocumentService.getDocumentById");
     try {
-      flowTracker.trackApiCall(`/documents/${id}`, 'GET', 'DocumentService.getDocumentById', { id });
-      
+      trackFlow(`Fetching document by ID: ${id}`, "DocumentService.getDocumentById", FlowCategory.API);
       const document = await apiService.get<DocumentType>(`/documents/${id}`);
-      
-      // Başarılı sonuç
-      const duration = flowTracker.markEnd(`getDocument_${id}`, 'API', 'DocumentService');
-      logger.debug(
-        `Belge getirildi: ${id}`,
-        'DocumentService.getDocumentById',
-        __filename,
-        67,
-        { id, documentName: document.fileName, duration }
-      );
-      
+      flow.end("Successfully fetched document by ID");
       return document;
     } catch (error) {
-      // Hata durumu
-      flowTracker.markEnd(`getDocument_${id}`, 'API', 'DocumentService');
-      logger.error(
-        `Belge getirilirken hata oluştu: ${id}`,
-        'DocumentService.getDocumentById',
-        __filename,
-        78,
-        { id, error }
-      );
+      this.logger.error('Error fetching document by ID', 'DocumentService.getDocumentById', __filename, undefined, { id, error });
+      flow.end(`Error: ${(error as Error).message}`);
       throw error;
     }
   }
@@ -107,39 +67,28 @@ class DocumentService {
    * @param id Belge ID
    * @returns Metin içeriği
    */
-  @LogMethod('DocumentService', 'API')
+  @LogMethod('DocumentService', FlowCategory.API)
   async getDocumentText(id: string): Promise<{ id: string; text: string }> {
-    flowTracker.markStart(`getDocumentText_${id}`);
-    
+    const flow = startAppFlow(FlowCategory.API, "DocumentService.getDocumentText");
     try {
-      flowTracker.trackApiCall(`/documents/${id}/text`, 'GET', 'DocumentService.getDocumentText', { id });
-      
-      const documentText = await apiService.get<{ id: string; text: string }>(
-        `/documents/${id}/text`,
-      );
-      
+      trackFlow(`Fetching document text for ID: ${id}`, "DocumentService.getDocumentText", FlowCategory.API);
+      const documentText = await apiService.get<{ id: string; text: string }>(`/documents/${id}/text`);
       // Başarılı sonuç
-      const duration = flowTracker.markEnd(`getDocumentText_${id}`, 'API', 'DocumentService');
+      const duration = this.flowTracker.markEnd(`getDocumentText_${id}`, mapToTrackerCategory(FlowCategory.API), 'DocumentService');
       const textLength = documentText.text.length;
-      logger.debug(
+      this.logger.debug(
         `Belge metni getirildi: ${id}`,
         'DocumentService.getDocumentText',
         __filename,
-        104,
+        undefined,
         { id, textLength, duration }
       );
-      
+      flow.end("Successfully fetched document text");
       return documentText;
     } catch (error) {
-      // Hata durumu
-      flowTracker.markEnd(`getDocumentText_${id}`, 'API', 'DocumentService');
-      logger.error(
-        `Belge metni getirilirken hata oluştu: ${id}`,
-        'DocumentService.getDocumentText',
-        __filename,
-        115,
-        { id, error }
-      );
+      this.flowTracker.markEnd(`getDocumentText_${id}`, mapToTrackerCategory(FlowCategory.API), 'DocumentService');
+      this.logger.error('Error fetching document text', 'DocumentService.getDocumentText', __filename, undefined, { id, error });
+      flow.end(`Error: ${(error as Error).message}`);
       throw error;
     }
   }
@@ -151,31 +100,25 @@ class DocumentService {
    * @param onProgress İlerleme durumunu bildiren callback
    * @returns Yüklenen belge bilgileri
    */
-  @LogMethod('DocumentService', 'API')
+  @LogMethod('DocumentService', FlowCategory.API)
   async uploadDocument(
     file: File,
     courseId?: string,
     onProgress?: (percentage: number) => void,
   ): Promise<DocumentType> {
-    flowTracker.markStart('uploadDocument');
+    const flow = startAppFlow(FlowCategory.API, "DocumentService.uploadDocument");
     
     // Akış izleme
-    flowTracker.trackStep(
-      'API',
-      'Belge yükleme başlatıldı',
-      'DocumentService.uploadDocument',
-      {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        courseId
-      }
+    trackFlow(
+      `Uploading document: ${file.name}`,
+      "DocumentService.uploadDocument",
+      FlowCategory.API
     );
     
     try {
       // Dosya boyutu kontrolü
       if (file.size > DOCUMENT_UPLOAD_CONSTRAINTS.maxSizeBytes) {
-        logger.warn(
+        this.logger.warn(
           'Belge yükleme isteği boyut sınırını aştı',
           'DocumentService.uploadDocument',
           __filename,
@@ -201,7 +144,7 @@ class DocumentService {
       );
 
       if (!isValidType) {
-        logger.warn(
+        this.logger.warn(
           'Belge yükleme isteği geçersiz dosya formatı içeriyor',
           'DocumentService.uploadDocument',
           __filename,
@@ -238,18 +181,21 @@ class DocumentService {
             
             // İlerleme durumunu izle
             if (percentage === 25 || percentage === 50 || percentage === 75 || percentage === 100) {
-              flowTracker.trackStep(
-                'API',
+              this.flowTracker.trackStep(
+                mapToTrackerCategory(FlowCategory.API),
                 `Belge yükleme: %${percentage}`,
                 'DocumentService.uploadDocument',
-                { fileName: file.name, loaded: progressEvent.loaded, total: progressEvent.total }
+                {
+                  fileName: file.name,
+                  percentage,
+                }
               );
             }
           }
         },
       };
 
-      logger.debug(
+      this.logger.debug(
         'Belge yükleme isteği gönderiliyor',
         'DocumentService.uploadDocument',
         __filename,
@@ -264,31 +210,21 @@ class DocumentService {
       );
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd('uploadDocument', 'API', 'DocumentService');
-      logger.info(
+      const duration = this.flowTracker.markEnd('uploadDocument', mapToTrackerCategory(FlowCategory.API), 'DocumentService');
+      this.logger.info(
         `Belge başarıyla yüklendi: ${file.name}`,
         'DocumentService.uploadDocument',
         __filename,
-        234,
-        { 
-          fileName: file.name, 
-          fileSize: file.size,
-          uploadedId: response.data.id,
-          duration 
-        }
+        undefined,
+        { fileName: file.name, courseId, duration }
       );
       
+      flow.end("Successfully uploaded document");
       return response.data;
     } catch (error) {
-      // Hata durumu
-      flowTracker.markEnd('uploadDocument', 'API', 'DocumentService');
-      logger.error(
-        `Belge yüklenirken hata oluştu: ${file.name}`,
-        'DocumentService.uploadDocument',
-        __filename,
-        250,
-        { fileName: file.name, error }
-      );
+      this.flowTracker.markEnd('uploadDocument', mapToTrackerCategory(FlowCategory.API), 'DocumentService');
+      this.logger.error('Error uploading document', 'DocumentService.uploadDocument', __filename, undefined, { fileName: file.name, error });
+      flow.end(`Error: ${(error as Error).message}`);
       throw error;
     }
   }
@@ -298,18 +234,18 @@ class DocumentService {
    * @param id Silinecek belge ID
    * @returns Silme işlemi sonucu
    */
-  @LogMethod('DocumentService', 'API')
+  @LogMethod('DocumentService', FlowCategory.API)
   async deleteDocument(id: string): Promise<DocumentDeleteResponse> {
-    flowTracker.markStart(`deleteDocument_${id}`);
+    this.flowTracker.markStart(`deleteDocument_${id}`);
     
     try {
-      flowTracker.trackApiCall(`/documents/${id}`, 'DELETE', 'DocumentService.deleteDocument', { id });
+      this.flowTracker.trackApiCall(`/documents/${id}`, 'DELETE', 'DocumentService.deleteDocument', { id });
       
       const response = await apiService.delete<DocumentDeleteResponse>(`/documents/${id}`);
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd(`deleteDocument_${id}`, 'API', 'DocumentService');
-      logger.info(
+      const duration = this.flowTracker.markEnd(`deleteDocument_${id}`, mapToTrackerCategory(FlowCategory.API), 'DocumentService');
+      this.logger.info(
         `Belge silindi: ${id}`,
         'DocumentService.deleteDocument',
         __filename,
@@ -320,8 +256,8 @@ class DocumentService {
       return response;
     } catch (error) {
       // Hata durumu
-      flowTracker.markEnd(`deleteDocument_${id}`, 'API', 'DocumentService');
-      logger.error(
+      this.flowTracker.markEnd(`deleteDocument_${id}`, mapToTrackerCategory(FlowCategory.API), 'DocumentService');
+      this.logger.error(
         `Belge silinirken hata oluştu: ${id}`,
         'DocumentService.deleteDocument',
         __filename,

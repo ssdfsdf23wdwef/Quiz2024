@@ -1,7 +1,15 @@
 import React from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import type { QuizListItem } from "@/store/useQuizStore";
+
+// QuizListItem türünü burada tanımlıyoruz
+export interface QuizListItem {
+  id: string;
+  title: string;
+  status: "hazır" | "tamamlandı" | "devam ediyor";
+  questionCount: number;
+  createdAt: string;
+}
 
 interface QuizListProps {
   quizzes: QuizListItem[];
@@ -42,7 +50,7 @@ export const QuizList: React.FC<QuizListProps> = ({ quizzes, onSelect }) => {
             <Badge
               variant={
                 quiz.status === "hazır"
-                  ? "info"
+                  ? "primary"
                   : quiz.status === "tamamlandı"
                     ? "success"
                     : "warning"
