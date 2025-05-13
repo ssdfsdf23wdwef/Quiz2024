@@ -42,9 +42,12 @@ export default function TopicDetector({
         // Not: Bu metod şu anda implementasyonu olmadığından, hata fırlatır
         // TODO: Gerçek API entegrasyonu tamamlandığında bu kısmı güncelle
         try {
+          // API'yi çağır (Bu şu an çalışmayacak)
           const detectedTopics = await documentService.detectTopics(fileUrl);
+          // Sonuçları ayarla
           setTopics(detectedTopics);
-        } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_) {
           // Geçici olarak sahte veri kullan
           const mockTopics: DetectedSubTopic[] = [
             { 

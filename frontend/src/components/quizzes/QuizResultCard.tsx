@@ -1,20 +1,35 @@
 import React from "react";
 import { Badge } from "@/components/ui/Badge";
-import type { Quiz } from "@/app/types/index";
+import type { Quiz } from "@/types";
 
 interface QuizResultCardProps {
   quiz: Quiz;
+}
+
+// Custom quiz tipi (Bu uygulama içinde genişletilmiş olabilir)
+interface CustomQuiz extends Quiz {
+  title?: string;
 }
 
 /**
  * Sınav sonucu kartı bileşeni
  */
 export const QuizResultCard: React.FC<QuizResultCardProps> = ({ quiz }) => {
-  const title =
-    (quiz as Record<string, string>).title || quiz.quizType || "Sınav";
+  // Quiz'in custom title alanı olabilir, yoksa quizType kullanılır
+  const title = "title" in quiz 
+    ? (quiz as CustomQuiz).title || quiz.quizType || "Sınav"
+    : quiz.quizType || "Sınav";
+  
   const score = typeof quiz.score === "number" ? quiz.score : 0;
   const total = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
-  const date = typeof quiz.createdAt === "string" ? quiz.createdAt : "";
+  
+  // timestamp'i tarih olarak format et
+  const date = quiz.timestamp 
+    ? typeof quiz.timestamp === "string" 
+      ? quiz.timestamp 
+      : new Date(quiz.timestamp).toLocaleString()
+    : "";
+  
   // Durum belirleme (örnek):
   let status: "başarılı" | "başarısız" | "devam" = "devam";
   if (score / (total || 1) >= 0.8) status = "başarılı";

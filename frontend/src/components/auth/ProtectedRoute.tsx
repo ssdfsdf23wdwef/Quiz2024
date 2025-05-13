@@ -4,7 +4,8 @@ import React, { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthUser, useAuthIsAuthenticated, useAuthIsLoading } from "@/store/auth.store";
-import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
+import { getLogger, getFlowTracker, trackFlow } from "@/lib/logger.utils";
+import { FlowCategory } from "@/constants/logging.constants";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();

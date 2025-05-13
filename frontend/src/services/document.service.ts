@@ -8,6 +8,7 @@ import { getLogger, getFlowTracker, trackFlow, startFlow as startAppFlow } from 
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory } from "@/constants/logging.constants";
 import { mapToTrackerCategory } from "../lib/logger.utils";
+import { DetectedSubTopic } from "@/types";
 
 /**
  * Belge servisi
@@ -15,9 +16,18 @@ import { mapToTrackerCategory } from "../lib/logger.utils";
  */
 @LogClass('DocumentService')
 class DocumentService {
-  detectTopics(fileUrl: string) {
-    throw new Error("Method not implemented.");
+  /**
+   * Bir belgedeki konuları tespit eder
+   * @param fileUrl Belge URL'si
+   * @returns Tespit edilen konuları içeren dizi
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async detectTopics(_fileUrl: string): Promise<DetectedSubTopic[]> {
+    // TODO: API entegrasyonu
+    // İlerleyen aşamalarda gerçek API endpointi ile değiştirilecek
+    throw new Error("Bu metod henüz uygulanmadı");
   }
+
   private readonly logger = getLogger();
   private readonly flowTracker = getFlowTracker();
 

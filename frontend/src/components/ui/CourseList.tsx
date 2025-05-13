@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { FiPlus, FiSearch, FiBook, FiAlertCircle } from "react-icons/fi";
-import CourseCard from "./CourseCard";
+import CourseCard from "@/components/ui/CourseCard";
 import EmptyState from "@/components/ui/EmptyState";
 import type { Course } from "@/types/course";
 

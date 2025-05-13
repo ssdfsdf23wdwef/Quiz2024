@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import Image from "next/image";
-import { Card } from "./ui/Card";
-import { Badge } from "./ui/Badge";
-import { Button } from "./ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import {
   BookOpen,
   Users,

@@ -11,7 +11,8 @@ import {
 } from "firebase/auth";
 import { getFirestore, Firestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, FirebaseStorage, connectStorageEmulator } from "firebase/storage";
-import { getLogger, trackFlow, FlowCategory } from "@/lib/logger.utils";
+import { getLogger, trackFlow } from "@/lib/logger.utils";
+import { FlowCategory } from "@/constants/logging.constants";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();

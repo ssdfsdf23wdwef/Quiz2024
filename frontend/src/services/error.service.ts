@@ -1,4 +1,3 @@
-
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { toast } from "react-hot-toast";
 import { getLogger, trackFlow } from "@/lib/logger.utils";
@@ -280,7 +279,7 @@ export class ErrorService {
    * Yeni hata kaydeder
    * @param errorInfo Hata bilgileri
    */
-  @LogMethod('ErrorService', 'Error')
+  @LogMethod('ErrorService', FlowCategory.Error)
   captureError(errorInfo: Omit<ErrorInfo, 'timestamp'>): ErrorInfo {
     const timestamp = Date.now();
     const fullErrorInfo: ErrorInfo = { ...errorInfo, timestamp };
@@ -402,7 +401,7 @@ export class ErrorService {
    * @param severity Hata ciddiyeti
    * @param context Ek bağlam bilgileri
    */
-  @LogMethod('ErrorService', 'Error')
+  @LogMethod('ErrorService', FlowCategory.Error)
   captureException(
     error: Error | unknown, 
     source: ErrorSource = ErrorSource.UNKNOWN,
@@ -444,7 +443,7 @@ export class ErrorService {
    * @param error Ağ hatası
    * @param context Ek bağlam bilgileri
    */
-  @LogMethod('ErrorService', 'Error')
+  @LogMethod('ErrorService', FlowCategory.Error)
   captureNetworkError(error: Record<string, unknown>, context?: Record<string, unknown>): ErrorInfo {
     // Axios hatası mı kontrol et
     const isAxiosError = error && error.isAxiosError;
@@ -500,7 +499,7 @@ export class ErrorService {
    * Son hataları getirir
    * @param limit Maksimum hata sayısı
    */
-  @LogMethod('ErrorService', 'Info')
+  @LogMethod('ErrorService', FlowCategory.Custom)
   getRecentErrors(limit = 10): ErrorInfo[] {
     return this.errors.slice(-limit);
   }
