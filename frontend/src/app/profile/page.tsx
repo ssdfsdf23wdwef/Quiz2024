@@ -11,17 +11,17 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/app/context/ThemeContext";
 import axios from "axios";
 import authService from "@/services/auth.service";
 
 export default function ProfilePage() {
   const { user, updateProfile, checkSession } = useAuth();
   const { showToast } = useToast();
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
 
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({

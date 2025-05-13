@@ -2,10 +2,9 @@
 
 import React, { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/app/context/AuthContext";
 import { useAuthUser, useAuthIsAuthenticated, useAuthIsLoading } from "@/store/auth.store";
 import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
-import type { User } from "@/types/user";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();

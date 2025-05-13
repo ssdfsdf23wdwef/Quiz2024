@@ -14,7 +14,7 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/app/context/ThemeContext";
 
 export default function SettingsPage() {
-  const { theme = "light", toggleTheme } = useTheme() ?? {};
+  const { isDarkMode, setThemeMode } = useTheme();
 
   const [settings, setSettings] = useState({
     darkMode: false,
@@ -28,9 +28,9 @@ export default function SettingsPage() {
   useEffect(() => {
     setSettings((prev) => ({
       ...prev,
-      darkMode: theme === "dark",
+      darkMode: isDarkMode,
     }));
-  }, [theme]);
+  }, [isDarkMode]);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -65,9 +65,11 @@ export default function SettingsPage() {
       const { checked } = e.target as HTMLInputElement;
       setSettings((prev) => ({ ...prev, [name]: checked }));
 
-      // Tema değişikliği için toggleTheme'i çağır
-      if (name === "darkMode" && toggleTheme) {
-        toggleTheme();
+      // Tema değişikliği için setThemeMode'u çağır
+      if (name === "darkMode") {
+        // Checkbox işaretlendiyse dark, işaretlenmediyse light
+        const newMode = e.target.checked ? "dark" : "light";
+        setThemeMode(newMode);
       }
     } else {
       setSettings((prev) => ({ ...prev, [name]: value }));

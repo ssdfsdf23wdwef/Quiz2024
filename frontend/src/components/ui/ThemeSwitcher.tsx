@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/app/context/ThemeContext";
 import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
 
 interface ThemeSwitcherProps {
@@ -13,7 +13,7 @@ export default function ThemeSwitcher({
   className = "",
   variant = "icon",
 }: ThemeSwitcherProps) {
-  const { theme, setTheme, isDark } = useTheme();
+  const { theme, setThemeMode, isDarkMode } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -46,11 +46,11 @@ export default function ThemeSwitcher({
   if (variant === "icon") {
     return (
       <button
-        onClick={() => setTheme(isDark ? "light" : "dark")}
+        onClick={() => setThemeMode(isDarkMode ? "light" : "dark")}
         className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${className}`}
-        aria-label={isDark ? "Açık temaya geç" : "Koyu temaya geç"}
+        aria-label={isDarkMode ? "Açık temaya geç" : "Koyu temaya geç"}
       >
-        {isDark ? (
+        {isDarkMode ? (
           <FiSun className="text-yellow-500" size={20} />
         ) : (
           <FiMoon className="text-indigo-600" size={20} />
@@ -68,9 +68,9 @@ export default function ThemeSwitcher({
           className={`p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${className}`}
           aria-label="Tema seçenekleri"
         >
-          {theme === "light" && <FiSun className="text-yellow-500" size={20} />}
-          {theme === "dark" && <FiMoon className="text-indigo-600" size={20} />}
-          {theme === "system" && (
+          {theme.mode === "light" && <FiSun className="text-yellow-500" size={20} />}
+          {theme.mode === "dark" && <FiMoon className="text-indigo-600" size={20} />}
+          {theme.mode === "system" && (
             <FiMonitor className="text-gray-600 dark:text-gray-300" size={20} />
           )}
         </button>
@@ -80,11 +80,11 @@ export default function ThemeSwitcher({
             <div className="py-1">
               <button
                 onClick={() => {
-                  setTheme("light");
+                  setThemeMode("light");
                   setIsOpen(false);
                 }}
                 className={`flex items-center w-full px-4 py-2 text-sm ${
-                  theme === "light"
+                  theme.mode === "light"
                     ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
@@ -94,11 +94,11 @@ export default function ThemeSwitcher({
               </button>
               <button
                 onClick={() => {
-                  setTheme("dark");
+                  setThemeMode("dark");
                   setIsOpen(false);
                 }}
                 className={`flex items-center w-full px-4 py-2 text-sm ${
-                  theme === "dark"
+                  theme.mode === "dark"
                     ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
@@ -111,11 +111,11 @@ export default function ThemeSwitcher({
               </button>
               <button
                 onClick={() => {
-                  setTheme("system");
+                  setThemeMode("system");
                   setIsOpen(false);
                 }}
                 className={`flex items-center w-full px-4 py-2 text-sm ${
-                  theme === "system"
+                  theme.mode === "system"
                     ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
@@ -137,9 +137,9 @@ export default function ThemeSwitcher({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <button
-        onClick={() => setTheme("light")}
+        onClick={() => setThemeMode("light")}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-          theme === "light"
+          theme.mode === "light"
             ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
             : "hover:bg-gray-100 dark:hover:bg-gray-700"
         }`}
@@ -148,9 +148,9 @@ export default function ThemeSwitcher({
         <span>Açık</span>
       </button>
       <button
-        onClick={() => setTheme("dark")}
+        onClick={() => setThemeMode("dark")}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-          theme === "dark"
+          theme.mode === "dark"
             ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
             : "hover:bg-gray-100 dark:hover:bg-gray-700"
         }`}
@@ -159,9 +159,9 @@ export default function ThemeSwitcher({
         <span>Koyu</span>
       </button>
       <button
-        onClick={() => setTheme("system")}
+        onClick={() => setThemeMode("system")}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-          theme === "system"
+          theme.mode === "system"
             ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
             : "hover:bg-gray-100 dark:hover:bg-gray-700"
         }`}

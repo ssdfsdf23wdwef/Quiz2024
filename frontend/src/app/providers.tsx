@@ -1,8 +1,8 @@
 "use client";
 
 import React, { ReactNode, useEffect } from "react";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/app/context/ThemeContext";
+import { AuthProvider } from "@/app/context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -37,26 +37,6 @@ interface ProvidersProps {
   children: ReactNode;
 }
 
-/**
- * Hata yakalama işleyicisi
- */
-const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
-  logger.error(
-    `App çapında hata: ${error.message}`,
-    'Providers',
-    'providers.tsx',
-    42,
-    {
-      errorName: error.name,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-    }
-  );
-  
-  // Console'a da yazdır
-  console.error("Uygulama seviyesinde bir hata oluştu:", error);
-  console.error("Bileşen yığını:", errorInfo.componentStack);
-};
 
 /**
  * Tüm uygulama sağlayıcılarını (providers) bir araya getiren bileşen
@@ -113,11 +93,7 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <ErrorBoundary 
-      context="RootErrorBoundary"
-      enableStackTrace={true}
-      captureComponentTree={true}
-      onError={handleError}
-    >
+      >
       <AuthProvider>
         <I18nextProvider i18n={i18n}>
           <QueryClientProvider client={queryClient}>
