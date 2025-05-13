@@ -3,10 +3,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "@/app/globals.css";
-import { Providers } from "@/providers";
+import { Providers } from "@/app/providers";
 import ClientAnalytics from "../components/analytics/ClientAnalytics";
-// import { AuthProvider } from "../contexts/AuthContext";
-// import { FirebaseAuthInitializer } from "../components/auth/FirebaseAuthInitializer";
+import MainLayout from "@/components/layout/MainLayout";
 
 const fontSans = FontSans({ subsets: ["latin"] });
 
@@ -48,10 +47,11 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.className)}>
+      <body className={cn("min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased", fontSans.className)}>
         <Providers>
-          {/* FirebaseAuthInitializer bileşeni güncellenecek */}
-          {children}
+          <MainLayout>
+            {children}
+          </MainLayout>
           <ClientAnalytics />
         </Providers>
       </body>

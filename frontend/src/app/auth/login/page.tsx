@@ -19,7 +19,7 @@ const LoginPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const forceLogin = searchParams.get("forceLogin") === "true";
-  const returnUrl = searchParams.get("returnUrl") || "/dashboard";
+  const returnUrl = searchParams.get("returnUrl") || "/";
   const errorType = searchParams.get("error");
 
   const {

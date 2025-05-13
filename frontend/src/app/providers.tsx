@@ -1,57 +1,65 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import React, { ReactNode, useEffect } from "react";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { Toaster } from "react-hot-toast";
+import { ToastProvider } from "./context/ToastContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/lib/i18n/i18n";
+import dynamic from "next/dynamic";
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 5 * 60 * 1000, // 5 dakika (daha uzun önbellekleme)
-            gcTime: 10 * 60 * 1000, // 10 dakika (eski adıyla cacheTime)
-            refetchOnWindowFocus: true,
-            refetchOnMount: "always",
-            retry: 1, // Başarısız istekleri sadece 1 kez yeniden dene
-            networkMode: "online",
-          },
-          mutations: {
-            networkMode: "online",
-            retry: 1,
-          },
-        },
-      }),
-  );
+// Dynamic imports for better performance
+const AnalyticsComponent = dynamic(
+  () => import("@/components/analytics/AnalyticsComponent"),
+  {
+    ssr: false,
+    loading: () => <></>, // Or a minimal skeleton/null
+  },
+);
 
-  const toasterOptions = useMemo(() => ({
-    position: "top-right" as const,
-    toastOptions: {
-      duration: 3000,
-      style: {
-        background: "#363636",
-        color: "#fff",
-      },
+// QueryClient oluştur
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 dakika
+      retry: 1,
+    },
+  },
+});
+
+interface ProvidersProps {
+  children: ReactNode;
+}
+
+/**
+ * Tüm uygulama sağlayıcılarını (providers) bir araya getiren bileşen
+ * Bu bileşen, RootLayout içerisinde tüm uygulamayı sarmalar
+ */
+export function Providers({ children }: ProvidersProps) {
+  // Tarayıcıda çalıştığında i18n'i başlat (SSR'daki uyumsuzluklardan kaçınmak için)
+  useEffect(() => {
+    // i18next'in hazır olduğundan emin ol
+    if (!i18n.isInitialized) {
+      i18n.init();
     }
-  }), []);
-
-  const isDevMode = useMemo(() => process.env.NODE_ENV === "development", []);
+  }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <ErrorBoundary>
       <AuthProvider>
-        <ThemeProvider>
-          {children}
-          <Toaster {...toasterOptions} />
-        </ThemeProvider>
+        <I18nextProvider i18n={i18n}>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <ToastProvider>
+                {children}
+                <AnalyticsComponent />
+              </ToastProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </I18nextProvider>
       </AuthProvider>
-      {isDevMode && (
-        <ReactQueryDevtools initialIsOpen={false} />
-      )}
-    </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

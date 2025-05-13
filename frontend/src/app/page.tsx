@@ -4,16 +4,20 @@ import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { QuizPreferences } from "./types";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   FiArrowRight,
   FiPlay,
   FiBook,
-  FiLogIn,
-  FiUserPlus,
+  FiTarget,
+  FiFileText,
+  FiBarChart2,
+  FiStar,
 } from "react-icons/fi";
+import { BiBrain } from "react-icons/bi";
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
+import { useAuthStore } from "@/store/auth.store";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Lazy loading ile bileşenleri yükle
 const ExamCreationWizard = lazy(
@@ -56,9 +60,32 @@ const buttonHover = {
   },
 };
 
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+};
+
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const isLoading = useAuthStore((state) => state.isLoading);
   const [showExamCreationWizard, setShowExamCreationWizard] = useState(false);
 
   const handleStartExamCreation = () => {
@@ -88,12 +115,22 @@ export default function Home() {
     router.push("/courses");
   };
 
-  const handleLogin = () => {
-    router.push("/auth/login");
+  const handleViewLearningGoals = () => {
+    if (!isAuthenticated) {
+      // Giriş yapmamış kullanıcıları login sayfasına yönlendir
+      router.push("/auth/login?returnUrl=/learning-goals");
+      return;
+    }
+    router.push("/learning-goals");
   };
 
-  const handleRegister = () => {
-    router.push("/auth/register");
+  const handleViewExams = () => {
+    if (!isAuthenticated) {
+      // Giriş yapmamış kullanıcıları login sayfasına yönlendir
+      router.push("/auth/login?returnUrl=/exams");
+      return;
+    }
+    router.push("/exams");
   };
 
   return (
@@ -195,79 +232,42 @@ export default function Home() {
                       animate="visible"
                       className="flex justify-center items-center gap-4 flex-wrap"
                     >
-                      {isLoading ? (
-                        // Yükleme durumu
-                        <div className="flex justify-center my-4">
-                          <Spinner size="md" />
-                        </div>
-                      ) : isAuthenticated ? (
-                        // Giriş yapmış kullanıcılar için butonlar
-                        <>
-                          <motion.button
-                            onClick={handleStartExamCreation}
-                            variants={buttonHover}
-                            initial="rest"
-                            whileHover="hover"
-                            className="flex items-center justify-center gap-3 bg-white hover:bg-indigo-50 text-indigo-700 font-semibold rounded-xl px-8 py-4 md:py-5 md:px-10 text-lg md:text-xl transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
-                          >
-                            <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-50 to-white z-0 opacity-0 group-hover:opacity-100 transition-all duration-300"></span>
-                            <span className="relative z-10 flex items-center">
-                              <FiPlay className="text-2xl text-indigo-600 mr-2" />
-                              <span>Sınav Oluştur</span>
-                            </span>
-                            <motion.span
-                              className="relative z-10 ml-1"
-                              animate={{ x: [0, 4, 0] }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                repeatType: "loop",
-                              }}
-                            >
-                              <FiArrowRight className="text-xl" />
-                            </motion.span>
-                          </motion.button>
+                      <motion.button
+                        onClick={handleStartExamCreation}
+                        variants={buttonHover}
+                        initial="rest"
+                        whileHover="hover"
+                        className="flex items-center justify-center gap-3 bg-white hover:bg-indigo-50 text-indigo-700 font-semibold rounded-xl px-8 py-4 md:py-5 md:px-10 text-lg md:text-xl transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
+                      >
+                        <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-50 to-white z-0 opacity-0 group-hover:opacity-100 transition-all duration-300"></span>
+                        <span className="relative z-10 flex items-center">
+                          <FiPlay className="text-2xl text-indigo-600 mr-2" />
+                          <span>Sınav Oluştur</span>
+                        </span>
+                        <motion.span
+                          className="relative z-10 ml-1"
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <FiArrowRight className="text-xl text-indigo-600" />
+                        </motion.span>
+                      </motion.button>
 
-                          <motion.button
-                            onClick={handleViewCourses}
-                            variants={buttonHover}
-                            initial="rest"
-                            whileHover="hover"
-                            className="flex items-center justify-center gap-3 bg-indigo-700/20 backdrop-blur-sm hover:bg-indigo-700/30 text-white font-medium rounded-xl px-8 py-4 md:py-5 md:px-10 text-lg md:text-xl transition-all duration-300 border border-white/20"
-                          >
-                            <FiBook className="text-2xl" />
-                            <span>Kurslarım</span>
-                          </motion.button>
-                        </>
-                      ) : (
-                        // Giriş yapmamış kullanıcılar için butonlar
-                        <>
-                          <motion.button
-                            onClick={handleLogin}
-                            variants={buttonHover}
-                            initial="rest"
-                            whileHover="hover"
-                            className="flex items-center justify-center gap-3 bg-white hover:bg-indigo-50 text-indigo-700 font-semibold rounded-xl px-8 py-4 md:py-5 md:px-10 text-lg md:text-xl transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
-                          >
-                            <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-50 to-white z-0 opacity-0 group-hover:opacity-100 transition-all duration-300"></span>
-                            <span className="relative z-10 flex items-center">
-                              <FiLogIn className="text-2xl text-indigo-600 mr-2" />
-                              <span>Giriş Yap</span>
-                            </span>
-                          </motion.button>
-
-                          <motion.button
-                            onClick={handleRegister}
-                            variants={buttonHover}
-                            initial="rest"
-                            whileHover="hover"
-                            className="flex items-center justify-center gap-3 bg-indigo-700/20 backdrop-blur-sm hover:bg-indigo-700/30 text-white font-medium rounded-xl px-8 py-4 md:py-5 md:px-10 text-lg md:text-xl transition-all duration-300 border border-white/20"
-                          >
-                            <FiUserPlus className="text-2xl" />
-                            <span>Kayıt Ol</span>
-                          </motion.button>
-                        </>
-                      )}
+                      <motion.button
+                        onClick={handleViewCourses}
+                        variants={buttonHover}
+                        initial="rest"
+                        whileHover="hover"
+                        className="flex items-center justify-center gap-2 bg-indigo-100/20 backdrop-blur-md text-white hover:bg-indigo-100/30 font-medium rounded-xl px-6 py-4 md:py-5 md:px-8 text-lg transition-all duration-300"
+                      >
+                        <FiBook className="text-xl" />
+                        <span>Derslerim</span>
+                      </motion.button>
                     </motion.div>
                   </div>
                 </div>

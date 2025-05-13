@@ -75,6 +75,12 @@ const nextConfig = {
 
     return config;
   },
+  // Yönlendirmeler - hatalı URL'leri doğru yollara yönlendir
+  async redirects() {
+    return [
+      // /ashboard yönlendirmesi kaldırıldı
+    ];
+  },
   // API proxy eklendi - Backend'e tüm istekleri yönlendir
   async rewrites() {
     return [

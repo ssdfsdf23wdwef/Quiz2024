@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useCall
 type Theme = "light" | "dark" | "system";
 
 interface ThemeContextType {
+  isDarkMode: boolean;
   theme: Theme;
   setTheme: (theme: Theme) => void;
   isDark: boolean;

@@ -1,8 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from "web-vitals";
+
+// Global gtag fonksiyonu için tip tanımı
+declare global {
+  interface Window {
+    gtag: (
+      command: string,
+      targetId: string,
+      params?: Record<string, unknown>
+    ) => void;
+  }
+}
 
 /**
  * Analitik izleme ve performans ölçümü yapmak için kullanılan bileşen.
@@ -10,13 +21,20 @@ import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from "web-vitals";
  */
 export default function AnalyticsComponent() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  // Sayfa değişikliklerini izle
+  // Sayfa görüntüleme ve etkinlikleri izleme
   useEffect(() => {
-    // Burası kullanıcı davranışlarını izlemek için Google Analytics,
-    // Hotjar, Mixpanel gibi analitik servislerinin entegrasyon noktasıdır.
-    // Bu örnek şu anda sadece konsolda sayfa görüntülemelerini kaydeder
-    console.log("Sayfa görüntüleme:", pathname);
+    // Yeni sayfa yüklemesini izle
+    const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
+    
+    // Sayfa görünümünü kaydet
+    trackPageView(url);
+
+    // Sadece geliştirme modunda konsola log
+    if (process.env.NODE_ENV === "development") {
+      console.log(`📊 [Analytics] Sayfa görüntülendi: ${url}`);
+    }
 
     // Web Vitals metriklerini izle
     const reportWebVital = (metric: Metric) => {
@@ -93,7 +111,32 @@ export default function AnalyticsComponent() {
         }
       }, 1000);
     }
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
-  return null; // Bu bileşen görsel bir çıktı üretmez
+  // Sayfa görüntüleme izleme fonksiyonu
+  function trackPageView(url: string) {
+    // Gerçek bir uygulamada bu fonksiyon, Google Analytics, Mixpanel,
+    // veya kendi backend analytics API'nizi çağırır.
+    
+    try {
+      // Örnek: Google Analytics'e gönderim
+      if (typeof window !== "undefined" && window.gtag) {
+        window.gtag("config", process.env.NEXT_PUBLIC_GA_ID as string, {
+          page_path: url,
+        });
+      }
+      
+      // Örnek: Kendi backend'inize gönderim
+      // await fetch('/api/analytics', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ path: url, event: 'page_view' }),
+      //   headers: { 'Content-Type': 'application/json' }
+      // })
+    } catch (error) {
+      console.error("[Analytics] Hata:", error);
+    }
+  }
+
+  // Bu bileşen görünür bir şey render etmez
+  return null;
 }

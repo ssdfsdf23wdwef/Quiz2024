@@ -1,12 +1,12 @@
 "use client";
 
 import React, { ReactNode, Suspense, memo } from "react";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import dynamic from "next/dynamic";
 import DevLoggerProvider from "@/components/providers/DevLoggerProvider";
 
-// Lazy load components - Next.js dynamic import kullanarak - export tipine göre düzenlendi
-const Header = dynamic(() => import("@/components/layout/Header").then(mod => ({ default: mod.Header })), { ssr: false });
+// Lazy load components - Next.js dynamic import kullanarak
+const Header = dynamic(() => import("@/components/layout/Header").then(mod => mod.Header), { ssr: false });
 const Sidebar = dynamic(() => import("@/components/layout/Sidebar"), { ssr: false });
 
 // Simple loading placeholder
@@ -22,7 +22,7 @@ interface MainLayoutProps {
 
 function MainLayoutBase({ children }: MainLayoutProps) {
   const themeContext = useTheme();
-  const isDarkMode = themeContext?.isDarkMode || false;
+  const isDarkMode = themeContext?.isDark || false;
 
   return (
     <DevLoggerProvider>

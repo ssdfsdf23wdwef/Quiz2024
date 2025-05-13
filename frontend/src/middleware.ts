@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 
 // Korumalı rotaları belirle (erişim için kimlik doğrulama gerektirir)
 const protectedRoutes = [
-  "/dashboard",
   "/profile",
   "/courses",
   "/documents",
@@ -49,14 +48,14 @@ export function middleware(request: NextRequest) {
     console.log(`[Middleware] Kullanıcı giriş yapmış, ${pathname} sayfasından yönlendiriliyor`);
     // Kullanıcı zaten oturum açmışsa, ana sayfaya veya dashboard'a yönlendir
     const redirectPath =
-      request.nextUrl.searchParams.get("returnUrl") || "/dashboard";
+      request.nextUrl.searchParams.get("returnUrl") || "/";
     return NextResponse.redirect(new URL(redirectPath, request.url));
   }
   
-  // Kullanıcı giriş yapmış ve ana sayfada ise dashboard'a yönlendir
+  // Kullanıcı giriş yapmış ve ana sayfada ise
   if (hasToken && pathname === "/") {
-    console.log("[Middleware] Kullanıcı giriş yapmış, ana sayfadan dashboard'a yönlendiriliyor");
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    console.log("[Middleware] Kullanıcı giriş yapmış, ana sayfada kalıyor");
+    return NextResponse.next();
   }
 
   // Kullanıcı giriş yapmamış ve korumalı bir sayfaya erişmeye çalışıyorsa

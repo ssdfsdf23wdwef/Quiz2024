@@ -85,11 +85,11 @@ const HeaderComponent: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" prefetch={true} className="flex items-center">
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-transparent bg-clip-text mr-2">
-              EduAI
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-transparent bg-clip-text mr-2">
+              q
             </span>
-            <span className="text-gray-600 dark:text-gray-400 text-sm font-medium hidden sm:inline-block">
-              | Öğrenme Asistanı
+            <span className="text-xl text-purple-600 dark:text-purple-400 font-medium">
+              quiz
             </span>
           </Link>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   FiHome,
@@ -15,28 +15,37 @@ import {
 } from "react-icons/fi";
 
 export default function Sidebar() {
-  const theme = useTheme()?.theme;
-  const { isAuthenticated, isLoading } = useAuth();
+  const themeContext = useTheme();
+  const isDarkMode = themeContext?.isDark || false;
+  const { isAuthenticated, isInitializing } = useAuth();
 
   // Oturum durumuna göre farklı menü öğeleri
   const authenticatedMenuItems = [
     {
-      href: "/dashboard",
+      href: "/",
       label: "Ana Sayfa",
       icon: <FiHome className="mr-2" />,
     },
-    { href: "/courses", label: "Dersler", icon: <FiBook className="mr-2" /> },
+    { 
+      href: "/courses", 
+      label: "Derslerim", 
+      icon: <FiBook className="mr-2" /> 
+    },
     {
       href: "/exams",
-      label: "Sınavlar",
+      label: "Sınavlarım",
       icon: <FiFileText className="mr-2" />,
     },
     {
       href: "/learning-goals",
-      label: "Öğrenme Hedefleri",
+      label: "Öğrenme Hedeflerim",
       icon: <FiTarget className="mr-2" />,
     },
-    { href: "/profile", label: "Profil", icon: <FiUser className="mr-2" /> },
+    { 
+      href: "/performance", 
+      label: "Performans Analizi", 
+      icon: <FiUser className="mr-2" /> 
+    },
     {
       href: "/settings",
       label: "Ayarlar",
@@ -66,9 +75,9 @@ export default function Sidebar() {
   return (
     <aside
       className={`hidden lg:block fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200
-        ${theme === "dark" ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
+        ${isDarkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
     >
-      {isLoading ? (
+      {isInitializing ? (
         // Yükleme durumunda placeholder göster
         <div className="flex flex-col gap-2 p-4">
           {[1, 2, 3, 4, 5].map((i) => (
