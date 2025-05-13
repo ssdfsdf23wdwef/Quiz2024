@@ -11,7 +11,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function SettingsPage() {
   const { isDarkMode, setThemeMode } = useTheme();

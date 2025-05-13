@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useTheme } from "@/app/context/ThemeContext";
-import { useAuth } from "@/app/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   FiHome,
   FiBook,

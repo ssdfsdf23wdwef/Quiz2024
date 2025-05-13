@@ -5,7 +5,7 @@ import {} from "react-icons/fi";
 import { useQuery } from "@tanstack/react-query";
 
 import courseService from "@/services/course.service";
-import CourseList from "@/components/CourseList";
+import CourseList from "@/components/ui/CourseList";
 import { Course } from "@/types/course";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuthStore } from "@/store/auth.store";

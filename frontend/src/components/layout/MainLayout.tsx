@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode, Suspense, memo } from "react";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 import dynamic from "next/dynamic";
 import DevLoggerProvider from "@/components/providers/DevLoggerProvider";
 

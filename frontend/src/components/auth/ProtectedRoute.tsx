@@ -2,7 +2,7 @@
 
 import React, { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useAuthUser, useAuthIsAuthenticated, useAuthIsLoading } from "@/store/auth.store";
 import { getLogger, getFlowTracker, FlowCategory, trackFlow } from "@/lib/logger.utils";
 

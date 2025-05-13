@@ -11,9 +11,9 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { useAuth } from "@/app/context/AuthContext";
-import { useToast } from "@/app/context/ToastContext";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { useTheme } from "@/context/ThemeContext";
 import axios from "axios";
 import authService from "@/services/auth.service";
 

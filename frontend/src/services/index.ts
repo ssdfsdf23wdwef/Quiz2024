@@ -6,7 +6,6 @@ export { default as documentService } from "./document.service";
 export { default as courseService } from "./course.service";
 export { default as quizService } from "./quiz.service";
 export { default as learningTargetService } from "./learningTarget.service";
-export { default as topicService } from "./topicService";
 export { default as firebaseService } from "./firebase.service";
 
 // Yeni loglama ve akış izleme servisleri

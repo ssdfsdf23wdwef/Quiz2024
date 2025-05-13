@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 // Lazy loading ile bileşenleri yükle
 const ExamCreationWizard = lazy(

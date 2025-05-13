@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { ErrorService } from "@/services/error.service";
 import { useAuthStore } from "@/store/auth.store";
 import { checkApiAvailability } from "@/services/api.service";
-import { useAuth as useAuthContext } from "@/app/context/AuthContext";
+import { useAuth as useAuthContext } from "@/context/AuthContext";
 
 // Firebase hata kodlarını kullanıcı dostu mesajlara çeviren yardımcı fonksiyon
 const getFirebaseErrorMessage = (errorCode: string): string => {

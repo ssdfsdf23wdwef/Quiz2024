@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useAuthStore } from "@/store/auth.store";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface NavItem {
   path: string;

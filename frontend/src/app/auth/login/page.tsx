@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { FaGoogle } from "react-icons/fa";
 import { ErrorService } from "@/services/error.service";
 import { FirebaseError } from "firebase/app";

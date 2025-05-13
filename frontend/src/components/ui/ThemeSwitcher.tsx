@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 import { FiSun, FiMoon, FiMonitor } from "react-icons/fi";
 
 interface ThemeSwitcherProps {
