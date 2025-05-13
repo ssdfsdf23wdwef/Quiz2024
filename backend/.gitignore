@@ -69,3 +69,10 @@ backend/secrets/
 # Firebase/Google Cloud gizli anahtarları
 *.json.key
 *firebase-adminsdk*.json 
+
+
+# Firebase service account key
+secrets/
+firebase-service-account.json
+*.json # Eğer secrets klasörü dışında da hassas json varsa
+
