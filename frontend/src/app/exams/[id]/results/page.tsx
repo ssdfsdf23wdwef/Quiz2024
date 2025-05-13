@@ -10,7 +10,7 @@ import { Question, Quiz, QuizType, PersonalizedQuizType, DifficultyLevel } from 
 
 // API'dan gelen tipi Quiz tipine dönüştürmek için yardımcı bir tip tanımlıyorum
 type ApiQuiz = Omit<Quiz, 'selectedSubTopics'> & {
-  selectedSubTopics?: any | null; // Backend API'sinden gelen kısım
+  selectedSubTopics?: unknown | null; // Backend API'sinden gelen kısım
 };
 
 interface ResultsPageProps {

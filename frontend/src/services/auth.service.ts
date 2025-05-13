@@ -9,9 +9,6 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   updateProfile as firebaseUpdateProfile,
-  AuthError,
-  UserCredential,
-  sendPasswordResetEmail,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { setAuthCookie, removeAuthCookie } from "@/lib/utils";
@@ -77,7 +74,7 @@ class AuthService {
       );
       
       // İstek verisini hazırla
-      const requestData: Record<string, any> = { idToken };
+      const requestData: Record<string, unknown> = { idToken };
       
       // Kullanıcı verileri varsa ekle
       if (userData) {

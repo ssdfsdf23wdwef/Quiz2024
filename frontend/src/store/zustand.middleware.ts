@@ -3,6 +3,7 @@
  * @description Zustand için loglama, durum değişikliği izleme ve performans middleware'leri
  */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { StateCreator, StoreApi } from 'zustand';
 import { getLogger, getFlowTracker } from '../lib/logger.utils';
 
@@ -36,9 +37,7 @@ export const loggerMiddleware = <T extends object>(storeName: string): Middlewar
         const updatedKeys: string[] = [];
         
         Object.keys(nextState).forEach((key) => {
-          // @ts-ignore - Zustand tipi için bu kontrolü yapıyoruz
           if (previousState[key] !== nextState[key]) {
-            // @ts-ignore
             changes[key] = { from: previousState[key], to: nextState[key] };
             updatedKeys.push(key);
           }
@@ -337,7 +336,8 @@ export const createTrackedStore = <T extends object, U>(
     // Store'un temel init fonksiyonunu çağır - burada kullanıcının kodu çalışacak
     return {
       _storeName: storeName,
-      ...(((set, get, api) => ({})) as StateCreator<T>)(set, get, api)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ...(((_set, _get, _api) => ({})) as StateCreator<T>)(set, get, api)
     };
   }));
 }; 
