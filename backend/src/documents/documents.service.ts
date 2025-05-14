@@ -129,7 +129,7 @@ export class DocumentsService {
         fileSize: file.size,
         extractedText: extractedText,
         userId: userId,
-        courseId: courseId,
+        courseId: courseId || null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };

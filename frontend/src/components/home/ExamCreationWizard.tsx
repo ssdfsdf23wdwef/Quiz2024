@@ -13,7 +13,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { QuizPreferences, DetectedSubTopic, Course } from "@/types";
-import { TopicDetectionResult } from "@/types/learningTarget";
 import { DocumentUploader } from "../document";
 import TopicSelectionScreen from "./TopicSelectionScreen";
 import { ErrorService } from "@/services/error.service";
@@ -22,7 +21,8 @@ import CourseTopicSelector from "./CourseTopicSelector";
 import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
-import apiService from "@/services/api.service";
+import authService from "@/services/auth.service";
+import axios from "axios";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -222,33 +222,65 @@ export default function ExamCreationWizard({
             courseId: selectedCourseId || ""
           };
           
-          const response = await apiService.post<TopicDetectionResult | DetectedSubTopic[]>(
-            "/learning-targets/detect-topics",
-            detectedTopicsRequest
+          // Token yenileme işlemi
+          try {
+            console.log(`🔑 Kimlik doğrulama token'ı yenileniyor...`);
+            await authService.refreshToken();
+            console.log(`✅ Token yenileme başarılı!`);
+          } catch (tokenError) {
+            console.error(`❌ Token yenileme hatası:`, tokenError);
+            // Token yenileme hatası aldıysak, kullanıcının oturumunu tekrar giriş yapması gerekebilir
+            ErrorService.showToast(
+              "Oturum süresi dolmuş olabilir. Lütfen sayfayı yenileyip tekrar giriş yapın.",
+              "error"
+            );
+            setUploadStatus("error");
+            return;
+          }
+          
+          // Yeni token alındıktan sonra Manuel olarak axios ile istek yapalım
+          const token = localStorage.getItem("auth_token");
+          if (!token) {
+            throw new Error("Kimlik doğrulama token'ı bulunamadı");
+          }
+          
+          console.log(`🔍 Yeni token ile konu tespiti yapılıyor...`);
+          const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/learning-targets/detect-topics`;
+          
+          const response = await axios.post(
+            apiUrl,
+            detectedTopicsRequest,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            }
           );
           
-          console.log(`✅ Konular başarıyla tespit edildi:`, response);
+          console.log(`✅ Konular başarıyla tespit edildi:`, response.data);
           
           // Sunucudan gelen yanıtı doğru formatta işle
           let processedTopics: DetectedSubTopic[] = [];
+          const responseData = response.data;
           
-          if (response && 'topics' in response && Array.isArray(response.topics)) {
+          if (responseData && 'topics' in responseData && Array.isArray(responseData.topics)) {
             // Yeni format - alt konu yapısı mevcut
-            processedTopics = response.topics.map((topic: any) => ({
+            processedTopics = responseData.topics.map((topic: DetectedSubTopic) => ({
               id: topic.normalizedSubTopicName, // id için normalizedSubTopicName kullan
               subTopicName: topic.subTopicName,
               normalizedSubTopicName: topic.normalizedSubTopicName,
               isSelected: false
             }));
             console.log(`📊 API'den gelen konular işlendi:`, processedTopics);
-          } else if (Array.isArray(response)) {
+          } else if (Array.isArray(responseData)) {
             // Eski format - düz string dizisi veya doğrudan DetectedSubTopic dizisi
-            if (response.length > 0 && 'id' in response[0]) {
+            if (responseData.length > 0 && 'id' in responseData[0]) {
               // Zaten DetectedSubTopic formatında
-              processedTopics = response as DetectedSubTopic[];
+              processedTopics = responseData as DetectedSubTopic[];
             } else {
               // String dizisi veya diğer format
-              processedTopics = response.map((topic: any) => {
+              processedTopics = responseData.map((topic: unknown) => {
                 if (typeof topic === 'string') {
                   return {
                     id: topic,
@@ -256,13 +288,15 @@ export default function ExamCreationWizard({
                     normalizedSubTopicName: topic,
                     isSelected: false
                   };
-                } else {
+                } else if (topic && typeof topic === 'object') {
+                  // Type guard: topic is object
+                  const topicObj = topic as Record<string, unknown>;
                   // Her türlü özellik kontrolünü yap
-                  const topicName = typeof topic.subTopicName === 'string' ? topic.subTopicName : 
-                                   (typeof topic.name === 'string' ? topic.name : '');
+                  const topicName = typeof topicObj.subTopicName === 'string' ? topicObj.subTopicName : 
+                                   (typeof topicObj.name === 'string' ? topicObj.name as string : '');
                                    
-                  const normalizedName = typeof topic.normalizedSubTopicName === 'string' ? topic.normalizedSubTopicName :
-                                        (typeof topic.normalizedName === 'string' ? topic.normalizedName : topicName);
+                  const normalizedName = typeof topicObj.normalizedSubTopicName === 'string' ? topicObj.normalizedSubTopicName as string :
+                                        (typeof topicObj.normalizedName === 'string' ? topicObj.normalizedName as string : topicName);
                                       
                   return {
                     id: normalizedName || topicName,
@@ -270,12 +304,20 @@ export default function ExamCreationWizard({
                     normalizedSubTopicName: normalizedName,
                     isSelected: false
                   };
+                } else {
+                  // Geçersiz veri durumunda boş bir item dön
+                  return {
+                    id: 'unknown',
+                    subTopicName: 'Bilinmeyen Konu', 
+                    normalizedSubTopicName: 'unknown',
+                    isSelected: false
+                  };
                 }
               });
             }
             console.log(`📊 Formatlanmış konular:`, processedTopics);
           } else {
-            console.error(`❌ HATA: Beklenmeyen yanıt formatı:`, response);
+            console.error(`❌ HATA: Beklenmeyen yanıt formatı:`, responseData);
             processedTopics = [];
           }
           
