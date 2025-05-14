@@ -3,6 +3,7 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { DocumentProcessingService } from './document-processing.service';
@@ -115,8 +116,17 @@ export class DocumentsService {
       // Metin çıkarma işlemini başlat
       const extractedText = await this.extractTextFromFile(file);
 
-      console.log(
-        `📄 Dosyadan metin çıkarma tamamlandı (${extractedText.length} karakter)`,
+      this.logger.debug(
+        `📄 Dosyadan metin çıkarma tamamlandı (${extractedText?.length || 0} karakter). İçerik (ilk 100kr): ${extractedText?.substring(0, 100)}`,
+        'DocumentsService.uploadDocument',
+        __filename,
+        undefined,
+        {
+          documentId: 'N/A',
+          userId,
+          fileName: originalName,
+          extractedLength: extractedText?.length || 0,
+        },
       );
 
       // Yeni doküman oluştur
@@ -130,12 +140,16 @@ export class DocumentsService {
         extractedText: extractedText,
         userId: userId,
         courseId: courseId || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
-      // Firestore'a kaydet
-      console.log(`💾 Döküman Firestore'a kaydediliyor...`);
+      // Firestore'a kaydetmeden önce logla
+      this.logger.debug(
+        `💾 Döküman Firestore'a kaydedilmeden ÖNCE: ${originalName}`,
+        'DocumentsService.uploadDocument',
+        __filename,
+        undefined,
+        { documentDetails: newDocument },
+      );
 
       // Dokuman koleksiyonuna ekle
       const document = await this.firebaseService.create(
@@ -288,21 +302,103 @@ export class DocumentsService {
   /**
    * Get document text for a document
    */
-  async getDocumentText(id: string, userId: string) {
-    const document = await this.firebaseService.findById<Document>(
-      FIRESTORE_COLLECTIONS.DOCUMENTS,
-      id,
-    );
+  @LogMethod({ trackParams: true })
+  async getDocumentText(id: string, userId: string): Promise<{ text: string }> {
+    try {
+      this.logger.debug(
+        `Belge metni isteniyor. Belge ID: ${id}, Kullanıcı ID: ${userId}`,
+        'DocumentsService.getDocumentText',
+        __filename,
+        undefined,
+        {
+          documentId: id,
+          userId,
+        },
+      );
 
-    if (!document) {
-      throw new NotFoundException('Belge bulunamadı');
+      // Belgeyi getir
+      const document = await this.firebaseService.findById<Document>(
+        FIRESTORE_COLLECTIONS.DOCUMENTS,
+        id,
+      );
+
+      this.logger.debug(
+        `getDocumentText: firebaseService.findById çağrısı sonrası. Belge ID: ${id}. Dönen 'document' objesinin varlığı: ${!!document}. İçerik (ilk 100 byte): ${document ? JSON.stringify(document).substring(0, 100) : 'NULL'}`,
+        'DocumentsService.getDocumentText',
+        __filename,
+        undefined, // flow.traceId yerine undefined kullandım
+        { documentId: id, userId, documentExists: !!document },
+      );
+
+      if (!document) {
+        // Hata durumunu debug seviyesinde logla, ancak önemli bir hata olduğu için ayrıca error logu da düşülebilir.
+        this.logger.debug(
+          `Belge bulunamadı (ID: ${id}, Kullanıcı: ${userId})`,
+          'DocumentsService.getDocumentText',
+          __filename,
+          undefined,
+          {
+            documentId: id,
+            userId,
+            additionalInfo: 'Belge veritabanında bulunamadı',
+          },
+        );
+
+        throw new NotFoundException('Belge bulunamadı');
+      }
+
+      if (!document.extractedText || document.extractedText.trim() === '') {
+        this.logger.debug(
+          `Belge bulundu (ID: ${id}) ancak 'extractedText' alanı boş veya tanımsız.`,
+          'DocumentsService.getDocumentText',
+          __filename,
+          undefined,
+          {
+            documentId: id,
+            userId,
+            hasExtractedText: !!document.extractedText,
+            textLength: document.extractedText?.length || 0,
+          },
+        );
+
+        // Daha açıklayıcı bir hata mesajı fırlat
+        throw new BadRequestException(
+          `'extractedText' alanı boş veya tanımsız. Belge ID: ${id}`,
+        );
+      }
+
+      this.logger.debug(
+        `Belge metni başarıyla alındı (ID: ${id}, Uzunluk: ${document.extractedText.length})`,
+        'DocumentsService.getDocumentText',
+        __filename,
+        undefined,
+        {
+          documentId: id,
+          userId,
+          textLength: document.extractedText.length,
+        },
+      );
+      return { text: document.extractedText };
+    } catch (error) {
+      // Hata zaten NotFoundException veya BadRequestException ise tekrar sarmalama
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+
+      // Diğer hatalar için genel bir hata logu
+      this.logger.error(
+        `Belge metni alınırken hata oluştu: ${error.message}`,
+        'DocumentsService.getDocumentText',
+        __filename,
+        undefined,
+      );
+      throw new InternalServerErrorException(
+        'Belge metni alınırken bir hata oluştu.',
+      );
     }
-
-    if (document.userId !== userId) {
-      throw new NotFoundException('Belge bulunamadı');
-    }
-
-    return { text: document.extractedText };
   }
 
   /**

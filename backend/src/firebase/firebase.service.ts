@@ -344,13 +344,8 @@ export class FirebaseService implements OnModuleInit {
         'FirebaseService',
       );
       const startTime = Date.now();
-
       const docRef = this.firestore.collection(collection).doc(id);
-      const snapshot = await docRef.get();
-
-      if (!snapshot.exists) {
-        return null;
-      }
+      const doc = await docRef.get();
 
       const endTime = Date.now();
       this.flowTracker.trackDbOperation(
@@ -360,10 +355,46 @@ export class FirebaseService implements OnModuleInit {
         'FirebaseService',
       );
 
-      return {
-        ...(snapshot.data() as T),
-        id: snapshot.id,
-      };
+      if (!doc.exists) {
+        this.logger.warn(
+          `${collection} koleksiyonunda ${id} ID'li döküman bulunamadı.`,
+          'FirebaseService.findById',
+          __filename,
+          362, // Yaklaşık satır
+        );
+        this.logger.debug(
+          `findById (iç): Belge bulunamadı. Dönecek sonuç: null`,
+          'FirebaseService.findById',
+          __filename,
+          undefined,
+          { collection, id, willReturnNull: true },
+        );
+        return null;
+      }
+
+      const documentData = doc.data() as T;
+      // Dönen veriyi logla
+      this.logger.debug(
+        `Firestore'dan ${collection}/${id} için belge verisi alındı. Alanlar: ${Object.keys(documentData || {}).join(', ')}`,
+        'FirebaseService.findById',
+        __filename,
+        371, // Yaklaşık satır
+        {
+          documentId: id,
+          collectionName: collection,
+          retrievedData: documentData,
+        }, // Direkt objeyi gönder, LoggerService halletsin
+      );
+
+      const result = { ...documentData, id: doc.id };
+      this.logger.debug(
+        `findById (iç): Belge bulundu ve işlendi. Dönecek sonuç (ilk 100 byte): ${JSON.stringify(result).substring(0, 100)}`,
+        'FirebaseService.findById',
+        __filename,
+        undefined,
+        { collection, id, willReturnObject: true },
+      );
+      return result;
     } catch (error) {
       this.logger.error(
         `Firestore belge getirme hatası: ${error.message}`,

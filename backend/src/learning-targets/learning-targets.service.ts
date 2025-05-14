@@ -519,78 +519,69 @@ export class LearningTargetsService {
   async analyzeDocumentForTopics(
     documentId: string,
     userId: string,
-  ): Promise<string[]> {
+  ): Promise<any[]> {
     try {
       this.logger.debug(
-        `Belge analizi başlatılıyor: ${documentId}`,
-        'LearningTargetsService',
-        __filename,
-      );
-
-      // Belge metnini al
-      this.logger.info(
         `Belge ID ${documentId} için belge metnini getiriliyor...`,
         'LearningTargetsService.analyzeDocumentForTopics',
         __filename,
+        undefined,
+        { documentId, userId },
       );
 
-      const documentText = await this.documentsService.getDocumentText(
+      // Belge ID kullanarak belge metnini al
+      const documentTextResponse = await this.documentsService.getDocumentText(
         documentId,
         userId,
       );
 
-      if (!documentText || !documentText.text) {
-        this.logger.error(
-          `Belge ID ${documentId} için metin bulunamadı!`,
+      // Belge metni dönüş tipini kontrol et
+      if (!documentTextResponse || !documentTextResponse.text) {
+        this.logger.warn(
+          `Belge metni alınamadı veya boş (ID: ${documentId})`,
           'LearningTargetsService.analyzeDocumentForTopics',
           __filename,
+          undefined,
+          { documentId, userId },
         );
-        throw new NotFoundException('Belge metni bulunamadı');
+        throw new BadRequestException('Geçerli bir belge metni bulunamadı.');
       }
 
+      // Belge metni aldığımızı logla
       this.logger.debug(
-        `Belge metni alındı (${documentText.text.length} karakter)`,
-        'LearningTargetsService.analyzeDocumentForTopics',
-        __filename,
-      );
-
-      // AI servisi ile konuları tespit et
-      this.logger.info(
-        `AI servisi ile konu tespiti başlatılıyor...`,
-        'LearningTargetsService.analyzeDocumentForTopics',
-        __filename,
-      );
-
-      const topicResult = await this.aiService.detectTopics(documentText.text);
-
-      // TopicDetectionResult nesnesini string dizisine dönüştür
-      const topics = topicResult.topics.map(
-        (topic) =>
-          topic.subTopicName ||
-          topic.normalizedSubTopicName ||
-          'Bilinmeyen konu',
-      );
-
-      this.logger.info(
-        `${topics.length} adet konu tespit edildi`,
-        'LearningTargetsService.analyzeDocumentForTopics',
-        __filename,
-      );
-
-      this.logger.debug(
-        'Belgeden çıkarılan konular',
+        `Belge metni alındı (${documentTextResponse.text.length} karakter)`,
         'LearningTargetsService.analyzeDocumentForTopics',
         __filename,
         undefined,
         {
-          userId,
           documentId,
-          topicCount: topics.length,
-          topics: topics.join(', '),
+          userId,
+          textLength: documentTextResponse.text.length,
         },
       );
 
-      return topics;
+      // Belge metninden konuları tespit et
+      this.logger.debug(
+        'AI servisi kullanılarak konular tespit ediliyor...',
+        'LearningTargetsService.analyzeDocumentForTopics',
+        __filename,
+        undefined,
+        { documentId, userId },
+      );
+
+      // AI servisini kullanarak metinden konuları tespit et
+      const topicResult = await this.aiService.detectTopics(
+        documentTextResponse.text,
+      );
+
+      // topicResult bir dizi değilse, içindeki topics dizisini dön
+      // Uyumluluk için topicResult.topics dizisini döndürüyoruz
+      if (topicResult && Array.isArray(topicResult.topics)) {
+        return topicResult.topics;
+      }
+
+      // Eğer topics dizisi yoksa boş dizi dön
+      return [];
     } catch (error) {
       this.logger.logError(
         error,
