@@ -1,105 +1,322 @@
 ---
-description:
-globs:
+title: "Kimlik Doğrulama ve Yetkilendirme"
+description: "Firebase Authentication ve NestJS entegrasyonu kuralları"
+glob_patterns: ["frontend/src/hooks/auth/**/*.ts", "frontend/src/services/auth*.ts", "backend/src/auth/**/*.ts"]
+---
+
+---
+description: 
+globs: 
 alwaysApply: false
 ---
 # Kimlik Doğrulama ve Yetkilendirme
 
 Bu projede kimlik doğrulama ve yetkilendirme işlemleri için Firebase Authentication kullanılmaktadır.
 
-## Firebase Authentication
+## Firebase Authentication Entegrasyonu
 
-- [backend/src/auth/firebase/](mdc:backend/src/auth/firebase/) - Backend Firebase entegrasyonu
-- [frontend/src/app/auth/](mdc:frontend/src/app/auth/) - Frontend kimlik doğrulama sayfaları
-- [frontend/src/hooks/auth/](mdc:frontend/src/hooks/auth/) - Kimlik doğrulama hook'ları
+- [backend/src/auth/firebase/](mdc:backend/src/auth/firebase) - Backend Firebase entegrasyonu
+- [frontend/src/app/auth/](mdc:frontend/src/app/auth) - Frontend kimlik doğrulama sayfaları
+  - [login/](mdc:frontend/src/app/auth/login) - Giriş sayfası
+  - [register/](mdc:frontend/src/app/auth/register) - Kayıt sayfası
+  - [forgot-password/](mdc:frontend/src/app/auth/forgot-password) - Şifre sıfırlama sayfası
+- [frontend/src/hooks/auth/](mdc:frontend/src/hooks/auth) - Kimlik doğrulama hook'ları
 
-## Kimlik Doğrulama Akışı
+## Frontend Kimlik Doğrulama İşlemleri
 
-1. Kullanıcı giriş/kayıt formu doldurur
-2. Frontend servisi Firebase'e istek atar
-3. Başarılı kimlik doğrulama sonrası alınan token, tüm API isteklerinde kullanılır
-4. Backend, gelen token'ı doğrular ve kullanıcı bilgilerini çıkarır
+### Auth Servisi
+- [frontend/src/services/auth.service.ts](mdc:frontend/src/services/auth.service.ts) - Firebase Auth ile etkileşim için servis
 
 ```typescript
-// Frontend kimlik doğrulama örneği
-const login = async (email: string, password: string) => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const token = await userCredential.user.getIdToken();
-    
-    // Token'ı sakla
-    localStorage.setItem('auth_token', token);
-    
-    // Kullanıcı verisini global state'e aktar
-    useAuthStore.getState().setUser({
-      uid: userCredential.user.uid,
-      email: userCredential.user.email,
-      // diğer veriler
-    });
-    
-    return userCredential.user;
-  } catch (error) {
-    throw new Error(`Giriş başarısız: ${error.message}`);
+// auth.service.ts örneği
+export class AuthService {
+  async login(email: string, password: string): Promise<UserCredential> {
+    try {
+      return await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      this.handleAuthError(error, 'Giriş başarısız');
+      throw error;
+    }
   }
-};
+  
+  async register(email: string, password: string, displayName: string): Promise<UserCredential> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName });
+      return userCredential;
+    } catch (error) {
+      this.handleAuthError(error, 'Kayıt başarısız');
+      throw error;
+    }
+  }
+  
+  async logout(): Promise<void> {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      this.handleAuthError(error, 'Çıkış başarısız');
+      throw error;
+    }
+  }
+  
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      this.handleAuthError(error, 'Şifre sıfırlama başarısız');
+      throw error;
+    }
+  }
+  
+  private handleAuthError(error: unknown, prefix: string): void {
+    const message = error instanceof FirebaseError 
+      ? this.getErrorMessage(error.code)
+      : 'Beklenmeyen bir hata oluştu';
+      
+    errorService.logError(`${prefix}: ${message}`);
+  }
+  
+  private getErrorMessage(errorCode: string): string {
+    // Firebase hata kodlarını Türkçe'ye çevir
+    switch (errorCode) {
+      case 'auth/user-not-found':
+        return 'Kullanıcı bulunamadı';
+      case 'auth/wrong-password':
+        return 'Yanlış şifre';
+      // Diğer hata kodları...
+      default:
+        return 'Beklenmeyen bir hata oluştu';
+    }
+  }
+}
 ```
 
-## Firebase Güvenlik Kuralları
-
-- Firebase Authentication ve Firestore'da güvenlik kuralları tanımlanmalıdır
-- Kullanıcılar sadece kendi verilerine erişebilmelidir
-- Daha fazla bilgi için Firebase dokümantasyonunu inceleyin
-
-## Frontend Yetkilendirme
-
-- [frontend/src/context/AuthContext.tsx](mdc:frontend/src/context/AuthContext.tsx) - Auth context yapısı
-- Protected Route yapısı ile yetkisiz erişimler engellenir:
+### Auth Hook'ları
 
 ```typescript
-// Protected route örneği
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
+// useAuth.ts hook örneği
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const authService = useMemo(() => new AuthService(), []);
   
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/auth/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, []);
   
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-  
-  return isAuthenticated ? <>{children}</> : null;
-};
+  return {
+    user,
+    loading,
+    isAuthenticated: !!user,
+    login: authService.login.bind(authService),
+    register: authService.register.bind(authService),
+    logout: authService.logout.bind(authService),
+    forgotPassword: authService.forgotPassword.bind(authService),
+  };
+}
 ```
 
-## Backend Yetkilendirme
-
-- [backend/src/auth/guards/](mdc:backend/src/auth/guards/) - NestJS auth guard'ları
-- JWT stratejisi ile token doğrulama
-- Role-based access control (RBAC) için dekoratörler
+## Zustand ile Auth State Yönetimi
 
 ```typescript
-// Controller seviyesinde auth kullanımı
+// auth.store.ts
+export const useAuthStore = create<AuthStore>()((set) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  error: null,
+  
+  setUser: (user: User | null) => 
+    set({ 
+      user: user ? {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+      } : null,
+      isAuthenticated: !!user,
+      isLoading: false,
+    }),
+    
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
+  setError: (error: string | null) => set({ error }),
+  clearUser: () => set({ user: null, isAuthenticated: false }),
+}));
+
+// Auth Listener
+export function initAuthListener() {
+  onAuthStateChanged(auth, (user) => {
+    useAuthStore.getState().setUser(user);
+  });
+}
+```
+
+## Backend Firebase Entegrasyonu
+
+### Firebase Admin SDK Kurulumu
+
+```typescript
+// firebase.service.ts
+import * as admin from 'firebase-admin';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class FirebaseService {
+  private readonly firebaseApp: admin.app.App;
+  
+  constructor() {
+    if (!admin.apps.length) {
+      this.firebaseApp = admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        }),
+        databaseURL: process.env.FIREBASE_DATABASE_URL,
+      });
+    } else {
+      this.firebaseApp = admin.app();
+    }
+  }
+  
+  getAuth(): admin.auth.Auth {
+    return this.firebaseApp.auth();
+  }
+  
+  getFirestore(): admin.firestore.Firestore {
+    return this.firebaseApp.firestore();
+  }
+}
+```
+
+### Token Doğrulama ve Kullanıcı Çıkarma
+
+```typescript
+// firebase-auth.service.ts
+import { Injectable } from '@nestjs/common';
+import { FirebaseService } from './firebase.service';
+
+@Injectable()
+export class FirebaseAuthService {
+  constructor(private readonly firebaseService: FirebaseService) {}
+  
+  async verifyToken(token: string): Promise<admin.auth.DecodedIdToken> {
+    try {
+      return await this.firebaseService.getAuth().verifyIdToken(token);
+    } catch (error) {
+      throw new UnauthorizedException('Geçersiz veya süresi dolmuş token');
+    }
+  }
+  
+  async getUser(uid: string): Promise<admin.auth.UserRecord> {
+    try {
+      return await this.firebaseService.getAuth().getUser(uid);
+    } catch (error) {
+      throw new NotFoundException('Kullanıcı bulunamadı');
+    }
+  }
+}
+```
+
+### NestJS Auth Guards ve JWT Entegrasyonu
+
+```typescript
+// firebase-auth.guard.ts
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { FirebaseAuthService } from '../services/firebase-auth.service';
+
+@Injectable()
+export class FirebaseAuthGuard implements CanActivate {
+  constructor(private readonly firebaseAuthService: FirebaseAuthService) {}
+  
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
+    
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization header eksik');
+    }
+    
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('Bearer token eksik');
+    }
+    
+    try {
+      const decodedToken = await this.firebaseAuthService.verifyToken(token);
+      
+      // İsteğe kullanıcı bilgisini ekle
+      request.user = {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        roles: decodedToken.roles || [],
+      };
+      
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException('Geçersiz veya süresi dolmuş token');
+    }
+  }
+}
+```
+
+### Roller ve Yetkilendirme
+
+```typescript
+// roles.decorator.ts
+export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
+
+// roles.guard.ts
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private readonly reflector: Reflector) {}
+  
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
+    
+    if (!requiredRoles) {
+      return true; // Rol gerektirmeyen endpoint
+    }
+    
+    const { user } = context.switchToHttp().getRequest();
+    
+    if (!user || !user.roles) {
+      return false; // Kullanıcı veya roller yok
+    }
+    
+    return requiredRoles.some(role => user.roles.includes(role));
+  }
+}
+```
+
+## Kullanım Örnekleri
+
+### Controller Seviyesinde Auth Kullanımı
+
+```typescript
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
   
   @Get()
-  @Public() // Herkese açık endpoint
+  @Public() // Herkese açık endpoint dekoratörü
   findAll() {
     return this.coursesService.findAll();
   }
   
   @Post()
-  @UseGuards(JwtAuthGuard) // Sadece giriş yapmış kullanıcılar
+  @UseGuards(FirebaseAuthGuard) // Sadece giriş yapmış kullanıcılar
   create(@Body() createCourseDto: CreateCourseDto, @GetUser() user: User) {
     return this.coursesService.create(createCourseDto, user.uid);
   }
   
   @Delete(':id')
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
   @Roles(['admin']) // Sadece admin rolüne sahip kullanıcılar
   remove(@Param('id') id: string) {
     return this.coursesService.remove(id);
@@ -107,38 +324,84 @@ export class CoursesController {
 }
 ```
 
-## Güvenlik Önlemleri
+### Frontend Yetkili Rota Kontrolü
 
-1. **Token Yenileme:** Access token'lar düzenli aralıklarla yenilenmelidir
-2. **CSRF Koruması:** Cross-Site Request Forgery saldırılarına karşı önlem alınmalıdır
-3. **XSS Koruması:** Cross-Site Scripting saldırılarını önlemek için kullanıcı girdileri temizlenmelidir
-4. **Rate Limiting:** API isteklerini sınırlamak için rate limiting uygulanmalıdır
+```tsx
+// Protected route component
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/auth/useAuth';
 
-## Oturum Yönetimi
+export const ProtectedRoute: React.FC<{ 
+  children: React.ReactNode,
+  requiredRoles?: string[] 
+}> = ({ children, requiredRoles }) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        // Kullanıcı giriş yapmamış
+        router.replace('/auth/login');
+      } else if (requiredRoles && !requiredRoles.some(role => user?.roles?.includes(role))) {
+        // Kullanıcının gerekli rolleri yok
+        router.replace('/unauthorized');
+      }
+    }
+  }, [isAuthenticated, isLoading, router, user, requiredRoles]);
+  
+  if (isLoading) {
+    return <Loading />;
+  }
+  
+  // Kullanıcı hem giriş yapmış hem de gerekli rollere sahipse içeriği göster
+  return (isAuthenticated && (!requiredRoles || requiredRoles.some(role => user?.roles?.includes(role)))) 
+    ? <>{children}</> 
+    : null;
+};
+```
 
-- Kullanıcı oturumları `persistent` olarak saklanmalıdır
-- Oturum açma/kapatma işlemleri [frontend/src/services/auth.service.ts](mdc:frontend/src/services/auth.service.ts) üzerinden yapılmalıdır
-- Oturum durumu global state'te tutulmalıdır (Zustand)
+## Güvenlik Pratikleri
+
+1. **Token Yönetimi:**
+   - Access token'lar kısa ömürlü olmalıdır (1 saat veya daha az)
+   - Refresh token'lar daha uzun ömürlü olabilir, ancak güvenli bir şekilde saklanmalıdır
+   - Token'lar localStorage yerine HttpOnly cookie'lerde veya bellek durumunda saklanmalıdır
+
+2. **Oturum Güvenliği:**
+   - İnaktif kullanıcılar için session timeout uygulanmalıdır
+   - Şüpheli aktivite tespit edildiğinde kullanıcı oturumdan çıkarılmalıdır
+   - Multi-factor authentication (MFA) özellikle admin rolündeki kullanıcılar için düşünülmelidir
+
+3. **Güvenli İşlemler:**
+   - Kritik işlemler için yeniden kimlik doğrulama istenmelidir
+   - Password hashing ve salting uygulanmalıdır (Firebase bunu otomatik yönetir)
+   - Şifre politikaları uygulanmalıdır (minimum uzunluk, karakter çeşitliliği vb.)
 
 ```typescript
-// Oturum durumu izleme
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // Kullanıcı giriş yapmış
-      useAuthStore.getState().setUser({
-        uid: user.uid,
-        email: user.email,
-        // diğer veriler
-      });
-    } else {
-      // Kullanıcı çıkış yapmış
-      useAuthStore.getState().clearUser();
+// Hassas işlem örneği
+async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  try {
+    // İlk önce kullanıcının mevcut şifresini doğrula
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      throw new Error('Kullanıcı oturum açmamış');
     }
     
-    useAuthStore.getState().setLoading(false);
-  });
-  
-  return () => unsubscribe();
-}, []);
+    // Yeniden kimlik doğrulama
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    
+    // Şifre değiştir
+    await updatePassword(user, newPassword);
+  } catch (error) {
+    // Hata yönetimi...
+    throw error;
+  }
+}
 ```
+
+4. **Loglama ve İzleme:**
+   - Başarısız giriş denemeleri loglanmalıdır
+   - Şüpheli aktiviteler tespit edilmeli ve bildirilmelidir
+   - Hassas işlemler (şifre değiştirme, rol değiştirme vb.) loglanmalıdır

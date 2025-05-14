@@ -1,33 +1,161 @@
 ---
 description: "project-structure kuralları"
-globs:
+globs: 
 alwaysApply: false
 ---
 # Proje Yapısı ve Organizasyonu
 
-Bu proje, Next.js tabanlı bir frontend ve NestJS tabanlı bir backend içeren tam bir web uygulamasıdır.
+Bu proje, Next.js tabanlı bir frontend ve NestJS tabanlı bir backend içeren tam bir web uygulamasıdır. Kişiselleştirilmiş Quiz Platformu olarak tasarlanmış, yapay zeka destekli bir öğrenme platformudur.
 
 ## Temel Dizin Yapısı
-- [backend/](mdc:backend/) - NestJS tabanlı backend API
-- [frontend/](mdc:frontend/) - Next.js tabanlı frontend uygulaması
+- [backend/](mdc:backend) - NestJS tabanlı backend API
+- [frontend/](mdc:frontend) - Next.js tabanlı frontend uygulaması
 
 ## Frontend Yapısı
-Frontend kodları [frontend/src/](mdc:frontend/src/) altında organize edilmiştir:
-- [app/](mdc:frontend/src/app/) - Next.js App Router sayfaları
-- [components/](mdc:frontend/src/components/) - Yeniden kullanılabilir React bileşenleri
-- [services/](mdc:frontend/src/services/) - Backend API ile etkileşim için servis katmanı
-- [hooks/](mdc:frontend/src/hooks/) - Custom React hook'ları
-- [contexts/](mdc:frontend/src/contexts/) - React context'leri
-- [store/](mdc:frontend/src/store/) - Zustand tabanlı global state yönetimi
-- [types/](mdc:frontend/src/types/) - TypeScript tipleri ve arayüzleri
-- [lib/](mdc:frontend/src/lib/) - Yardımcı fonksiyonlar ve yardımcı programlar
+
+Frontend kodları [frontend/src/](mdc:frontend/src) altında organize edilmiştir:
+
+### Sayfa ve Rotalar
+- [app/](mdc:frontend/src/app) - Next.js App Router sayfa ve rotaları
+  - [auth/](mdc:frontend/src/app/auth) - Kimlik doğrulama sayfaları
+  - [courses/](mdc:frontend/src/app/courses) - Ders yönetimi sayfaları
+  - [exams/](mdc:frontend/src/app/exams) - Sınav ve quiz sayfaları
+  - [learning-goals/](mdc:frontend/src/app/learning-goals) - Öğrenme hedefleri
+  - [profile/](mdc:frontend/src/app/profile) - Kullanıcı profil yönetimi
+  - [upload/](mdc:frontend/src/app/upload) - İçerik yükleme sayfaları
+
+### Bileşenler
+- [components/](mdc:frontend/src/components) - Yeniden kullanılabilir React bileşenleri
+  - [ui/](mdc:frontend/src/components/ui) - Temel UI bileşenleri (buton, input, vb.)
+  - [layout/](mdc:frontend/src/components/layout) - Düzen bileşenleri (header, footer, sidebar)
+  - [auth/](mdc:frontend/src/components/auth) - Kimlik doğrulama bileşenleri
+  - [document/](mdc:frontend/src/components/document) - Belge görüntüleme/düzenleme bileşenleri
+  - [analytics/](mdc:frontend/src/components/analytics) - Veri görselleştirme bileşenleri
+  - [transitions/](mdc:frontend/src/components/transitions) - Animasyon ve geçiş bileşenleri
+  - [providers/](mdc:frontend/src/components/providers) - Context sağlayıcılar
+
+### Veri ve State Yönetimi
+- [services/](mdc:frontend/src/services) - Backend API ile etkileşim için servis katmanı
+- [hooks/](mdc:frontend/src/hooks) - Custom React hook'ları
+  - [api/](mdc:frontend/src/hooks/api) - API hook'ları (TanStack Query ile)
+  - [auth/](mdc:frontend/src/hooks/auth) - Kimlik doğrulama hook'ları
+  - [document/](mdc:frontend/src/hooks/document) - Belge yönetimi hook'ları
+  - [quiz/](mdc:frontend/src/hooks/quiz) - Sınav/quiz hook'ları
+  - [ui/](mdc:frontend/src/hooks/ui) - UI ile ilgili hook'lar
+- [contexts/](mdc:frontend/src/contexts) - React context'leri
+- [store/](mdc:frontend/src/store) - Zustand tabanlı global state yönetimi
+  - [auth/](mdc:frontend/src/store/auth) - Kimlik doğrulama store
+  - [courses/](mdc:frontend/src/store/courses) - Ders yönetimi store
+  - [ui/](mdc:frontend/src/store/ui) - UI durumu store
+
+### Destek Dosyaları
+- [types/](mdc:frontend/src/types) - TypeScript tipleri ve arayüzleri
+- [lib/](mdc:frontend/src/lib) - Yardımcı fonksiyonlar ve yardımcı programlar
+  - [i18n/](mdc:frontend/src/lib/i18n) - Çoklu dil desteği
+- [constants/](mdc:frontend/src/constants) - Sabit değerler ve konfigürasyon
 
 ## Backend Yapısı
-Backend kodları [backend/src/](mdc:backend/src/) altında organize edilmiştir:
-- [auth/](mdc:backend/src/auth/) - Kimlik doğrulama ve yetkilendirme
-- [users/](mdc:backend/src/users/) - Kullanıcı yönetimi
-- [courses/](mdc:backend/src/courses/) - Kurs yönetimi
-- [documents/](mdc:backend/src/documents/) - Doküman yönetimi
-- [quizzes/](mdc:backend/src/quizzes/) - Test/Sınav yönetimi
-- [common/](mdc:backend/src/common/) - Ortak yardımcı programlar ve dekoratörler
-- [config/](mdc:backend/src/config/) - Uygulama yapılandırması
+
+Backend kodları [backend/src/](mdc:backend/src) altında organize edilmiştir. NestJS, modüler bir yapıya sahiptir ve her bir işlevsel birim kendi modülüne sahiptir:
+
+### Temel Modüller
+- [auth/](mdc:backend/src/auth) - Kimlik doğrulama ve yetkilendirme
+  - [decorators/](mdc:backend/src/auth/decorators) - Özel dekoratörler
+  - [dto/](mdc:backend/src/auth/dto) - Veri transfer nesneleri
+  - [firebase/](mdc:backend/src/auth/firebase) - Firebase entegrasyonu
+  - [guards/](mdc:backend/src/auth/guards) - Erişim koruyucuları
+  - [strategies/](mdc:backend/src/auth/strategies) - Kimlik doğrulama stratejileri
+
+- [users/](mdc:backend/src/users) - Kullanıcı yönetimi
+  - [dto/](mdc:backend/src/users/dto) - Kullanıcı veri transfer nesneleri
+  - [responses/](mdc:backend/src/users/dto/responses) - Yanıt nesneleri
+
+### Temel İş Mantığı Modülleri
+- [courses/](mdc:backend/src/courses) - Kurs/ders yönetimi
+  - [dto/](mdc:backend/src/courses/dto) - Kurs veri transfer nesneleri
+- [documents/](mdc:backend/src/documents) - Belge/içerik yönetimi
+  - [dto/](mdc:backend/src/documents/dto) - Belge veri transfer nesneleri
+- [quizzes/](mdc:backend/src/quizzes) - Sınav/quiz yönetimi
+  - [dto/](mdc:backend/src/quizzes/dto) - Quiz veri transfer nesneleri
+  - [responses/](mdc:backend/src/quizzes/dto/responses) - Quiz yanıt DTO'ları
+- [questions/](mdc:backend/src/questions) - Soru bankası yönetimi
+  - [dto/](mdc:backend/src/questions/dto) - Soru veri transfer nesneleri
+  - [responses/](mdc:backend/src/questions/dto/responses) - Soru yanıt DTO'ları
+- [learning-targets/](mdc:backend/src/learning-targets) - Öğrenme hedefleri
+  - [dto/](mdc:backend/src/learning-targets/dto) - Öğrenme hedefi DTO'ları
+  - [interfaces/](mdc:backend/src/learning-targets/interfaces) - Öğrenme hedefi arayüzleri
+
+### Yapay Zeka Entegrasyonu
+- [ai/](mdc:backend/src/ai) - Yapay zeka servisleri
+  - [dto/](mdc:backend/src/ai/dto) - AI ile ilgili veri transfer nesneleri
+  - [enums/](mdc:backend/src/ai/enums) - AI enumerasyonları
+  - [interfaces/](mdc:backend/src/ai/interfaces) - AI servisleri için arayüzler
+  - [prompts/](mdc:backend/src/ai/prompts) - AI prompt şablonları
+
+### Destek Modülleri
+- [common/](mdc:backend/src/common) - Ortak yardımcı programlar ve dekoratörler
+  - [constants/](mdc:backend/src/common/constants) - Sabitler
+  - [decorators/](mdc:backend/src/common/decorators) - Özel dekoratörler
+  - [documentation/](mdc:backend/src/common/documentation) - Swagger/OpenAPI dokümanları
+  - [filters/](mdc:backend/src/common/filters) - Hata filtreleri
+  - [interfaces/](mdc:backend/src/common/interfaces) - Ortak arayüzler
+  - [services/](mdc:backend/src/common/services) - Ortak servisler
+  - [types/](mdc:backend/src/common/types) - Tip tanımları
+  - [utils/](mdc:backend/src/common/utils) - Yardımcı fonksiyonlar
+- [config/](mdc:backend/src/config) - Uygulama yapılandırması
+- [firebase/](mdc:backend/src/firebase) - Firebase konfigürasyonu
+- [interceptors/](mdc:backend/src/interceptors) - HTTP yanıt dönüştürücüler
+- [shared/](mdc:backend/src/shared) - Modüller arası paylaşılan kod
+  - [normalization/](mdc:backend/src/shared/normalization) - Konu normalizasyonu
+
+## NestJS Mimari Yapısı
+
+Her bir NestJS modülü genellikle aşağıdaki öğeleri içerir:
+
+- **Controller**: API endpoint'lerini tanımlar, HTTP isteklerini karşılar
+- **Service**: İş mantığını uygular, veritabanı işlemlerini gerçekleştirir
+- **Module**: Controller ve service'leri bir araya getirir, bağımlılıkları tanımlar
+- **DTO (Data Transfer Objects)**: İstek ve yanıt verilerinin yapısını tanımlar
+- **Entities**: Veritabanı modellerini tanımlar
+- **Repository**: Veritabanı işlemlerini soyutlar
+
+## Next.js App Router Yapısı
+
+Next.js App Router, React Server Components üzerine kurulu bir sayfa yönlendirme sistemidir:
+
+- **Page.tsx**: Her klasör için bir page.tsx dosyası o URL rotasının görünümünü tanımlar
+- **Layout.tsx**: Sayfa düzenini tanımlar, alt rotaları sarar
+- **Loading.tsx**: Sayfa yüklenirken gösterilecek içerik
+- **Error.tsx**: Hata durumunda gösterilecek içerik
+- **Not-found.tsx**: 404 sayfası
+
+İlgili bir sayfaya özel bileşenler genellikle `_components` alt klasöründe tutulur:
+
+```
+app/
+└── courses/
+    ├── page.tsx
+    ├── layout.tsx
+    ├── loading.tsx
+    ├── error.tsx
+    └── _components/
+        ├── CourseList.tsx
+        ├── CourseCard.tsx
+        └── CourseSearch.tsx
+```
+
+## Veritabanı ve Depolama
+
+Proje, Google Cloud ürünlerini kullanır:
+
+- **Firestore**: NoSQL doküman veritabanı (ana veritabanı)
+- **Firebase Authentication**: Kullanıcı kimlik doğrulama
+- **Firebase Storage**: Kullanıcı tarafından yüklenen dosyaların depolanması
+
+Ana koleksiyonlar:
+- `users`: Kullanıcı profilleri
+- `courses`: Dersler ve içerikler
+- `quizzes`: Sınavlar ve sonuçlar
+- `questions`: Soru bankası
+- `userLearningObjectives`: Kullanıcı öğrenme hedefleri
+- `quickQuizResults`: Hızlı sınav geçici sonuçları

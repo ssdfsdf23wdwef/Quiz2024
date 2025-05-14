@@ -1,5 +1,5 @@
 ---
-description: "coding-standards kuralları" 
+description: "coding-standards kuralları"
 globs: 
 alwaysApply: false
 ---
@@ -12,26 +12,186 @@ Bu proje için aşağıdaki kodlama standartlarını takip etmelisiniz:
 - **SOLID:** Kodlar SOLID prensiplerine uygun yazılmalıdır
 - **DRY (Don't Repeat Yourself):** Kod tekrarından kaçınılmalıdır
 - **KISS:** Çözümler gereksiz karmaşıklıktan arındırılmış olmalıdır
-- **Modern Yaklaşımlar:** ES6+, React Hooks ve Next.js App Router kullanılmalıdır
+- **Modüler Yapı:** Fonksiyonlar ve bileşenler küçük, tek sorumluluk ilkesine (SRP) uygun olmalıdır
+- **Modern Yaklaşımlar:** ES6+, React Hooks, Next.js App Router ve NestJS dekoratörleri kullanılmalıdır
 
 ## TypeScript Kullanımı
 - **`any` Kullanımı Yasaktır:** Kesinlikle `any` türü kullanılmamalıdır
-- **Açık Tipler:** Tüm değişkenler, parametreler ve dönüş değerleri için tip belirtilmelidir
+- **unknown > any:** Eğer bir tipin tam olarak ne olduğu bilinmiyorsa, `any` yerine `unknown` kullanılmalıdır
+- **Explicit Type Annotations:** Tüm değişkenler, parametreler ve dönüş değerleri için tip belirtilmelidir
+- **Type Inference:** TypeScript'in tip çıkarımı yapabildiği durumlarda gereksiz tip notasyonları eklenmemelidir
 - **Null/Undefined Kontrolü:** `strictNullChecks` aktiftir, `!` operatörü kullanılmamalıdır
-- Tip tanımları için referans: [frontend/src/types/](mdc:frontend/src/types)
+- **Union Types:** Bir değişken farklı tiplerden değer alabiliyorsa union tipler kullanılmalıdır: `type Result = Success | Error`
+- **Generic Types:** Genel amaçlı fonksiyon ve bileşenler için generic tipler kullanılmalıdır
+- **Tip Tanımları:** Karmaşık veri yapıları için tipler [frontend/src/types/](mdc:frontend/src/types) ve [backend/src/common/types/](mdc:backend/src/common/types) altında tanımlanmalıdır
+- **Interface vs Type:** İşlevsel olarak benzer olsalar da, genellikle:
+  - Genişletilebilir veri yapıları için `interface`
+  - Birleşim, kesişim ve primitive tipler için `type` tercih edilmelidir
+
+```typescript
+// Kötü:
+const getData = (id): any => {
+  return fetch(`/api/data/${id}`).then(res => res.json());
+};
+
+// İyi:
+interface DataResponse {
+  id: string;
+  title: string;
+  count: number;
+}
+
+const getData = async (id: string): Promise<DataResponse> => {
+  const res = await fetch(`/api/data/${id}`);
+  return res.json() as Promise<DataResponse>;
+};
+```
 
 ## React & Next.js Bileşenleri
 - **Yazım Stili:** Sadece fonksiyonel bileşenler ve hook'lar kullanılmalıdır
 - **Server Components:** Varsayılan olarak Server Component kullanılmalıdır
 - **Client Components:** Sadece tarayıcı API'leri veya event handler'lar gerektiğinde `"use client"` direktifi kullanılmalıdır
+- **Bileşen Dosya Yapısı:**
+  ```tsx
+  'use client'; // Sadece gerekliyse
+  
+  import { useState } from 'react';
+  import { cn } from '@/lib/utils';
+  
+  // Tipler
+  export interface ButtonProps {
+    variant?: 'primary' | 'secondary';
+    size?: 'sm' | 'md' | 'lg';
+    children: React.ReactNode;
+    onClick?: () => void;
+  }
+  
+  // Bileşen
+  export function Button({ 
+    variant = 'primary',
+    size = 'md',
+    children,
+    onClick,
+    ...props 
+  }: ButtonProps) {
+    // Hook'lar en üstte
+    const [isLoading, setIsLoading] = useState(false);
+    
+    // Event handler'lar
+    const handleClick = () => {
+      setIsLoading(true);
+      onClick?.();
+      setIsLoading(false);
+    };
+    
+    // JSX return
+    return (
+      <button
+        className={cn(
+          'rounded-md font-medium',
+          variant === 'primary' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800',
+          size === 'sm' ? 'px-2 py-1 text-sm' : size === 'lg' ? 'px-4 py-3 text-lg' : 'px-3 py-2 text-base'
+        )}
+        onClick={handleClick}
+        disabled={isLoading}
+        {...props}
+      >
+        {isLoading ? 'Yükleniyor...' : children}
+      </button>
+    );
+  }
+  ```
+
+## NestJS Backend
+- **Class İsimleri:** Her sınıf belirli bir sonek ile adlandırılmalıdır: Controller, Service, Module, Guard, vb.
+- **Dekoratörler:** NestJS dekoratörleri kullanılmalıdır (`@Controller`, `@Injectable`, `@Get`, vb.)
+- **DTOs:** Veri transfer nesneleri için `class` kullanılmalı ve class-validator dekoratörleri eklenmelidir
+- **Dependency Injection:** Constructor injection kullanılmalıdır
+- **Modüler Yapı:** Her özellik için ayrı modül oluşturulmalıdır
+
+```typescript
+// DTOs
+export class CreateKursDto {
+  @IsNotEmpty()
+  @IsString()
+  @Length(3, 100)
+  baslik: string;
+  
+  @IsOptional()
+  @IsString()
+  aciklama?: string;
+  
+  @IsNotEmpty()
+  @IsArray()
+  @ArrayMinSize(1)
+  konular: string[];
+}
+
+// Service
+@Injectable()
+export class KurslarService {
+  constructor(
+    private readonly firestoreService: FirestoreService,
+    private readonly loggerService: LoggerService,
+  ) {}
+  
+  async findAll(userId: string): Promise<Kurs[]> {
+    try {
+      // İşlem
+      return kurslar;
+    } catch (error) {
+      this.loggerService.error('Kurslar getirilemedi', error);
+      throw new InternalServerErrorException('Kurslar getirilemedi');
+    }
+  }
+}
+
+// Controller
+@Controller('kurslar')
+export class KurslarController {
+  constructor(private readonly kurslarService: KurslarService) {}
+  
+  @Get()
+  @UseGuards(AuthGuard)
+  async getKurslar(@GetUser() user: User) {
+    return this.kurslarService.findAll(user.id);
+  }
+}
+```
 
 ## API Etkileşimi
 - **API Servisleri:** Tüm backend istekleri [frontend/src/services/api.service.ts](mdc:frontend/src/services/api.service.ts) üzerinden yapılmalıdır
-- **Client-Side Veri Çekme:** TanStack Query (React Query) kullanılmalıdır
+- **Client-Side Veri Çekme:** TanStack Query (React Query v5) kullanılmalıdır
 - **Hata Yönetimi:** API çağrılarında hata durumları mutlaka ele alınmalıdır
+- **Axios İnterceptor'ları:** Kimlik doğrulama, istek/yanıt dönüşümleri için interceptor'lar kullanılmalıdır
 
 ## Stil ve UI
-- **Styling:** Tailwind CSS kullanılmalıdır
+- **Styling:** Tailwind CSS 4 kullanılmalıdır
+- **Bileşen Kütüphanesi:** NextUI kullanılmalıdır
 - **Tema Tutarlılığı:** Tailwind tema değişkenleri kullanılmalıdır
 - **Responsive Design:** Mobil öncelikli tasarım yapılmalıdır
+- **Karanlık Mod:** `next-themes` ile sağlanmalıdır
+
+## Kod Formatı ve Linting
+- **ESLint:** Tüm kod ESLint kurallarına uygun olmalıdır
+- **Prettier:** Kod formatı Prettier ile standartlaştırılmalıdır
+- **Husky:** Commit öncesi otomatik lint ve format kontrolü yapılmalıdır
+- **Boşluklar:** 2 space indent kullanılmalıdır
+- **Satır Sonu:** Unix satır sonu (LF) kullanılmalıdır
+- **Semicolons:** Her ifade sonunda noktalı virgül (;) kullanılmalıdır
+
+## İsimlendirme Kuralları
+- **Bileşenler:** PascalCase (Örn: `KullaniciKarti.tsx`)
+- **Hook'lar:** camelCase, use prefixi ile (Örn: `useKurslar.ts`)
+- **Fonksiyonlar:** camelCase (Örn: `hesaplaToplamPuan()`)
+- **Değişkenler:** camelCase (Örn: `kullaniciAdi`)
+- **Sabitler:** UPPER_SNAKE_CASE (Örn: `MAX_SORU_SAYISI`)
+- **Tip ve Interface'ler:** PascalCase (Örn: `KursDetayi`)
+- **Enum'lar:** PascalCase (Örn: `SinavDurumu`)
+
+## Diğer Önemli Noktalar
+- **Test Yazılmalıdır:** Özellikle kritik iş mantığı için birim testleri yazılmalıdır
+- **Belgelendirme:** Karmaşık fonksiyonlar ve bileşenler TSDoc/JSDoc yorumlarıyla belgelenmelidir
+- **Erişilebilirlik (a11y):** Tüm kullanıcı arayüzü WCAG AA standartlarına uygun olmalıdır
+- **Performans:** Gereksiz render'ları önlemek için `useMemo`, `useCallback` ve React.memo kullanılmalıdır
 

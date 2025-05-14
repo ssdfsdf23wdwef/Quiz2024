@@ -1,43 +1,247 @@
 ---
-description: "component-organization kuralları" 
-globs:
-  - "frontend/src/components/**/*" 
+description: "component-organization kuralları"
+globs: 
 alwaysApply: false
 ---
 # Bileşen Organizasyonu ve Yapısı
 
 Frontend uygulamasının bileşen organizasyonu ve yapısı ile ilgili kurallar:
 
+## Atomik Tasarım Sistemi
+
+Projede atomik tasarım sistemi kullanılmaktadır:
+
+1. **Atomlar:** Temel UI parçaları (Button, Input, Card, Text, Icon vb.)
+   - [frontend/src/components/ui/button.tsx](mdc:frontend/src/components/ui/button.tsx)
+   - [frontend/src/components/ui/input.tsx](mdc:frontend/src/components/ui/input.tsx)
+
+2. **Moleküller:** Atomlardan oluşan bileşik parçalar (FormField, SearchBar, NavItem vb.)
+   - [frontend/src/components/ui/form-field.tsx](mdc:frontend/src/components/ui/form-field.tsx)
+   - [frontend/src/components/ui/search-bar.tsx](mdc:frontend/src/components/ui/search-bar.tsx)
+
+3. **Organizmalar:** Molekül ve atomların birleşimi (CourseCard, QuizForm, Header vb.)
+   - [frontend/src/components/courses/course-card.tsx](mdc:frontend/src/components/courses/course-card.tsx)
+   - [frontend/src/components/auth/login-form.tsx](mdc:frontend/src/components/auth/login-form.tsx)
+
+4. **Şablonlar:** Sayfa düzenleri (DashboardLayout, AuthLayout vb.)
+   - [frontend/src/components/layout/dashboard-layout.tsx](mdc:frontend/src/components/layout/dashboard-layout.tsx)
+
+5. **Sayfalar:** App Router içindeki sayfa bileşenleri
+   - [frontend/src/app/courses/page.tsx](mdc:frontend/src/app/courses/page.tsx)
+
 ## Bileşen Dizin Yapısı
 - [frontend/src/components/ui/](mdc:frontend/src/components/ui) - Atomik UI bileşenleri (butonlar, inputlar, kartlar vb.)
-- [frontend/src/components/features/](mdc:frontend/src/components/features) - Özellik bazlı bileşenler (örn: kurs-listesi, kullanıcı-profili vb.)
+- [frontend/src/components/auth/](mdc:frontend/src/components/auth) - Kimlik doğrulama bileşenleri
+- [frontend/src/components/layout/](mdc:frontend/src/components/layout) - Düzen bileşenleri
+- [frontend/src/components/transitions/](mdc:frontend/src/components/transitions) - Animasyon bileşenleri
+- [frontend/src/components/analytics/](mdc:frontend/src/components/analytics) - Analitik bileşenleri
+- [frontend/src/components/document/](mdc:frontend/src/components/document) - Doküman işleme bileşenleri
 - [frontend/src/app/](mdc:frontend/src/app) - Sayfa bileşenleri (App Router yapısında)
 
+## Next.js App Router Yapısı
+
+App Router, dosya sistemi tabanlı bir yönlendirme sistemi kullanır:
+
+```
+app/
+├── layout.tsx               # Root layout (tüm sayfalar için)
+├── page.tsx                 # Anasayfa 
+├── auth/                    # /auth route
+│   ├── layout.tsx           # Auth sayfaları için layout
+│   ├── login/               # /auth/login route
+│   │   └── page.tsx         # Login sayfası
+│   └── register/            # /auth/register route
+│       └── page.tsx         # Kayıt sayfası
+├── courses/                 # /courses route
+│   ├── page.tsx             # Kurslar listesi sayfası
+│   ├── layout.tsx           # Kurs sayfaları layout'u
+│   ├── [courseId]/          # Dinamik route: /courses/[courseId]
+│   │   ├── page.tsx         # Kurs detay sayfası
+│   │   └── edit/            # /courses/[courseId]/edit route
+│   │       └── page.tsx     # Kurs düzenleme sayfası
+│   └── create/              # /courses/create route
+│       └── page.tsx         # Yeni kurs oluşturma sayfası
+```
+
+### Özel Dosyalar
+
+- `layout.tsx`: Sayfa düzeni, çocuk sayfaları sarar
+- `page.tsx`: Rotalara karşılık gelen sayfalar
+- `loading.tsx`: Sayfa yüklenirken gösterilecek yükleme durumu
+- `error.tsx`: Hata durumunda gösterilecek bileşen
+- `not-found.tsx`: 404 durumunda gösterilecek bileşen
+
 ## Co-location Prensibi
-Sayfaya özgü kodlar ilgili sayfa dizini altında `_components/`, `_hooks/`, `_lib/` altdizinlerinde bulunmalıdır:
+
+Sayfaya özgü kodlar ilgili sayfa dizini altında `_components/`, `_hooks/`, `_lib/` gibi altdizinlerinde bulunmalıdır. Altçizgi (`_`) ile başlayan klasörler App Router'da rota oluşturmaz:
+
 ```
 app/
 └── kurslar/
-    ├── page.tsx         # Sayfa bileşeni
-    ├── _components/     # Sayfaya özgü bileşenler
-    ├── _hooks/          # Sayfaya özgü hook'lar
-    └── _lib/            # Sayfaya özgü yardımcı fonksiyonlar
+    ├── page.tsx           # Sayfa bileşeni
+    ├── _components/       # Sayfaya özgü bileşenler
+    │   ├── FilterBar.tsx  # Bu sayfaya özel filtre bileşeni
+    │   └── CourseList.tsx # Bu sayfaya özel kurs listesi
+    ├── _hooks/            # Sayfaya özgü hook'lar
+    │   └── useCourseFilters.ts
+    └── _lib/              # Sayfaya özgü yardımcı fonksiyonlar
+        └── courseUtils.ts
+```
+
+## Server ve Client Bileşenler
+
+### Server Components (Varsayılan)
+- Next.js 13+ ile bileşenler varsayılan olarak **Server Component**'tir
+- Server Component'ler sunucuda render edilir, client'a sadece HTML gönderilir
+- Avantajları:
+  - Backend kaynaklarına doğrudan erişim (veritabanı, dosya sistemi)
+  - Daha az JavaScript bundle boyutu
+  - SEO için daha iyi
+  - Daha hızlı sayfa yükleme
+
+```tsx
+// ServerComponent.tsx
+// Not: "use client" direktifi YOK
+
+import { getCoursesFromDB } from '@/services/db';
+
+export default async function Courses() {
+  // Sunucu tarafında veri çekme (backend servislerine doğrudan erişim)
+  const courses = await getCoursesFromDB();
+  
+  return (
+    <div>
+      <h1>Kurslar</h1>
+      <ul>
+        {courses.map(course => (
+          <li key={course.id}>{course.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Client Components
+- Etkileşimli ve durum gerektiren bileşenler için kullanılır
+- Dosyanın en üstüne `"use client"` direktifi eklenir
+- React hook'ları, tarayıcı API'leri, etkileşimli öğeler burada kullanılabilir
+- Server Component'ler, Client Component'leri import edemez (yalnızca child olarak alabilir)
+
+```tsx
+"use client";
+ 
+// ClientComponent.tsx
+import { useState } from 'react';
+ 
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Artır</button>
+    </div>
+  );
+}
+```
+
+### Client ve Server Component Kompozisyonu
+
+```tsx
+// page.tsx (Server Component)
+import CourseList from './CourseList'; // Server Component
+import FilterBar from './_components/FilterBar'; // Client Component
+import Stats from './_components/Stats'; // Server Component
+
+export default async function CoursesPage() {
+  // Sunucu tarafında veri çekme
+  const courses = await getCourses();
+  const stats = await getStats();
+  
+  return (
+    <div>
+      <h1>Kurslar</h1>
+      <Stats data={stats} />
+      <FilterBar /> {/* Client Component */}
+      <CourseList courses={courses} />
+    </div>
+  );
+}
+```
+
+## NextUI Bileşen Kütüphanesi
+
+Projede NextUI kütüphanesi temel UI bileşenleri için kullanılmaktadır:
+
+```tsx
+// NextUI kullanımı örneği
+import { Button, Card, Input } from "@nextui-org/react";
+
+export function LoginForm() {
+  return (
+    <Card className="p-4 w-full max-w-md">
+      <Input
+        label="Email"
+        placeholder="email@example.com"
+        type="email"
+        className="mb-4"
+      />
+      <Input
+        label="Şifre"
+        type="password" 
+        className="mb-4"
+      />
+      <Button color="primary" fullWidth>
+        Giriş Yap
+      </Button>
+    </Card>
+  );
+}
+```
+
+## TypeScript Prop Tipleri
+
+Her bileşenin prop tipleri açıkça tanımlanmalıdır:
+
+```tsx
+// Props tiplerini ayrı tanımlama
+type ButtonProps = {
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  isLoading?: boolean;
+  isDisabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+  className?: string;
+};
+
+export const Button: React.FC<ButtonProps> = ({
+  variant = 'primary',
+  size = 'md',
+  isLoading = false,
+  isDisabled = false,
+  onClick,
+  children,
+  className,
+}) => {
+  // Bileşen implementasyonu
+};
 ```
 
 ## Dosya İsimlendirme Kuralları
-- Bileşen dosyaları: `PascalCase.tsx`
-- Hook dosyaları: `useCamelCase.ts`
-- Yardımcı dosyalar: `camelCase.ts` veya `kebab-case.ts`
-- CSS Modülleri: `ComponentName.module.css`
+- Bileşen dosyaları: `PascalCase.tsx` (örn: `CourseCard.tsx`)
+- Hook dosyaları: `useCamelCase.ts` (örn: `useAuth.ts`)
+- Yardımcı fonksiyonlar: `camelCase.ts` veya `kebab-case.ts` (örn: `formatDate.ts`, `string-utils.ts`)
+- CSS Modülleri: `ComponentName.module.css` veya `component-name.module.css`
+- Sayfa bileşenleri: `page.tsx` (Next.js App Router yönetimi için)
 
 ## Bileşen Yazım Prensipleri
 - **Tek Sorumluluk:** Her bileşen tek bir sorumluluğa sahip olmalıdır
-- **Küçük Bileşenler:** Karmaşık UI'lar daha küçük, yönetilebilir bileşenlere bölünmelidir
-- **Prop'lar Üzerinden İletişim:** Bileşenler arası veri akışı prop'lar üzerinden sağlanmalıdır
-- **Prop'ların Tip Güvenliği:** Prop'ların tipleri TypeScript ile tanımlanmalıdır
+- **Küçük Bileşenler:** Karmaşık UI'lar daha küçük, yönetilebilir bileşenlere bölünmelidir (50-150 satır hedeflenmelidir)
+- **Prop Drilling'den Kaçınma:** 3 seviyeden fazla prop geçirme durumunda Context API veya Zustand düşünülmelidir
+- **Yeniden Kullanım:** Birden fazla yerde kullanılan bileşenler shared components olarak taşınmalıdır
+- **Bileşen Belgeleme:** Kompleks bileşenler için JSDoc yorum blokları kullanılmalıdır
 
-## Server ve Client Bileşenler
-- Bileşenler varsayılan olarak **Server Component** olmalıdır
-- Client Component'lara `"use client"` direktifi eklenmelidir
-- Client Component'lara asla gereksiz veri çekme kodu konulmamalıdır
+
 

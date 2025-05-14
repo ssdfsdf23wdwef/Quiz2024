@@ -1,10 +1,341 @@
 ---
-description: "auto-fix-integration kuralları" 
-globs:
-  - "frontend/src/components/**/*"
-  - "frontend/src/lib/**/*" 
+description: "auto-fix-integration kuralları"
+globs: 
 alwaysApply: false
 ---
+# Otomatik Düzeltme, Linting ve Kod Format Entegrasyonu
+
+Bu projede kod kalitesini ve tutarlılığını sağlamak için çeşitli otomatik düzeltme, linting ve format araçları kullanılmaktadır.
+
+## ESLint Yapılandırması
+
+- [frontend/.eslintrc.json](mdc:frontend/.eslintrc.json) - Frontend ESLint yapılandırması
+- [backend/.eslintrc.js](mdc:backend/.eslintrc.js) - Backend ESLint yapılandırması
+
+### ESLint Eklentileri ve Kuralları
+
+Frontend için:
+```json
+{
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:tailwindcss/recommended"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "tailwindcss",
+    "import"
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ],
+    "tailwindcss/no-custom-classname": "warn"
+  }
+}
+```
+
+Backend için:
+```javascript
+module.exports = {
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: 'tsconfig.json',
+    sourceType: 'module',
+  },
+  plugins: ['@typescript-eslint/eslint-plugin', 'sonarjs', 'security'],
+  extends: [
+    'plugin:@typescript-eslint/recommended',
+    'plugin:sonarjs/recommended',
+    'plugin:security/recommended',
+    'plugin:prettier/recommended',
+  ],
+  root: true,
+  env: {
+    node: true,
+    jest: true,
+  },
+  ignorePatterns: ['.eslintrc.js'],
+  rules: {
+    '@typescript-eslint/interface-name-prefix': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'warn',
+    '@typescript-eslint/explicit-module-boundary-types': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'sonarjs/cognitive-complexity': ['error', 15],
+    'security/detect-object-injection': 'warn',
+  },
+};
+```
+
+## Prettier Yapılandırması
+
+- [frontend/.prettierrc](mdc:frontend/.prettierrc) - Frontend Prettier yapılandırması
+- [backend/.prettierrc](mdc:backend/.prettierrc) - Backend Prettier yapılandırması
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "printWidth": 100,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "endOfLine": "lf"
+}
+```
+
+## TypeScript Yapılandırması
+
+- [frontend/tsconfig.json](mdc:frontend/tsconfig.json) - Frontend TypeScript yapılandırması
+- [backend/tsconfig.json](mdc:backend/tsconfig.json) - Backend TypeScript yapılandırması
+
+### Kapsamlı Tip Kontrolü
+
+```json
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+```
+
+## Önemli Tip Kontrolü Ayarları
+
+- `strict: true`: Sıkı tip kontrolü aktifleştirilmiştir
+- `noUncheckedIndexedAccess: true`: Dizi ve nesne erişimlerinde `undefined` kontrolü
+- `noImplicitReturns: true`: Tüm kod yollarında dönüş değeri gerektirir
+- `noFallthroughCasesInSwitch: true`: Switch/case'lerde break zorunluluğu
+- `exactOptionalPropertyTypes: true`: Optional property'lerde undefined dışında değer kabul etmez
+
+## Pre-commit Hooks
+
+Git commit işlemlerinden önce kod kalitesini kontrol etmek için Husky ve lint-staged kullanılmaktadır:
+
+```json
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  }
+}
+```
+
+## VS Code Entegrasyonu
+
+- [.vscode/settings.json](mdc:.vscode/settings.json) - VS Code ayarları
+- ESLint, Prettier, TypeScript, Tailwind CSS için VS Code eklentileri yapılandırılmıştır
+- Kaydetme sırasında otomatik formatlama aktifleştirilmiştir
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`](mdc:[^/"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "[\"'`](mdc:[^/"'`]*).*?[\"'`]"]
+  ]
+}
+```
+
+## Hata Tiplendirme
+
+TypeScript'te özel hata tipleri tanımlanmıştır:
+
+```typescript
+// frontend/src/types/errors.ts
+export type ApiError = {
+  message: string;
+  code: string;
+  statusCode: number;
+  details?: Record<string, any>;
+};
+
+export type ValidationError = {
+  field: string;
+  message: string;
+};
+
+export type FormErrors = Record<string, string | undefined>;
+```
+
+## Zorunlu Kurallar
+
+1. **Türkçe Değişken ve Fonksiyon İsimleri:**
+   - Tüm değişken, fonksiyon ve sınıf isimleri Türkçe olmalıdır
+   - Backend'de NestJS isimlendirme şablonları korunmalıdır (Controller, Service gibi)
+
+2. **Tip Güvenliği:**
+   - `any` tipinden kaçınılmalıdır
+   - Her fonksiyon ve metot için dönüş tipi açıkça belirtilmelidir
+   - Undefined olabilecek değerler için null-checking yapılmalıdır
+   - Non-null assertion operator (`!`) kullanmaktan kaçınılmalıdır
+
+3. **Kod Stili:**
+   - Maximum satır uzunluğu: 100 karakter
+   - Maksimum fonksiyon karmaşıklığı (cognitive complexity): 15
+   - İç içe ifadeler maksimum 3 seviye olmalıdır
+
+4. **Linter Hataları:**
+   - Warning seviyesindeki lint hataları görmezden gelinebilir (nadir durumlarda)
+   - Error seviyesindeki lint hataları kesinlikle düzeltilmelidir
+   - `eslint-disable` kullanımı, nedeni belirtilerek yapılmalıdır:
+   ```javascript
+   // eslint-disable-next-line sonarjs/cognitive-complexity -- Bu karmaşıklık hizmet kalitesi için gereklidir
+   ```
+
+5. **Format Tutarlılığı:**
+   - Tüm dosyalar commit edilmeden önce Prettier ile formatlanmalıdır
+   - IDE'deki otomatik format ayarları aktif tutulmalıdır
+
+## Komut Satırı ile Kontrol
+
+Frontend:
+```bash
+# Linting kontrolü
+npm run lint
+
+# Sadece düzeltilmesi gereken hataları göster
+npm run lint:report
+
+# Düzeltilebilir hataları otomatik düzelt
+npm run lint:fix
+
+# Format kontrolü
+npm run format:check
+
+# Format düzeltme
+npm run format:fix
+
+# Tüm kontrolleri çalıştır
+npm run validate
+```
+
+Backend:
+```bash
+# Linting kontrolü
+npm run lint
+
+# Düzeltilebilir hataları otomatik düzelt
+npm run lint:fix
+
+# Format kontrolü ve düzeltme
+npm run format
+
+# Tip kontrolü
+npm run type-check
+```
+
+## Karşılaşılan Yaygın Hatalar ve Çözümleri
+
+1. **Unused variables (Kullanılmayan değişkenler):**
+   ```typescript
+   // Hatalı
+   const { data, isLoading, error } = useQuery(...);
+   // ❌ 'error' is declared but its value is never read.
+   
+   // Doğru
+   const { data, isLoading } = useQuery(...);
+   // veya
+   const { data, isLoading, error: _ } = useQuery(...);
+   ```
+
+2. **No explicit any (Açıkça belirtilmemiş any tipi):**
+   ```typescript
+   // Hatalı
+   function processData(data: any) { ... }
+   // ❌ Unexpected any. Specify a different type.
+   
+   // Doğru
+   function processData<T>(data: T) { ... }
+   // veya
+   function processData(data: unknown) { ... }
+   ```
+
+3. **Nullable fields without check (Null kontrolü olmayan alanlar):**
+   ```typescript
+   // Hatalı
+   const length = user.name.length;
+   // ❌ Object is possibly 'undefined'.
+   
+   // Doğru
+   const length = user.name?.length ?? 0;
+   ```
+
+4. **Missing return types (Eksik dönüş tipleri):**
+   ```typescript
+   // Hatalı
+   function calculateTotal(items) { ... }
+   // ❌ Missing return type on function.
+   
+   // Doğru
+   function calculateTotal(items: CartItem[]): number { ... }
+   ```
+
+5. **Tailwind class sorting (Tailwind sınıf sıralaması):**
+   ```tsx
+   // Hatalı
+   <div className="text-red-500 p-4 flex">
+   // ❌ Expected Tailwind class order: 'flex p-4 text-red-500'
+   
+   // Doğru (otomatik düzeltilir)
+   <div className="flex p-4 text-red-500">
+   ```
+
 # Otomatik Hata Tespiti ve Kod Kalitesi
 
 Bu projede kod kalitesini sürekli olarak yüksek tutmak ve frontend-backend entegrasyonunu sağlamak için aşağıdaki otomatik düzeltme ve kontrol süreçleri uygulanmalıdır.
@@ -69,6 +400,8 @@ Her kod değişikliği öncesinde:
 ---
 
 > **Not:** Komut zincirlerinde `&&` yerine `;` kullanılmalıdır: Örn. `cd frontend; npx tsc --noEmit`
+
+
 
 
 

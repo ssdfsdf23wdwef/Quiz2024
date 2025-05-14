@@ -350,36 +350,188 @@ Tasarım süreci boyunca ve platform yayınlandıktan sonra düzenli olarak kull
 
 # Bölüm 6: Teknik Mimari ve Teknoloji Seçimleri
 
-Bu bölüm, Kişiselleştirilmiş Quiz Platformu için önerilen teknik mimariyi, kullanılacak teknolojileri ve bu seçimlerin gerekçelerini detaylandırmaktadır. Amaç, ölçeklenebilir, güvenli, sürdürülebilir ve performansı yüksek bir sistem inşa etmektir.
+Bu bölüm, Kişiselleştirilmiş Quiz Platformu'nun teknik mimarisini ve projede kullanılan teknolojileri detaylandırmaktadır. Bu seçimler, projenin ölçeklenebilirliği, sürdürülebilirliği, güvenliği ve performansı göz önünde bulundurularak yapılmıştır.
 
 ## 6.1. Genel Mimari Yaklaşımı
 
-Platform için **mikroservis tabanlı bir mimari** veya **modüler monolit** bir yaklaşım değerlendirilebilir. Projenin başlangıç aşamasındaki karmaşıklığı ve geliştirme ekibinin büyüklüğü göz önüne alındığında, iyi yapılandırılmış bir **modüler monolit** ile başlamak ve gelecekte ihtiyaç duyuldukça belirli modülleri mikroservislere dönüştürmek daha yönetilebilir olabilir. Ancak, yapay zeka özellikleri, içerik işleme ve sınav motoru gibi yoğun işlem gerektirebilecek veya bağımsız olarak ölçeklenmesi gerekebilecek bileşenler için baştan itibaren ayrı servisler (veya en azından çok net ayrılmış modüller) düşünülmelidir.
+Platform, modüler, iyi yapılandırılmış ve ölçeklenebilir bir mimari üzerine inşa edilmiştir. Sistem, birbirleriyle API'ler üzerinden iletişim kuran frontend ve backend bileşenlerinden oluşmaktadır.
 
 **Temel Katmanlar:**
 
-1.  **Sunum Katmanı (Presentation Layer - Frontend):** Kullanıcı arayüzünü (UI) ve kullanıcı deneyimini (UX) yönetir. Web tarayıcıları ve gelecekte mobil uygulamalar üzerinden erişilir.
-2.  **Uygulama Katmanı (Application Layer - Backend):** İş mantığını, API'leri, kullanıcı yönetimini, sınav mantığını, içerik yönetimini ve diğer temel platform fonksiyonlarını barındırır.
-3.  **Veri Katmanı (Data Layer):** Kullanıcı verileri, ders içerikleri, sınavlar, sorular, öğrenme hedefleri ve diğer tüm kalıcı verilerin depolanmasından ve yönetilmesinden sorumludur.
-4.  **Yapay Zeka ve İşleme Katmanı (AI & Processing Layer):** İçerik analizi, soru üretimi, kişiselleştirme algoritmaları, performans değerlendirme ve diğer yapay zeka destekli görevleri yürüten servisleri veya modülleri içerir. Bu katman, uygulama katmanıyla API'ler aracılığıyla iletişim kurabilir ve asenkron işlemler için bir mesaj kuyruğu sistemi kullanabilir.
+1. **Sunum Katmanı (Frontend):** Kullanıcı arayüzünü (UI) ve kullanıcı deneyimini (UX) yönetir. Web tarayıcıları üzerinden erişilir ve gelecekte mobil uygulamalar için temel oluşturabilir.
+
+2. **Uygulama Katmanı (Backend):** İş mantığını, API'leri, kullanıcı yönetimini, sınav mantığını, içerik yönetimini ve diğer temel platform fonksiyonlarını barındırır.
+
+3. **Veri Katmanı:** Kullanıcı verileri, ders içerikleri, sınavlar, sorular, öğrenme hedefleri ve diğer kalıcı verilerin depolanmasından ve yönetilmesinden sorumludur.
+
+4. **Yapay Zeka ve İşleme Katmanı:** İçerik analizi, soru üretimi, kişiselleştirme algoritmaları, performans değerlendirme ve diğer yapay zeka destekli görevleri yürüten servisleri içerir.
 
 **İletişim Akışı:**
 
-*   Kullanıcılar, frontend aracılığıyla backend API'lerine istek gönderir.
-*   Backend, iş mantığını uygular, gerekirse veri katmanından veri alır/yazar ve yapay zeka katmanındaki servisleri tetikler.
-*   Yapay zeka servisleri, yoğun hesaplama gerektiren işlemleri (örneğin, NLP, makine öğrenmesi modellerinin çalıştırılması) gerçekleştirir ve sonuçları backend'e API veya mesaj kuyruğu aracılığıyla iletir.
+* Kullanıcılar, frontend uygulaması aracılığıyla backend API'lerine istek gönderir.
+* Backend, iş mantığını uygular, veritabanından veri alır/yazar ve gerektiğinde yapay zeka servislerini kullanır.
+* Yapay zeka servisleri, karmaşık hesaplamalar gerektiren işlemleri gerçekleştirir ve sonuçları backend'e iletir.
+
+## 6.2. Kullanılan Teknoloji Yığını
+
+### Frontend:
+
+* **Framework:** **Next.js 15** - React tabanlı, sunucu taraflı renderingi (SSR), statik site oluşturmayı (SSG) ve API rotalarını destekleyen modern bir web framework'ü.
+* **Temel Dil:** **TypeScript** - Statik tipleme, gelişmiş IDE desteği ve daha güvenli kod yazımı sağlar.
+* **UI Kütüphaneleri:** 
+  * **React 19** - Bileşen tabanlı kullanıcı arayüzü geliştirme kütüphanesi.
+  * **TailwindCSS 4** - Utility-first CSS framework'ü, hızlı ve tutarlı UI geliştirmeyi sağlar.
+  * **NextUI** - Tailwind CSS üzerine inşa edilmiş, modern ve erişilebilir bileşen kütüphanesi.
+  * **Framer Motion** - Animasyonlar ve geçişler için kullanılan kütüphane.
+* **State Yönetimi:** 
+  * **Zustand 5** - Basit, hızlı ve ölçeklenebilir durum yönetimi çözümü.
+  * **Immer** - Değişmez veri yapıları için kullanılan yardımcı kütüphane.
+* **API İletişimi:** 
+  * **TanStack Query 5** (React Query) - Sunucu durumu yönetimi, veri önbellekleme ve senkronizasyon için kullanılan kütüphane.
+  * **Axios** - HTTP istekleri için kullanılan istemci kütüphanesi.
+* **Form ve Validasyon:** **Zod** - TypeScript ile uyumlu şema validasyon kütüphanesi.
+* **Uluslararasılaştırma:** **i18next** - Çoklu dil desteği sağlayan kütüphane.
+* **Bildirimler:** **React Hot Toast** ve **React Toastify** - Kullanıcı bildirimlerini yönetmek için kullanılan kütüphaneler.
+* **Tema Desteği:** **next-themes** - Karanlık/aydınlık mod desteği sağlayan kütüphane.
+* **Grafik ve Veri Görselleştirme:** **Chart.js** ve **React Chart.js 2** - Kullanıcı performans verilerini görselleştirmek için.
+
+### Backend:
+
+* **Framework:** **NestJS** - TypeScript tabanlı, Angular benzeri modüler yapıya sahip, kurumsal düzeyde Node.js uygulamaları için framework.
+* **Temel Dil:** **TypeScript** - Tip güvenliği ve gelişmiş IDE desteği sağlar.
+* **API Tasarımı:** **RESTful API** - HTTP metodları üzerinden kaynak odaklı etkileşim sağlar.
+* **Validasyon:** **Class-validator** ve **Class-transformer** - DTO'ları doğrulamak ve dönüştürmek için kullanılır.
+* **Dokümantasyon:** **Swagger/OpenAPI** - API dokümantasyonu için kullanılır.
+* **Loglama ve İzleme:** 
+  * **Winston** veya özel loglama servisi - Uygulama loglarını yönetmek için kullanılır.
+  * **Sentry** - Hata izleme ve performans monitörleme için kullanılır.
+* **Cache Yönetimi:** **NestJS Cache Manager** - Cache işlemlerini yönetmek için kullanılır.
+
+### Veritabanı ve Depolama:
+
+* **Ana Veritabanı:** **Firestore (Google Cloud)** - NoSQL doküman veritabanı, gerçek zamanlı senkronizasyon ve esnek veri modeli sağlar.
+* **Kimlik Doğrulama ve Yetkilendirme:** **Firebase Authentication** - Güvenli kullanıcı kimlik doğrulama ve yetkilendirme hizmetleri.
+* **Dosya Depolama:** **Firebase Storage** - Kullanıcı tarafından yüklenen dosyaları (resimler, belgeler, vb.) depolamak için.
+
+### Yapay Zeka ve İşleme:
+
+* **Dil İşleme (NLP):** API entegrasyonları veya özel servislere bağlantı yoluyla içerik analizi, soru üretimi ve kişiselleştirme için.
+
+### DevOps ve Deployment:
+
+* **CI/CD:** GitHub Actions veya benzeri araçlar kullanılarak sürekli entegrasyon ve dağıtım.
+* **Hosting:** 
+  * **Frontend:** Vercel (Next.js'in yaratıcıları tarafından), Netlify veya Firebase Hosting.
+  * **Backend:** Google Cloud Run, Google App Engine veya diğer bulut servisleri.
+
+## 6.3. Frontend Mimarisi
+
+Frontend mimarisi, Next.js'in dosya tabanlı yönlendirme sistemi etrafında organize edilmiştir:
+
+* **`/app`:** Next.js App Router yapısı, tüm sayfalar ve rotalar bu dizinde bulunur.
+* **`/components`:** Yeniden kullanılabilir ve bağımsız UI bileşenleri burada bulunur, atomic design prensiplerine göre organize edilmiştir:
+  * `/ui` - Temel UI bileşenleri (butonlar, formlar, inputlar vb.).
+  * `/layout` - Düzen bileşenleri (header, footer, sidebar vb.).
+  * `/auth` - Kimlik doğrulama ile ilgili bileşenler.
+  * `/document` - Belge yönetimi bileşenleri.
+  * `/transitions` - Animasyon ve geçiş bileşenleri.
+* **`/hooks`:** Özel React hook'ları burada bulunur:
+  * `/api` - API iletişimini sağlayan TanStack Query hook'ları.
+  * `/auth` - Kimlik doğrulama hook'ları.
+  * `/document` - Belge yönetimi hook'ları.
+  * `/quiz` - Sınav ilgili hook'lar.
+  * `/ui` - UI ile ilgili hook'lar.
+* **`/context`:** React Context API ile oluşturulan global state yapıları.
+* **`/store`:** Zustand store'ları ve ilgili eylemler burada bulunur.
+* **`/services`:** API istekleri, veri dönüşümleri ve diğer servis fonksiyonları.
+* **`/types`:** TypeScript tip tanımlamaları.
+* **`/lib`:** Yardımcı fonksiyonlar, sabitler ve üçüncü parti kütüphane yapılandırmaları.
+* **`/constants`:** Sabit değerler ve yapılandırmalar.
+
+State yönetimi stratejisi şu şekilde uygulanmaktadır:
+* **Yerel Bileşen State**: Yalnızca bir bileşeni ilgilendiren durumlar için `useState` veya `useReducer` hook'ları.
+* **Context API**: İç içe bileşenler arasında paylaşılan, ancak global olmayan durumlar için.
+* **Zustand**: Global UI durumu ve karmaşık durum yönetimi gerektiren senaryolar için.
+* **TanStack Query**: Sunucu durumu (API'den gelen veriler) için, önbellekleme ve yeniden doğrulama stratejileriyle.
+
+## 6.4. Backend Mimarisi
+
+NestJS, modüler bir yapıya sahiptir ve aşağıdaki ana bileşenlerden oluşur:
+
+* **Modüller:** Her işlevsel birim (kullanıcılar, kurslar, sınavlar, sorular vb.) kendi modülüne sahiptir.
+* **Controllerlar:** API endpoint'lerini tanımlar ve HTTP isteklerini yönetir.
+* **Servisler:** İş mantığını uygular, veritabanı etkileşimlerini yönetir.
+* **DTO'lar (Data Transfer Objects):** İstek ve yanıt veri yapılarını tanımlar.
+* **Middleware'ler:** İstekleri işlemek için ek fonksiyonlar sağlar (loglama, kimlik doğrulama vb.).
+* **Interceptor'lar:** İstek/yanıt döngüsünü değiştirme veya ek işlemler yapma imkanı sağlar.
+* **Guards:** Endpoint'lere erişimi kontrol eder.
+* **Decorator'lar:** Metadata tabanlı özellikler ekler.
+
+Backend dizin yapısı şu şekilde organize edilmiştir:
+* **`/src`:** Ana kaynak kodu dizini
+  * `/auth` - Kimlik doğrulama ve yetkilendirme
+  * `/users` - Kullanıcı yönetimi
+  * `/courses` - Ders yönetimi
+  * `/questions` - Soru yönetimi
+  * `/quizzes` - Sınav yönetimi
+  * `/documents` - Belge yönetimi
+  * `/learning-targets` - Öğrenme hedefleri
+  * `/ai` - Yapay zeka entegrasyonu
+  * `/common` - Ortak bileşenler (filtreler, servisler, yardımcılar)
+  * `/config` - Yapılandırma
+  * `/firebase` - Firebase entegrasyonu
+  * `/shared` - Paylaşılan kod
+
+## 6.5. Veritabanı ve Veri Yönetimi
+
+### Firestore Veri Modeli
+
+Projede, Bölüm 7'de detaylandırıldığı gibi Google Cloud Firestore NoSQL veritabanı kullanılmaktadır. Firestore, doküman tabanlı bir veritabanıdır ve aşağıdaki koleksiyonlardan oluşur:
+
+* **`users`:** Kullanıcı profilleri ve kimlik bilgileri
+* **`courses`:** Dersler ve çalışma alanları
+* **`quizzes`:** Sınavlar ve sınav sonuçları
+* **`questions`:** Soru bankası
+* **`userLearningObjectives`:** Kullanıcı öğrenme hedefleri
+* **`quickQuizResults`:** Hızlı sınav geçici sonuçları
+
+Uygun indeksleme ve denormalizasyon teknikleri uygulanarak, Firestore'un performanslı çalışması sağlanır.
+
+## 6.6. API İletişimi
+
+* **Protokol:** HTTPS
+* **Format:** JSON
+* **Kimlik Doğrulama:** JWT (JSON Web Tokens) ve Firebase Authentication
+* **Yetkilendirme:** Rol tabanlı erişim kontrolü (RBAC)
+* **API Versiyonlama:** URL üzerinden (`/api/v1/`)
+* **API Dokümantasyonu:** Swagger/OpenAPI
 
 ## 6.7. Alt Konu Normalizasyonu
 
-*   **Problem:** Farklı kullanıcılar veya sistemler tarafından girilen benzer anlamdaki alt konuların (örneğin, "Cebirsel İfadeler", "Cebir İfadeleri", "Algebraic Expressions") farklı varlıklar olarak algılanması, içerik tutarlılığını ve arama/analiz etkinliğini düşürebilir.
-*   **Çözüm Yaklaşımı:**
-    1.  **Kontrollü Vokabüler/Taksonomi:** Mümkün olduğunca, platform genelinde kullanılacak standart bir konu ve alt konu hiyerarşisi (taksonomi) oluşturulmaya çalışılacaktır. Yeni alt konu girişlerinde bu taksonomiye uygunluk teşvik edilebilir.
-    2.  **Yapay Zeka Destekli Normalizasyon:**
-        *   **Benzerlik Analizi:** Yeni bir alt konu girildiğinde veya mevcut içerikler analiz edildiğinde, NLP teknikleri (örneğin, kelime gömme modelleri - Word Embeddings, anlamsal benzerlik algoritmaları) kullanılarak mevcut alt konularla benzerliği ölçülür.
-        *   **Öneri Sistemi:** Yüksek benzerlik durumunda, kullanıcıya mevcut standart bir alt konu başlığı önerilir (örneğin, "Girdiğiniz 'Cebir İfadeleri' yerine standart 'Cebirsel İfadeler' terimini kullanmak ister misiniz?").
-        *   **Otomatik Eşleştirme (Dikkatli Kullanım):** Çok yüksek güven skorlarıyla otomatik eşleştirme yapılabilir, ancak genellikle kullanıcı onayı tercih edilir.
-    3.  **Manuel Kürasyon ve Yönetim Arayüzü:** Platform yöneticileri veya konu uzmanları için, alt konuları gözden geçirebilecekleri, birleştirebilecekleri, standart terimler atayabilecekleri bir yönetim arayüzü sağlanabilir.
-    4.  **Eşanlamlılar (Synonyms) Yönetimi:** Bir alt konunun farklı eşanlamlıları tanımlanarak, arama ve analiz sırasında bu eşanlamlıların da dikkate alınması sağlanabilir.
+Farklı kaynaklardan gelen benzer alt konuların tutarlı bir şekilde işlenmesi için:
+
+1. **Kontrollü Vokabüler/Taksonomi:** Platform genelinde standart bir konu hiyerarşisi oluşturulur.
+2. **Yapay Zeka Destekli Normalizasyon:** NLP teknikleri ile benzer konular arasındaki ilişkiler belirlenir.
+3. **Öneri Sistemi:** Kullanıcılara, girilen konuların standart karşılıklarını önerebilir.
+4. **Manuel Kürasyon:** Platform yöneticileri için konu yönetim araçları sağlanır.
+
+## 6.8. Performans, Ölçeklenebilirlik ve Maliyet
+
+* **Performans İyileştirmeleri:**
+  * Etkin önbellekleme (TanStack Query, Redis veya benzer servisler)
+  * Code splitting ve lazy loading (Next.js özelliği)
+  * Resim optimizasyonu (Next.js Image komponenti)
+  * Firestore sorgu optimizasyonu
+
+* **Ölçeklenebilirlik:**
+  * Serverless mimari (Google Cloud Functions, Firebase)
+  * Stateless backend API'leri
+  * Yatay ölçeklendirme desteği
+
+* **Maliyet Optimizasyonu:**
+  * Firebase'in dinamik ölçeklendirme özellikleri
+  * Önbellekleme stratejileri ile okuma maliyetlerinin düşürülmesi
+  * Denormalizasyon teknikleriyle sorgu sayısının azaltılması
 
 
 
@@ -566,28 +718,6 @@ Bu veri modelleri, platformun temel gereksinimlerini karşılamak üzere tasarla
 
 Kişiselleştirilmiş Quiz Platformu'nun başarısı, kullanıcılarına güvenilir, stabil ve emniyetli bir deneyim sunmasına bağlıdır. Bu nedenle, kalite güvencesi (QA) ve güvenlik, geliştirme yaşam döngüsünün her aşamasında en üst düzeyde önceliklendirilecektir.
 
-## 8.2. Kod Kalitesi Standartları
-
-Yüksek kaliteli kod, platformun sürdürülebilirliği, ölçeklenebilirliği ve bakım kolaylığı için hayati öneme sahiptir.
-
-*   **Kodlama Stil Kılavuzları (Coding Style Guides):**
-    *   **Amaç:** Kodun tutarlı, okunabilir ve anlaşılır olmasını sağlamak.
-    *   **Uygulama:** Kullanılan programlama dilleri için standart stil kılavuzları benimsenecektir (örneğin, Python için PEP 8, JavaScript/TypeScript için ESLint ve Prettier ile yapılandırılmış kurallar).
-*   **Kod Gözden Geçirmeleri (Code Reviews):**
-    *   **Amaç:** Hataları erken aşamada tespit etmek, kod kalitesini artırmak, bilgi paylaşımını sağlamak ve ekip içinde ortak bir anlayış geliştirmek.
-    *   **Uygulama:** Her kod değişikliği (pull request/merge request) en az bir başka geliştirici tarafından gözden geçirilecektir. Gözden geçirme kriterleri (doğruluk, performans, güvenlik, okunabilirlik, test kapsamı) belirlenecektir.
-*   **Statik Kod Analizi (Static Code Analysis):**
-    *   **Amaç:** Kodu çalıştırmadan potansiyel hataları, bug'ları, stil ihlallerini ve güvenlik açıklarını otomatik olarak tespit etmek.
-    *   **Araçlar:** SonarQube, ESLint, Pylint, Bandit (Python güvenlik için).
-    *   **Uygulama:** CI/CD süreçlerine entegre edilerek otomatik analizler yapılacaktır.
-*   **Sürüm Kontrol Sistemi (Version Control):**
-    *   **Araç:** Git.
-    *   **Dallanma Stratejisi (Branching Strategy):** Projenin ihtiyaçlarına uygun bir dallanma stratejisi (örneğin, GitFlow veya GitHub Flow) benimsenecektir. Bu, paralel geliştirmeyi, özellik izolasyonunu ve stabil sürüm yönetimini kolaylaştırır.
-*   **Dokümantasyon:**
-    *   **Kod İçi Dokümantasyon (Comments):** Karmaşık veya anlaşılması zor kod blokları için açıklayıcı yorumlar eklenecektir.
-    *   **API Dokümantasyonu:** Backend API'leri için Swagger/OpenAPI gibi araçlarla otomatik veya manuel olarak detaylı ve güncel dokümantasyon oluşturulacaktır.
-    *   **Sistem Mimarisi Dokümantasyonu:** Platformun genel mimarisi, bileşenleri ve aralarındaki ilişkiler dokümante edilecektir.
-
 ## 8.3. Güvenlik Öncelikleri ve Stratejileri
 
 Platformun ve kullanıcı verilerinin güvenliği en üst düzeyde tutulacaktır.
@@ -618,4 +748,229 @@ Platformun ve kullanıcı verilerinin güvenliği en üst düzeyde tutulacaktır
 *   **Veri Gizliliği ve Uyumluluk:**
     *   **Uygulama:** GDPR, KVKK gibi ilgili veri koruma yönetmeliklerine tam uyum sağlanacaktır. Kullanıcıların verileri üzerindeki hakları (bilgi alma, düzeltme, silme vb.) gözetilecektir. Şeffaf bir gizlilik politikası yayınlanacaktır.
 
+
+
+
+# Bölüm 9: Geliştirme Yol Haritası (Aşamalandırma)
+
+Kişiselleştirilmiş Quiz Platformu, kapsamlı bir proje olduğu için geliştirme süreci aşamalı bir yaklaşımla yönetilecektir. Bu, erken aşamalarda temel işlevselliğe sahip bir ürün (MVP - Minimum Viable Product) sunmayı, kullanıcı geri bildirimlerini toplamayı ve sonraki aşamalarda platformu iteratif olarak geliştirmeyi hedefler. Her aşama, belirli hedeflere, özellik setlerine ve zaman çizelgelerine sahip olacaktır.
+
+**Genel Aşamalandırma Yaklaşımı:**
+
+*   **Sprint Tabanlı Geliştirme (Agile Metodolojisi):** Proje, 2-3 haftalık sprintlerle yönetilecektir. Her sprint sonunda, çalışan ve test edilmiş bir yazılım artışı (increment) hedeflenecektir.
+*   **Önceliklendirme:** Özellikler, kullanıcı değeri, iş kritikliği ve geliştirme karmaşıklığına göre önceliklendirilecektir.
+*   **Sürekli Geri Bildirim:** Her aşamada kullanıcı ve paydaş geri bildirimleri toplanarak sonraki sprintlerin planlanmasında kullanılacaktır.
+
+**Aşama 1: Temel Platform ve Hızlı Sınav MVP (Tahmini Süre: 3-4 Ay)**
+
+*   **Hedef:** Temel kullanıcı yönetimi, ders/konu yapısı ve anonim kullanıcılar için Hızlı Sınav işlevselliğini içeren bir MVP sunmak.
+*   **Özellikler:**
+    *   **Kullanıcı Yönetimi (Temel):**
+        *   E-posta/şifre ile kullanıcı kaydı ve girişi.
+        *   Temel profil yönetimi (isim, e-posta güncelleme).
+    *   **Ders ve İçerik Yönetimi (Temel - Yönetici Arayüzü ile):**
+        *   Yöneticiler için ders, konu, alt konu ve soru ekleme/düzenleme arayüzü.
+        *   Temel soru tipleri (çoktan seçmeli, doğru/yanlış).
+        *   Soru bankası (basit yapıda).
+    *   **Hızlı Sınav Modülü:**
+        *   Giriş yapmadan konu seçimi ve sınav başlatma.
+        *   Seçilen konudan rastgele sorularla sınav oluşturma.
+        *   Kullanıcı dostu sınav arayüzü.
+        *   Anında sınav sonucu ve doğru cevapların gösterilmesi.
+        *   Hızlı Sınav sonuçlarının geçici (tarayıcı tabanlı) kaydedilmesi ve daha sonra hesaba aktarma seçeneği için altyapı.
+    *   **Teknik Altyapı:**
+        *   Temel frontend ve backend mimarisinin kurulması.
+        *   Firestore veritabanı şemasının ilk versiyonunun oluşturulması.
+        *   Temel API endpointlerinin geliştirilmesi.
+        *   CI/CD pipeline altyapısının kurulması.
+*   **Çıktılar:**
+    *   Çalışan bir Hızlı Sınav platformu.
+    *   Yönetici paneli üzerinden içerik eklenebilen bir sistem.
+    *   İlk kullanıcı geri bildirimlerini toplama imkanı.
+
+**Aşama 2: Kişiselleştirilmiş Sınav Temelleri ve Gelişmiş İçerik Yönetimi (Tahmini Süre: 4-5 Ay)**
+
+*   **Hedef:** Kişiselleştirilmiş Sınav modülünün temel özelliklerini sunmak, kullanıcı paneli oluşturmak ve içerik yönetim yeteneklerini geliştirmek.
+*   **Özellikler:**
+    *   **Kişiselleştirilmiş Kullanıcı Paneli (Dashboard):**
+        *   Giriş yapan kullanıcılar için kişisel panel.
+        *   Temel ilerleme özeti ve son aktiviteler.
+    *   **Kişiselleştirilmiş Sınav (Temel):**
+        *   Kullanıcının seçtiği ders/konudan sınav oluşturma.
+        *   Sınav sonuçlarının kullanıcı profiline kaydedilmesi.
+        *   Temel performans analizi (doğru/yanlış, puan).
+    *   **Ders Yönetimi (Kullanıcı Tarafı):**
+        *   Kullanıcıların ders oluşturabilmesi (basit yapıda).
+        *   Derslere konu ve alt konu ekleyebilmesi.
+    *   **İçerik Yönetimi (Gelişmiş):**
+        *   Kullanıcıların kendi içeriklerini (metin, resim, PDF) yükleyebilmesi.
+        *   Zengin metin editörü.
+        *   İçeriklerin konularla ilişkilendirilmesi.
+    *   **Öğrenme Hedefleri (Temel):**
+        *   Kullanıcıların basit öğrenme hedefleri tanımlayabilmesi.
+        *   Hedeflerin içerik ve sınavlarla manuel olarak ilişkilendirilmesi.
+    *   **Yapay Zeka Entegrasyonu (İlk Adımlar):**
+        *   Yüklenen metinlerden basit anahtar kelime çıkarma (konu önerisi için).
+*   **Çıktılar:**
+    *   Kullanıcıların kendi profillerinde sınav çözebildiği ve ilerlemelerini görebildiği bir platform.
+    *   Kullanıcıların kendi derslerini ve içeriklerini yönetmeye başlayabildiği bir sistem.
+
+**Aşama 3: Yapay Zeka Destekli Kişiselleştirme ve Gelişmiş Özellikler (Tahmini Süre: 5-6 Ay)**
+
+*   **Hedef:** Yapay zeka yeteneklerini derinleştirerek adaptif sınavlar, kişiselleştirilmiş geri bildirimler ve içerik üretimi özelliklerini sunmak.
+*   **Özellikler:**
+    *   **Yapay Zeka Destekli Adaptif Sınav Oluşturma:**
+        *   Kullanıcının performansına ve öğrenme hedeflerine göre dinamik sınavlar.
+        *   Soruların zorluk seviyesinin ve konu dağılımının kişiye özel ayarlanması.
+    *   **Yapay Zeka Destekli İçerik Üretimi:**
+        *   Metinden otomatik soru üretme (çoktan seçmeli, D/Y).
+        *   Konu özeti oluşturma.
+    *   **Kişiselleştirilmiş Geri Bildirim ve Öneriler:**
+        *   Sınav sonuçlarına göre yapay zeka destekli detaylı geri bildirimler.
+        *   Çalışma materyali ve ek sınav önerileri.
+    *   **Öğrenme Hedefleri Takibi (Gelişmiş):**
+        *   Hedeflere ulaşma durumunun otomatik takibi ve görselleştirilmesi.
+        *   Hedeflerin dinamik güncellenmesi için altyapı.
+    *   **Konu Analizi ve Alt Konu Normalizasyonu (İlk Versiyon):**
+        *   Yüklenen içeriklerden otomatik konu/alt konu çıkarma ve normalizasyon önerileri.
+    *   **Gelişmiş Soru Tipleri:**
+        *   Boşluk doldurma, eşleştirme gibi yeni soru tipleri.
+    *   **Performans Değerlendirme (Gelişmiş):**
+        *   Detaylı analizler, grafikler ve güçlü/zayıf yön raporları.
+*   **Çıktılar:**
+    *   Gerçek anlamda kişiselleştirilmiş bir öğrenme deneyimi sunan platform.
+    *   Yapay zekanın öğrenme sürecini aktif olarak desteklediği bir sistem.
+
+**Aşama 4: İleri Seviye Özellikler, Optimizasyon ve Ölçeklendirme (Sürekli)**
+
+*   **Hedef:** Platformu daha da zenginleştirmek, performansı optimize etmek, ölçeklenebilirliği artırmak ve kullanıcı geri bildirimlerine göre yeni özellikler eklemek.
+*   **Potansiyel Özellikler:**
+    *   **Eğitmen Rolü ve Araçları:** Eğitmenlerin öğrenci gruplarını yönetmesi, ödev vermesi, ilerlemeyi takip etmesi için özel araçlar.
+    *   **Kurumsal Çözümler:** Şirketler için özel eğitim modülleri, raporlama ve kullanıcı yönetimi.
+    *   **Oyunlaştırma (Gamification):** Rozetler, liderlik tabloları, puan sistemleri ile motivasyonu artırma.
+    *   **Mobil Uygulama (iOS ve Android):** Platformun mobil cihazlarda da kullanılabilmesi.
+    *   **Topluluk Özellikleri:** Kullanıcıların birbirleriyle etkileşimde bulunabileceği forumlar, tartışma grupları.
+    *   **Çoklu Dil Desteği.**
+    *   **API Entegrasyonları:** Diğer LMS (Learning Management System) veya eğitim platformlarıyla entegrasyon.
+    *   **Gelişmiş Yapay Zeka Özellikleri:** Uzun cevaplı soruların yapay zeka ile değerlendirilmesi, daha sofistike içerik üretimi ve analizleri.
+*   **Sürekli İyileştirmeler:**
+    *   Performans optimizasyonu.
+    *   Güvenlik güncellemeleri ve denetimleri.
+    *   Kullanılabilirlik iyileştirmeleri.
+    *   Veritabanı ve altyapı ölçeklendirmesi.
+    *   Maliyet optimizasyonu.
+
+**Not:** Bu yol haritası genel bir çerçeve sunmaktadır. Her aşamanın detayları, sprint planlamaları sırasında daha da netleştirilecektir. Kullanıcı geri bildirimleri ve pazar koşulları, yol haritasında değişikliklere neden olabilir.
+
+
+
+
+# Bölüm 10: Potansiyel Riskler ve Yönetim Stratejileri
+
+Her projede olduğu gibi, Kişiselleştirilmiş Quiz Platformu geliştirme sürecinde de çeşitli risklerle karşılaşılabilir. Bu risklerin erken aşamada tanımlanması ve bunlara yönelik proaktif yönetim stratejilerinin belirlenmesi, projenin başarısı için kritik öneme sahiptir. Bu bölümde, potansiyel riskler ve bu risklerin etkilerini azaltmaya veya ortadan kaldırmaya yönelik stratejiler ele alınmaktadır.
+
+**1. Teknik Riskler**
+
+*   **Risk: Yapay Zeka Algoritmalarının Beklenen Performansı Verememesi**
+    *   **Açıklama:** Kişiselleştirme, soru üretimi, içerik analizi gibi temel özellikler yapay zeka algoritmalarına dayanmaktadır. Bu algoritmaların doğruluğu, hızı veya kullanıcı beklentilerini karşılayamaması platformun değerini düşürebilir.
+    *   **Yönetim Stratejileri:**
+        *   **İteratif Geliştirme ve Test:** Yapay zeka modellerini aşamalı olarak geliştirmek, her aşamada kapsamlı testler (doğruluk, hassasiyet, geri çağırma metrikleri) yapmak.
+        *   **Hazır Modeller ve Transfer Öğrenimi:** Mümkün olduğunca, kanıtlanmış açık kaynaklı yapay zeka modellerini (örneğin, Hugging Face Transformers) temel almak ve transfer öğrenimi tekniklerini kullanmak.
+        *   **Veri Kalitesi ve Miktarı:** Modellerin eğitimi için yüksek kaliteli ve yeterli miktarda veri sağlamak. Veri artırma (data augmentation) tekniklerini kullanmak.
+        *   **Kullanıcı Geri Bildirimi Entegrasyonu:** Yapay zeka çıktılarının (örneğin, üretilen sorular) kullanıcılar tarafından değerlendirilmesine ve bu geri bildirimlerin modelleri iyileştirmek için kullanılmasına olanak tanımak.
+        *   **Alternatif Yaklaşımlar:** Belirli yapay zeka görevleri için birden fazla algoritma veya yaklaşımı değerlendirmek ve en uygun olanı seçmek.
+
+*   **Risk: Ölçeklenebilirlik Sorunları**
+    *   **Açıklama:** Kullanıcı sayısı ve veri miktarı arttıkça platformun performansında düşüşler yaşanması veya sistemin artan yükü kaldıramaması.
+    *   **Yönetim Stratejileri:**
+        *   **Ölçeklenebilir Mimari Seçimi:** Mikroservis veya iyi tasarlanmış modüler monolit mimari, yatay ölçeklendirmeye uygun teknolojiler (örneğin, Firestore, sunucusuz fonksiyonlar) seçmek.
+        *   **Performans Testleri:** Düzenli yük ve stres testleri yaparak darboğazları erken tespit etmek.
+        *   **Veritabanı Optimizasyonu:** Etkin indeksleme, sorgu optimizasyonu ve gerekirse okuma replikaları kullanmak.
+        *   **Önbellekleme:** Sık erişilen veriler için agresif önbellekleme stratejileri uygulamak.
+        *   **Bulut Hizmetlerinin Kullanımı:** Bulut sağlayıcılarının otomatik ölçeklendirme (auto-scaling) özelliklerinden faydalanmak.
+
+*   **Risk: Veritabanı Performansı ve Maliyeti (Özellikle Firestore)**
+    *   **Açıklama:** NoSQL veritabanı olan Firestore'un yanlış kullanımı (hatalı veri modellemesi, verimsiz sorgular) performans sorunlarına ve beklenenden yüksek maliyetlere yol açabilir.
+    *   **Yönetim Stratejileri:**
+        *   **Doğru Veri Modelleme:** Firestore'un en iyi uygulamalarına uygun veri modelleri tasarlamak (denormalizasyon, alt koleksiyonların etkin kullanımı).
+        *   **Sorgu Optimizasyonu:** Firestore sorgu limitlerini ve yeteneklerini göz önünde bulundurarak verimli sorgular yazmak. Gerekli kompozit indeksleri oluşturmak.
+        *   **Maliyet İzleme:** Firestore kullanımını ve maliyetlerini düzenli olarak izlemek, maliyet optimizasyonu için Firestore kotalarını ve fiyatlandırma modelini anlamak.
+        *   **Okuma/Yazma Optimizasyonu:** Gereksiz okuma ve yazma işlemlerinden kaçınmak.
+
+*   **Risk: Üçüncü Parti Servis Bağımlılıkları**
+    *   **Açıklama:** Yapay zeka API'leri, bulut hizmetleri veya diğer dış servislere olan bağımlılık, bu servislerde yaşanacak kesintiler veya değişiklikler nedeniyle platformu etkileyebilir.
+    *   **Yönetim Stratejileri:**
+        *   **Servis Seviyesi Anlaşmaları (SLA):** Kritik servisler için SLA'ları dikkatlice incelemek.
+        *   **Hata Toleransı ve Devre Kesiciler (Circuit Breakers):** Dış servislerdeki hatalara karşı dayanıklı kod yazmak, devre kesici desenlerini uygulamak.
+        *   **Alternatif Servisler:** Kritik bağımlılıklar için alternatif servis sağlayıcılarını araştırmak ve acil durum planları oluşturmak.
+        *   **API Versiyonlama Takibi:** Bağımlı olunan API'lerin versiyon değişikliklerini takip etmek ve uyumluluğu sağlamak.
+
+**2. Proje Yönetimi Riskleri**
+
+*   **Risk: Kapsam Kayması (Scope Creep)**
+    *   **Açıklama:** Proje başladıktan sonra sürekli yeni özellik taleplerinin gelmesi ve projenin orijinal kapsamının dışına çıkması, zaman çizelgesini ve bütçeyi olumsuz etkileyebilir.
+    *   **Yönetim Stratejileri:**
+        *   **Net Kapsam Tanımı:** Proje başında PRD gibi dokümanlarla kapsamı net bir şekilde tanımlamak ve tüm paydaşların onayını almak.
+        *   **Değişiklik Yönetim Süreci:** Kapsam değişiklikleri için resmi bir değişiklik talep ve değerlendirme süreci oluşturmak.
+        *   **Önceliklendirme:** Yeni talepleri, projenin ana hedefleri ve mevcut kaynaklarla uyumuna göre değerlendirmek ve önceliklendirmek.
+        *   **MVP Yaklaşımı:** Temel işlevselliğe odaklanarak MVP'yi zamanında çıkarmak, ek özellikleri sonraki aşamalara bırakmak.
+
+*   **Risk: Zaman Çizelgesinde Gecikmeler**
+    *   **Açıklama:** Geliştirme süreçlerinde beklenmedik sorunlar, kaynak eksikliği veya yanlış tahminlemeler nedeniyle projenin planlanan sürede tamamlanamaması.
+    *   **Yönetim Stratejileri:**
+        *   **Gerçekçi Planlama:** Deneyime dayalı ve tampon süreler içeren gerçekçi zaman tahminleri yapmak.
+        *   **Sprint Tabanlı Yönetim:** Agile metodolojilerle kısa sprintler halinde çalışarak ilerlemeyi düzenli takip etmek ve sapmaları erken fark etmek.
+        *   **Risk Analizi:** Potansiyel gecikme nedenlerini önceden analiz ederek önleyici tedbirler almak.
+        *   **Kaynak Yönetimi:** Yeterli ve yetkin insan kaynağının projeye atanmasını sağlamak.
+        *   **Düzenli İletişim:** Ekip içi ve paydaşlarla düzenli iletişim kurarak olası sorunları ve gecikmeleri şeffaf bir şekilde paylaşmak.
+
+*   **Risk: Bütçe Aşımı**
+    *   **Açıklama:** Kapsam kayması, zaman çizelgesindeki gecikmeler, beklenmedik teknik maliyetler (örneğin, bulut hizmetleri) nedeniyle proje bütçesinin aşılması.
+    *   **Yönetim Stratejileri:**
+        *   **Detaylı Bütçeleme:** Proje başında tüm potansiyel maliyet kalemlerini içeren detaylı bir bütçe oluşturmak.
+        *   **Maliyet Takibi:** Proje boyunca harcamaları düzenli olarak takip etmek ve bütçeyle karşılaştırmak.
+        *   **Maliyet Optimizasyonu:** Bulut kaynakları, lisanslar ve diğer giderler için maliyet etkin çözümler aramak.
+        *   **Kapsam Kontrolü:** Bütçeyi etkileyebilecek kapsam değişikliklerini dikkatlice yönetmek.
+
+**3. Kullanıcı Kabulü ve Pazar Riskleri**
+
+*   **Risk: Düşük Kullanıcı Kabulü veya Etkileşimi**
+    *   **Açıklama:** Platformun kullanıcıların ihtiyaçlarını veya beklentilerini karşılayamaması, kullanıcı dostu olmaması veya pazarda yeterince farklılaşamaması nedeniyle beklenen ilgiyi görmemesi.
+    *   **Yönetim Stratejileri:**
+        *   **Kullanıcı Araştırması:** Hedef kitleyi ve ihtiyaçlarını derinlemesine anlamak için kullanıcı araştırmaları yapmak.
+        *   **Kullanılabilirlik Testleri:** Tasarım ve geliştirme aşamalarında düzenli kullanılabilirlik testleri yaparak kullanıcı deneyimini optimize etmek.
+        *   **MVP ve İteratif Geliştirme:** Erken aşamada MVP sunarak kullanıcı geri bildirimlerini toplamak ve ürünü bu geri bildirimlere göre şekillendirmek.
+        *   **Etkili Pazarlama ve Tanıtım:** Platformun değer önerisini hedef kitleye doğru kanallarla ve etkili bir şekilde iletmek.
+        *   **Rekabet Analizi:** Rakip platformları analiz ederek farklılaşma noktalarını belirlemek ve platformu buna göre konumlandırmak.
+
+*   **Risk: Hızlı Değişen Teknoloji ve Pazar Koşulları**
+    *   **Açıklama:** Eğitim teknolojileri alanındaki hızlı değişimler, yeni rakip ürünlerin ortaya çıkması veya kullanıcı beklentilerinin değişmesi platformun rekabet gücünü azaltabilir.
+    *   **Yönetim Stratejileri:**
+        *   **Sürekli İzleme:** Teknoloji trendlerini, rakip faaliyetlerini ve pazar dinamiklerini sürekli olarak izlemek.
+        *   **Esnek Mimari:** Platformun yeni teknolojilere ve değişen gereksinimlere kolayca adapte olabilecek esnek bir mimariye sahip olmasını sağlamak.
+        *   **İnovasyon Kültürü:** Sürekli iyileştirme ve yenilikçiliği teşvik eden bir kurum kültürü oluşturmak.
+        *   **Çevik Geliştirme:** Pazar değişikliklerine hızlı yanıt verebilmek için çevik geliştirme metodolojilerini benimsemek.
+
+**4. Güvenlik ve Uyumluluk Riskleri**
+
+*   **Risk: Veri İhlalleri ve Güvenlik Açıkları**
+    *   **Açıklama:** Kullanıcı verilerinin (kişisel bilgiler, sınav sonuçları vb.) yetkisiz erişime uğraması, çalınması veya sızdırılması.
+    *   **Yönetim Stratejileri:**
+        *   **Güvenlik Odaklı Geliştirme (DevSecOps):** Güvenliği geliştirme yaşam döngüsünün her aşamasına entegre etmek.
+        *   **Düzenli Güvenlik Testleri:** Sızma testleri, zafiyet taramaları ve kod analizleri yapmak (Bkz. Bölüm 8.3).
+        *   **Güçlü Kimlik Doğrulama ve Yetkilendirme:** MFA, güçlü şifre politikaları, RBAC uygulamak.
+        *   **Veri Şifreleme:** Verileri hem aktarım sırasında hem de depolama sırasında şifrelemek.
+        *   **Güvenlik Duvarları ve Saldırı Tespit Sistemleri:** Altyapı güvenliğini sağlamak.
+        *   **Olay Müdahale Planı:** Olası bir ihlal durumunda hızlı ve etkili müdahale için plan oluşturmak.
+
+*   **Risk: Yasal Uyumluluk Sorunları (GDPR, KVKK vb.)**
+    *   **Açıklama:** Veri koruma ve gizlilik yönetmeliklerine (örneğin, GDPR, KVKK) uyum sağlanamaması, yasal yaptırımlara ve itibar kaybına yol açabilir.
+    *   **Yönetim Stratejileri:**
+        *   **Hukuki Danışmanlık:** İlgili yasal düzenlemeler konusunda uzman bir hukuk danışmanından destek almak.
+        *   **Gizlilik Odaklı Tasarım (Privacy by Design):** Platformu geliştirirken gizlilik ilkelerini temel almak.
+        *   **Şeffaf Gizlilik Politikası:** Kullanıcılara verilerinin nasıl toplandığı, kullanıldığı ve korunduğu hakkında açık ve anlaşılır bilgi sunmak.
+        *   **Kullanıcı Hakları:** Kullanıcıların verileri üzerindeki haklarını (erişim, düzeltme, silme vb.) kullanmalarını sağlayacak mekanizmalar oluşturmak.
+        *   **Veri İşleme Sözleşmeleri:** Üçüncü parti servis sağlayıcılarla veri işleme sözleşmeleri yapmak.
+
+Bu risk listesi ve yönetim stratejileri, projenin başlangıç aşamasında bir ön değerlendirme niteliğindedir. Proje ilerledikçe yeni riskler ortaya çıkabilir veya mevcut risklerin öncelikleri değişebilir. Bu nedenle, risk yönetimi sürekli ve dinamik bir süreç olmalıdır. Düzenli risk değerlendirme toplantıları yapılarak riskler takip edilmeli ve yönetim stratejileri güncellenmelidir.
 

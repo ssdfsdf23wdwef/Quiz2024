@@ -9,7 +9,9 @@ import {
   FiPlay,
   FiBook,
   FiTarget,
-  FiBarChart2
+  FiBarChart2,
+  FiUser,
+  FiClock
 } from "react-icons/fi";
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
@@ -61,10 +63,13 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const [showExamCreationWizard, setShowExamCreationWizard] = useState(false);
 
-  const handleStartExamCreation = () => {
+  const handleStartQuickQuiz = () => {
+    router.push("/exams/quick");
+  };
+
+  const handleStartPersonalizedQuiz = () => {
     if (!isAuthenticated) {
-      // Giriş yapmamış kullanıcıları login sayfasına yönlendir
-      router.push("/auth/login?returnUrl=/exams/create");
+      router.push("/auth/login?returnUrl=/exams/create?type=personalized");
       return;
     }
     setShowExamCreationWizard(true);
@@ -77,15 +82,6 @@ export default function Home() {
   }) => {
     const url = `/exams/create?type=${result.quizType}&fileName=${encodeURIComponent(result.file?.name || "")}`;
     router.push(url);
-  };
-
-  const handleViewCourses = () => {
-    if (!isAuthenticated) {
-      // Giriş yapmamış kullanıcıları login sayfasına yönlendir
-      router.push("/auth/login?returnUrl=/courses");
-      return;
-    }
-    router.push("/courses");
   };
   
   const navigateTo = (path: string) => {
@@ -192,7 +188,7 @@ export default function Home() {
                       className="mb-4 inline-block"
                     >
                       <span className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium">
-                        Yapay Zeka Destekli Öğrenme Platformu
+                        Yapay Zeka Destekli Quiz Platformu
                       </span>
                     </motion.div>
 
@@ -203,7 +199,7 @@ export default function Home() {
                       animate="visible"
                       className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.2)] tracking-tight leading-tight"
                     >
-                      Kişiselleştirilmiş Öğrenme Platformu
+                      Kişiselleştirilmiş Quiz Platformu
                     </motion.h1>
 
                     <motion.p
@@ -211,61 +207,78 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="text-xl md:text-2xl text-indigo-100/90 mb-12 max-w-2xl mx-auto font-light leading-relaxed"
+                      className="text-xl md:text-2xl text-indigo-100/90 mb-8 max-w-2xl mx-auto font-light leading-relaxed"
                     >
-                      Kişisel öğrenme materyallerinizden yapay zeka destekli,
-                      kişiselleştirilmiş sınavlar oluşturun ve öğrenme
-                      hedeflerinizi takip edin.
+                      Bilgi seviyenizi ölçün, eksiklerinizi tespit edin ve öğrenme sürecinizi
+                      kişiselleştirilmiş bir deneyimle optimize edin.
                     </motion.p>
 
+                    {/* Quiz Türü Seçimi */}
                     <motion.div
                       custom={3}
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="flex justify-center items-center gap-4 flex-wrap mb-10"
+                      className="grid md:grid-cols-2 gap-6 mb-10 max-w-4xl mx-auto"
                     >
-                      <motion.button
-                        onClick={handleStartExamCreation}
-                        variants={buttonHover}
-                        initial="rest"
-                        whileHover="hover"
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center justify-center gap-3 bg-white hover:bg-indigo-50 text-indigo-700 font-semibold rounded-xl px-8 py-4 md:py-5 md:px-10 text-lg md:text-xl transition-all duration-300 shadow-lg hover:shadow-xl relative overflow-hidden group"
-                      >
-                        <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-indigo-50 to-white z-0 opacity-0 group-hover:opacity-100 transition-all duration-300"></span>
-                        <span className="relative z-10 flex items-center">
-                          <FiPlay className="text-2xl text-indigo-600 mr-2" />
-                          <span>Sınav Oluştur</span>
-                        </span>
-                        <motion.span
-                          className="relative z-10 ml-1"
-                          animate={{ x: [0, 5, 0] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            repeatType: "reverse",
-                            ease: "easeInOut",
-                          }}
+                      {/* Hızlı Sınav Kartı */}
+                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="bg-blue-500/20 p-3 rounded-lg">
+                            <FiClock className="text-white text-xl" />
+                          </div>
+                          <span className="text-xs text-indigo-100/70 px-2 py-1 bg-white/10 rounded-full">
+                            Üyelik Gerektirmez
+                          </span>
+                        </div>
+                        <h3 className="text-white text-xl font-medium mb-3">Hızlı Sınav</h3>
+                        <p className="text-indigo-100/80 mb-4">
+                          Üyelik gerektirmeden istediğiniz konuda bilgi seviyenizi hemen test edin. 
+                          Seçtiğiniz alanda temel bilgilerinizi ölçmek için ideal.
+                        </p>
+                        <motion.button
+                          onClick={handleStartQuickQuiz}
+                          variants={buttonHover}
+                          initial="rest"
+                          whileHover="hover"
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full flex items-center justify-center gap-2 bg-blue-600/80 hover:bg-blue-600 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300"
                         >
-                          <FiArrowRight className="text-xl text-indigo-600" />
-                        </motion.span>
-                      </motion.button>
+                          <FiPlay className="text-lg" />
+                          <span>Hızlı Sınav Başlat</span>
+                        </motion.button>
+                      </div>
 
-                      <motion.button
-                        onClick={handleViewCourses}
-                        variants={buttonHover}
-                        initial="rest"
-                        whileHover="hover"
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center justify-center gap-2 bg-indigo-100/20 backdrop-blur-md text-white hover:bg-indigo-100/30 font-medium rounded-xl px-6 py-4 md:py-5 md:px-8 text-lg transition-all duration-300 border border-white/20"
-                      >
-                        <FiBook className="text-xl" />
-                        <span>Derslerim</span>
-                      </motion.button>
+                      {/* Kişiselleştirilmiş Sınav Kartı */}
+                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="bg-purple-500/20 p-3 rounded-lg">
+                            <FiUser className="text-white text-xl" />
+                          </div>
+                          <span className="text-xs text-indigo-100/70 px-2 py-1 bg-white/10 rounded-full">
+                            {isAuthenticated ? "Premium Özellik" : "Giriş Gerektirir"}
+                          </span>
+                        </div>
+                        <h3 className="text-white text-xl font-medium mb-3">Kişiselleştirilmiş Sınav</h3>
+                        <p className="text-indigo-100/80 mb-4">
+                          Öğrenme geçmişiniz, performansınız ve hedeflerinize göre tamamen size özel 
+                          sınavlar oluşturun ve ilerlemenizi takip edin.
+                        </p>
+                        <motion.button
+                          onClick={handleStartPersonalizedQuiz}
+                          variants={buttonHover}
+                          initial="rest"
+                          whileHover="hover"
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300"
+                        >
+                          <FiTarget className="text-lg" />
+                          <span>{isAuthenticated ? "Kişiselleştirilmiş Sınav Oluştur" : "Giriş Yap ve Başla"}</span>
+                        </motion.button>
+                      </div>
                     </motion.div>
-                    
-                    {/* Feature Cards */}
+
+                    {/* Platformun Özellikleri */}
                     <motion.div
                       custom={4}
                       variants={fadeInUp}
@@ -286,14 +299,14 @@ export default function Home() {
                       </div>
                       
                       <div 
-                        onClick={() => navigateTo('/exams')}
+                        onClick={() => navigateTo('/courses')}
                         className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
                       >
                         <div className="bg-purple-500/20 p-3 rounded-lg inline-block mb-3">
-                          <FiPlay className="text-white text-xl" />
+                          <FiBook className="text-white text-xl" />
                         </div>
-                        <h3 className="text-white text-lg font-medium mb-2">Sınavlar</h3>
-                        <p className="text-indigo-100/70 text-sm">Kişiselleştirilmiş sınavlarla bilginizi test edin</p>
+                        <h3 className="text-white text-lg font-medium mb-2">Dersler</h3>
+                        <p className="text-indigo-100/70 text-sm">Çalışma alanlarınızı yönetin ve içerik ekleyin</p>
                         <FiArrowRight className="text-white/50 mt-3 group-hover:translate-x-1 transition-transform" />
                       </div>
                       
@@ -305,7 +318,7 @@ export default function Home() {
                           <FiBarChart2 className="text-white text-xl" />
                         </div>
                         <h3 className="text-white text-lg font-medium mb-2">Performans</h3>
-                        <p className="text-indigo-100/70 text-sm">İlerlemenizi takip edin ve geliştirin</p>
+                        <p className="text-indigo-100/70 text-sm">İlerlemenizi takip edin ve güçlü/zayıf yönlerinizi görün</p>
                         <FiArrowRight className="text-white/50 mt-3 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </motion.div>

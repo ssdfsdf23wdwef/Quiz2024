@@ -1,8 +1,8 @@
 ---
 description: "State yönetimi kuralları ve standartları"
-globs:
-  - "frontend/src/store/**/*" 
+globs: 
 alwaysApply: true
+---
 ---
 # State Yönetimi
 
@@ -50,15 +50,15 @@ export const useTheme = () => {
 };
 ```
 
-## Global State (Zustand)
+## Global State (Zustand 5)
 - [frontend/src/store/](mdc:frontend/src/store) - Zustand store tanımlamaları
-- Gerçekten global olan UI state için Zustand kullanın
+- Gerçekten global olan UI state için Zustand 5 kullanın
 - Mümkün olduğunca düz (flat) store yapısı tercih edin
 - Selector'lar ile sadece ihtiyaç duyulan state'i bileşenlerde kullanın
 
 ```tsx
-// Store tanımı
-export const useAuthStore = create<AuthStore>((set) => ({
+// Store tanımı (Zustand 5)
+export const useAuthStore = create<AuthStore>()((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
@@ -97,9 +97,9 @@ Store'ları aşağıdaki şekilde organize edin:
   - index.ts              // Export noktası
 ```
 
-## Durum Değişimi İzleme
+## Durum Değişimi İzleme ve Middleware'ler
 
-Zustand store'larındaki durum değişimlerini izlemek için middleware'ler kullanın:
+Zustand 5 store'larındaki durum değişimlerini izlemek için middleware'ler kullanın:
 
 ```tsx
 // Logger middleware
@@ -139,23 +139,97 @@ export const useAuthStore = create(
 );
 ```
 
-## Sunucu Durumu (TanStack Query)
+## Asenkron İşlemleri Yönetme
+
+Zustand 5 ile asenkron işlemleri yönetmek için:
+
+```tsx
+// Asenkron aksiyonlar
+export const useUserStore = create<UserStore>()((set, get) => ({
+  users: [],
+  isLoading: false,
+  error: null,
+  
+  // Asenkron işlemi yöneten fonksiyon
+  fetchUsers: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await userService.getUsers();
+      set({ users: response.data, isLoading: false });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Kullanıcılar yüklenemedi', 
+        isLoading: false 
+      });
+    }
+  },
+  
+  // Mevcut state'i kullanarak asenkron işlem
+  addUser: async (userData) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await userService.addUser(userData);
+      // Mevcut state'i al ve güncelle
+      set({ 
+        users: [...get().users, response.data], 
+        isLoading: false 
+      });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Kullanıcı eklenemedi', 
+        isLoading: false 
+      });
+    }
+  }
+}));
+```
+
+## Sunucu Durumu (TanStack Query 5)
 - Sunucudan gelen veri için kesinlikle Zustand veya Context API KULLANMAYIN
-- TanStack Query (React Query) kullanarak backend API verilerini önbelleğe alın, durumunu yönetin
+- TanStack Query 5 (React Query) kullanarak backend API verilerini önbelleğe alın, durumunu yönetin
 - API isteklerini ve sonuçlarını özel hook'larda kapsülleyin
 
 ```tsx
-// TanStack Query hook örneği
+// TanStack Query 5 hook örneği
 export function useKursDetay(kursId: string) {
   return useQuery({
     queryKey: ['kurs', kursId],
     queryFn: () => courseService.getKursById(kursId),
     staleTime: 5 * 60 * 1000, // 5 dakika
+    gcTime: 10 * 60 * 1000,   // 10 dakika
   });
 }
 
 // Kullanımı
-const { data: kurs, isLoading, error } = useKursDetay(kursId);
+const { data: kurs, isLoading, error, isError } = useKursDetay(kursId);
+```
+
+## Zustand ile TanStack Query 5 Entegrasyonu
+
+Zustand global durumu ile TanStack Query önbelleğini senkronize etmek için:
+
+```tsx
+// Zustand store tanımı
+export const useFiltersStore = create<FiltersStore>()((set) => ({
+  searchTerm: '',
+  category: 'all',
+  setSearchTerm: (term: string) => set({ searchTerm: term }),
+  setCategory: (category: string) => set({ category }),
+  resetFilters: () => set({ searchTerm: '', category: 'all' }),
+}));
+
+// TanStack Query ile entegrasyon
+export const useFilteredCourses = () => {
+  // Zustand store'dan filtreleri al
+  const { searchTerm, category } = useFiltersStore();
+  
+  // Filtreleri queryKey'e dahil et
+  return useQuery({
+    queryKey: ['courses', { searchTerm, category }],
+    queryFn: () => courseService.getCourses({ searchTerm, category }),
+    // Filtreyi değiştirdiğimizde yeni sorgu otomatik tetikleniyor
+  });
+};
 ```
 
 ## State Değişimlerini Loglama
@@ -245,8 +319,8 @@ const useStore = create(
 
 1. Bu state sadece bir bileşen için mi? → **useState/useReducer**
 2. Bu state bir bileşen ağacındaki sınırlı sayıdaki bileşen için mi? → **Context API**
-3. Bu state UI ile ilgili global bir state mi? → **Zustand**
-4. Bu state backend API'den gelen veri mi? → **TanStack Query**
+3. Bu state UI ile ilgili global bir state mi? → **Zustand 5**
+4. Bu state backend API'den gelen veri mi? → **TanStack Query 5**
 
 ## Frontend-Backend Durum Senkronizasyonu
 
@@ -255,25 +329,41 @@ const useStore = create(
    - Hata durumunda geri alabileceğiniz bir mekanizma oluşturun
 
 ```tsx
-// Optimistic update örneği
-const markAsCompleted = async (taskId: string) => {
-  // Önceki durumu kaydet
-  const previousTasks = queryClient.getQueryData(['tasks']);
+// Optimistic update örneği (TanStack Query 5)
+const markAsCompleted = useMutation({
+  mutationFn: (taskId: string) => taskService.markAsCompleted(taskId),
   
   // Optimistik güncelleme
-  queryClient.setQueryData(['tasks'], (old) => 
-    old.map(task => task.id === taskId ? {...task, completed: true} : task)
-  );
+  onMutate: async (taskId) => {
+    // Önceki sorguları durdur
+    await queryClient.cancelQueries({ queryKey: ['tasks'] });
+    
+    // Önceki durumu kaydet
+    const previousTasks = queryClient.getQueryData(['tasks']);
+    
+    // Optimistik güncelleme
+    queryClient.setQueryData(['tasks'], (old) => 
+      old.map(task => task.id === taskId ? {...task, completed: true} : task)
+    );
+    
+    // Önceki durumu döndür (rollback için)
+    return { previousTasks };
+  },
   
-  try {
-    // API çağrısı
-    await taskService.markAsCompleted(taskId);
-  } catch (error) {
-    // Hata durumunda geri al
-    queryClient.setQueryData(['tasks'], previousTasks);
+  // Hata durumunda önceki duruma geri dön
+  onError: (err, taskId, context) => {
+    queryClient.setQueryData(['tasks'], context.previousTasks);
     toast.error('Görev tamamlanamadı');
-  }
-};
+  },
+  
+  // Başarılı işlem sonrası ilgili sorguları yenile
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  },
+});
+
+// Kullanımı
+markAsCompleted.mutate(taskId);
 ```
 
 2. **WebSocket ile Gerçek Zamanlı Güncellemeler:**
@@ -297,4 +387,5 @@ useEffect(() => {
 - [TanStack Query Dokümantasyon](mdc:https:/tanstack.com/query/latest)
 - [Zustand GitHub](mdc:https:/github.com/pmndrs/zustand)
 - [React Context API](mdc:https:/react.dev/reference/react/createContext)
+
 

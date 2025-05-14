@@ -1,19 +1,27 @@
 ---
-description: "styling-tailwind kuralları" 
+title: "Stil ve Tailwind CSS Kullanımı"
+description: "Tailwind CSS 4 ve NextUI kullanım kuralları ve best practice'leri"
+glob_patterns: ["frontend/src/components/**/*.tsx", "frontend/src/app/**/*.tsx", "frontend/**/*.css"]
+---
+
+---
+description: "styling-tailwind kuralları"
 globs: 
 alwaysApply: false
 ---
 # Stil ve Tailwind CSS Kullanımı
 
-Bu projede stil için Tailwind CSS framework'ü kullanılmaktadır. Aşağıda Tailwind CSS kullanımı ile ilgili kurallar ve prensipler bulunmaktadır.
+Bu projede stil için Tailwind CSS 4 framework'ü ve NextUI bileşen kütüphanesi kullanılmaktadır. Aşağıda Tailwind CSS kullanımı ile ilgili kurallar ve prensipler bulunmaktadır.
 
 ## Temel Prensipler
 - **Utility-First Yaklaşımı:** Öncelikle Tailwind'in utility sınıfları kullanılmalıdır
 - **Özel CSS:** Ancak Tailwind utility'leri ile çözülemeyen durumlar için özel CSS yazılmalıdır
 - **Tema Tutarlılığı:** Özel renkler, ölçüler ve boşluklar için Tailwind tema değişkenleri kullanılmalıdır
+- **NextUI Bileşenleri:** Genel UI bileşenleri için NextUI kütüphanesi tercih edilmelidir
 
-## Tailwind Yapılandırması
+## Tailwind ve UI Yapılandırması
 - [frontend/tailwind.config.ts](mdc:frontend/tailwind.config.ts) - Tailwind yapılandırması ve tema değişkenleri
+- [frontend/src/app/providers.tsx](mdc:frontend/src/app/providers.tsx) - NextUI ve tema sağlayıcıları
 
 ## Stil Uygulama Yöntemleri
 1. **Inline Tailwind Sınıfları** (Öncelikli Tercih)
@@ -23,14 +31,29 @@ Bu projede stil için Tailwind CSS framework'ü kullanılmaktadır. Aşağıda T
    </div>
    ```
 
-2. **Koşullu Sınıflar**
+2. **Koşullu Sınıflar - clsx/tailwind-merge**
    ```tsx
-   <button className={`px-4 py-2 rounded ${aktif ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}>
+   import { cn } from "@/lib/utils";
+   
+   <button className={cn(
+     "px-4 py-2 rounded",
+     aktif ? "bg-primary text-white" : "bg-gray-200 text-gray-700"
+   )}>
      Buton
    </button>
    ```
 
-3. **CSS Modülleri** (Sadece İhtiyaç Varsa)
+3. **NextUI Bileşenleri**
+   ```tsx
+   import { Button, Card, Input } from "@nextui-org/react";
+   
+   <Card className="p-4">
+     <Input label="Kullanıcı Adı" />
+     <Button color="primary">Giriş Yap</Button>
+   </Card>
+   ```
+
+4. **CSS Modülleri** (Sadece İhtiyaç Varsa)
    ```tsx
    import styles from './Button.module.css';
    
@@ -50,7 +73,27 @@ Bu projede stil için Tailwind CSS framework'ü kullanılmaktadır. Aşağıda T
 ## Tema ve Renk Paletleri
 - **Tema Renkleri:** Özel renkleri doğrudan yazmak yerine tema değişkenlerini kullanın
 - **Erişilebilirlik:** WCAG AA standardına uygun kontrast oranları sağlayın
-- **Karanlık Mod:** Karanlık mod için `dark:` önekini kullanın
+- **Karanlık Mod:** Karanlık mod için `next-themes` kütüphanesi ve `dark:` önekini kullanın
+  ```tsx
+  import { useTheme } from "next-themes";
+  
+  const { theme, setTheme } = useTheme();
+  
+  <div className="bg-white text-black dark:bg-gray-900 dark:text-white">
+    <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+      Tema Değiştir
+    </button>
+  </div>
+  ```
+
+## Animasyonlar
+- Animasyonlar için Framer Motion kütüphanesini kullanın
+- Basit hover/focus efektleri için Tailwind'in geçiş sınıflarını tercih edin
+  ```tsx
+  <div className="transition-all duration-300 hover:scale-105">
+    Hover ile büyüyen element
+  </div>
+  ```
 
 ## Kötü Uygulamalar (Yapılmamalı)
 - Gereksiz `!important` kullanımı
@@ -58,4 +101,5 @@ Bu projede stil için Tailwind CSS framework'ü kullanılmaktadır. Aşağıda T
 - Inline stil (`style={}`) kullanımı
 - Global CSS stil dosyalarının aşırı kullanımı
 - `@apply` direktifinin gereksiz kullanımı
+- NextUI bileşenleri varken benzer fonksiyonları sağlayan custom bileşenler oluşturmak
 

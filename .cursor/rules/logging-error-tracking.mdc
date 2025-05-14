@@ -1,11 +1,57 @@
 ---
-description: "logging-error-tracking kuralları" 
+description: "logging-error-tracking kuralları"
 globs: 
 alwaysApply: false
+---
 ---
 # Loglama, Durum Akışı ve Hata İzleme Rehberi
 
 Bu projede loglama, durum akışı ve hata izleme için belirli standartlar kullanılmaktadır. Bu standartlar, uygulamanın davranışını anlamak, hataları tespit etmek ve performans sorunlarını izlemek açısından kritik öneme sahiptir.
+
+## Loglama Mimarisi
+
+### Backend (NestJS) Loglama
+
+NestJS'in kendi loglama sistemini genişleterek özelleştirilmiş bir loglama mimarisi kullanılmaktadır:
+
+- [backend/src/common/services/logger.service.ts](mdc:backend/src/common/services/logger.service.ts) - Merkezi loglama servisi
+- [backend/src/common/services/flow-tracker.service.ts](mdc:backend/src/common/services/flow-tracker.service.ts) - Akış izleme servisi
+- [backend/src/common/filters/exception.filter.ts](mdc:backend/src/common/filters/exception.filter.ts) - Merkezi hata işleme
+
+### LoggerService
+
+- Singleton pattern ile implementasyon
+- Farklı log seviyeleri: `error`, `warn`, `info`, `debug`, `verbose`
+- Log mesajları yapılandırılabilir hedeflere (dosya, konsol, MongoDB) yazılabilir
+- Hata tiplerine göre ayrıntılı loglama
+- JSON formatında yapılandırılmış loglar
+- Ortam değişkenlerine göre log seviyesi ayarlama
+
+```typescript
+// LoggerService kullanım örneği
+@Injectable()
+export class CoursesService {
+  private readonly logger = new LoggerService(CoursesService.name);
+  
+  async findAll(userId: string): Promise<Course[]> {
+    this.logger.log('Kurslar getiriliyor', { userId });
+    try {
+      const courses = await this.coursesRepository.findByUserId(userId);
+      this.logger.log('Kurslar başarıyla getirildi', { 
+        userId, 
+        courseCount: courses.length 
+      });
+      return courses;
+    } catch (error) {
+      this.logger.error('Kurslar getirilirken hata oluştu', { 
+        userId, 
+        error: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
+  }
+}
 
 ## Loglama Servisleri
 
