@@ -90,8 +90,11 @@ export class AiService {
           errorType: error.constructor?.name || 'Unknown',
           attemptNumber,
           retriesLeft,
-          waitTimeMs: Math.min(this.RETRY_OPTIONS.maxTimeout, 
-                             this.RETRY_OPTIONS.minTimeout * Math.pow(this.RETRY_OPTIONS.factor, attemptNumber - 1)),
+          waitTimeMs: Math.min(
+            this.RETRY_OPTIONS.maxTimeout,
+            this.RETRY_OPTIONS.minTimeout *
+              Math.pow(this.RETRY_OPTIONS.factor, attemptNumber - 1),
+          ),
           processingEvent: 'retry-attempt-failed',
           traceId: errorTraceId,
         },
@@ -188,7 +191,8 @@ export class AiService {
         'AiService.parseJsonResponse',
         __filename,
         173,
-        { responseValue: text, traceId },
+        undefined, // Error nesnesi yok
+        { responseValue: text, traceId }, // additionalInfo olarak geçirilmeli
       );
       throw new Error('AI yanıtı parse edilemedi: Yanıt boş.');
     }
@@ -425,20 +429,19 @@ export class AiService {
 
         return parsedData;
       } catch (parseError) {
+        const error = parseError as Error;
         this.logger.error(
-          `[${traceId}] JSON parse hatası: ${parseError.message} (metin: ${jsonText.substring(0, 100)}...)`,
+          `[${traceId}] JSON parse hatası: ${error.message} (metin: ${jsonText.substring(0, 100)}...)`,
           'AiService.parseJsonResponse',
           __filename,
           326,
+          error, // Hata nesnesi
           {
-            error: parseError.message,
-            errorName: parseError.name,
-            errorType: parseError.constructor?.name || 'Unknown',
             jsonTextPreview:
               jsonText.substring(0, 150) + (jsonText.length > 150 ? '...' : ''),
             jsonTextLength: jsonText.length,
             positionHint:
-              parseError.message.match(/position (\d+)/)?.[1] || 'unknown',
+              error.message.match(/position (\d+)/)?.[1] || 'unknown',
             extractionMethod,
             traceId,
           },
@@ -474,15 +477,14 @@ export class AiService {
 
             return parsedData;
           } catch (lastError) {
+            const error = lastError as Error;
             this.logger.error(
-              `[${traceId}] Son çare JSON parse denemesi de başarısız oldu: ${lastError.message}`,
+              `[${traceId}] Son çare JSON parse denemesi de başarısız oldu: ${error.message}`,
               'AiService.parseJsonResponse',
               __filename,
               355,
+              error, // Hata nesnesi
               {
-                lastError: lastError.message,
-                lastErrorName: lastError.name,
-                lastErrorType: lastError.constructor?.name || 'Unknown',
                 originalError: parseError.message,
                 failureReason: 'both-parsing-attempts-failed',
                 traceId,
@@ -495,17 +497,16 @@ export class AiService {
         throw parseError;
       }
     } catch (error) {
+      const err = error as Error;
       const duration = Date.now() - startTime;
 
       this.logger.error(
-        `[${traceId}] JSON parse hatası: ${error.message} (${duration}ms)`,
+        `[${traceId}] JSON parse hatası: ${err.message} (${duration}ms)`,
         'AiService.parseJsonResponse',
         __filename,
         371,
+        err, // Hata nesnesi
         {
-          error: error.message,
-          errorName: error.name,
-          errorType: error.constructor?.name || 'Unknown',
           processingTime: duration,
           textFirstChars: text.substring(0, 150),
           textLastChars: text.substring(Math.max(0, text.length - 150)),
@@ -544,7 +545,7 @@ export class AiService {
       }
 
       throw new Error(
-        `AI yanıt formatı geçersiz veya parse edilemedi: ${error.message}`,
+        `AI yanıt formatı geçersiz veya parse edilemedi: ${err.message}`,
       );
     }
   }
@@ -684,11 +685,13 @@ export class AiService {
           'AiService.detectTopics',
           __filename,
           334,
+          error, // Error nesnesi en uygun biçimde
           {
-            error: error.message,
+            // 'error' yerine 'errorMessage' kullan
+            errorMessage: error.message,
             errorName: error.name,
             errorType: error.constructor?.name || 'Unknown',
-            errorCode: error.code || 'UNKNOWN',
+            errorCode: (error as any).code || 'UNKNOWN',
             promptFilePath,
             processingError: 'prompt-file-read-error',
             traceId,
@@ -779,9 +782,9 @@ export class AiService {
       const aiCallStartTime = Date.now();
 
       // Birinci iyileştirme: pRetry kullanımı için tip tanımını düzeltelim
-      result = await pRetry(async (attempt) => {
-        // Güvenlik için null değerini kontrol et - ilk çağrıda her zaman valid değer içerecek
-        const attemptNumber = attempt?.attemptNumber || 1;
+      result = await pRetry(async (attempt: number) => {
+        // Attempt her zaman bir number'dır
+        const attemptNumber = attempt;
 
         this.logger.debug(
           `[${traceId}] AI isteği deneme #${attemptNumber} başlatılıyor`,
@@ -876,8 +879,12 @@ export class AiService {
           'AiService.detectTopics',
           __filename,
           429,
+          new Error('Invalid AI response format'), // Hata nesnesi oluştur
           {
-            result,
+            // 'result' yerine 'resultData' kullan
+            resultData: result
+              ? JSON.stringify(result).substring(0, 100)
+              : 'null',
             validationError: 'invalid-ai-response-format',
             traceId,
           },
@@ -958,7 +965,8 @@ export class AiService {
       }
 
       return result;
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       const processingDuration = Date.now() - processingStartTime;
 
       this.logger.error(
@@ -966,11 +974,8 @@ export class AiService {
         'AiService.detectTopics',
         __filename,
         492,
+        error, // Hata nesnesi
         {
-          error: error.message,
-          errorName: error.name,
-          errorType: error.constructor?.name || 'Unknown',
-          errorStack: error.stack,
           processingDuration,
           documentLength: documentText?.length || 0,
           processingError: 'topic-detection-failed',
@@ -978,7 +983,7 @@ export class AiService {
         },
       );
 
-      // Kullanıcı dostu hata mesajı oluştur
+      // Kullanıcı dostu hata mesajı
       let errorMessage = 'Konular tespit edilemedi';
       let errorDetails = '';
 
@@ -1056,8 +1061,9 @@ export class AiService {
           'AiService.normalizeTopicResult',
           __filename,
           432,
+          undefined, // Error nesnesi yok
           {
-            result,
+            resultValue: result ? 'undefined' : 'null',
             validationFailed: 'null-or-undefined-result',
             traceId,
           },
@@ -1071,6 +1077,7 @@ export class AiService {
           'AiService.normalizeTopicResult',
           __filename,
           441,
+          undefined, // Error nesnesi yok
           {
             resultKeys: Object.keys(result),
             availableFields: JSON.stringify(result).substring(0, 200),
@@ -1087,6 +1094,7 @@ export class AiService {
           'AiService.normalizeTopicResult',
           __filename,
           450,
+          undefined, // null yerine undefined
           {
             topicsType: typeof result.topics,
             topicsValue: JSON.stringify(result.topics).substring(0, 200),
@@ -1298,8 +1306,10 @@ export class AiService {
                     'AiService.normalizeTopicResult',
                     __filename,
                     569,
+                    subTopicError, // Hata nesnesi
                     {
-                      error: subTopicError.message,
+                      errorMessage: subTopicError.message,
+                      errorName: subTopicError.name,
                       errorType: subTopicError.constructor?.name || 'Unknown',
                       errorStack: subTopicError.stack,
                       parentTopic: mainTopicName,
@@ -1390,8 +1400,10 @@ export class AiService {
             'AiService.normalizeTopicResult',
             __filename,
             638,
+            topicError, // Hata nesnesi
             {
-              error: topicError.message,
+              errorMessage: topicError.message,
+              errorName: topicError.name,
               errorType: topicError.constructor?.name || 'Unknown',
               errorStack: topicError.stack,
               topic: JSON.stringify(topic).substring(0, 200),
@@ -1424,7 +1436,8 @@ export class AiService {
       );
 
       return normalizedResult;
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       const duration = Date.now() - startTime;
 
       this.logger.error(
@@ -1432,11 +1445,9 @@ export class AiService {
         'AiService.normalizeTopicResult',
         __filename,
         670,
+        error, // Hata nesnesi
         {
-          error: error.message,
-          errorType: error.constructor?.name || 'Unknown',
-          errorStack: error.stack,
-          result: result
+          resultData: result
             ? JSON.stringify(result).substring(0, 200) + '...'
             : 'null',
           duration,
@@ -2040,14 +2051,14 @@ Yanıtını aşağıdaki JSON formatında ver:
   ): Promise<TopicDetectionResult> {
     const startTime = Date.now();
     const traceId = `gemini-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    
+
     try {
       this.logger.info(
         `[${traceId}] Gemini AI ile konu tespiti başlatıldı (prompt: ${prompt.length} karakter)`,
         'AiService.getTopicsWithGemini',
         __filename,
         1078,
-        { 
+        {
           promptLength: prompt.length,
           modelName: this.llmConfig.model || 'gemini-1.5-flash',
           temperature: this.llmConfig.temperature || 0.7,
@@ -2057,136 +2068,120 @@ Yanıtını aşağıdaki JSON formatında ver:
         },
       );
 
-      this.flowTracker.trackStep('Gemini AI modeli kullanılıyor', 'AiService');
-
       // Use p-retry for resilience
-      const aiResponse = await pRetry(
-        async (attempt) => {
-          // Güvenlik için null değerini kontrol et - ilk çağrıda her zaman valid değer içerecek
-          const attemptNumber = attempt?.attemptNumber || 1;
-          
-          try {
-            this.logger.debug(
-              `[${traceId}] Gemini API isteği başlatılıyor (deneme: ${attemptNumber})`,
-              'AiService.getTopicsWithGemini',
-              __filename,
-              1089,
-              {
-                attemptNumber,
-                maxAttempts: this.RETRY_OPTIONS.retries,
-                elapsedSinceStart: Date.now() - startTime,
-                processingEvent: 'gemini-attempt-start',
-                traceId,
-              },
-            );
+      const aiResponse = await pRetry(async (attempt: number) => {
+        // Attempt her zaman bir number'dır
+        const attemptNumber = attempt;
 
-            // AI isteği zamanını izle
-            const attemptStartTime = Date.now();
+        try {
+          this.logger.debug(
+            `[${traceId}] Gemini API isteği başlatılıyor (deneme: ${attemptNumber})`,
+            'AiService.getTopicsWithGemini',
+            __filename,
+            1089,
+            {
+              attemptNumber,
+              maxAttempts: this.RETRY_OPTIONS.retries,
+              elapsedSinceStart: Date.now() - startTime,
+              processingEvent: 'gemini-attempt-start',
+              traceId,
+            },
+          );
 
-            // İstek parametrelerini hazırla
-            const requestParams = {
-              temperature: this.llmConfig.temperature || 0.7,
-              maxOutputTokens: this.llmConfig.maxTokens || 1024,
-            };
-            
-            // İstek zamanlamasını ölç
-            const requestStartTime = Date.now();
-            const result = await this.model.generateContent(prompt);
-            const responseTime = Date.now() - requestStartTime;
+          // AI isteği zamanını izle
+          const attemptStartTime = Date.now();
 
-            this.logger.debug(
-              `[${traceId}] Gemini API yanıtı alındı (${responseTime}ms, deneme: ${attemptNumber})`,
-              'AiService.getTopicsWithGemini',
-              __filename,
-              1103,
-              { 
-                responseTime, 
-                attemptNumber,
-                promptTokenEstimate: Math.ceil(prompt.length / 4),
-                outputTokenEstimate: Math.ceil(result.response.text().length / 4),
-                requestParams,
-                processingEvent: 'gemini-response-received',
-                traceId,
-              },
-            );
+          // İstek parametrelerini hazırla
+          const requestParams: any = {
+            temperature: this.llmConfig.temperature || 0.7,
+            maxOutputTokens: this.llmConfig.maxTokens || 1024,
+          };
 
-            if (!result || !result.response) {
-              throw new Error('Gemini API boş yanıt döndürdü');
-            }
+          const geminiModel = this.model;
+          const response = await geminiModel.generateContent(
+            prompt,
+            requestParams,
+          );
+          const responseText = response.response.text();
+          const responseTime = Date.now() - attemptStartTime;
 
-            const response = result.response;
-            const text = response.text();
+          this.logger.debug(
+            `[${traceId}] Gemini API yanıtı alındı (${responseTime}ms, deneme: ${attemptNumber})`,
+            'AiService.getTopicsWithGemini',
+            __filename,
+            1103,
+            {
+              responseTime,
+              attemptNumber,
+              promptTokenEstimate: Math.ceil(prompt.length / 4),
+              outputTokenEstimate: Math.ceil(responseText.length / 4),
+              requestParams,
+              processingEvent: 'gemini-response-received',
+              traceId,
+            },
+          );
 
-            if (!text || text.trim() === '') {
-              throw new Error('Gemini API yanıt metni boş');
-            }
+          this.logger.debug(
+            `[${traceId}] Yanıt metin uzunluğu: ${responseText.length} karakter (deneme: ${attemptNumber})`,
+            'AiService.getTopicsWithGemini',
+            __filename,
+            1119,
+            {
+              textLength: responseText.length,
+              attemptNumber,
+              responsePreview: responseText.substring(0, 200),
+              processingEvent: 'gemini-text-received',
+              traceId,
+            },
+          );
 
-            this.logger.debug(
-              `[${traceId}] Yanıt metin uzunluğu: ${text.length} karakter (deneme: ${attemptNumber})`,
-              'AiService.getTopicsWithGemini',
-              __filename,
-              1119,
-              { 
-                textLength: text.length,
-                attemptNumber,
-                responsePreview: text.substring(0, 200) + (text.length > 200 ? '...' : ''),
-                processingEvent: 'gemini-text-received',
-                traceId,
-              },
-            );
+          // JSON yanıtını ayrıştır
+          const jsonParseStart = Date.now();
+          const parsedResponse = this.parseTopicDetectionResponse(responseText);
+          const parseTime = Date.now() - jsonParseStart;
 
-            // JSON dönüşümünü ölç
-            const parseStartTime = Date.now();
-            // Metni işlemeye geç
-            const parsedResponse = this.parseTopicDetectionResponse(text);
-            const parseTime = Date.now() - parseStartTime;
+          this.logger.debug(
+            `[${traceId}] Gemini yanıtı başarıyla JSON'a çevrildi (${parseTime}ms, toplam: ${Date.now() - attemptStartTime}ms)`,
+            'AiService.getTopicsWithGemini',
+            __filename,
+            1131,
+            {
+              parseTime,
+              attemptDuration: Date.now() - attemptStartTime,
+              attemptNumber,
+              parsedTopics: parsedResponse.topics
+                ? parsedResponse.topics.length
+                : 0,
+              hasTopicsArray: !!parsedResponse.topics,
+              processingEvent: 'gemini-parse-success',
+              traceId,
+            },
+          );
 
-            if (!parsedResponse) {
-              throw new Error('JSON yanıtı parse edilemedi');
-            }
+          return parsedResponse;
+        } catch (error) {
+          // Hata detayları
+          this.logger.error(
+            `[${traceId}] Gemini API yanıtı işlenirken hata oluştu (deneme: ${attemptNumber}): ${error.message}`,
+            'AiService.getTopicsWithGemini',
+            __filename,
+            1138,
+            error,
+            {
+              errorMessage: error.message,
+              errorName: error.name || 'Unknown',
+              errorType: error.constructor?.name || 'Unknown',
+              attemptNumber,
+              elapsedSinceStart: Date.now() - startTime,
+              processingEvent: 'gemini-attempt-error',
+              traceId,
+            },
+          );
 
-            const attemptDuration = Date.now() - attemptStartTime;
-
-            this.logger.debug(
-              `[${traceId}] Gemini yanıtı başarıyla JSON'a çevrildi (${parseTime}ms, toplam: ${attemptDuration}ms)`,
-              'AiService.getTopicsWithGemini',
-              __filename,
-              1131,
-              {
-                parseTime,
-                attemptDuration,
-                attemptNumber,
-                parsedTopics: parsedResponse.topics?.length || 0,
-                hasTopicsArray: !!parsedResponse.topics && Array.isArray(parsedResponse.topics),
-                processingEvent: 'gemini-parse-success',
-                traceId,
-              },
-            );
-
-            return parsedResponse;
-          } catch (error) {
-            const errorTime = Date.now() - startTime;
-            
-            
-            this.logger.error(
-              `Gemini API isteği hatası (deneme: ${attemptContext.attemptNumber}): ${error.message}`,
-              'AiService.getTopicsWithGemini',
-              __filename,
-              1144,
-              {
-                attemptCount: attemptContext.attemptNumber,
-                errorCode: error.code || 'UNKNOWN',
-                errorType: error.constructor.name,
-                errorDetails: error.details || 'Detay yok',
-              },
-            );
-
-            // Yeniden deneme yapılacaksa bu hatayı fırlat
-            throw error;
-          }
-        },
-        this.RETRY_OPTIONS,
-      );
+          // Yeniden deneme yapılacaksa bu hatayı fırlat
+          throw error;
+        }
+      }, this.RETRY_OPTIONS);
 
       // JSON dönüşümü tamamlandı, şimdi konuları normalize et
       this.logger.debug(
@@ -2198,70 +2193,145 @@ Yanıtını aşağıdaki JSON formatında ver:
 
       const normalizedResult = this.normalizeTopicResult(aiResponse);
 
-      this.logger.info(
-        `Konu tespiti tamamlandı: ${normalizedResult.topics.length} konu bulundu`,
-        'AiService.getTopicsWithGemini',
-        __filename,
-        1169,
-        {
-          topicCount: normalizedResult.topics.length,
-          mainTopicCount: normalizedResult.topics.filter((t) => t.isMainTopic)
-            .length,
-          subTopicCount: normalizedResult.topics.filter((t) => !t.isMainTopic)
-            .length,
-        },
-      );
-
-      return normalizedResult;
-    } catch (error) {
-      this.logger.error(
-        `Gemini ile konu tespiti başarısız: ${error.message}`,
-        'AiService.getTopicsWithGemini',
-        __filename,
-        1182,
-        {
-          error: error.toString(),
-          stack: error.stack,
-          errorType: error.constructor.name,
-        },
-      );
-
-      // Kullanıcı dostu hata mesajı
-      let userFriendlyError = 'Konular tespit edilirken bir sorun oluştu';
+      // Topics dizisinin var olduğundan emin ol ve SubTopic formatına dönüştür
+      const result: TopicDetectionResult = { topics: [] };
 
       if (
-        error.message.includes('quota') ||
-        error.message.includes('rate limit')
+        normalizedResult &&
+        normalizedResult.topics &&
+        Array.isArray(normalizedResult.topics)
       ) {
-        userFriendlyError =
-          'AI servisi şu anda yoğun, lütfen daha sonra tekrar deneyin (Kota aşıldı)';
-      } else if (
-        error.message.includes('blocked') ||
-        error.message.includes('harmful')
-      ) {
-        userFriendlyError =
-          'İçerik güvenlik kontrollerine takıldı, lütfen farklı bir içerik deneyin';
-      } else if (
-        error.message.includes('network') ||
-        error.message.includes('connection')
-      ) {
-        userFriendlyError =
-          'Ağ bağlantı hatası, lütfen internet bağlantınızı kontrol edin';
-      } else if (
-        error.message.includes('empty') ||
-        error.message.includes('boş')
-      ) {
-        userFriendlyError =
-          'AI boş yanıt döndürdü, belge içeriği yeterince bilgi içermiyor olabilir';
-      } else if (
-        error.message.includes('parse') ||
-        error.message.includes('JSON')
-      ) {
-        userFriendlyError =
-          'AI yanıtı beklenmeyen bir formatta geldi, lütfen tekrar deneyin';
+        // Gemini'den gelen konu formatını SubTopic formatına çevir
+        normalizedResult.topics.forEach((topicItem) => {
+          // topicItem'ı any olarak işle
+          const anyTopic = topicItem as any;
+
+          if (typeof anyTopic === 'object' && anyTopic !== null) {
+            // Ana konular
+            if (anyTopic.mainTopic || anyTopic.name || anyTopic.title) {
+              const mainTopicName =
+                anyTopic.mainTopic ||
+                anyTopic.name ||
+                anyTopic.title ||
+                'Isimsiz Konu';
+              const normalizedMainTopicName =
+                this.normalizationService.normalizeSubTopicName(mainTopicName);
+
+              // SubTopic arayüzüne uygun biçimde ekle
+              result.topics.push({
+                subTopicName: mainTopicName,
+                normalizedSubTopicName: normalizedMainTopicName,
+                isMainTopic: true,
+              });
+
+              // Alt konular
+              if (Array.isArray(anyTopic.subTopics)) {
+                anyTopic.subTopics.forEach((subTopicItem) => {
+                  if (typeof subTopicItem === 'string') {
+                    // String olarak gelen alt konu
+                    result.topics.push({
+                      subTopicName: subTopicItem,
+                      normalizedSubTopicName:
+                        this.normalizationService.normalizeSubTopicName(
+                          subTopicItem,
+                        ),
+                      parentTopic: mainTopicName,
+                      isMainTopic: false,
+                    });
+                  } else if (
+                    typeof subTopicItem === 'object' &&
+                    subTopicItem !== null
+                  ) {
+                    // Nesne olarak gelen alt konu
+                    const anySubTopic = subTopicItem as any;
+                    const subTopicName =
+                      anySubTopic.subTopicName ||
+                      anySubTopic.name ||
+                      'Alt konu';
+                    result.topics.push({
+                      subTopicName: subTopicName,
+                      normalizedSubTopicName:
+                        this.normalizationService.normalizeSubTopicName(
+                          subTopicName,
+                        ),
+                      parentTopic: mainTopicName,
+                      isMainTopic: false,
+                    });
+                  }
+                });
+              }
+            } else if (anyTopic.subTopicName) {
+              // Direkt SubTopic formatında gelen konu
+              result.topics.push({
+                subTopicName: anyTopic.subTopicName,
+                normalizedSubTopicName:
+                  anyTopic.normalizedSubTopicName ||
+                  this.normalizationService.normalizeSubTopicName(
+                    anyTopic.subTopicName,
+                  ),
+                isMainTopic: !!anyTopic.isMainTopic,
+              });
+            }
+          } else if (typeof anyTopic === 'string') {
+            // String olarak gelen konu (ana konu olarak kabul et)
+            result.topics.push({
+              subTopicName: anyTopic,
+              normalizedSubTopicName:
+                this.normalizationService.normalizeSubTopicName(anyTopic),
+              isMainTopic: true,
+            });
+          }
+        });
+
+        this.logger.info(
+          `Konu tespiti tamamlandı: ${result.topics.length} konu bulundu`,
+          'AiService.getTopicsWithGemini',
+          __filename,
+          1169,
+          {
+            topicCount: result.topics.length,
+            mainTopicCount: result.topics.filter((t) => t.isMainTopic).length,
+            subTopicCount: result.topics.filter((t) => !t.isMainTopic).length,
+          },
+        );
+      } else {
+        // Eğer normalizedResult.topics dizisi yoksa veya dizi değilse
+        this.logger.warn(
+          `[${traceId}] Konu tespiti tamamlandı ancak geçerli sonuç bulunamadı`,
+          'AiService.getTopicsWithGemini',
+          __filename,
+          1204,
+          {
+            normalizedResultType: typeof normalizedResult,
+            hasTopics: !!normalizedResult?.topics,
+            isArray: Array.isArray(normalizedResult?.topics),
+            processingEvent: 'topics-not-found',
+            traceId,
+          },
+        );
       }
 
-      throw new BadRequestException(userFriendlyError);
+      return result;
+    } catch (error) {
+      // Tüm işlem sırasında oluşan hatalar
+      this.logger.error(
+        `[${traceId}] Konu tespiti başarısız oldu: ${error.message}`,
+        'AiService.getTopicsWithGemini',
+        __filename,
+        1220,
+        error,
+        {
+          errorMessage: error.message,
+          errorName: error.name || 'Unknown',
+          errorType: error.constructor?.name || 'Unknown',
+          elapsedSinceStart: Date.now() - startTime,
+          processingEvent: 'topic-detection-failed',
+          traceId,
+        },
+      );
+
+      // Hata durumunda boş bir sonuç döndür
+      return { topics: [] };
     }
   }
 
@@ -2280,5 +2350,70 @@ Yanıtını aşağıdaki JSON formatında ver:
 
     // Şimdilik Gemini kullanarak devam et
     return this.getTopicsWithGemini(prompt);
+  }
+
+  private detectTruncatedTextMarkers(text: string): {
+    isTextTruncated: boolean;
+    truncatedText: string | null;
+  } {
+    const startTime = Date.now();
+    const traceId = `truncate-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    try {
+      // İfadeyi düzenle - arama ifadesini farklı değişkenler olarak tanımla
+      const truncatedRegex = /\[TEXT_TRUNCATED:([0-9]+)\]/i;
+      const match = text.match(truncatedRegex);
+
+      if (!match) {
+        this.logger.debug(
+          `[${traceId}] Metinde kısaltma işareti bulunamadı`,
+          'AiService.detectTruncatedTextMarkers',
+          __filename,
+          689,
+          {
+            textLength: text.length,
+            processingEvent: 'no-truncation-found',
+            traceId,
+          },
+        );
+        return { isTextTruncated: false, truncatedText: null };
+      }
+
+      // Eşleşme varsa
+      const charCount = parseInt(match[1], 10);
+      this.logger.debug(
+        `[${traceId}] Metinde kısaltma işareti bulundu: ${charCount} karakter`,
+        'AiService.detectTruncatedTextMarkers',
+        __filename,
+        700,
+        {
+          charCount,
+          matchLocation: match.index,
+          processingEvent: 'truncation-found',
+          traceId,
+        },
+      );
+
+      return {
+        isTextTruncated: true,
+        truncatedText: text.replace(truncatedRegex, ''),
+      };
+    } catch (err) {
+      const error = err as Error;
+      this.logger.error(
+        `[${traceId}] Kısaltma işareti tespiti sırasında hata: ${error.message}`,
+        'AiService.detectTruncatedTextMarkers',
+        __filename,
+        711,
+        error, // Hata nesnesi
+        {
+          // additionalInfo
+          processingDuration: Date.now() - startTime,
+          textLength: text.length,
+          traceId,
+        },
+      );
+      return { isTextTruncated: false, truncatedText: null };
+    }
   }
 }
