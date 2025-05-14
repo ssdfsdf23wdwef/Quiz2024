@@ -8,7 +8,8 @@ import { LogMethod } from '../../common/decorators/log-method.decorator';
 
 /**
  * JWT tabanlı kimlik doğrulama guard'ı
- * Bu guard, @Public dekoratörü ile işaretlenmemiş tüm endpoint'lere erişimi korur
+ * Bu guard, @Public dekoratörü veya @SetMetadata('anonymousAllowed', true) ile işaretlenmiş
+ * tüm endpoint'lere anonim erişime izin verir
  */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -23,7 +24,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       'JwtAuthGuard oluşturuldu',
       'JwtAuthGuard.constructor',
       __filename,
-      21,
+      22,
     );
   }
 
@@ -46,15 +47,21 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
 
-    if (isPublic) {
+    // Anonim erişime izin verilen endpoint'ler kontrolü
+    const isAnonymousAllowed = this.reflector.getAllAndOverride<boolean>(
+      'anonymousAllowed',
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (isPublic || isAnonymousAllowed) {
       this.logger.debug(
-        `Public endpoint: ${method} ${path}`,
+        `Anonim erişim izni verilen endpoint: ${method} ${path} (isPublic: ${isPublic}, isAnonymousAllowed: ${isAnonymousAllowed})`,
         'JwtAuthGuard.canActivate',
         __filename,
-        46,
+        52,
       );
       this.flowTracker.trackStep(
-        'Public endpoint erişim izni verildi',
+        'Endpoint anonim erişime açık, kimlik doğrulama atlanıyor',
         'JwtAuthGuard',
       );
       return true;
@@ -65,7 +72,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       `Korumalı endpoint: ${method} ${path}`,
       'JwtAuthGuard.canActivate',
       __filename,
-      55,
+      63,
     );
     this.flowTracker.trackStep(
       'JWT doğrulama gerçekleştiriliyor',

@@ -257,7 +257,7 @@ export class LearningTargetsController {
       );
 
       this.logger.debug(
-        'Konular tespit ediliyor',
+        'Konu tespiti başlatılıyor',
         'LearningTargetsController.detectTopics',
         __filename,
         183,
@@ -266,6 +266,8 @@ export class LearningTargetsController {
           courseId: dto.courseId || 'N/A',
           textLength: dto.documentText?.length || 0,
           hasDocumentId: !!dto.documentId,
+          isAnonymous: userId === 'anonymous',
+          requestDetails: JSON.stringify(dto),
         },
       );
 
@@ -277,12 +279,42 @@ export class LearningTargetsController {
           __filename,
         );
 
-        // Belge ID'si ile konu tespiti yap
-        return await this.learningTargetsService.analyzeDocumentForTopics(
-          dto.documentId,
-          userId,
-        );
-      } else {
+        try {
+          // Belge ID'si ile konu tespiti yap
+          const result =
+            await this.learningTargetsService.analyzeDocumentForTopics(
+              dto.documentId,
+              userId,
+            );
+
+          this.logger.info(
+            `Belge ID ${dto.documentId} için konu tespiti başarılı: ${result.length} konu bulundu`,
+            'LearningTargetsController.detectTopics',
+            __filename,
+          );
+
+          // TopicDetectionResult formatında yanıt döndür
+          return {
+            topics: result.map((topic) => ({
+              subTopicName: topic,
+              normalizedSubTopicName: topic
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '-'),
+            })),
+          };
+        } catch (error) {
+          this.logger.logError(
+            error,
+            'LearningTargetsController.detectTopics.documentIdMode',
+            {
+              userId,
+              documentId: dto.documentId,
+              errorMessage: error.message,
+            },
+          );
+          throw error;
+        }
+      } else if (dto.documentText) {
         this.logger.info(
           `Doğrudan metin kullanılarak konular tespit ediliyor (${dto.documentText?.length || 0} karakter)`,
           'LearningTargetsController.detectTopics',
@@ -301,7 +333,26 @@ export class LearningTargetsController {
           __filename,
         );
 
-        return result;
+        // TopicDetectionResult formatında yanıt döndür
+        return {
+          topics: result.map((topic) => ({
+            subTopicName: topic,
+            normalizedSubTopicName: topic
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, '-'),
+          })),
+        };
+      } else {
+        // Ne belge metni ne de belge ID'si var
+        this.logger.warn(
+          "Konu tespiti için ne belge metni ne de belge ID'si belirtilmemiş",
+          'LearningTargetsController.detectTopics',
+          __filename,
+        );
+
+        throw new BadRequestException(
+          "Konu tespiti için belge metni veya belge ID'si gerekmektedir",
+        );
       }
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.detectTopics', {
@@ -310,6 +361,8 @@ export class LearningTargetsController {
         documentId: dto.documentId,
         textLength: dto.documentText?.length || 0,
         additionalInfo: 'Konular tespit edilirken hata oluştu',
+        errorType: error.constructor.name,
+        errorMessage: error.message,
       });
       throw error;
     }
