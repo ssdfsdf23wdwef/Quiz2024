@@ -246,14 +246,13 @@ export class LearningTargetsController {
     type: String,
     isArray: true,
   })
-  @UseGuards(JwtAuthGuard)
-  @SetMetadata('anonymousAllowed', false)
+  @SetMetadata('anonymousAllowed', true)
   async detectTopics(@Body() dto: DetectTopicsDto, @Req() req: any) {
-    const userId = req.user.uid;
+    const userId = req.user?.uid || 'anonymous';
 
     try {
       this.flowTracker.trackStep(
-        `${dto.courseId} ID'li ders için metin içinden konular tespit ediliyor`,
+        `${dto.courseId || 'N/A'} ID'li ders için metin içinden konular tespit ediliyor`,
         'LearningTargetsController',
       );
 
@@ -264,8 +263,8 @@ export class LearningTargetsController {
         183,
         {
           userId,
-          courseId: dto.courseId,
-          textLength: dto.documentText.length,
+          courseId: dto.courseId || 'N/A',
+          textLength: dto.documentText?.length || 0,
           hasDocumentId: !!dto.documentId,
         },
       );
@@ -285,14 +284,14 @@ export class LearningTargetsController {
         );
       } else {
         this.logger.info(
-          `Doğrudan metin kullanılarak konular tespit ediliyor (${dto.documentText.length} karakter)`,
+          `Doğrudan metin kullanılarak konular tespit ediliyor (${dto.documentText?.length || 0} karakter)`,
           'LearningTargetsController.detectTopics',
           __filename,
         );
 
         // AI servisini doğrudan çağırarak konu tespiti yap
         const result = await this.learningTargetsService.analyzeDocumentText(
-          dto.documentText,
+          dto.documentText || '',
           userId,
         );
 
@@ -307,7 +306,7 @@ export class LearningTargetsController {
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.detectTopics', {
         userId,
-        courseId: dto.courseId,
+        courseId: dto.courseId || 'N/A',
         documentId: dto.documentId,
         textLength: dto.documentText?.length || 0,
         additionalInfo: 'Konular tespit edilirken hata oluştu',

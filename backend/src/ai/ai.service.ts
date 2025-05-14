@@ -371,12 +371,12 @@ export class AiService {
           }
         } else if (typeof topic === 'string' || topic.subTopicName) {
           // Handle legacy format (flat list)
-          const subTopicName =
+            const subTopicName =
             typeof topic === 'string' ? topic : topic.subTopicName;
           normalizedResult.topics.push({
-            subTopicName,
-            normalizedSubTopicName:
-              this.normalizationService.normalizeSubTopicName(subTopicName),
+              subTopicName,
+              normalizedSubTopicName:
+                this.normalizationService.normalizeSubTopicName(subTopicName),
             isMainTopic: true,
           });
         }
