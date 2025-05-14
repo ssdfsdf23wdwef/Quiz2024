@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import * as pdfParse from 'pdf-parse';
+const pdfParse = require('pdf-parse');
 import * as mammoth from 'mammoth';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';

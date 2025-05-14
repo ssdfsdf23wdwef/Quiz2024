@@ -74,8 +74,7 @@ export default function DocumentFlow({
     try {
       logInfo(
         `Dosya yükleme başlatıldı: ${file.name} (${file.size} bytes)`,
-        "DocumentFlow.handleFileUpload",
-        __filename
+        "DocumentFlow.handleFileUpload"
       );
       
       setCurrentStep(DocumentFlowStep.PROCESSING);

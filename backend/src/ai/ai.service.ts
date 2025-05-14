@@ -2196,6 +2196,26 @@ Yanıtını aşağıdaki JSON formatında ver:
       // Topics dizisinin var olduğundan emin ol ve SubTopic formatına dönüştür
       const result: TopicDetectionResult = { topics: [] };
 
+      // Asıl çözüm: aiResponse içindeki konuları doğrudan işle
+      if (aiResponse && aiResponse.topics && Array.isArray(aiResponse.topics)) {
+        // aiResponse içindeki topicler direkt olarak işlenebilir
+        result.topics = aiResponse.topics;
+
+        this.logger.info(
+          `Konu tespiti tamamlandı: ${result.topics.length} konu bulundu`,
+          'AiService.getTopicsWithGemini',
+          __filename,
+          1169,
+          {
+            topicCount: result.topics.length,
+            mainTopicCount: result.topics.filter((t) => t.isMainTopic).length,
+            subTopicCount: result.topics.filter((t) => !t.isMainTopic).length,
+          },
+        );
+        return result;
+      }
+
+      // Önceki normalizeTopicResult'a dayalı yaklaşımı dene
       if (
         normalizedResult &&
         normalizedResult.topics &&

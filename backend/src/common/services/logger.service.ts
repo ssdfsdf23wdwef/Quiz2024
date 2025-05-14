@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as util from 'util';
 
 /**
  * Hata kayıt seviyesi
