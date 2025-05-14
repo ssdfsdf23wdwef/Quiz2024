@@ -21,8 +21,8 @@ import CourseTopicSelector from "./CourseTopicSelector";
 import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
-import authService from "@/services/auth.service";
 import axios from "axios";
+import { auth } from "@/app/firebase/config";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -214,45 +214,48 @@ export default function ExamCreationWizard({
         try {
           console.log(`🔍 Belge ID ${documentId} için konu tespiti başlatılıyor...`);
           
+          // Kimlik doğrulama tokeni almaya çalış, ama zorunlu değil
+          let token = null;
+          
+          // Hızlı sınav için giriş yapmış kullanıcıyı kontrol et ama giriş zorunlu değil
+          try {
+            const currentUser = auth.currentUser;
+            
+            if (currentUser) {
+              console.log(`🔐 Mevcut kullanıcı bulundu, token almaya çalışılıyor...`);
+              try {
+                token = await currentUser.getIdToken(false);
+              } catch (tokenError) {
+                console.log(`⚠️ Token alınamadı, anonim olarak devam ediliyor: `, tokenError);
+                // Token alınamasa da sorun değil
+              }
+            } else {
+              console.log(`ℹ️ Giriş yapmış kullanıcı yok, anonim olarak devam ediliyor`);
+            }
+          } catch (authError) {
+            console.log(`⚠️ Yetkilendirme hatası, anonim olarak devam ediliyor: `, authError);
+            // Auth hatası olsa da işleme devam et
+          }
+          
+          // API isteğini yapılandır
+          const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/ai/detect-topics`;
+          
           // Konuları tespit et - metin boş ama belge ID'si ile istek yapılıyor
           console.log(`Konu tespiti için belge ID kullanılıyor: ${documentId}`);
           const detectedTopicsRequest = {
             documentId: documentId,
             documentText: "", // Boş metin, backend belge ID'den metni alacak
-            courseId: selectedCourseId || ""
+            courseId: selectedCourseId || null, // courseId null olabilir
           };
           
-          // Token yenileme işlemi
-          try {
-            console.log(`🔑 Kimlik doğrulama token'ı yenileniyor...`);
-            await authService.refreshToken();
-            console.log(`✅ Token yenileme başarılı!`);
-          } catch (tokenError) {
-            console.error(`❌ Token yenileme hatası:`, tokenError);
-            // Token yenileme hatası aldıysak, kullanıcının oturumunu tekrar giriş yapması gerekebilir
-            ErrorService.showToast(
-              "Oturum süresi dolmuş olabilir. Lütfen sayfayı yenileyip tekrar giriş yapın.",
-              "error"
-            );
-            setUploadStatus("error");
-            return;
-          }
-          
           // Yeni token alındıktan sonra Manuel olarak axios ile istek yapalım
-          const token = localStorage.getItem("auth_token");
-          if (!token) {
-            throw new Error("Kimlik doğrulama token'ı bulunamadı");
-          }
-          
-          console.log(`🔍 Yeni token ile konu tespiti yapılıyor...`);
-          const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/learning-targets/detect-topics`;
-          
           const response = await axios.post(
             apiUrl,
             detectedTopicsRequest,
             {
               headers: {
-                'Authorization': `Bearer ${token}`,
+                // Hızlı sınav için kimlik doğrulama zorunlu değil
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
                 'Content-Type': 'application/json'
               }
             }
@@ -264,79 +267,139 @@ export default function ExamCreationWizard({
           let processedTopics: DetectedSubTopic[] = [];
           const responseData = response.data;
           
-          if (responseData && 'topics' in responseData && Array.isArray(responseData.topics)) {
-            // Yeni format - alt konu yapısı mevcut
-            processedTopics = responseData.topics.map((topic: DetectedSubTopic) => ({
-              id: topic.normalizedSubTopicName, // id için normalizedSubTopicName kullan
-              subTopicName: topic.subTopicName,
-              normalizedSubTopicName: topic.normalizedSubTopicName,
-              isSelected: false
-            }));
-            console.log(`📊 API'den gelen konular işlendi:`, processedTopics);
-          } else if (Array.isArray(responseData)) {
-            // Eski format - düz string dizisi veya doğrudan DetectedSubTopic dizisi
-            if (responseData.length > 0 && 'id' in responseData[0]) {
-              // Zaten DetectedSubTopic formatında
-              processedTopics = responseData as DetectedSubTopic[];
-            } else {
-              // String dizisi veya diğer format
-              processedTopics = responseData.map((topic: unknown) => {
-                if (typeof topic === 'string') {
-                  return {
-                    id: topic,
-                    subTopicName: topic, 
-                    normalizedSubTopicName: topic,
-                    isSelected: false
-                  };
-                } else if (topic && typeof topic === 'object') {
-                  // Type guard: topic is object
-                  const topicObj = topic as Record<string, unknown>;
-                  // Her türlü özellik kontrolünü yap
-                  const topicName = typeof topicObj.subTopicName === 'string' ? topicObj.subTopicName : 
-                                   (typeof topicObj.name === 'string' ? topicObj.name as string : '');
-                                   
-                  const normalizedName = typeof topicObj.normalizedSubTopicName === 'string' ? topicObj.normalizedSubTopicName as string :
-                                        (typeof topicObj.normalizedName === 'string' ? topicObj.normalizedName as string : topicName);
-                                      
-                  return {
-                    id: normalizedName || topicName,
-                    subTopicName: topicName,
-                    normalizedSubTopicName: normalizedName,
-                    isSelected: false
-                  };
+          // Veri dönüşüm işlemleri için hata yakalama ekleyelim
+          try {
+            if (responseData && 'topics' in responseData && Array.isArray(responseData.topics)) {
+              // Yeni format - alt konu yapısı mevcut
+              if (responseData.topics.length > 0) {
+                processedTopics = responseData.topics.map((topic: DetectedSubTopic) => ({
+                  id: topic.normalizedSubTopicName || `topic-${Math.random().toString(36).substring(2, 11)}`, // id için normalizedSubTopicName kullan veya random üret
+                  subTopicName: topic.subTopicName || 'İsimsiz Konu',
+                  normalizedSubTopicName: topic.normalizedSubTopicName || 'unnamed-topic',
+                  isSelected: false
+                }));
+                console.log(`📊 API'den gelen konular işlendi:`, processedTopics);
+              } else {
+                // Konu tespit edilemedi, varsayılan bir konu oluşturalım
+                console.warn("⚠️ Konu tespit edilemedi. Varsayılan konu oluşturuluyor.");
+                processedTopics = [{
+                  id: "default-topic",
+                  subTopicName: "Genel Konular",
+                  normalizedSubTopicName: "general-topics", 
+                  isSelected: true
+                }];
+              }
+            } else if (Array.isArray(responseData)) {
+              // Eski format - düz string dizisi veya doğrudan DetectedSubTopic dizisi
+              if (responseData.length > 0) {
+                if ('id' in responseData[0]) {
+                  // Zaten DetectedSubTopic formatında
+                  processedTopics = responseData as DetectedSubTopic[];
                 } else {
-                  // Geçersiz veri durumunda boş bir item dön
-                  return {
-                    id: 'unknown',
-                    subTopicName: 'Bilinmeyen Konu', 
-                    normalizedSubTopicName: 'unknown',
-                    isSelected: false
-                  };
+                  // String dizisi veya diğer format
+                  processedTopics = responseData.map((topic: unknown) => {
+                    if (typeof topic === 'string') {
+                      return {
+                        id: topic,
+                        subTopicName: topic, 
+                        normalizedSubTopicName: topic,
+                        isSelected: false
+                      };
+                    } else if (topic && typeof topic === 'object') {
+                      // Type guard: topic is object
+                      const topicObj = topic as Record<string, unknown>;
+                      // Her türlü özellik kontrolünü yap
+                      const topicName = typeof topicObj.subTopicName === 'string' ? topicObj.subTopicName : 
+                                      (typeof topicObj.name === 'string' ? topicObj.name as string : 'İsimsiz Konu');
+                                      
+                      const normalizedName = typeof topicObj.normalizedSubTopicName === 'string' ? topicObj.normalizedSubTopicName as string :
+                                            (typeof topicObj.normalizedName === 'string' ? topicObj.normalizedName as string : 
+                                            topicName.toLowerCase().replace(/\s+/g, '-'));
+                                        
+                      return {
+                        id: normalizedName || `topic-${Math.random().toString(36).substring(2, 11)}`,
+                        subTopicName: topicName,
+                        normalizedSubTopicName: normalizedName,
+                        isSelected: false
+                      };
+                    } else {
+                      // Geçersiz veri durumunda boş bir item dön
+                      return {
+                        id: `unknown-${Math.random().toString(36).substring(2, 11)}`,
+                        subTopicName: 'Bilinmeyen Konu', 
+                        normalizedSubTopicName: 'unknown-topic',
+                        isSelected: false
+                      };
+                    }
+                  });
                 }
-              });
+                console.log(`📊 Formatlanmış konular:`, processedTopics);
+              } else {
+                // Boş dizi durumunda varsayılan konu oluştur
+                console.warn("⚠️ Konu tespit edilemedi. Varsayılan konu oluşturuluyor.");
+                processedTopics = [{
+                  id: "default-topic",
+                  subTopicName: "Genel Konular",
+                  normalizedSubTopicName: "general-topics", 
+                  isSelected: true
+                }];
+              }
+            } else {
+              // Beklenmeyen yanıt formatı
+              console.error(`❌ HATA: Beklenmeyen yanıt formatı:`, responseData);
+              // Varsayılan bir konu oluştur
+              processedTopics = [{
+                id: "default-topic",
+                subTopicName: "Genel Konular",
+                normalizedSubTopicName: "general-topics", 
+                isSelected: true
+              }];
             }
-            console.log(`📊 Formatlanmış konular:`, processedTopics);
-          } else {
-            console.error(`❌ HATA: Beklenmeyen yanıt formatı:`, responseData);
-            processedTopics = [];
+          } catch (parseError) {
+            // Veri işleme sırasında hata - varsayılan konu oluştur
+            console.error("❌ HATA: Konu verisi işlenirken hata:", parseError);
+            processedTopics = [{
+              id: "default-topic",
+              subTopicName: "Genel Konular",
+              normalizedSubTopicName: "general-topics", 
+              isSelected: true
+            }];
           }
           
-          if (processedTopics.length > 0) {
-            setDetectedTopics(processedTopics);
-            setCurrentStep(2); // Konu seçim ekranına geç
-          } else {
-            console.error(`❌ HATA: Tespit edilen konu yok!`);
-            ErrorService.showToast(
-              "Belgede konu tespit edilemedi. Lütfen başka bir belge deneyin.",
-              "error"
-            );
+          // Her zaman bir konu olduğundan emin olalım
+          if (processedTopics.length === 0) {
+            console.warn("⚠️ İşlenmiş konu listesi boş. Varsayılan konu ekleniyor.");
+            processedTopics = [{
+              id: "default-topic",
+              subTopicName: "Genel Konular",
+              normalizedSubTopicName: "general-topics", 
+              isSelected: true
+            }];
           }
+          
+          // Konuları state'e kaydet ve sonraki adıma geç
+          setDetectedTopics(processedTopics);
+          setCurrentStep(2); // Konu seçim ekranına geç
         } catch (error) {
           console.error(`❌ HATA: Konu tespiti başarısız! ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+          
+          // Hata durumunda varsayılan konularla devam et - hızlı sınav için akışı kesmemek önemli
+          const defaultTopics: DetectedSubTopic[] = [{
+            id: "default-topic",
+            subTopicName: "Genel Konular",
+            normalizedSubTopicName: "general-topics", 
+            isSelected: true
+          }];
+          
+          setDetectedTopics(defaultTopics);
+          
+          // Hata olsa bile sonraki adıma geç ama kullanıcıyı bilgilendir
           ErrorService.showToast(
-            `Konular tespit edilirken bir hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
-            "error"
+            `Konular tespit edilirken bir sorun oluştu. Genel konularla devam ediliyor.`,
+            "warning"
           );
+          
+          setCurrentStep(2); // Konu seçim ekranına geç
         }
       } else {
         console.error(`❌ HATA: Belge ID bulunamadı!`);
