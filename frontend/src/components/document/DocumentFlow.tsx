@@ -446,13 +446,7 @@ export default function DocumentFlow({
               <h4 className="text-base font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Seçilen Konular ({selectedTopics.length})
               </h4>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {selectedTopics.map((topic) => (
-                  <Chip key={topic.id || topic.normalizedSubTopicName} color="primary" variant="flat">
-                    {topic.subTopicName || topic.name}
-                  </Chip>
-                ))}
-              </div>
+                            <div className="flex flex-wrap gap-2 mb-4">                {selectedTopics.map((topic, index) => (                  <Chip key={`selected-topic-${topic.id || topic.normalizedSubTopicName}-${index}`} color="primary" variant="flat">                    {topic.subTopicName || topic.name}                  </Chip>                ))}              </div>
             </div>
             
             <div className="mb-6">
@@ -480,20 +474,7 @@ export default function DocumentFlow({
                 Zorluk
               </h4>
               <div className="flex flex-wrap gap-2">
-                {["easy", "medium", "hard", "mixed"].map((level) => (
-                  <Button
-                    key={level}
-                    color={difficulty === level ? "primary" : "default"}
-                    variant={difficulty === level ? "solid" : "bordered"}
-                    onClick={() => setDifficulty(level)}
-                    className="capitalize"
-                  >
-                    {level === "easy" && "Kolay"}
-                    {level === "medium" && "Orta"}
-                    {level === "hard" && "Zor"}
-                    {level === "mixed" && "Karışık"}
-                  </Button>
-                ))}
+                                {["easy", "medium", "hard", "mixed"].map((level, index) => (                  <Button                    key={`difficulty-level-${level}-${index}`}                    color={difficulty === level ? "primary" : "default"}                    variant={difficulty === level ? "solid" : "bordered"}                    onClick={() => setDifficulty(level)}                    className="capitalize"                  >                    {level === "easy" && "Kolay"}                    {level === "medium" && "Orta"}                    {level === "hard" && "Zor"}                    {level === "mixed" && "Karışık"}                  </Button>                ))}
               </div>
             </div>
             
@@ -631,9 +612,7 @@ export default function DocumentFlow({
         </div>
         
         <div className="flex items-center space-x-1 text-xs">
-          {["Yükleme", "İşleme", "Konular", "Ayarlar", "Oluşturma", "Tamamlandı"].map(
-            (step, index) => (
-              <div key={index} className="flex items-center">
+                    {["Yükleme", "İşleme", "Konular", "Ayarlar", "Oluşturma", "Tamamlandı"].map(            (step, index) => (              <div key={`flow-step-${step}-${index}`} className="flex items-center">
                 <div
                   className={`rounded-full w-2 h-2 ${
                     index + 1 <= getStepProgress()

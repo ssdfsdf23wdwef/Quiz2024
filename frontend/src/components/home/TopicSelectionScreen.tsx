@@ -423,8 +423,8 @@ export default function TopicSelectionScreen({
             className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 sm:text-sm"
           >
             <option value="">Ders seçin...</option>
-            {availableCourses.map((course) => (
-              <option key={course.id} value={course.id}>
+            {availableCourses.map((course, index) => (
+              <option key={`course-option-${course.id}-${index}`} value={course.id}>
                 {course.name}
               </option>
             ))}
@@ -490,13 +490,13 @@ export default function TopicSelectionScreen({
         </div>
 
         <div className="grid gap-3">
-          {displayTopics.map((topic) => {
+          {displayTopics.map((topic, index) => {
             const statusInfo = getStatusInfo(topic.status as LearningTargetStatus);
             const Icon = statusInfo.icon;
 
             return (
               <div
-                key={topic.id}
+                key={`topic-item-${topic.id}-${index}`}
                 className={`flex items-center justify-between p-3 rounded-lg border ${
                   topic.isSelected
                     ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800"
