@@ -12,7 +12,7 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { QuizPreferences } from "@/app/types";
+import { QuizPreferences } from "@/types/quiz";
 import { DocumentUploader } from "../document";
 import TopicSelectionScreen from "./TopicSelectionScreen";
 import { ErrorService } from "@/services/error.service";
@@ -24,11 +24,13 @@ import type { Course } from "@/types/course";
 import type { DetectedSubTopic } from "@/types/learningTarget";
 
 interface ExamCreationWizardProps {
+  quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
   onComplete?: (result: {
     file: File | null;
     quizType: "quick" | "personalized";
     personalizedQuizType?:
       | "weakTopicFocused"
+      | "learningObjectiveFocused"
       | "newTopicFocused"
       | "comprehensive";
     preferences: QuizPreferences;
@@ -36,13 +38,14 @@ interface ExamCreationWizardProps {
 }
 
 export default function ExamCreationWizard({
+  quizType, // Dışarıdan gelen sınav türü
   onComplete,
 }: ExamCreationWizardProps) {
   const router = useRouter();
 
   // Adım yönetimi
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 3; // Sınav türü seçimi kaldırıldığı için 4'ten 3'e düşürüldü
 
   // Dosya yükleme durumu
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -50,10 +53,9 @@ export default function ExamCreationWizard({
     "idle" | "uploading" | "success" | "error"
   >("idle");
 
-  // Sınav türü
-  const [quizType, setQuizType] = useState<"quick" | "personalized">("quick");
+  // Kişiselleştirilmiş sınav alt türü - sadece personalized modda kullanılıyor
   const [personalizedQuizType, setPersonalizedQuizType] = useState<
-    "weakTopicFocused" | "newTopicFocused" | "comprehensive"
+    "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive"
   >("comprehensive");
 
   // Tercihler
@@ -61,6 +63,7 @@ export default function ExamCreationWizard({
     questionCount: 10,
     difficulty: "mixed",
     timeLimit: undefined,
+    personalizedQuizType: quizType === "personalized" ? "comprehensive" : undefined, 
   });
   const [useTimeLimit, setUseTimeLimit] = useState<boolean>(false);
 
@@ -150,15 +153,14 @@ export default function ExamCreationWizard({
     setSelectedFile(file);
     setUploadStatus("success");
 
-    // Personalized türüyse veya hızlıysa bir sonraki adıma geç
-    // Zayıf/Orta odaklı dışında belge yükleme sonrası Sınav Türü adımına gidilir
+    // Kişiselleştirilmiş sınav ve Zayıf/Orta odaklı seçilmişse direkt tercihlere geç
     if (
       quizType === "personalized" &&
       personalizedQuizType === "weakTopicFocused"
     ) {
-      setCurrentStep(4); // Zayıf/Orta odaklıysa direkt tercihlere
+      setCurrentStep(3); // Zayıf/Orta odaklıysa direkt tercihlere (artık adım 3)
     } else {
-      setCurrentStep(2); // Diğer durumlarda Sınav Türü seçimine
+      setCurrentStep(2); // Diğer durumlarda Konu Seçimi adımına (artık adım 2)
     }
   };
 
@@ -216,34 +218,19 @@ export default function ExamCreationWizard({
     });
   };
 
-  // Sınav türü işlemleri
-  const handleQuizTypeSelect = (type: "quick" | "personalized") => {
-    setQuizType(type);
-
-    // Kişiselleştirilmiş sınav seçilirse tercihleri güncelle
-    if (type === "personalized") {
-      setPreferences((prev: QuizPreferences) => ({
-        ...prev,
-        personalizedQuizType: personalizedQuizType, // Mevcut alt türü koru
-      }));
-    } else {
-      // Hızlı sınav seçilirse alt türü temizle
-      setPreferences((prev: QuizPreferences) => ({
-        ...prev,
-        personalizedQuizType: undefined,
-      }));
-    }
-  };
-
   // Kişiselleştirilmiş sınav alt türü
   const handlePersonalizedQuizTypeSelect = (
-    type: "weakTopicFocused" | "newTopicFocused" | "comprehensive",
+    type: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive",
   ) => {
     setPersonalizedQuizType(type);
-    setPreferences((prev: QuizPreferences) => ({
-      ...prev,
+    
+    // Tip hatası giderme: QuizPreferences tipine uygun olacak şekilde
+    const updatedPreferences: QuizPreferences = {
+      ...preferences,
       personalizedQuizType: type,
-    }));
+    };
+    
+    setPreferences(updatedPreferences);
   };
 
   // Tercih işlemleri
@@ -292,9 +279,9 @@ export default function ExamCreationWizard({
       return;
     }
 
-    // Adım 3 Doğrulama: Konu Seçimi (Personalized ve weakTopicFocused Dışında)
+    // Adım 2 Doğrulama: Konu Seçimi (Personalized ve weakTopicFocused Dışında)
     if (
-      currentStep === 3 &&
+      currentStep === 2 &&
       quizType === "personalized" &&
       personalizedQuizType !== "weakTopicFocused" &&
       selectedTopicIds.length === 0
@@ -307,27 +294,13 @@ export default function ExamCreationWizard({
       let nextStepTarget = currentStep + 1;
 
       // Akış Atlama Mantığı
-      // 1. Hızlı Sınav: Adım 2'den Adım 4'e atla (Konu Seçimi yok)
-      if (quizType === "quick" && currentStep === 2) {
-        nextStepTarget = 4;
-      }
-      // 2. Zayıf/Orta Odaklı: Adım 2'den Adım 4'e atla (Dosya Yükleme ve Konu Seçimi yok)
-      else if (
-        quizType === "personalized" &&
-        personalizedQuizType === "weakTopicFocused" &&
-        currentStep === 2
-      ) {
-        nextStepTarget = 4; // Direkt tercihlere
-      }
-      // 3. Zayıf/Orta Odaklı (alternatif başlangıç): Eğer 1. adımdan sonra bu tür seçilirse, Adım 1'den 4'e atla
-      else if (
+      // Zayıf/Orta Odaklı: Adım 1'den Adım 3'e atla (Konu Seçimi yok)
+      if (
         quizType === "personalized" &&
         personalizedQuizType === "weakTopicFocused" &&
         currentStep === 1
       ) {
-        // Normalde bu akış olmaz, handleFileUploadComplete'den yönetiliyor
-        // Güvenlik için buraya da ekleyebiliriz ama mevcut mantıkta buraya düşmemeli
-        nextStepTarget = 4;
+        nextStepTarget = 3; // Direkt tercihlere
       }
 
       setCurrentStep(nextStepTarget);
@@ -335,7 +308,7 @@ export default function ExamCreationWizard({
       // Tamamlandı
       if (onComplete) {
         // Son tercihleri oluştur
-        const finalPreferences = {
+        const finalPreferences: QuizPreferences = {
           ...preferences,
           topicIds:
             quizType === "personalized" &&
@@ -347,8 +320,6 @@ export default function ExamCreationWizard({
             personalizedQuizType !== "weakTopicFocused"
               ? selectedSubTopicIds
               : undefined,
-          personalizedQuizType:
-            quizType === "personalized" ? personalizedQuizType : undefined,
         };
 
         onComplete({
@@ -366,10 +337,10 @@ export default function ExamCreationWizard({
         // Sınav oluşturma sayfasına yönlendir
         const params = new URLSearchParams();
         params.set("type", quizType);
-        if (quizType === "personalized") {
+        if (quizType === "personalized" && personalizedQuizType) {
           params.set("personalizedType", personalizedQuizType);
         }
-        if (selectedFile && personalizedQuizType !== "weakTopicFocused") {
+        if (selectedFile && (quizType !== "personalized" || personalizedQuizType !== "weakTopicFocused")) {
           params.set("fileName", selectedFile.name);
         }
 
@@ -384,17 +355,14 @@ export default function ExamCreationWizard({
       let prevStepTarget = currentStep - 1;
 
       // Akış Geri Atlama Mantığı
-      // 1. Hızlı Sınav veya Zayıf/Orta: Adım 4'ten Adım 2'ye dön
+      // Zayıf/Orta: Adım 3'ten Adım 1'e dön (Konu Seçimi olmadığı için)
       if (
-        currentStep === 4 &&
-        (quizType === "quick" ||
-          (quizType === "personalized" &&
-            personalizedQuizType === "weakTopicFocused"))
+        currentStep === 3 &&
+        quizType === "personalized" &&
+        personalizedQuizType === "weakTopicFocused"
       ) {
-        prevStepTarget = 2;
+        prevStepTarget = 1;
       }
-      // 2. Zayıf/Orta (alternatif): Adım 4'ten Adım 1'e (Eğer bu tür ilk adımdan sonra seçildiyse - pek olası değil)
-      // Bu durumun oluşması zor, genellikle 2'den 4'e atlanır.
 
       setCurrentStep(prevStepTarget);
     }
@@ -405,18 +373,22 @@ export default function ExamCreationWizard({
     <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-          Sınav Oluştur
+          {quizType === "quick" ? "Hızlı Sınav Oluştur" : "Kişiselleştirilmiş Sınav Oluştur"}
         </h2>
         <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-          Öğrenme sürecinizi kişiselleştirmek için adımları takip edin.
+          Yapay zeka destekli kişiselleştirilmiş öğrenme deneyimi için adımları takip edin.
         </p>
       </div>
 
       <div className="p-6 md:p-8">
-        <ExamCreationProgress currentStep={currentStep} totalSteps={totalSteps} />
+        <ExamCreationProgress 
+          currentStep={currentStep} 
+          totalSteps={totalSteps} 
+          quizType={quizType} 
+        />
 
         <AnimatePresence mode="wait">
-          {/* Adım 1: Dosya Yükleme */}
+          {/* Adım 1: Belge Yükleme */}
           {currentStep === 1 && (
             <motion.div
               key="step1"
@@ -437,18 +409,18 @@ export default function ExamCreationWizard({
                 className="mb-4"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                Desteklenen formatlar: PDF, DOCX, DOC, TXT (Maks 40MB). Lütfen
-                şifresiz ve okunabilir belgeler yükleyin.
+                Desteklenen formatlar: PDF, DOCX, DOC, TXT (Maks 40MB). Yapay zeka bu belgeleri analiz ederek sizin için en uygun soruları oluşturacaktır.
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <b>Not:</b> &quot;Zayıf/Orta Odaklı&quot; kişiselleştirilmiş
-                sınav türü için belge yüklemeniz gerekmez, bu adımı
-                atlayabilirsiniz.
-              </p>
+              {quizType === "personalized" && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <b>Not:</b> Kişiselleştirilmiş sınav türü için farklı odak seçenekleri bir sonraki adımda sunulacaktır.
+                  {personalizedQuizType === "weakTopicFocused" ? " Zayıf/Orta Odaklı sınav türü için belge yüklemeniz gerekmez." : ""}
+                </p>
+              )}
             </motion.div>
           )}
 
-          {/* Adım 2: Sınav Türü Seçimi */}
+          {/* Adım 2: Kişiselleştirilmiş Sınav Alt Türü veya Konu Seçimi */}
           {currentStep === 2 && (
             <motion.div
               key="step2"
@@ -457,143 +429,190 @@ export default function ExamCreationWizard({
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                2. Sınav Türü Seçimi
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* Hızlı Sınav Seçeneği */}
-                <div
-                  className={`
-                    border rounded-xl p-6 cursor-pointer transition-all duration-200 ease-in-out transform hover:scale-[1.02]
-                    ${
-                      quizType === "quick"
-                        ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-2 ring-indigo-500/50 shadow-md"
-                        : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600"
-                    }
-                  `}
-                  onClick={() => handleQuizTypeSelect("quick")}
-                >
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-4 text-blue-600 dark:text-blue-400">
-                      <FiClock className="text-xl" />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200">
-                      Hızlı Sınav
-                    </h4>
-                  </div>
-
-                  <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-14 list-disc list-inside">
-                    <li>Tek belgeyi hızlıca değerlendirir</li>
-                    <li>Öğrenme hedeflerini etkilemez</li>
-                    <li>Sonuçlar kaydedilir</li>
-                  </ul>
-                </div>
-
-                {/* Kişiselleştirilmiş Sınav Seçeneği */}
-                <div
-                  className={`
-                     border rounded-xl p-6 cursor-pointer transition-all duration-200 ease-in-out transform hover:scale-[1.02]
-                    ${
-                      quizType === "personalized"
-                        ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-2 ring-indigo-500/50 shadow-md"
-                        : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600"
-                    }
-                  `}
-                  onClick={() => handleQuizTypeSelect("personalized")}
-                >
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mr-4 text-purple-600 dark:text-purple-400">
-                      <FiTarget className="text-xl" />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200">
-                      Kişiselleştirilmiş Sınav
-                    </h4>
-                  </div>
-
-                  <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-14 list-disc list-inside">
-                    <li>Öğrenme sürecini takip eder</li>
-                    <li>Hedeflerinizi günceller</li>
-                    <li>Detaylı analiz sunar</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Kişiselleştirilmiş Sınav Alt Türleri */}
               {quizType === "personalized" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700"
-                >
-                  <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">
-                    Sınav Odağı Seçin:
-                  </h4>
+                <>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                    2. Sınav Odağı ve Konu Seçimi
+                  </h3>
+                  
+                  {/* Kişiselleştirilmiş Sınav Alt Türleri */}
+                  <div className="mt-2 mb-6">
+                    <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">
+                      Sınav Odağı Seçin:
+                    </h4>
 
-                  <div className="grid grid-cols-1 gap-3">
-                    {/* Zayıf/Orta Odaklı Sınav */}
-                    <div
-                      className={`
-                        flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
-                        ${
-                          personalizedQuizType === "weakTopicFocused"
-                            ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
-                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                    <div className="grid grid-cols-1 gap-3">
+                      {/* Zayıf/Orta Odaklı Sınav */}
+                      <div
+                        className={`
+                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          ${
+                            personalizedQuizType === "weakTopicFocused"
+                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                          }
+                        `}
+                        onClick={() =>
+                          handlePersonalizedQuizTypeSelect("weakTopicFocused")
                         }
-                      `}
-                      onClick={() =>
-                        handlePersonalizedQuizTypeSelect("weakTopicFocused")
-                      }
-                    >
-                      <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-red-600 dark:text-red-400">
-                        <FiZap />
+                      >
+                        <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-red-600 dark:text-red-400">
+                          <FiZap />
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                            Zayıf/Orta Odaklı
+                          </h5>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            Yapay zeka, geçmiş performansınıza göre zayıf olduğunuz konulara odaklanır. (Belge gerekmez)
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                          Zayıf/Orta Odaklı
-                        </h5>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                          Mevcut hedeflerinizdeki eksiklere odaklanın. (Belge
-                          gerekmez)
-                        </p>
-                      </div>
-                    </div>
 
-                    {/* Kapsamlı Sınav */}
-                    <div
-                      className={`
-                        flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
-                        ${
-                          personalizedQuizType === "comprehensive"
-                            ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
-                            : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                      {/* Öğrenme Hedefi Odaklı Sınav */}
+                      <div
+                        className={`
+                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          ${
+                            personalizedQuizType === "learningObjectiveFocused"
+                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                          }
+                        `}
+                        onClick={() =>
+                          handlePersonalizedQuizTypeSelect("learningObjectiveFocused")
                         }
-                      `}
-                      onClick={() =>
-                        handlePersonalizedQuizTypeSelect("comprehensive")
-                      }
-                    >
-                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-blue-600 dark:text-blue-400">
-                        <FiAward />
+                      >
+                        <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-green-600 dark:text-green-400">
+                          <FiTarget />
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                            Öğrenme Hedefi Odaklı
+                          </h5>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            Belirlediğiniz öğrenme hedeflerine ulaşma durumunuzu yapay zeka yardımıyla ölçer. (Belge gerekir)
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                          Kapsamlı
-                        </h5>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                          Yeni konular ve mevcut hedeflerinizi birleştirin.
-                          (Belge gerekir)
-                        </p>
+
+                      {/* Yeni Konu Odaklı Sınav */}
+                      <div
+                        className={`
+                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          ${
+                            personalizedQuizType === "newTopicFocused"
+                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                          }
+                        `}
+                        onClick={() =>
+                          handlePersonalizedQuizTypeSelect("newTopicFocused")
+                        }
+                      >
+                        <div className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-yellow-600 dark:text-yellow-400">
+                          <FiZap />
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                            Yeni Konu Odaklı
+                          </h5>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            Yüklenen belgeden yapay zeka ile tespit edilen yeni konuları test eder. (Belge gerekir)
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Kapsamlı Sınav */}
+                      <div
+                        className={`
+                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          ${
+                            personalizedQuizType === "comprehensive"
+                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                          }
+                        `}
+                        onClick={() =>
+                          handlePersonalizedQuizTypeSelect("comprehensive")
+                        }
+                      >
+                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-blue-600 dark:text-blue-400">
+                          <FiAward />
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                            Kapsamlı
+                          </h5>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            Yapay zeka, yeni içerik ile mevcut öğrenme hedeflerinizi birleştiren karma bir sınav oluşturur. (Belge gerekir)
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </>
               )}
+
+              {/* Konu Seçimi - Hem hızlı sınav hem de kişiselleştirilmiş sınav için */}
+              <div className={quizType === "personalized" ? "mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" : ""}>
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                  {quizType === "personalized" ? "Konu Seçimi" : "2. Konu Seçimi"}
+                </h4>
+
+                {personalizedQuizType === "weakTopicFocused" ? (
+                  <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-md text-yellow-800 dark:text-yellow-200">
+                    <p className="text-sm font-medium">Bilgi:</p>
+                    <p className="text-sm">
+                      Zayıf/Orta Odaklı Sınav seçildiğinde, durumu
+                      &lsquo;başarısız&apos; veya &#39;orta&#39; olan mevcut
+                      öğrenme hedefleriniz otomatik olarak kullanılır. Bu
+                      adımda ek konu seçimi gerekmez.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Yüklediğiniz belgeden yapay zeka tarafından tespit edilen konular aşağıdadır. Sınava dahil etmek istediklerinizi seçin.
+                    </p>
+                    {/* AI Konu Tespiti ve Seçim Ekranı */}
+                    <TopicSelectionScreen
+                      detectedTopics={[]}
+                      onTopicsSelected={handleTopicsDetected}
+                      onCancel={handleTopicDetectionCancel}
+                      isLoading={false}
+                      error={undefined}
+                      quizType={quizType}
+                    />
+                  </>
+                )}
+
+                {/* Ders ve Alt Konu Seçici - Kişiselleştirilmiş sınav için gerekli */}
+                {quizType === "personalized" && personalizedQuizType !== "weakTopicFocused" && (
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
+                      Ders ve Alt Konu Seçimi
+                    </h4>
+                    <CourseTopicSelector
+                      courses={courses}
+                      selectedCourseId={selectedCourseId}
+                      handleCourseChange={handleCourseChange}
+                      courseTopics={courseTopics}
+                      selectedTopicIds={selectedTopicIds}
+                      handleTopicToggle={handleTopicToggle}
+                      topicSubTopics={topicSubTopics}
+                      selectedSubTopicIds={selectedSubTopicIds}
+                      handleSubTopicToggle={handleSubTopicToggle}
+                      quizType={quizType}
+                      personalizedQuizType={personalizedQuizType}
+                    />
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 
-          {/* Adım 3: Konu Seçimi */}
+          {/* Adım 3: Tercihler */}
           {currentStep === 3 && (
             <motion.div
               key="step3"
@@ -603,82 +622,7 @@ export default function ExamCreationWizard({
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                3. Konu Seçimi
-              </h3>
-
-              {quizType === "personalized" && (
-                <>
-                  {personalizedQuizType === "weakTopicFocused" ? (
-                    <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-md text-yellow-800 dark:text-yellow-200">
-                      <p className="text-sm font-medium">Bilgi:</p>
-                      <p className="text-sm">
-                        Zayıf/Orta Odaklı Sınav seçildiğinde, durumu
-                        &lsquo;başarısız&apos; veya &#39;orta&#39; olan mevcut
-                        öğrenme hedefleriniz otomatik olarak kullanılır. Bu
-                        adımda ek konu seçimi gerekmez.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Yüklediğiniz belgeden AI tarafından tespit edilen
-                        konular aşağıdadır. Sınava dahil etmek istediklerinizi
-                        seçin.
-                      </p>
-                      {/* AI Konu Tespiti ve Seçim Ekranı */}
-                      {/* 
-                         TODO: Gerçek AI Konu Tespiti implementasyonu
-                         - Backend'den AI ile konu tespiti çağrısı yapılacak.
-                         - Yükleme durumu (isLoading) yönetilecek.
-                         - Hata durumu (error) yönetilecek.
-                         - mockDetectedTopics yerine gerçek veriler kullanılacak.
-                       */}
-                      <TopicSelectionScreen
-                        detectedTopics={[]}
-                        onTopicsSelected={handleTopicsDetected}
-                        onCancel={handleTopicDetectionCancel}
-                        isLoading={false}
-                        error={undefined}
-                        quizType={quizType}
-                      />
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* Ders ve Alt Konu Seçici (Opsiyonel, Genellikle Personalized/Kapsamlı içindir) */}
-              {quizType === "personalized" && (
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    Ders ve Alt Konu Seçimi{" "}
-                  </h4>
-                  <CourseTopicSelector
-                    courses={courses}
-                    selectedCourseId={selectedCourseId}
-                    handleCourseChange={handleCourseChange}
-                    courseTopics={courseTopics}
-                    selectedTopicIds={selectedTopicIds}
-                    handleTopicToggle={handleTopicToggle}
-                    topicSubTopics={topicSubTopics}
-                    selectedSubTopicIds={selectedSubTopicIds}
-                    handleSubTopicToggle={handleSubTopicToggle}
-                  />
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* Adım 4: Tercihler */}
-          {currentStep === 4 && (
-            <motion.div
-              key="step4"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                4. Sınav Tercihleri
+                {quizType === "personalized" ? "3. Sınav Tercihleri" : "3. Sınav Tercihleri"}
               </h3>
 
               {/* Seçilen Sınav Türü Bilgisi */}
@@ -698,23 +642,28 @@ export default function ExamCreationWizard({
                       ? "Hızlı Sınav"
                       : personalizedQuizType === "weakTopicFocused"
                         ? "Kişiselleştirilmiş: Zayıf/Orta Odaklı"
-                        : personalizedQuizType === "newTopicFocused"
-                          ? "Kişiselleştirilmiş: Yeni Konu Odaklı"
-                          : "Kişiselleştirilmiş: Kapsamlı"}
+                        : personalizedQuizType === "learningObjectiveFocused"
+                          ? "Kişiselleştirilmiş: Öğrenme Hedefi Odaklı"
+                          : personalizedQuizType === "newTopicFocused"
+                            ? "Kişiselleştirilmiş: Yeni Konu Odaklı"
+                            : "Kişiselleştirilmiş: Kapsamlı"}
                   </span>
                 </div>
                 <p className="text-xs text-gray-700 dark:text-gray-400 mt-1.5 ml-9">
                   {quizType === "quick" &&
-                    "Tek bir belge içeriğini hızlıca değerlendirmek için. Öğrenme hedeflerini etkilemez."}
+                    "Tek bir belge içeriğini yapay zeka ile hızlıca analiz eder ve değerlendirir. Anında sonuç ve detaylı geri bildirim alırsınız."}
                   {quizType === "personalized" &&
                     personalizedQuizType === "weakTopicFocused" &&
-                    "Durumu zayıf veya orta olan mevcut öğrenme hedeflerinize odaklanır."}
+                    "Yapay zeka, geçmiş performansınızı analiz ederek zayıf olduğunuz konulara odaklanır. Eksiklerinizi tamamlamanıza yardımcı olacak kişiselleştirilmiş sorular sunar."}
+                  {quizType === "personalized" &&
+                    personalizedQuizType === "learningObjectiveFocused" &&
+                    "Belirlediğiniz öğrenme hedeflerine ulaşma durumunuzu yapay zeka yardımıyla ölçer. Hedeflerinize ilerleyişinizi görselleştirir ve kişiselleştirilmiş öneriler sunar."}
                   {quizType === "personalized" &&
                     personalizedQuizType === "newTopicFocused" &&
-                    "Yüklenen belgedeki yeni konuları test eder ve ilk durumlarını belirler."}
+                    "Yüklenen belgeden yapay zeka ile tespit edilen yeni konuları test eder ve bilgi seviyenizi ölçer. Yeni öğrenme alanlarını keşfetmenizi sağlar."}
                   {quizType === "personalized" &&
                     personalizedQuizType === "comprehensive" &&
-                    "Yeni içerik ile tüm öğrenme hedeflerinizi birleştirir."}
+                    "Yapay zeka, yeni içerik ile mevcut öğrenme hedeflerinizi birleştirerek kapsamlı bir sınav oluşturur. Tüm bilgi alanlarınızı dengeli şekilde değerlendirir."}
                 </p>
               </div>
 

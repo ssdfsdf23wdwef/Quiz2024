@@ -3,7 +3,7 @@
 import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { QuizPreferences } from "./types";
+import { QuizPreferences } from "@/types/quiz";
 import {
   FiArrowRight,
   FiPlay,
@@ -62,9 +62,15 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [showExamCreationWizard, setShowExamCreationWizard] = useState(false);
+  const [currentQuizType, setCurrentQuizType] = useState<"quick" | "personalized">("personalized");
 
   const handleStartQuickQuiz = () => {
-    router.push("/exams/quick");
+    if (!isAuthenticated) {
+      router.push("/auth/login?returnUrl=/exams/create?type=quick");
+      return;
+    }
+    setShowExamCreationWizard(true);
+    setCurrentQuizType("quick");
   };
 
   const handleStartPersonalizedQuiz = () => {
@@ -73,6 +79,7 @@ export default function Home() {
       return;
     }
     setShowExamCreationWizard(true);
+    setCurrentQuizType("personalized");
   };
 
   const handleExamCreationComplete = (result: {
@@ -108,7 +115,10 @@ export default function Home() {
                 </div>
               }
             >
-              <ExamCreationWizard onComplete={handleExamCreationComplete} />
+              <ExamCreationWizard 
+                quizType={currentQuizType} 
+                onComplete={handleExamCreationComplete} 
+              />
             </Suspense>
           </motion.div>
         ) : (

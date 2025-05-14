@@ -5,6 +5,7 @@
 export type QuizType = "quick" | "personalized";
 export type PersonalizedQuizType =
   | "weakTopicFocused"
+  | "learningObjectiveFocused"
   | "newTopicFocused"
   | "comprehensive";
 export type DifficultyLevel = "easy" | "medium" | "hard" | "mixed";
@@ -49,9 +50,11 @@ export interface Quiz {
  */
 export interface QuizPreferences {
   questionCount: number;
-  difficulty: DifficultyLevel;
+  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'mixed';
   timeLimit?: number;
-  prioritizeWeakAndMediumTopics?: boolean;
+  topicIds?: string[];
+  subTopicIds?: string[];
+  personalizedQuizType?: 'weakTopicFocused' | 'learningObjectiveFocused' | 'newTopicFocused' | 'comprehensive';
 }
 
 /**

@@ -80,6 +80,7 @@ interface TopicSelectionScreenProps {
   quizType: "quick" | "personalized";
   personalizedQuizType?:
     | "weakTopicFocused"
+    | "learningObjectiveFocused"
     | "newTopicFocused"
     | "comprehensive";
   isLoading?: boolean;
@@ -132,6 +133,9 @@ export default function TopicSelectionScreen({
       topics = [...detectedTopics];
     } else if (personalizedQuizType === "newTopicFocused") {
       topics = [...detectedTopics];
+    } else if (personalizedQuizType === "learningObjectiveFocused") {
+      // Öğrenme hedefi odaklı: Tüm mevcut konular + yeni konular
+      topics = [...existingTopics, ...detectedTopics];
     } else if (personalizedQuizType === "weakTopicFocused") {
       topics = existingTopics.filter(
         (topic) => topic.status === "failed" || topic.status === "medium",
@@ -146,7 +150,7 @@ export default function TopicSelectionScreen({
 
     if (personalizedQuizType === "weakTopicFocused") {
       topics = topics.map((topic) => ({ ...topic, isSelected: true }));
-    } else if (personalizedQuizType === "comprehensive") {
+    } else if (personalizedQuizType === "comprehensive" || personalizedQuizType === "learningObjectiveFocused") {
       topics = topics.map((topic) => ({
         ...topic,
         isSelected: topic.status === "failed" || topic.status === "medium",
@@ -262,12 +266,14 @@ export default function TopicSelectionScreen({
   // Sınav türü başlığı
   const getQuizTypeTitle = useCallback(() => {
     if (quizType === "quick") {
-      return "Hızlı Sınav";
+      return "Hızlı Sınav - Konu Seçimi";
     }
 
     switch (personalizedQuizType) {
       case "weakTopicFocused":
         return "Zayıf/Orta Konulara Odaklı Sınav";
+      case "learningObjectiveFocused":
+        return "Öğrenme Hedefi Odaklı Sınav";
       case "newTopicFocused":
         return "Yeni Konulara Odaklı Sınav";
       case "comprehensive":
@@ -345,12 +351,14 @@ export default function TopicSelectionScreen({
         </h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {personalizedQuizType === "weakTopicFocused"
-            ? "Zayıf ve orta düzeydeki konularınızı geliştirmek için özel bir sınav oluşturun."
-            : personalizedQuizType === "newTopicFocused"
-              ? "Yeni tespit edilen konular için bir sınav oluşturun."
-              : personalizedQuizType === "comprehensive"
-                ? "Tüm konuları kapsayan bir sınav oluşturun. İsterseniz zayıf ve orta düzeydeki konulara öncelik verebilirsiniz."
-                : "Seçtiğiniz konular için hızlı bir sınav oluşturun."}
+            ? "Yapay zeka, zayıf ve orta düzeydeki konularınızı analiz ederek özel bir sınav oluşturur."
+            : personalizedQuizType === "learningObjectiveFocused"
+              ? "Yapay zeka, belirlediğiniz öğrenme hedeflerine ulaşmanıza yardımcı olacak kişiselleştirilmiş bir sınav hazırlar."
+              : personalizedQuizType === "newTopicFocused"
+                ? "Yapay zeka, yüklediğiniz belgedeki yeni konuları analiz ederek bilgi seviyenizi ölçecek bir sınav oluşturur."
+                : personalizedQuizType === "comprehensive"
+                  ? "Yapay zeka, tüm konuları kapsayan kapsamlı bir sınav oluşturur. Zayıf ve orta düzeydeki konularınıza öncelik verir."
+                  : "Yapay zeka, seçtiğiniz konulara uygun, hızlı bir şekilde analiz edilmiş sorular içeren bir sınav oluşturur."}
         </p>
       </div>
 
@@ -438,7 +446,7 @@ export default function TopicSelectionScreen({
 
         <div className="grid gap-3">
           {displayTopics.map((topic) => {
-            const statusInfo = getStatusInfo(topic.status);
+            const statusInfo = getStatusInfo(topic.status as LearningTargetStatus);
             const Icon = statusInfo.icon;
 
             return (
