@@ -8,6 +8,7 @@ import {
   FiInfo,
   FiBook,
   FiAlertTriangle,
+  FiPlus,
 } from "react-icons/fi";
 import { LearningTargetStatus } from "@/types/learningTarget";
 
@@ -226,7 +227,7 @@ export default function TopicSelectionScreen({
         bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
         borderColor: "border-indigo-200 dark:border-indigo-700",
         label: "Yeni",
-        icon: "plus",
+        icon: FiPlus,
       };
     }
 
@@ -318,18 +319,61 @@ export default function TopicSelectionScreen({
 
   if (filteredTopics.length === 0) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center border rounded-lg bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
+      <div className="py-8 px-6 flex flex-col items-center justify-center border rounded-lg bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
         <FiInfo className="w-8 h-8 text-blue-500 dark:text-blue-400 mb-4" />
-        <p className="text-gray-700 dark:text-gray-300 mb-2">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 text-center">
           {personalizedQuizType === "weakTopicFocused"
             ? "Henüz zayıf veya orta düzeyde konunuz bulunmuyor."
-            : "Henüz hiç konu tespit edilmedi."}
-        </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 text-center max-w-md">
-          {personalizedQuizType === "weakTopicFocused"
-            ? "Daha fazla sınav çözerek öğrenme durumunuzu güncelleyebilirsiniz."
-            : "Lütfen başka bir belge yüklemeyi deneyin veya başka bir sınav türü seçin."}
-        </p>
+            : "Belgede konu tespit edilemedi"}
+        </h3>
+        <div className="text-gray-700 dark:text-gray-300 mb-4 text-center max-w-lg">
+          {personalizedQuizType === "weakTopicFocused" ? (
+            <p>Daha fazla sınav çözerek öğrenme durumunuzu güncelleyebilirsiniz.</p>
+          ) : (
+            <>
+              <p className="mb-2">
+                Yapay zeka modelimiz yüklenen belgeden konu çıkarırken bir sorun oluştu. Bu şu sebeplerden kaynaklanabilir:
+              </p>
+              <ul className="list-disc text-left text-sm ml-6 mb-4 space-y-1">
+                <li>Belge formatı uygun olmayabilir veya metin çıkarılamayabilir</li>
+                <li>Belge çok kısa veya yetersiz içeriğe sahip olabilir</li>
+                <li>Yapay zeka modelimiz belgenin dilini veya konusunu tanıyamamış olabilir</li>
+                <li>Teknik bir sorun oluşmuş olabilir</li>
+              </ul>
+              <p className="text-sm mb-4">
+                Aşağıdaki çözümleri deneyebilirsiniz:
+              </p>
+            </>
+          )}
+        </div>
+        
+        <div className="w-full max-w-md space-y-3 mb-4">
+          {personalizedQuizType !== "weakTopicFocused" && (
+            <>
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Başka bir belge yükleyin</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Farklı bir doküman veya farklı bir format (PDF, DOCX, TXT) deneyebilirsiniz.
+                </p>
+              </div>
+              
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Farklı bir sınav türü seçin</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Kişiselleştirilmiş sınav yerine "Hızlı Sınav&quot; seçeneğini veya mevcut konularınız varsa "Zayıf Konular&quot; odaklı modu deneyebilirsiniz.
+                </p>
+              </div>
+              
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Daha sonra tekrar deneyin</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Sistem şu anda yoğun olabilir. Daha sonra tekrar denemeniz durumunda hata çözülebilir.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+        
         {onCancel && (
           <button
             onClick={onCancel}
