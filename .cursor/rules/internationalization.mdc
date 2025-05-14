@@ -1,0 +1,284 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Çoklu Dil Desteği ve Yerelleştirme
+
+Bu projede çoklu dil desteği ve yerelleştirme için kullanılan kurallar ve prensipler.
+
+## Çeviri Altyapısı
+
+- [frontend/src/lib/i18n/](mdc:frontend/src/lib/i18n) - Çeviri dosyaları ve i18n yapılandırması
+- [frontend/src/lib/i18n/locales/](mdc:frontend/src/lib/i18n/locales) - Dil dosyaları
+
+## Desteklenen Diller
+
+Uygulama şu dilleri desteklemektedir:
+- Türkçe (tr) - Varsayılan dil
+- İngilizce (en)
+
+## i18n Entegrasyonu
+
+### Frontend Yerelleştirme (next-intl)
+
+- Proje next-intl kütüphanesini kullanmaktadır
+- Tüm çevrilebilir metin öğeleri `getMessage` veya `formatMessage` ile elde edilmelidir
+- Doğrudan metin içeriği yerine çeviri anahtarları kullanılmalıdır
+
+```tsx
+// next-intl kullanımı
+import { useTranslations } from 'next-intl';
+
+function WelcomeMessage() {
+  const t = useTranslations('common');
+  
+  return (
+    <div>
+      <h1>{t('welcome')}</h1>
+      <p>{t('description')}</p>
+    </div>
+  );
+}
+```
+
+### Çeviri Anahtarları Düzeni
+
+Çeviri dosyaları aşağıdaki hiyerarşiyi takip etmelidir:
+
+```json
+{
+  "common": {
+    "buttons": {
+      "save": "Kaydet",
+      "cancel": "İptal",
+      "delete": "Sil"
+    },
+    "messages": {
+      "success": "İşlem başarılı",
+      "error": "Bir hata oluştu"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Giriş Yap",
+      "email": "E-posta",
+      "password": "Şifre"
+    }
+  },
+  "courses": {
+    "list": {
+      "title": "Kurslar",
+      "empty": "Henüz kurs bulunmamaktadır"
+    }
+  }
+}
+```
+
+### Dinamik Çeviriler ve Değişkenler
+
+Çevirilerde dinamik değişkenler kullanılabilir:
+
+```tsx
+// Değişken içeren çeviriler
+const message = t('welcome.user', { name: user.name });
+// tr: "Merhaba, {name}!"
+// Sonuç: "Merhaba, Ali!"
+```
+
+### Çoğul Formları
+
+Sayıya bağlı çoğul formları için ICU sözdizimi kullanılmalıdır:
+
+```json
+{
+  "courses.count": "{count, plural, =0{Kurs bulunamadı} one{# kurs bulundu} other{# kurs bulundu}}"
+}
+```
+
+```tsx
+// Çoğul formlar
+const message = t('courses.count', { count: 5 });
+// Sonuç: "5 kurs bulundu"
+```
+
+## Dil Seçimi ve Değiştirme
+
+- Kullanıcı tercihleri localStorage'da saklanır
+- Dil değiştirme arayüzü header'da yer alır
+- URL yolu dili içerir: `/en/courses` veya `/tr/courses`
+
+```tsx
+// Dil değiştirme bileşeni
+function LanguageSwitcher() {
+  const router = useRouter();
+  const { locale } = useRouter();
+  
+  const switchLanguage = (newLocale) => {
+    const { pathname, asPath, query } = router;
+    router.push({ pathname, query }, asPath, { locale: newLocale });
+  };
+  
+  return (
+    <select value={locale} onChange={(e) => switchLanguage(e.target.value)}>
+      <option value="tr">Türkçe</option>
+      <option value="en">English</option>
+    </select>
+  );
+}
+```
+
+## Tarih ve Saat Biçimlendirme
+
+Tarih ve saat biçimlendirme için Intl.DateTimeFormat API'si kullanılmalıdır:
+
+```tsx
+// Tarih biçimlendirme
+function formatDate(date, locale) {
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(date);
+}
+
+// Kullanımı
+const localizedDate = formatDate(new Date(), 'tr');
+// Sonuç: "5 Mayıs 2023"
+```
+
+## Sayı ve Para Birimi Biçimlendirme
+
+Sayı ve para birimlerini biçimlendirmek için Intl.NumberFormat API'si kullanılmalıdır:
+
+```tsx
+// Sayı biçimlendirme
+function formatNumber(number, locale) {
+  return new Intl.NumberFormat(locale).format(number);
+}
+
+// Para birimi biçimlendirme
+function formatCurrency(amount, locale, currency = 'TRY') {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency
+  }).format(amount);
+}
+
+// Kullanımı
+const formattedNumber = formatNumber(1234567.89, 'tr');
+// Sonuç: "1.234.567,89"
+
+const formattedPrice = formatCurrency(99.99, 'tr');
+// Sonuç: "99,99 ₺"
+```
+
+## Backend Çeviri Kullanımı
+
+Backend, hata mesajları ve e-posta şablonları için çevirileri destekler:
+
+```typescript
+// Backend'de çeviri kullanımı
+@Injectable()
+export class I18nService {
+  private readonly translations: Record<string, any> = {
+    tr: require('../i18n/tr.json'),
+    en: require('../i18n/en.json')
+  };
+  
+  translate(key: string, locale: string = 'tr', params: Record<string, any> = {}): string {
+    const keys = key.split('.');
+    let value = this.translations[locale];
+    
+    for (const k of keys) {
+      if (!value[k]) return key;
+      value = value[k];
+    }
+    
+    // Parametreleri değiştir
+    return this.replaceParams(value, params);
+  }
+  
+  private replaceParams(text: string, params: Record<string, any>): string {
+    return Object.entries(params).reduce(
+      (result, [key, value]) => result.replace(`{${key}}`, value),
+      text
+    );
+  }
+}
+
+// Kullanımı
+@Injectable()
+export class EmailService {
+  constructor(private readonly i18nService: I18nService) {}
+  
+  async sendWelcomeEmail(user: User) {
+    const subject = this.i18nService.translate('emails.welcome.subject', user.locale);
+    const body = this.i18nService.translate('emails.welcome.body', user.locale, {
+      name: user.name
+    });
+    
+    // E-posta gönderme işlemi
+  }
+}
+```
+
+## SEO ve Çoklu Dil
+
+Her sayfanın başlık ve meta açıklamaları tüm desteklenen dillerde sağlanmalıdır:
+
+```tsx
+// Çoklu dil SEO desteği
+import { useTranslations } from 'next-intl';
+import Head from 'next/head';
+
+function CoursePage() {
+  const t = useTranslations('courses');
+  
+  return (
+    <>
+      <Head>
+        <title>{t('meta.title')}</title>
+        <meta name="description" content={t('meta.description')} />
+        <link rel="canonical" href="https://example.com/tr/courses" />
+        <link rel="alternate" hrefLang="en" href="https://example.com/en/courses" />
+        <link rel="alternate" hrefLang="tr" href="https://example.com/tr/courses" />
+      </Head>
+      {/* Sayfa içeriği */}
+    </>
+  );
+}
+```
+
+## Çeviri İş Akışı
+
+1. **Çeviri Anahtarı Ekleme:**
+   - Yeni özellikler için önce Türkçe çevirileri ekleyin
+   - Tutarlı anahtar isimlendirmesi kullanın
+
+2. **Çeviri Durumu İzleme:**
+   - Eksik çevirileri tespit etmek için araçlar kullanın
+   - Çeviri ilerlemesini düzenli olarak gözden geçirin
+
+3. **Eksik Çevirileri Kurtarma:**
+   - Çeviri yoksa anahtar değerini göstermek yerine varsayılan dile (Türkçe) geri dönün
+
+```tsx
+// Eksik çevirileri kurtarma
+function getTranslation(key, locale, fallbackLocale = 'tr') {
+  try {
+    return t(key);
+  } catch (error) {
+    // Anahtarı varsayılan dilde arama
+    console.warn(`Missing translation: ${key} for locale: ${locale}`);
+    return fallbackTranslations[key] || key;
+  }
+}
+```
+
+## Çeviri Testi
+
+- Her dil için UI testleri çalıştırın
+- Yerleşim sorunlarını tespit etmek için uzun metinleri test edin
+- İçerik uzunluğunun değişmesine karşı dayanıklı UI tasarlayın
+

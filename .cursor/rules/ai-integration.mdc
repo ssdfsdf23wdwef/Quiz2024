@@ -1,0 +1,347 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Yapay Zeka Entegrasyonu
+
+Bu projede yapay zeka özellikleri ve entegrasyonu için kurallar ve prensipler.
+
+## AI Modülleri ve Mimarisi
+
+- [backend/src/ai/](mdc:backend/src/ai) - AI ile ilgili backend modülleri
+- [backend/src/ai/prompts/](mdc:backend/src/ai/prompts) - LLM modelleri için hazır promptlar
+- [backend/src/ai/interfaces/](mdc:backend/src/ai/interfaces) - AI işlemleri için tip tanımları
+
+## LLM (Large Language Model) Entegrasyonu
+
+### OpenAI API Kullanımı
+- API istekleri için merkezi bir servis kullanın
+- Rate limiting ve hata yönetimi mekanizmaları ekleyin
+- Prompt mühendisliği için şablonlar oluşturun
+
+```typescript
+// OpenAI API kullanım örneği
+import { OpenAI } from 'openai';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class OpenAIService {
+  private readonly openai: OpenAI;
+  private readonly logger = new Logger(OpenAIService.name);
+  private readonly maxRetries = 3;
+
+  constructor(private readonly configService: ConfigService) {
+    this.openai = new OpenAI({
+      apiKey: this.configService.get('OPENAI_API_KEY'),
+    });
+  }
+
+  async generateCompletion(prompt: string, options: any = {}): Promise<string> {
+    let retries = 0;
+    
+    while (retries < this.maxRetries) {
+      try {
+        const response = await this.openai.chat.completions.create({
+          model: options.model || 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: options.temperature || 0.7,
+          max_tokens: options.maxTokens || 500,
+        });
+
+        return response.choices[0].message.content;
+      } catch (error) {
+        retries++;
+        this.logger.error(`OpenAI API hatası: ${error.message}`);
+        
+        if (retries === this.maxRetries) {
+          throw new Error(`OpenAI API isteği başarısız oldu: ${error.message}`);
+        }
+        
+        // Üstel geri çekilme
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, retries)));
+      }
+    }
+  }
+}
+```
+
+### Prompt Şablonları
+- [backend/src/ai/prompts/](mdc:backend/src/ai/prompts) dizininde şablonlar saklayın
+- İşlevselliğe göre düzenleyin (özetleme, içerik oluşturma, sınav oluşturma)
+- Değişken yer tutucuları için tutarlı bir format kullanın
+
+```typescript
+// Prompt şablonu örneği
+export const SUMMARIZATION_PROMPT = `
+Aşağıdaki metni özetle:
+---
+{{content}}
+---
+
+Özet aşağıdaki kurallara uymalıdır:
+1. En fazla {{maxLength}} kelime olmalı
+2. Orijinal metnin ana fikirlerini kapsamalı
+3. Anahtar terimleri ve kavramları korumalı
+4. Anlaşılır ve akıcı olmalı
+5. Nesnel olmalı, yorum içermemeli
+
+Format:
+- Başlık
+- Özet metni
+- 3-5 anahtar kelime
+`;
+
+export const QUESTION_GENERATION_PROMPT = `
+Aşağıdaki içerik hakkında {{questionCount}} adet test sorusu oluştur:
+---
+{{content}}
+---
+
+Sorular şu formatta olmalıdır:
+- Çoktan seçmeli sorular (4 seçenek)
+- Her soru için bir doğru cevap
+- Her soru için zorluk derecesi (Kolay, Orta, Zor)
+- Her soru için bir açıklama
+
+JSON formatında dön:
+{
+  "questions": [
+    {
+      "question": "Soru metni",
+      "options": ["A", "B", "C", "D"],
+      "correctAnswer": "A",
+      "difficulty": "Kolay",
+      "explanation": "Cevap açıklaması"
+    }
+  ]
+}
+`;
+```
+
+## AI Özellik Entegrasyonu
+
+### İçerik Özetleme
+- Uzun belgeleri özetlemek için LLM kullanımı
+- Özetlenen içeriği veritabanında saklama
+- Özetleme tercihlerini kullanıcı ayarları üzerinden yönetme
+
+```typescript
+// İçerik özetleme servisi
+@Injectable()
+export class ContentSummarizationService {
+  constructor(
+    private readonly openAIService: OpenAIService,
+    private readonly documentsService: DocumentsService,
+  ) {}
+
+  async summarizeDocument(documentId: string, options: SummarizeOptions): Promise<SummaryResult> {
+    const document = await this.documentsService.findById(documentId);
+    
+    if (!document) {
+      throw new NotFoundException('Belge bulunamadı');
+    }
+    
+    const prompt = SUMMARIZATION_PROMPT
+      .replace('{{content}}', document.content)
+      .replace('{{maxLength}}', options.maxLength.toString());
+    
+    const summary = await this.openAIService.generateCompletion(prompt, {
+      temperature: 0.5,
+      maxTokens: 1000,
+    });
+    
+    // Özeti veritabanına kaydet
+    await this.documentsService.saveSummary(documentId, summary);
+    
+    return { summary, documentId };
+  }
+}
+```
+
+### Soru Oluşturma
+- Ders içeriklerinden soru bankası oluşturma
+- Zorluk seviyelerine göre filtreleme
+- Konu alanlarına göre kategorilendirme
+
+```typescript
+// Soru oluşturma servisi
+@Injectable()
+export class QuestionGenerationService {
+  constructor(
+    private readonly openAIService: OpenAIService,
+    private readonly questionsService: QuestionsService,
+  ) {}
+
+  async generateQuestionsFromContent(
+    content: string, 
+    count: number,
+    learningTargetId: string,
+  ): Promise<Question[]> {
+    const prompt = QUESTION_GENERATION_PROMPT
+      .replace('{{questionCount}}', count.toString())
+      .replace('{{content}}', content);
+    
+    const responseText = await this.openAIService.generateCompletion(prompt, {
+      temperature: 0.7,
+      maxTokens: 2000,
+    });
+    
+    try {
+      const parsedResponse = JSON.parse(responseText);
+      const questions = parsedResponse.questions.map(q => ({
+        ...q,
+        learningTargetId,
+      }));
+      
+      // Soruları veritabanına kaydet
+      return await this.questionsService.createMany(questions);
+    } catch (error) {
+      throw new BadRequestException('AI yanıtı işlenemedi: ' + error.message);
+    }
+  }
+}
+```
+
+### İçerik Analizi
+- Belgelerin konularını otomatik tespit etme
+- Anahtar kelime çıkarma
+- Zorluk seviyesi analizi
+
+```typescript
+// İçerik analiz servisi
+@Injectable()
+export class ContentAnalysisService {
+  constructor(private readonly openAIService: OpenAIService) {}
+
+  async analyzeDocument(content: string): Promise<ContentAnalysisResult> {
+    const prompt = `
+      Aşağıdaki eğitim içeriğini analiz et:
+      ---
+      ${content}
+      ---
+      
+      Şu bilgileri çıkar:
+      1. Ana konular (en fazla 5)
+      2. Anahtar terimler (en fazla 10)
+      3. Zorluk seviyesi (Başlangıç, Orta, İleri)
+      4. Tahmini okuma süresi (dakika)
+      5. Ön koşul bilgiler
+      
+      JSON formatında dön.
+    `;
+    
+    const responseText = await this.openAIService.generateCompletion(prompt, {
+      temperature: 0.3,
+      maxTokens: 1000,
+    });
+    
+    try {
+      return JSON.parse(responseText);
+    } catch (error) {
+      throw new BadRequestException('AI yanıtı işlenemedi');
+    }
+  }
+}
+```
+
+## AI Kalitesi ve Güvenliği
+
+### Prompt Hijacking Önleme
+- Kullanıcı girdilerini prompt içine yerleştirmeden önce temizleyin
+- Prompt enjeksiyon saldırılarını önlemek için girdileri kontrol edin
+- Kritik sistem yönergelerini kullanıcı girdilerinden ayırın
+
+```typescript
+// Güvenli prompt oluşturma
+function createSafePrompt(template: string, variables: Record<string, string>): string {
+  // Kullanıcı girdisindeki tehlikeli komutları temizle
+  const sanitizedVariables = Object.entries(variables).reduce((acc, [key, value]) => {
+    // Basit temizleme - gerçek uygulamada daha kapsamlı olmalı
+    const sanitized = value
+      .replace(/prompt:|system:|assistant:|user:/gi, '')
+      .trim();
+    acc[key] = sanitized;
+    return acc;
+  }, {});
+  
+  // Temizlenmiş değişkenleri şablona yerleştir
+  let prompt = template;
+  for (const [key, value] of Object.entries(sanitizedVariables)) {
+    prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  }
+  
+  return prompt;
+}
+```
+
+### AI Çıktı Validasyonu
+- AI yanıtlarını işlemeden önce doğrulayın
+- Beklenmeyen çıktılar için hata yakalama ve işleme
+- Format ve içerik güvenliği kontrolü
+
+```typescript
+// AI yanıtlarını doğrulama
+function validateAIResponse(response: string, schema: z.ZodSchema): boolean {
+  try {
+    schema.parse(JSON.parse(response));
+    return true;
+  } catch (error) {
+    logger.error(`AI yanıtı doğrulama hatası: ${error.message}`);
+    return false;
+  }
+}
+```
+
+### Maliyetleri Kontrol Etme
+- Token kullanımını izleyin ve bütçe sınırları belirleyin
+- Gereksiz API çağrılarını önleyin, önbelleğe alın
+- Uygun model seçimi (GPT-3.5 vs GPT-4)
+
+```typescript
+// Token kullanımını izleme
+@Injectable()
+export class TokenUsageService {
+  private tokenCount = 0;
+  private readonly budgetLimit = 100000; // Aylık token limiti
+  
+  recordUsage(promptTokens: number, completionTokens: number) {
+    this.tokenCount += promptTokens + completionTokens;
+    
+    if (this.tokenCount > this.budgetLimit) {
+      // Uyarı gönder
+      this.sendAlert(`Token bütçesi aşıldı! Kullanılan: ${this.tokenCount}`);
+    }
+  }
+  
+  getUsageStats() {
+    return {
+      totalTokens: this.tokenCount,
+      budgetLimit: this.budgetLimit,
+      percentUsed: (this.tokenCount / this.budgetLimit) * 100
+    };
+  }
+}
+```
+
+## AI İşlevselliği
+
+### Öğrenme Hedefi Öneri Sistemi
+- Kurs içeriğinden öğrenme hedefleri çıkarma
+- Kullanıcının ilerlemesine göre yeni hedefler önerme
+
+### Kişiselleştirilmiş Öğrenme Yol Haritası
+- Kullanıcının güçlü ve zayıf yönlerine göre içerik önerme
+- Öğrenme hızına göre zorluk seviyesi ayarlama
+
+### Akıllı Sınav Oluşturma
+- Kullanıcının bilgi seviyesine göre dinamik soru seçimi
+- Yanlış cevaplanan konulara odaklanma
+
+## AI Servisleri için Test Stratejileri
+
+- Mock LLM yanıtları ile birim testleri
+- E2E testlerde gerçek API çağrılarını önbelleğe alın
+- Kararlı yanıtlar için prompt versiyonlaması kullanın
+

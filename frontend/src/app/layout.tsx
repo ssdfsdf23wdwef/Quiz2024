@@ -44,8 +44,19 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        <link rel="icon" href="/frontend/public/favicon.webp" />
+
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <style>{`
+          /* Sidebar'ın görünürlüğü için özel stil */
+          @media (min-width: 0px) {
+            .sidebar-visible {
+              display: block !important;
+              visibility: visible !important;
+            }
+          }
+        `}</style>
       </head>
       <body className={cn("min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased", fontSans.className)}>
         <Providers>

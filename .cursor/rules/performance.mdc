@@ -1,0 +1,237 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Performans Optimizasyonu
+
+Bu projede performans optimizasyonu için belirli prensipler ve teknikler kullanılmaktadır.
+
+## Frontend Performans Optimizasyonu
+
+### 1. Bileşen Optimizasyonu
+- Gereksiz render'ları önlemek için memo, useMemo ve useCallback kullanın
+- Props değişmediğinde bileşenlerin yeniden render edilmesini önlemek için React.memo kullanın
+- React DevTools Profiler ile gereksiz render'ları tespit edin
+
+```tsx
+// React.memo örneği
+const ExpensiveComponent = React.memo(({ data }) => {
+  // Bileşen içeriği
+});
+
+// useCallback örneği
+const handleClick = useCallback(() => {
+  // İşlem
+}, [dependency]);
+
+// useMemo örneği
+const filteredData = useMemo(() => {
+  return data.filter(item => item.active);
+}, [data]);
+```
+
+### 2. Görüntü Optimizasyonu
+- Next.js Image bileşeni kullanarak resimleri optimize edin
+- Lazy loading ile sayfanın görünen kısmında olmayan resimleri geciktirin
+- Doğru resim formatı ve sıkıştırma kullanın (WebP, AVIF)
+
+```tsx
+// Next.js Image örneği
+import Image from 'next/image';
+
+<Image 
+  src="/images/hero.jpg"
+  width={1200}
+  height={600}
+  alt="Hero görüntüsü"
+  priority={true} // LCP için önemli resimlerde kullanın
+/>
+```
+
+### 3. Code Splitting ve Lazy Loading
+- Dynamic import ile sayfa ve bileşen kodlarını bölün
+- Kullanıcının ihtiyaç duyduğunda yükleyin
+- Kritik olmayan kaynakları lazy load edin
+
+```tsx
+// Dinamik import örneği
+import dynamic from 'next/dynamic';
+
+const DynamicChart = dynamic(
+  () => import('../components/Chart'),
+  { loading: () => <p>Yükleniyor...</p>, ssr: false }
+);
+```
+
+### 4. Bundle Size Optimizasyonu
+- Import'ları optimize edin, sadece kullanılan fonksiyonları import edin
+- Büyük paketler için alternatifler düşünün
+- Bundle analiz araçları kullanın (next-bundle-analyzer)
+
+```tsx
+// Kötü örnek
+import _ from 'lodash';
+
+// İyi örnek
+import debounce from 'lodash/debounce';
+```
+
+### 5. Render Bloklamayı Önleme
+- Ağır hesaplamalar için Web Workers kullanın
+- requestAnimationFrame ve requestIdleCallback ile zamanlama optimizasyonu
+- CSS'in kritik yolunu optimize edin
+
+```typescript
+// Web Worker örneği
+const worker = new Worker(new URL('../workers/heavy-calculation.ts', import.meta.url));
+worker.postMessage({ data: complexData });
+worker.onmessage = (event) => {
+  setResult(event.data);
+};
+```
+
+## Backend Performans Optimizasyonu
+
+### 1. Önbelleğe Alma (Caching)
+- HTTP yanıtlarını önbelleğe alın
+- Sorgu sonuçlarını önbelleğe alın
+- Redis veya in-memory cache kullanın
+
+```typescript
+// Cache dekoratörü örneği
+@CacheKey('all-courses')
+@CacheTTL(3600) // 1 saat
+@Get()
+async findAll() {
+  return this.coursesService.findAll();
+}
+```
+
+### 2. Veritabanı Optimizasyonu
+- Sorguları optimize edin
+- Endeksler kullanın
+- N+1 sorgu sorununu çözün
+
+```typescript
+// Temel fikir: İç içe sorgu yerine JOIN kullanın
+// Kötü (N+1 sorgu problemi):
+const courses = await this.courseRepository.find();
+for (const course of courses) {
+  course.author = await this.authorRepository.findOne(course.authorId);
+}
+
+// İyi:
+const courses = await this.courseRepository.find({
+  relations: ['author']
+});
+```
+
+### 3. API Yanıt Optimizasyonu
+- Gereksiz veri göndermekten kaçının
+- Sayfalama, filtreleme ve sıralama uygulayın
+- Gzip/Brotli sıkıştırma kullanın
+
+```typescript
+// Sayfalama örneği
+@Get()
+async findAll(
+  @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+) {
+  return this.coursesService.findAll({
+    skip: (page - 1) * limit,
+    take: limit,
+  });
+}
+```
+
+## İzleme ve Performans Ölçümü
+
+### 1. Web Vitals İzleme
+- Core Web Vitals'ı izleyin (LCP, FID, CLS)
+- next-web-vitals kullanarak gerçek kullanıcı metriklerini toplayın
+- Lighthouse ile performans skorlarını ölçün
+
+```typescript
+// Web Vitals raporlama
+export function reportWebVitals(metric) {
+  console.log(metric);
+  // Analitik servisine gönder
+  sendToAnalytics('web-vitals', metric);
+}
+```
+
+### 2. Performans İzleme Araçları
+- Chrome DevTools Performance paneli
+- Lighthouse
+- WebPageTest
+- GTmetrix
+
+### 3. Sunucu Performans İzleme
+- NestJS terminatörü için performans logları
+- API yanıt sürelerini izleme
+- Bellek ve CPU kullanımını izleme
+
+```typescript
+// API yanıt süresi middleware
+@Injectable()
+export class PerformanceMiddleware implements NestMiddleware {
+  private readonly logger = new Logger('API');
+
+  use(req: Request, res: Response, next: Function) {
+    const start = Date.now();
+    
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      this.logger.log(`${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
+      
+      // Yavaş yanıtları logla
+      if (duration > 500) {
+        this.logger.warn(`Yavaş API çağrısı: ${req.method} ${req.originalUrl} - ${duration}ms`);
+      }
+    });
+    
+    next();
+  }
+}
+```
+
+## Best Practices
+
+1. **LCP (Largest Contentful Paint) optimizasyonu:**
+   - Kritik CSS'i satır içi (inline) olarak kullanın
+   - Öncelikli görüntüleri preload edin
+   - Sunucu yanıt süresini optimize edin
+
+2. **React uygulamasını optimize edin:**
+   - `<React.StrictMode>` kullanarak potansiyel sorunları tespit edin
+   - Gereksiz global state güncellemelerinden kaçının
+   - Ağır işlemleri memorize edin
+
+3. **Veritabanı okuma/yazma operasyonlarını dengelenin:**
+   - Okuma ağırlıklı işlemler için önbelleğe alma stratejisi belirleyin
+   - Yazma ağırlıklı işlemler için batch processing kullanın
+
+4. **CDN kullanın:**
+   - Statik varlıklar için CDN kullanın
+   - Edge Functions ile edge'e yakın hesaplama yapın
+
+5. **Medya içeriğini optimize edin:**
+   - Responsive resimler için srcset kullanın
+   - Video içerikler için lazy loading uygulayın
+   - Fontları optimize edin, sadece gerekli font ağırlıklarını yükleyin
+
+## Performans Bütçesi
+
+- **Time to Interactive (TTI):** < 3.5 saniye
+- **First Contentful Paint (FCP):** < 1.8 saniye
+- **Largest Contentful Paint (LCP):** < 2.5 saniye
+- **Cumulative Layout Shift (CLS):** < 0.1
+- **First Input Delay (FID):** < 100ms
+- **Total Blocking Time (TBT):** < 300ms
+- **Sayfa Boyutu:** < 500KB (sıkıştırılmış)
+- **JavaScript Boyutu:** < 250KB (sıkıştırılmış/minimize edilmiş)
+
+Bu hedeflere ulaşmak için sürekli performans izlemesi ve optimizasyon yapılmalıdır.
+

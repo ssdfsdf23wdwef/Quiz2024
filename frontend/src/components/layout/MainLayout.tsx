@@ -1,13 +1,9 @@
 "use client";
 
-import React, { ReactNode, Suspense, memo } from "react";
+import React, { ReactNode, memo, useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import dynamic from "next/dynamic";
 import DevLoggerProvider from "@/components/providers/DevLoggerProvider";
-
-// Lazy load components - Next.js dynamic import kullanarak
-const Header = dynamic(() => import("@/components/layout/Header").then(mod => mod.Header), { ssr: false });
-const Sidebar = dynamic(() => import("@/components/layout/Sidebar"), { ssr: false });
 
 // Simple loading placeholder
 const LoadingPlaceholder = () => (
@@ -16,6 +12,17 @@ const LoadingPlaceholder = () => (
   </div>
 );
 
+// Lazy load components with loading priority
+const Header = dynamic(() => import("@/components/layout/Header").then(mod => mod.Header), { 
+  ssr: false, 
+  loading: () => <LoadingPlaceholder /> 
+});
+
+const Sidebar = dynamic(() => import("@/components/layout/Sidebar"), { 
+  ssr: false, 
+  loading: () => <LoadingPlaceholder /> 
+});
+
 interface MainLayoutProps {
   children: ReactNode;
 }
@@ -23,6 +30,16 @@ interface MainLayoutProps {
 function MainLayoutBase({ children }: MainLayoutProps) {
   // useTheme hook'undan isDarkMode değişkenini al
   const { isDarkMode } = useTheme();
+  const [isClient, setIsClient] = useState(false);
+
+  // Hydration mismatch sorunlarını önlemek için client tarafı render kontrolü
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900"></div>;
+  }
 
   return (
     <DevLoggerProvider>
@@ -33,17 +50,16 @@ function MainLayoutBase({ children }: MainLayoutProps) {
             : "bg-gray-50 text-gray-900"
         }`}
       >
-        <Suspense fallback={<LoadingPlaceholder />}>
-          <Header />
-        </Suspense>
-        <div className="flex">
-          {/* Sidebar sadece lg ve üstü ekran boyutlarında görünür */}
-          <Suspense fallback={<LoadingPlaceholder />}>
-            <Sidebar />
-          </Suspense>
+        <Header />
 
-          {/* Ana içerik - mobil cihazlar için kenar boşluğunu ayarla */}
-          <main className="w-full lg:ml-64 pt-[70px] px-4 py-6 lg:p-6 transition-colors duration-200">
+        <div className="flex w-full">
+          {/* Sidebar her zaman görünür */}
+          <div className="fixed top-0 left-0 h-full z-30">
+            <Sidebar />
+          </div>
+
+          {/* Ana içerik - sidebar'a göre kenarlık ayarı */}
+          <main className="flex-1 w-full ml-64 pt-[70px] px-4 py-6 transition-colors duration-200">
             <div className="max-w-7xl mx-auto">{children}</div>
           </main>
         </div>

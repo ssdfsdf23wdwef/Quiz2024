@@ -24,7 +24,7 @@ export default function PageTransition({
       initial="hidden"
       animate="enter"
       exit="exit"
-      transition={{ duration: 0.4, type: "easeInOut" }}
+      transition={{ duration: 0.2, type: "easeInOut" }}
       className={className}
     >
       {children}

@@ -1,0 +1,144 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Kimlik Doğrulama ve Yetkilendirme
+
+Bu projede kimlik doğrulama ve yetkilendirme işlemleri için Firebase Authentication kullanılmaktadır.
+
+## Firebase Authentication
+
+- [backend/src/auth/firebase/](mdc:backend/src/auth/firebase/) - Backend Firebase entegrasyonu
+- [frontend/src/app/auth/](mdc:frontend/src/app/auth/) - Frontend kimlik doğrulama sayfaları
+- [frontend/src/hooks/auth/](mdc:frontend/src/hooks/auth/) - Kimlik doğrulama hook'ları
+
+## Kimlik Doğrulama Akışı
+
+1. Kullanıcı giriş/kayıt formu doldurur
+2. Frontend servisi Firebase'e istek atar
+3. Başarılı kimlik doğrulama sonrası alınan token, tüm API isteklerinde kullanılır
+4. Backend, gelen token'ı doğrular ve kullanıcı bilgilerini çıkarır
+
+```typescript
+// Frontend kimlik doğrulama örneği
+const login = async (email: string, password: string) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const token = await userCredential.user.getIdToken();
+    
+    // Token'ı sakla
+    localStorage.setItem('auth_token', token);
+    
+    // Kullanıcı verisini global state'e aktar
+    useAuthStore.getState().setUser({
+      uid: userCredential.user.uid,
+      email: userCredential.user.email,
+      // diğer veriler
+    });
+    
+    return userCredential.user;
+  } catch (error) {
+    throw new Error(`Giriş başarısız: ${error.message}`);
+  }
+};
+```
+
+## Firebase Güvenlik Kuralları
+
+- Firebase Authentication ve Firestore'da güvenlik kuralları tanımlanmalıdır
+- Kullanıcılar sadece kendi verilerine erişebilmelidir
+- Daha fazla bilgi için Firebase dokümantasyonunu inceleyin
+
+## Frontend Yetkilendirme
+
+- [frontend/src/context/AuthContext.tsx](mdc:frontend/src/context/AuthContext.tsx) - Auth context yapısı
+- Protected Route yapısı ile yetkisiz erişimler engellenir:
+
+```typescript
+// Protected route örneği
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/auth/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+  
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+  
+  return isAuthenticated ? <>{children}</> : null;
+};
+```
+
+## Backend Yetkilendirme
+
+- [backend/src/auth/guards/](mdc:backend/src/auth/guards/) - NestJS auth guard'ları
+- JWT stratejisi ile token doğrulama
+- Role-based access control (RBAC) için dekoratörler
+
+```typescript
+// Controller seviyesinde auth kullanımı
+@Controller('courses')
+export class CoursesController {
+  constructor(private readonly coursesService: CoursesService) {}
+  
+  @Get()
+  @Public() // Herkese açık endpoint
+  findAll() {
+    return this.coursesService.findAll();
+  }
+  
+  @Post()
+  @UseGuards(JwtAuthGuard) // Sadece giriş yapmış kullanıcılar
+  create(@Body() createCourseDto: CreateCourseDto, @GetUser() user: User) {
+    return this.coursesService.create(createCourseDto, user.uid);
+  }
+  
+  @Delete(':id')
+  @Roles(['admin']) // Sadece admin rolüne sahip kullanıcılar
+  remove(@Param('id') id: string) {
+    return this.coursesService.remove(id);
+  }
+}
+```
+
+## Güvenlik Önlemleri
+
+1. **Token Yenileme:** Access token'lar düzenli aralıklarla yenilenmelidir
+2. **CSRF Koruması:** Cross-Site Request Forgery saldırılarına karşı önlem alınmalıdır
+3. **XSS Koruması:** Cross-Site Scripting saldırılarını önlemek için kullanıcı girdileri temizlenmelidir
+4. **Rate Limiting:** API isteklerini sınırlamak için rate limiting uygulanmalıdır
+
+## Oturum Yönetimi
+
+- Kullanıcı oturumları `persistent` olarak saklanmalıdır
+- Oturum açma/kapatma işlemleri [frontend/src/services/auth.service.ts](mdc:frontend/src/services/auth.service.ts) üzerinden yapılmalıdır
+- Oturum durumu global state'te tutulmalıdır (Zustand)
+
+```typescript
+// Oturum durumu izleme
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Kullanıcı giriş yapmış
+      useAuthStore.getState().setUser({
+        uid: user.uid,
+        email: user.email,
+        // diğer veriler
+      });
+    } else {
+      // Kullanıcı çıkış yapmış
+      useAuthStore.getState().clearUser();
+    }
+    
+    useAuthStore.getState().setLoading(false);
+  });
+  
+  return () => unsubscribe();
+}, []);
+```

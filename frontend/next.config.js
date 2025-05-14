@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false, // Geliştirme aşamasında çift rendering'i önlemek için kapatıldı
   // Next.js 15'te swcMinify varsayılan olduğu için kaldırıldı
   poweredByHeader: false,
   images: {

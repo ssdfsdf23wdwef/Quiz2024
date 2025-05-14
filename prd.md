@@ -1,330 +1,621 @@
----
-
-## **Kişiselleştirilmiş Quiz Platformu - Ürün Gereksinim Dokümanı (PRD)**
-
-
-**İçindekiler**
-
-1.  **Giriş ve Kapsam**
-    * 1.1. Platform Vizyonu
-    * 1.2. Temel Çalışma Prensibi
-    * 1.3. Hedef Kullanıcı Kitlesi
-2.  **Temel Kavramlar ve Terminoloji**
-3.  **Genel Kullanıcı Akışı**
-4.  **Platform Yetenekleri ve Özellikler**
-    * 4.1. Kullanıcı Yönetimi
-    * 4.2. Ders (Çalışma Alanı) Yönetimi
-    * 4.3. İçerik Yönetimi ve İşleme
-    * 4.4. Yapay Zeka Destekli Analiz ve İçerik Üretimi
-    * 4.5. Öğrenme Hedefleri (Learning Targets) ve Takibi
-    * 4.6. Sınav (Quiz) Sistemi
-    * 4.7. Performans Değerlendirme ve Geri Bildirim
-5.  **Kullanıcı Deneyimi (UX/UI) ve Tasarım**
-6.  **Teknik Mimari ve Teknoloji Seçimleri**
-    * 6.1. Genel Mimari Yaklaşımı
-    * 6.2. Teknoloji Yığını
-    * 6.3. Frontend Mimarisi (Next.js)
-    * 6.4. Backend Mimarisi (NestJS)
-    * 6.5. Veritabanı ve Veri Yönetimi
-    * 6.6. API İletişimi (REST)
-    * 6.7. Alt Konu Normalizasyonu
-    * 6.8. Performans, Ölçeklenebilirlik ve Maliyet
-7.  **Veri Modelleri (Firestore Önerisi)**
-8.  **Kalite Güvencesi ve Güvenlik**
-    * 8.1. Test Stratejisi
-    * 8.2. Kod Kalitesi Standartları
-    * 8.3. Güvenlik Öncelikleri ve Stratejileri
-9.  **Geliştirme Yol Haritası (Aşamalandırma)**
-10. **Potansiyel Riskler ve Yönetim Stratejileri**
-
----
-
-### **1. Giriş ve Kapsam**
-
-#### **1.1. Platform Vizyonu**
-
-Kullanıcıların kişisel öğrenme materyallerini (PDF, DOCX, TXT formatlarında, 10 MB'a kadar) sisteme yükleyerek, yapay zeka (AI) destekli, kişiselleştirilmiş sınavlar oluşturmalarını sağlayan yenilikçi bir web platformu geliştirmek. Platform, kullanıcının seçtiği **Ders (Course)** bağlamında, yüklenen içerikleri ve geçmiş sınav performansını analiz ederek, öğrenilmesi gereken **Alt Konular** bazında tanımlanan **Öğrenme Hedefleri** üzerindeki yeterliliğini **dört aşamalı bir durum (`beklemede`, `başarısız`, `orta`, `başarılı`)** ile takip eder. Temel amaç, öğrenme sürecini optimize etmek, kullanıcının bilgi eksikliklerini belirlemesine yardımcı olmak ve geçmiş hatalardan ders çıkararak sürekli gelişimi teşvik eden modern bir eğitim aracı sunmaktır.
-
-#### **1.2. Temel Çalışma Prensibi**
-
-Platformun özü, öğrenme deneyimini kullanıcıya ve içeriğe özel kılmaktır. Bu, dinamik bir döngü ile gerçekleştirilir:
-
-**İçerik Yükleme → AI Konu Analizi → Kullanıcı Konu Seçimi → Öğrenme Hedefi Oluşturma/Güncelleme → Kişiselleştirilmiş Sınav → Performans Analizi → Öğrenme Hedefi Durum Güncellemesi.**
-
-Sistem, **Öğrenme Hedefleri** olarak tanımlanan Alt Konuları dinamik olarak yönetir, kullanıcının bu hedeflerdeki ilerlemesini **4 aşamalı durum (status)** göstergesiyle izler ve her **Kişiselleştirilmiş Sınav** sonrasında bu durumları güncelleyerek adaptif bir öğrenme ortamı sağlar. Ayrıca, yanlış cevaplanan sorular kaydedilerek tekrar çalışma imkanı sunulur.
-
-#### **1.3. Hedef Kullanıcı Kitlesi**
-
-Platform, öğrenciler, mesleki gelişimini sürdüren profesyoneller, sürekli öğrenmeyi hedefleyen bireyler ve yaşam boyu öğrenme felsefesini benimsemiş herkes için tasarlanmıştır.
-
----
-
-### **2. Temel Kavramlar ve Terminoloji**
-
-| Kavram                               | Açıklama                                                                                                                                                                                                                                                                                                      |
-| :----------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Kullanıcı (User)**                 | Platforma kimlik doğrulaması yaparak giriş yapan ve öğrenme süreçlerini yöneten birey.                                                                                                                                                                                                                        |
-| **Ders (Course)**                    | Kullanıcının öğrenme materyallerini, hedeflerini ve sınav verilerini gruplandırdığı mantıksal çalışma alanı veya konu başlığı (örn: “Yazılım Mimarisi”, “İleri İstatistik”). **Çalışma Alanı** olarak da ifade edilebilir.                                                                                    |
-| **İçerik Öğesi (Belge)**             | Kullanıcının bir Derse yüklediği PDF, DOCX veya TXT formatındaki, en fazla 10 MB boyutundaki dosya. Metin içeriği önceliklidir; görsellerdeki veya karmaşık tablolardaki metinlerin işlenmesi sınırlıdır.                                                                                                     |
-| **Konu / Alt Konu**                  | Yapay zekanın yüklenen belgeden analiz ederek çıkardığı, **en fazla iki seviyeli** (Ana Konu → Alt Konu) kavramsal hiyerarşi. Başlıklar kısa, standart ve öğrenilebilir/test edilebilir **kavramsal** bilgiyi temsil etmelidir. Bu Alt Konular, Öğrenme Hedeflerinin temelini oluşturur.                      |
-| **Öğrenme Hedefi (Learning Target)** | Belirli bir **Ders** içerisindeki bir **Alt Konu** için **Kullanıcının** yeterlilik seviyesini gösteren kayıttır. Her hedefin dört durumdan birini (`pending`, `failed`, `medium`, `mastered`) gösteren bir **`status`** alanı bulunur. Hedefler, **normalize edilmiş alt konu adı** (Bkz 6.7) ile yönetilir. |
-| **Sınav (Quiz)**                     | Öğrenme hedeflerini ölçmek veya yüklenen içeriği değerlendirmek amacıyla oluşturulan testtir. Türleri: **Hızlı Sınav** ve **Kişiselleştirilmiş Sınavlar** (alt türleri: Zayıf-Orta Odaklı, Yeni Konu Odaklı, Kapsamlı).                                                                                       |
-
----
-
-### **3. Genel Kullanıcı Akışı**
-
-1.  **Kimlik Doğrulama:** Kullanıcı, e-posta/şifre veya Google hesabı ile platforma kaydolur veya giriş yapar. (Kişiselleştirilmiş özellikler için giriş zorunludur).
-2.  **Ders Yönetimi:** Kullanıcı yeni bir Ders (Çalışma Alanı) oluşturur veya mevcut bir dersi seçerek çalışma ortamına girer.
-3.  **İçerik Yükleme:** Kullanıcı, aktif Derse bir Belge (PDF, DOCX, TXT) yükler. Backend (NestJS), belgeyi işleyerek metin içeriğini çıkarır.
-4.  **Konu Analizi ve Seçimi:**
-    - Backend, çıkarılan metni AI'ye (Gemini) göndererek potansiyel Alt Konuları tespit eder (varsa mevcut hedefleri filtreleyerek).
-    - Başarılı tespitte, yeni Alt Konular frontend'deki **Konu Seçim Ekranı**'nda kullanıcıya sunulur. Kullanıcı sınava dahil edilecek konuları onaylar veya seçer.
-    - Başarısız tespitte kullanıcı bilgilendirilir ve süreç durdurulur.
-5.  **Öğrenme Hedefi Yönetimi:** Seçilen her yeni Alt Konu için backend, ilgili Ders altında `status: 'pending'` ile bir Öğrenme Hedefi kaydı oluşturur (veya mevcut hedefi eşleştirir).
-6.  **Sınav Başlatma:** Kullanıcı, ihtiyacına uygun Sınav Modunu (Hızlı veya Kişiselleştirilmiş türlerden biri) ve sınav ayarlarını (soru sayısı, zorluk vb.) seçerek sınavı başlatır.
-7.  **Soru Üretimi:** Backend, seçilen mod, ayarlar, ilgili Öğrenme Hedeflerinin durumu ve (gerekiyorsa) belge içeriğine göre AI'ye (Gemini) soruları ürettirir.
-8.  **Sınav Çözme:** Sorular frontend arayüzünde kullanıcıya sunulur ve cevaplar kaydedilir.
-9.  **Sınav Tamamlama ve Analiz:** Sınav bittiğinde veya süre dolduğunda, cevaplar backend'e gönderilir ve değerlendirilir.
-    - Genel skor ve alt konu bazlı performans hesaplanır.
-    - Yanlış cevaplanan sorular kaydedilir (`FailedQuestion` koleksiyonu).
-    - **Kişiselleştirilmiş Sınavlar:** Analiz sonuçları oluşturulur ve ilgili Öğrenme Hedeflerinin `status` değerleri güncellenir.
-    - Sınav kaydı (`Quiz` koleksiyonu) veritabanına yazılır.
-10. **Sonuç Görüntüleme ve Takip:** Kullanıcı, sınav sonuçlarını ve (varsa) detaylı analizi frontend'de görür. **Öğrenme Takip Sayfası** üzerinden Ders bazlı genel ilerlemesini ve hedeflerinin güncel durumunu izleyebilir.
-
----
-
-### **4. Platform Yetenekleri ve Özellikler**
-
-#### **4.1. Kullanıcı Yönetimi**
-
-- **4.1.1. Kimlik Doğrulama:** Güvenli kullanıcı kaydı, girişi, şifre sıfırlama ve oturum yönetimi. Tercihen Firebase Authentication kullanılır ve NestJS backend tarafından doğrulanır. Google ile sosyal giriş desteklenir.
-- **4.1.2. Kullanıcı Profili:** Kullanıcıya ait temel bilgiler (e-posta, opsiyonel ad/soyad) ve uygulama tercihleri (örn: tema) yönetilir.
-
-#### **4.2. Ders (Çalışma Alanı) Yönetimi**
-
-- Kullanıcılar mantıksal çalışma alanları olan Dersleri oluşturabilir, isimlendirebilir, listeleyebilir ve (opsiyonel) açıklama ekleyebilir.
-- Bir Ders silindiğinde, ilişkili tüm verilerin (İçerik Öğeleri, Hedefler, Sınavlar, Başarısız Sorular) kalıcı olarak silineceği konusunda kullanıcı uyarılır ve silme işlemi **Cascade Delete** mantığıyla gerçekleştirilir (Bkz 8.3).
-
-#### **4.3. İçerik Yönetimi ve İşleme**
-
-- **4.3.1. Belge Yükleme:** PDF, DOCX, TXT formatlarında, UTF-8 kodlamalı, en fazla 10 MB boyutundaki belgeler desteklenir. Kolay kullanım için sürükle-bırak arayüzü sunulur. Dosyalar güvenli bir depolama alanında (örn: Firebase Storage) saklanır.
-- **4.3.2. Metin Çıkarma:** Yüklenen belgelerden metin içeriği **NestJS backend** tarafından, uygun kütüphaneler kullanılarak (örn: `pdf-plumber`, `mammoth`) çıkarılır. Görsel veya karmaşık yapısal elemanlardaki metinler işlenmez.
-- **4.3.3. Hata Yönetimi:** Desteklenmeyen format, bozuk dosya, boyut aşımı veya metin çıkarma hatası gibi durumlarda kullanıcıya anlaşılır hata mesajları sunulur.
-
-#### **4.4. Yapay Zeka Destekli Analiz ve İçerik Üretimi**
+# Bölüm 1: Giriş ve Kapsam
 
-- **4.4.1. AI Konu Tespiti ve Seçimi:**
-  - **Model ve Prompt:** Google Gemini (`gemini-1.5-flash`, `temperature=0`) modeli, özel olarak tasarlanmış bir prompt (Bkz. `Prompts/3.md`, `Bitirme/PRD - v8.3.md` Section 4.4.1.1) kullanılarak metinden en fazla iki seviyeli, kavramsal Alt Konuları tespit eder. Prompt, yapısal başlıkları, pratik adımları, tekrarları ve önemsiz detayları elemeye odaklanır. Mevcut Ders hedefleri prompt'a eklenerek tekrar önlenir.
-  - **Konu Seçim Ekranı:** AI tarafından önerilen yeni Alt Konular, kullanıcı onayı için frontend'de listelenir. Kullanıcı sınava dahil edilecek konuları seçer.
-  - **Başarısız Tespit:** AI konu çıkaramazsa (`Konu tespit edilemedi.` yanıtı), süreç durdurulur ve kullanıcı bilgilendirilir.
-- **4.4.2. AI Soru Üretimi:**
-  - **Süreç:** NestJS backend, seçilen sınav modu, Öğrenme Hedeflerinin durumu (`status`), kullanıcı tercihleri (zorluk vb.), seçilen Alt Konular ve (gerekiyorsa) hesaplanan soru dağılımına göre Gemini API'sine istek gönderir.
-  - **Çıktı:** AI, JSON formatında bir soru listesi döndürür. Her soru; `id`, `questionText`, `options` (seçenekler), `correctAnswer`, `explanation` (açıklama), `subTopic` (orijinal ad), `normalizedSubTopic`, `difficulty` alanlarını içerir. Açıklama (`explanation`) üretilmesi zorunludur.
-  - **Güvenlik ve Hata Yönetimi:** API anahtarı backend'de güvenli tutulur. API çağrıları backend üzerinden yapılır. Geçici hatalar için yeniden deneme mekanizması (Exponential Backoff) kullanılır.
+## 1.1. Platform Vizyonu
 
-#### **4.5. Öğrenme Hedefleri (Learning Targets) ve Takibi**
+Kişiselleştirilmiş Quiz Platformu, her seviyeden öğrencinin ve profesyonelin bilgi düzeylerini ölçmelerine, eksiklerini tespit etmelerine ve öğrenme süreçlerini kişiye özel bir deneyimle optimize etmelerine olanak tanıyan, yapay zeka destekli, yenilikçi ve kullanıcı dostu bir eğitim teknolojisi çözümü olmayı hedefler. Platform, geleneksel sınav ve değerlendirme yöntemlerinin ötesine geçerek, öğrenmeyi daha etkileşimli, motive edici ve verimli hale getirmeyi amaçlar. Temel vizyonumuz, herkesin kendi öğrenme hızına ve tarzına uygun, esnek ve etkili bir değerlendirme aracına erişimini sağlayarak, yaşam boyu öğrenmeyi desteklemek ve bilgiye dayalı bir toplumun gelişimine katkıda bulunmaktır. Platform, kullanıcıların sadece mevcut bilgilerini test etmelerini değil, aynı zamanda yeni bilgiler edinmelerini ve öğrenme hedeflerine ulaşmalarını sağlayacak kapsamlı bir ekosistem sunacaktır.
 
-- **4.5.1. Tanım:** Bir Ders içerisindeki her bir Alt Konu için kullanıcının yeterliliğini temsil eden ve `normalizedSubTopicName` ile eşleştirilen kayıtlardır (`courses/{courseId}/learningTargets/{targetId}`).
-- **4.5.2. 4-Seviyeli Durum (`status`) Sistemi:** Her Öğrenme Hedefinin durumu, **sadece** o hedefle ilgili sorular içeren **en son Kişiselleştirilmiş Sınavdaki** başarı yüzdesine (`lastAttemptScorePercent`) göre belirlenir:
-  - `'pending'` (Beklemede): Henüz ilgili konuda soru çözülmemiş veya hedef yeni oluşturulmuş.
-  - `'failed'` (Başarısız): Başarı %0 - %49 (dahil).
-  - `'medium'` (Orta): Başarı %50 (dahil) - %69 (dahil).
-  - `'mastered'` (Başarılı): Başarı %70 (dahil) veya üzeri.
-- **4.5.3. Oluşturma ve Güncelleme:** Yeni hedefler `'pending'` olarak başlar. İlk ilgili sınavdan sonra durumları (`failed`, `medium`, `mastered`) belirlenir. Sonraki sınavlarda durum, sadece o sınavdaki performansa göre güncellenir. Sınavda soru sorulmayan hedeflerin durumu değişmez. İsteğe bağlı olarak `failCount`, `mediumCount`, `successCount` sayaçları tutulabilir.
-- **4.5.4. Kullanım:** Hedeflerin `status` değerleri, Zayıf/Orta Odaklı ve Kapsamlı sınavların içeriğini ve soru dağılımını belirlemede kullanılır.
+## 1.2. Temel Çalışma Prensibi
 
-#### **4.6. Sınav (Quiz) Sistemi**
+Platform, iki ana sınav türü etrafında şekillenen bir çalışma prensibine sahiptir: Hızlı Sınav ve Kişiselleştirilmiş Sınav. 
 
-- **4.6.1. Sınav Oluşturma Modları:**
-  - **Hızlı Sınav:** Tek belgeyi hızlıca değerlendirir, Öğrenme Hedeflerini etkilemez.
-  - **Kişiselleştirilmiş Sınavlar (Ders İlişkili):**
-    - **Zayıf/Orta Odaklı:** Belge gerektirmeden, durumu `'failed'` veya `'medium'` olan mevcut hedeflere odaklanır.
-    - **Yeni Konu Odaklı:** Yüklenen belgedeki sadece yeni (ve seçilen) Alt Konuları test eder ve bu hedeflerin ilk durumunu belirler.
-    - **Kapsamlı:** Yeni belge içeriği (seçilen konular) ile mevcut tüm Öğrenme Hedeflerini birleştirir. `prioritizeWeakAndMediumTopics` ayarı ile zayıf/orta konulara ağırlık verebilir.
-- **4.6.2. Sınav Ayarları:**
-  - **Ortak:** Soru Sayısı (5-20, slider), Zorluk Seviyesi (Kolay/Orta/Zor/Karışık, dropdown), Zaman Sınırı (Opsiyonel, dakika girişi).
-  - **Kapsamlı Özel:** Başarısız ve Orta Konulara Öncelik Ver (`prioritizeWeakAndMediumTopics`, checkbox, %60 ağırlık).
+**Hızlı Sınav:** Kullanıcıların herhangi bir üyelik oluşturmadan veya kişisel bilgilerini girmeden, seçtikleri bir konu veya ders üzerinden hızlıca bilgi seviyelerini test etmelerine olanak tanır. Bu modül, anlık merak giderme, genel bir konu hakkında fikir edinme veya hızlı bir tekrar yapma ihtiyacını karşılar. Hızlı Sınav sonuçları, kullanıcının isteğine bağlı olarak geçici olarak saklanabilir ve daha sonra Kişiselleştirilmiş Sınav deneyimine temel oluşturabilir.
 
-#### **4.7. Performans Değerlendirme ve Geri Bildirim**
+**Kişiselleştirilmiş Sınav:** Kullanıcıların üyelik oluşturarak giriş yaptığı ve öğrenme geçmişleri, performansları, ilgi alanları ve hedefleri doğrultusunda tamamen kendilerine özel sınavlar oluşturabildiği modüldür. Bu modül, yapay zeka algoritmaları kullanarak kullanıcının güçlü ve zayıf yönlerini analiz eder, öğrenme hedeflerine göre uyarlanmış sorular sunar ve detaylı geri bildirimlerle öğrenme sürecini yönlendirir. Kullanıcılar, kendi derslerini (çalışma alanlarını) oluşturabilir, içerik yükleyebilir, öğrenme hedefleri belirleyebilir ve platformun sunduğu yapay zeka destekli içerik üretimi özelliklerinden faydalanabilirler. Kişiselleştirilmiş Sınav, sürekli öğrenmeyi ve derinlemesine bilgi edinmeyi hedefler.
 
-- **4.7.1. Sınav Sonuç Ekranı:** Genel skoru gösterir. Kişiselleştirilmiş Sınavlar için ek olarak; alt konu bazlı performans (başarı %, güncel `status` rozeti - Kırmızı/Sarı/Yeşil/Gri), zorluk bazlı performans, durum bazında konu listeleri ve (varsa) yanlış cevaplanan soruları (açıklamalarıyla) sunar.
-- **4.7.2. Öğrenme Takip Sayfası (Dashboard):** Seçili Ders için genel ilerleme grafiği (zamanla ortalama skorlar) ve hedef durumlarının (`status`) dağılımını (pasta/çubuk grafik) gösterir. Alt konuları güncel durumları (renk kodları, son başarı %, sayaçlar) ile listeler. Tasarım referansı: `learning-tracker.html`.
-- **4.7.3. Sınav Geçmişi:** Kullanıcıların çözdüğü tüm sınavları (Hızlı ve Kişiselleştirilmiş) listeler ve sonuçları tekrar inceleme imkanı sunar.
-- **4.7.4. Başarısız Soru Takibi:** Tüm sınavlardaki yanlış cevaplar, detaylarıyla birlikte merkezi `FailedQuestion` koleksiyonuna kaydedilir. Bu, gelecekteki tekrar veya analizler için kullanılır.
+Platformun temel çalışma prensibi, kullanıcıya esneklik sunarken, öğrenme verimliliğini en üst düzeye çıkarmak üzerine kuruludur. İçerik yönetimi, konu analizi, alt konu normalizasyonu ve öğrenme hedefi takibi gibi özellikler, bu prensibi destekleyen temel yapı taşlarıdır.
 
----
+## 1.3. Hedef Kullanıcı Kitlesi
 
-### **5. Kullanıcı Deneyimi (UX/UI) ve Tasarım**
+Kişiselleştirilmiş Quiz Platformu, geniş bir kullanıcı yelpazesine hitap etmeyi amaçlamaktadır. Başlıca hedef kullanıcı kitleleri şunlardır:
 
-- **5.1. Tasarım İlkeleri:** Modern, minimalist, sezgisel, kullanıcı dostu, net ve erişilebilir bir tasarım hedeflenir.
-- **5.2. Teknolojiler:** Stil için Tailwind CSS, animasyonlar için Framer Motion, bildirimler için `react-toastify`, grafikler için `Chart.js` kullanılır.
-- **5.3. Tema:** Karanlık ve Aydınlık mod desteklenir, kullanıcı tercihine veya sistem ayarlarına göre geçiş yapılır.
-- **5.4. Duyarlılık:** Platform, mobil, tablet ve masaüstü cihazlarda sorunsuz çalışacak şekilde duyarlı (responsive) tasarlanır.
-- **5.5. Erişilebilirlik:** WCAG 2.1 AA standartlarına uyum hedeflenir.
-- **5.6. Akış ve Geri Bildirim:** Kullanıcı akışları pürüzsüz olmalıdır. Onboarding turu (Bkz 5.8), kolay içerik yükleme, net konu seçimi (AI önerisi vurgusuyla), işlem sırasında yükleme göstergeleri, sidebar navigasyonu ve durumlar (başarı, hata, yükleme, hedef `status`) için anlık ve anlaşılır görsel/metinsel geri bildirimler sağlanır.
-- **5.7. Hata Yönetimi:** Katmanlı hata yakalama uygulanır. Kullanıcıya spesifik, anlaşılır hata mesajları ve mümkünse çözüm veya alternatif eylemler sunulur. Ağ/API hataları için otomatik yeniden deneme yapılır. Tüm önemli hatalar merkezi olarak (Sentry vb.) loglanır.
-- **5.8. Onboarding Turu:** Yeni kullanıcılar için platformun temel mantığını (Ders, Hedef, 4-seviyeli durum, Sınav Türleri) açıklayan, `react-joyride` gibi bir kütüphane ile desteklenen, isteğe bağlı ve tekrar başlatılabilir interaktif bir tanıtım turu sunulur.
+*   **Öğrenciler (K-12, Üniversite ve Lisansüstü):** Derslerine yardımcı olmak, sınavlara hazırlanmak, bilgi seviyelerini ölçmek ve eksiklerini gidermek isteyen her seviyeden öğrenciler. Platform, öğrencilerin kendi öğrenme hızlarında ilerlemelerine ve konuları daha iyi anlamalarına yardımcı olacaktır.
+*   **Profesyoneller ve Yaşam Boyu Öğrenenler:** Mesleki gelişimlerini sürdürmek, yeni beceriler kazanmak, sertifika sınavlarına hazırlanmak veya ilgi duydukları alanlarda bilgilerini tazelemek isteyen yetişkinler. Platform, yoğun iş hayatına sahip profesyoneller için esnek ve etkili bir öğrenme ve değerlendirme aracı sunacaktır.
+*   **Eğitmenler ve Öğretmenler:** Öğrencileri için özelleştirilmiş sınavlar oluşturmak, öğrenci ilerlemesini takip etmek ve öğretim materyallerini zenginleştirmek isteyen eğitimciler. Platform, eğitmenlere zaman kazandıracak ve öğretim süreçlerini daha veri odaklı hale getirmelerine yardımcı olacaktır.
+*   **Kurumlar ve Şirketler:** Çalışanlarının eğitim ihtiyaçlarını karşılamak, mesleki yetkinliklerini ölçmek ve şirket içi eğitim programlarını desteklemek isteyen kurumlar. Platform, kurumsal eğitim çözümleri için ölçeklenebilir ve özelleştirilebilir bir altyapı sunacaktır.
+*   **İçerik Üreticileri ve Yayıncılar:** Kendi uzmanlık alanlarında quizler ve değerlendirme materyalleri oluşturarak platforma katkıda bulunmak ve geniş bir kitleye ulaşmak isteyen bireyler ve kuruluşlar.
 
----
+Platform, farklı öğrenme ihtiyaçlarına ve hedeflerine sahip tüm bu kullanıcı gruplarına değer katmayı ve onların öğrenme yolculuklarında güvenilir bir ortak olmayı hedefler.
 
-### **6. Teknik Mimari ve Teknoloji Seçimleri**
 
-#### **6.1. Genel Mimari Yaklaşımı**
 
-Full-stack bir mimari benimsenecektir:
 
-- **Frontend:** Next.js (React tabanlı)
-- **Backend:** NestJS (Node.js tabanlı)
-- **API İletişimi:** REST API
+# Bölüm 2: Temel Kavramlar ve Terminoloji
 
-#### **6.2. Teknoloji Yığını**
+Bu bölümde, Kişiselleştirilmiş Quiz Platformu içerisinde sıkça kullanılacak olan temel kavramlar ve bu kavramlara atfedilen anlamlar detaylı bir şekilde açıklanmaktadır. Bu terminolojinin net bir şekilde anlaşılması, platformun işleyişinin ve özelliklerinin doğru kavranması için kritik öneme sahiptir.
 
-- **Frontend:** Next.js (App Router), React, TypeScript.
-- **UI (Frontend):** Tailwind CSS, Framer Motion, `react-toastify`, `Chart.js`.
-- **State Yönetimi (Frontend):** Zustand (karmaşık/global state), React Context API (basit global state: Auth, Theme).
-- **Data Fetching (Frontend):** SWR veya TanStack Query (React Query).
-- **Backend:** NestJS, TypeScript.
-- **Veritabanı:** Firestore (NoSQL) - _Alternatifler değerlendirilebilir_.
-- **ORM (Backend):** Prisma.
-- **Kimlik Doğrulama:** Firebase Authentication (Öneri).
-- **Dosya Depolama:** Firebase Storage (Öneri).
-- **AI:** Google Gemini API (`@google/generative-ai` SDK).
-- **Hata Takibi:** Sentry (Öneri).
-- **Test Kütüphaneleri:** Jest, React Testing Library, Playwright/Cypress, (Firebase Emulator Suite - eğer Firebase servisleri kullanılıyorsa).
-
-#### **6.3. Frontend Mimarisi (Next.js)**
-
-- **Yapı:** `src/` dizini altında `app/` (routing), `components/` (UI/feature), `lib/` (utils), `services/` (API katmanı), `hooks/`, `store/` (Zustand), `contexts/`, `types/` klasörleri kullanılır.
-- **Bileşenler:** Feature-based veya Atomic Design prensiplerine göre organize edilir.
-- **Veri Çekme:** `services/` katmanı REST API çağrılarını soyutlar. SWR/TanStack Query ile Client Component'larda veri yönetimi yapılır. Server Component'lar ilk yükleme için kullanılır.
-- **State:** Zustand ve Context API belirtilen amaçlar için kullanılır.
-- **Auth:** Oturum bilgisi (HttpOnly cookie önerilir) backend tarafından yönetilir, frontend state'i Context/Zustand ile tutulur, route koruması Middleware veya layout/page seviyesinde yapılır.
-
-#### **6.4. Backend Mimarisi (NestJS)**
-
-- **Yapı:** Modüler yapı (Modules, Controllers, Services) benimsenir. Dependency Injection aktif olarak kullanılır.
-- **API:** RESTful API endpoint'leri Controller'lar ile tanımlanır. DTO'lar ve ValidationPipe ile istek doğrulaması yapılır.
-- **Servisler:** İş mantığı, veritabanı işlemleri (Prisma ile), AI API çağrıları (`@google/generative-ai` SDK ile), metin çıkarma ve diğer harici servis etkileşimleri Servis katmanında implemente edilir.
-- **Güvenlik:** Guard'lar (Auth, Roles vb.) ile endpoint güvenliği ve yetkilendirme sağlanır. API anahtarları güvenli yönetilir.
-- **Veritabanı:** Prisma ORM ile veritabanı şeması yönetilir ve type-safe sorgular yapılır.
-
-#### **6.6. API İletişimi (REST)**
-
-- Frontend (Next.js) ve Backend (NestJS) arasındaki tüm iletişim standart REST prensiplerine uygun olarak tasarlanmış API endpoint'leri üzerinden gerçekleştirilecektir. İstek ve yanıtlar için JSON formatı kullanılacaktır.
-
-#### **6.7. Alt Konu Normalizasyonu**
-
-- Tutarlılık ve doğru eşleştirme için, AI tarafından tespit edilen veya potansiyel olarak kullanıcı tarafından girilen Alt Konu isimleri, backend'de standart bir formata (`normalizedSubTopicName`) dönüştürülecektir (küçük harf, trim, ardışık boşlukları teke indirme, temel noktalama işaretlerini kaldırma). Tüm Öğrenme Hedefi ve Başarısız Soru eşleştirmeleri bu normalize edilmiş isim üzerinden yapılacaktır.
-
-#### **6.8. Performans, Ölçeklenebilirlik ve Maliyet**
-
-- Uygulamanın performanslı çalışması hedeflenir (verimli sorgular, optimize edilmiş frontend yüklemeleri). Kullanıcıya uzun süren işlemler (AI çağrıları vb.) sırasında geri bildirim (loading state) verilir.
-- Mimari, gelecekteki kullanıcı artışını karşılayabilecek şekilde (NestJS'in ölçeklenebilirlik özellikleri, optimize veritabanı kullanımı) tasarlanır.
-- AI API kullanımı, veritabanı işlemleri ve hosting maliyetleri göz önünde bulundurulur ve optimize edilir.
-
----
-
-### **7. Veri Modelleri (Firestore Önerisi)**
-
-_(Bu modeller Firestore için tasarlanmıştır. Farklı bir veritabanı seçilirse Prisma şeması buna göre uyarlanmalıdır. Alanlar PRD v8.3'teki tanımlara uygundur.)_
-
-- **7.1. User:** (`users/{userId}`)
-  - `uid`, `email`, `displayName` (nullable), `createdAt`, `lastLogin`, `settings` ({ `theme` })
-- **7.2. Course:** (`courses/{courseId}`)
-  - `id`, `userId` (index), `name`, `description` (nullable), `createdAt`
-- **7.3. LearningTarget:** (`courses/{courseId}/learningTargets/{targetId}`)
-  - `id` (UUID), `courseId`, `userId`, `subTopicName`, `normalizedSubTopicName` (index), `status` ('pending'|'failed'|'medium'|'mastered', index), `failCount`, `mediumCount`, `successCount`, `lastAttemptScorePercent` (nullable), `lastAttempt` (nullable), `firstEncountered`
-- **7.4. Quiz:** (`quizzes/{quizId}`)
-  - `id`, `userId` (index), `quizType` ('quick'|'personalized', index), `personalizedQuizType` ('weakTopicFocused'|'newTopicFocused'|'comprehensive'|null, index), `courseId` (nullable, index), `sourceDocument` ({ `fileName`, `storagePath`? }|null), `selectedSubTopics` (string[]|null), `preferences` ({ `questionCount`, `difficulty`, `timeLimit`, `prioritizeWeakAndMediumTopics` }), `questions` (Question[]), `userAnswers` (Record<string, string>), `score`, `correctCount`, `totalQuestions`, `elapsedTime` (nullable), `analysisResult` (AnalysisResult|null), `timestamp` (index)
-- **7.5. Question:** (Quiz.questions içinde)
-  - `id` (UUID), `questionText`, `options` (string[]), `correctAnswer`, `explanation` (nullable), `subTopic`, `normalizedSubTopic`, `difficulty`
-- **7.6. AnalysisResult:** (Quiz.analysisResult içinde)
-  - `overallScore`, `performanceBySubTopic` (Record<normSubTopic, { scorePercent, status, questionCount, correctCount }>), `performanceCategorization` ({ failed[], medium[], mastered[] }), `performanceByDifficulty` (Record<difficulty, { count, correct, score }>), `recommendations` (string[]|null)
-- **7.7. FailedQuestion:** (`failedQuestions/{failedQuestionId}`)
-  - `id`, `userId` (index), `quizId`, `questionId`, `courseId` (nullable, index), `questionText`, `options`, `correctAnswer`, `userAnswer`, `subTopicName`, `normalizedSubTopicName` (index), `difficulty`, `failedTimestamp` (index)
-
----
-
-### **8. Kalite Güvencesi ve Güvenlik**
-
-#### **8.1. Test Stratejisi**
-
-- Kapsamlı bir test stratejisi izlenecektir:
-  - **Birim Testleri (Jest):** NestJS servisleri ve Next.js hook'ları/utility'leri için iş mantığı, hesaplamalar ve durum güncelleme kuralları test edilir.
-  - **Bileşen Testleri (React Testing Library):** Next.js UI bileşenlerinin doğru render edildiği, olaylara tepki verdiği ve beklenen kullanıcı etkileşimlerini desteklediği doğrulanır.
-  - **Entegrasyon Testleri:** NestJS endpoint'leri, veritabanı etkileşimleri (Prisma mock'ları veya test veritabanı ile), AI API çağrıları (mock servisler ile) ve (kullanılıyorsa) Firebase servis etkileşimleri (Emulator Suite ile) test edilir.
-  - **Uçtan Uca Testler (Playwright/Cypress):** Temel kullanıcı akışları (kayıt/giriş, ders oluşturma, belge yükleme, konu seçimi, farklı sınav türleri, sonuç analizi, hedef durumu güncellemesi, hata senaryoları) baştan sona test edilir.
-
-#### **8.2. Kod Kalitesi Standartları**
-
-- Tüm projede **TypeScript** kullanımı zorunludur. Kod stili tutarlılığı için **ESLint** ve **Prettier** kullanılır ve otomatik formatlama yapılandırılır. Anlamlı isimlendirme, JSDoc/TSDoc ile belgelendirme ve DRY (Don't Repeat Yourself) prensibine uyulur. **Kod Gözden Geçirmeleri (Code Reviews)** geliştirme sürecinin bir parçasıdır.
-
-#### **8.3. Güvenlik Öncelikleri ve Stratejileri**
-
-- **Kimlik Doğrulama & Yetkilendirme:** Güvenli kimlik doğrulama (Firebase Auth önerisi) ve NestJS backend'de token doğrulama/yetkilendirme (Guard'lar) esastır.
-- **Veri Erişimi:** Veritabanı erişimi (Firestore Güvenlik Kuralları veya NestJS servis katmanı aracılığıyla) sıkı bir şekilde kontrol edilir, kullanıcılar yalnızca kendi verilerine erişebilir.
-- **API Güvenliği:** Tüm API endpoint'leri (NestJS) uygun şekilde korunur (Auth Guard, Rate Limiting, CORS). Hassas API anahtarları (Gemini vb.) backend'de güvenli bir şekilde saklanır ve yönetilir.
-- **Dosya Güvenliği:** Dosya depolama (Firebase Storage önerisi) erişimi güvenlik kuralları ile kısıtlanır.
-- **Veri Doğrulama:** Hem frontend hem de backend'de (NestJS DTO/ValidationPipe) gelen veriler doğrulanır.
-- **Bağımlılık Yönetimi:** Güvenlik açıkları için kullanılan kütüphaneler düzenli olarak (`npm audit`) kontrol edilir.
-- **Veri Gizliliği:** İlgili veri gizliliği yönetmeliklerine (GDPR/KVKK) uyum sağlanır ve şeffaf bir gizlilik politikası sunulur.
-- **Cascade Delete:** Ders veya Kullanıcı silme işlemlerinde ilişkili tüm verilerin tutarlı bir şekilde silinmesi için mekanizmalar (NestJS servisleri veya DB tetikleyicileri) implemente edilir ve dikkatlice test edilir.
-
----
-
-### **9. Geliştirme Yol Haritası (Aşamalandırma)**
-
-_(NestJS backend kararı ışığında güncellenmiş aşamalar)_
-
-- **MVP (Minimum Viable Product):**
-  - Auth (Kayıt, Giriş - NestJS + Firebase Auth).
-  - Ders CRUD (NestJS API).
-  - Belge Yükleme (PDF/TXT) & Metin Çıkarma (NestJS).
-  - Hızlı Sınav Modu (AI Soru Üretimi (NestJS), Sonuç Gösterimi, Kayıt).
-  - Temel Veritabanı Şeması ve Prisma Kurulumu (User, Course, Quiz-Quick, FailedQuestion).
-  - Temel UI/UX (Next.js).
-- **Faz 2 (Temel Kişiselleştirme):**
-  - AI Konu Tespiti & Konu Seçim Ekranı (NestJS + Next.js).
-  - Temel Alt Konu Normalizasyonu (NestJS).
-  - Temel Learning Target Oluşturma/Güncelleme (4-seviyeli `status`, `pending` dahil) (NestJS + DB).
-  - Yeni Konu Odaklı Sınav Modu.
-  - DOCX Desteği (NestJS).
-  - Basit Sınav Geçmişi (NestJS API + Next.js).
-  - Temel Analiz Ekranı (`status` gösterimi).
-- **Faz 3 (Gelişmiş Kişiselleştirme ve Hedef Takibi):**
-  - AI Konu Tespiti (Mevcut Ders Filtreleme).
-  - Kapsamlı Sınav Modu (`prioritizeWeakAndMediumTopics` özelliği).
-  - Zayıf/Orta Odaklı Sınav Modu.
-  - Learning Target Güncelleme Mantığı (`failed`/`medium`/`mastered`) ve Sayaçlar.
-  - Öğrenme Takip Sayfası (Dashboard) (Grafikler, Hedef Listesi).
-  - Tema Desteği (Aydınlık/Karanlık).
-- **Faz 4 (UX İyileştirmeleri ve Sağlamlaştırma):**
-  - UI Animasyonları (Framer Motion).
-  - Gelişmiş Hata Yönetimi Stratejisi.
-  - Onboarding Turu (`react-joyride`).
-  - Cascade Delete Mekanizması.
-  - Kapsamlı Testler (Entegrasyon, E2E).
-  - Performans Optimizasyonları ve Güvenlik Gözden Geçirmeleri.
-- **Gelecek Aşamalar:** Başarısız Soru Yönetimi/Sınavı, PDF Çıktısı, Gelişmiş AI Açıklamaları, Farklı Soru Tipleri, Kullanıcı Konu Düzenleme, Paylaşım, Çoklu Dil, Gelişmiş Konu Eşleştirme, LMS Entegrasyonları.
-
----
-
-### **10. Potansiyel Riskler ve Yönetim Stratejileri**
-
-1.  **Kritik Güvenlik Riski:** API anahtarlarının sızması veya NestJS API endpoint'lerinin yetersiz korunması.
-    - **Yönetim:** Anahtarların backend ortam değişkenleri/Secret Manager ile güvenli yönetimi; tüm hassas çağrıların backend'den yapılması; NestJS Guard'larının etkin kullanımı.
-2.  **AI Kalitesi/Tutarlılığı:** Konu tespiti ve soru üretiminde değişkenlik veya hatalar.
-    - **Yönetim:** Detaylı prompt mühendisliği, `temperature=0` kullanımı, model izleme, beklenti yönetimi, katı normalizasyon, kullanıcı geri bildirim mekanizması (gelecekte).
-3.  **Operasyonel Maliyetler:** AI API kullanımı, veritabanı ve NestJS hosting/altyapı maliyetleri.
-    - **Yönetim:** Verimli tasarım (Prisma sorgu optimizasyonu, AI model seçimi), maliyet takibi/uyarıları, optimizasyonlar (caching), uygun maliyetli ve yönetilebilir hosting çözümü seçimi.
-4.  **Veri Güvenliği (DB/Storage):** Yetkisiz erişim veya veri ihlali.
-    - **Yönetim:** Sıkı erişim kontrolleri (Firestore Güvenlik Kuralları veya NestJS yetkilendirme katmanı), güvenli API yönetimi, düzenli denetimler, Cascade Delete'in dikkatli implementasyonu.
-5.  **Kullanıcı Kabulü:** Yeni konseptlerin (4-seviyeli durum, farklı sınav modları) anlaşılması.
-    - **Yönetim:** Etkili onboarding turu, net UI/UX, açıklayıcı metinler, görselleştirmeler (Dashboard).
-6.  **Metin Çıkarma/Analiz Hataları:** Farklı/karmaşık belge yapıları.
-    - **Yönetim:** Robust kütüphaneler, net bilgilendirme, gelişmiş hata yönetimi ve kullanıcıya alternatif sunma.
-7.  **Veri Büyümesi:** Veritabanı koleksiyonlarının (Hedefler, Başarısız Sorular) büyümesi ve performans etkisi.
-    - **Yönetim:** Etkili indeksleme, sorgu optimizasyonu, (gelecekte) arşivleme/temizleme stratejileri.
-8.  **NestJS Altyapı Yönetimi:** Özel backend kullanmanın getirdiği ek altyapı yönetimi (hosting, ölçeklendirme, bakım) sorumluluğu.
-    - **Yönetim:** Yönetilen platformlar (PaaS, Serverless - NestJS uyumlu) kullanmak, CI/CD ile süreçleri otomatikleştirmek, Prisma Migrate gibi araçlarla DB yönetimini kolaylaştırmak.
+*   **Kullanıcı (User):**
+    *   **Tanım:** Platforma erişen ve platformun sunduğu hizmetlerden (Hızlı Sınav, Kişiselleştirilmiş Sınav, içerik oluşturma vb.) faydalanan herhangi bir birey veya kurumsal hesaptır. Kullanıcılar, platformla etkileşimlerine göre farklı rollere ve yetkilere sahip olabilirler (örneğin, öğrenci, eğitmen, içerik üreticisi, yönetici).
+    *   **Detaylar:** Her kullanıcı, Kişiselleştirilmiş Sınav özelliklerinden faydalanmak için benzersiz bir kimliğe (kullanıcı adı/e-posta ve şifre) sahip olmalıdır. Hızlı Sınav için kullanıcı girişi zorunlu değildir, ancak bu durumda ilerleme ve kişiselleştirilmiş öneriler sunulamaz. Kullanıcı verileri (profil bilgileri, sınav sonuçları, öğrenme hedefleri, oluşturulan içerikler vb.) güvenli bir şekilde saklanır ve gizlilik politikalarına uygun olarak yönetilir.
+
+*   **Ders (Course / Çalışma Alanı):**
+    *   **Tanım:** Belirli bir konu, disiplin veya öğrenme alanını kapsayan, organize edilmiş içeriklerin, sınavların ve öğrenme hedeflerinin bir araya getirildiği sanal bir çalışma ortamıdır. Kullanıcılar, kendi ilgi alanlarına veya öğrenme ihtiyaçlarına göre dersler oluşturabilir, mevcut derslere kaydolabilir veya platform tarafından sunulan genel derslerden faydalanabilirler.
+    *   **Detaylar:** Her ders, bir veya daha fazla ana konuyu ve bu konulara bağlı alt konuları içerebilir. Dersler, kullanıcıların kendi içeriklerini (metin, resim, video, PDF vb.) yükleyebilecekleri, platformun yapay zeka destekli araçlarıyla içerik üretebilecekleri ve öğrenme hedefleri belirleyebilecekleri esnek bir yapıya sahiptir. Bir ders, herkese açık, özel veya belirli bir kullanıcı grubuna özel olabilir.
+
+*   **İçerik Öğesi (Content Item):**
+    *   **Tanım:** Bir ders veya konu içerisinde yer alan, öğrenme materyali olarak kullanılan her türlü bilgi birimidir. Bu, metin tabanlı açıklamalar, makaleler, görseller, videolar, ses kayıtları, sunumlar, dış bağlantılar veya platform üzerinde oluşturulmuş interaktif öğrenme modülleri olabilir.
+    *   **Detaylar:** İçerik öğeleri, belirli konulara ve öğrenme hedeflerine etiketlenebilir. Platform, yüklenen içerik öğelerini analiz ederek (örneğin, metin içeriğinden anahtar kelimeler çıkararak, video transkriptlerini işleyerek) otomatik olarak konu ve alt konu etiketlemesi yapabilir. Kullanıcılar, kendi içerik öğelerini oluşturabilir, düzenleyebilir veya platformun sunduğu hazır içerik kütüphanesinden faydalanabilirler. Yapay zeka, mevcut içerik öğelerinden yeni sorular veya özetler üretebilir.
+
+*   **Konu/Alt Konu (Topic/Sub-topic):**
+    *   **Tanım:** Bir dersin veya daha geniş bir bilgi alanının mantıksal alt bölümleridir. Konular, öğrenilecek materyalin daha yönetilebilir ve anlaşılır parçalara ayrılmasını sağlar. Alt konular, bir ana konunun daha spesifik detaylarını veya bileşenlerini ifade eder.
+    *   **Detaylar:** Platform, hiyerarşik bir konu yapısını destekler (örneğin, Ders: Matematik -> Konu: Cebir -> Alt Konu: Denklemler). İçerik öğeleri ve sınav soruları, ilgili konu ve alt konularla ilişkilendirilir. Yapay zeka, kullanıcıların yüklediği içeriklerden veya belirttikleri alanlardan otomatik olarak konu ve alt konu ağaçları oluşturabilir veya mevcutları iyileştirebilir. Alt konu normalizasyonu, farklı kaynaklardan gelen benzer konuların standart bir terminoloji altında birleştirilmesini sağlar, böylece içerik tutarlılığı ve arama etkinliği artar.
+
+*   **Öğrenme Hedefi (Learning Objective):**
+    *   **Tanım:** Bir kullanıcının belirli bir ders, konu veya içerik öğesini tamamladıktan sonra neyi bilmesi, anlaması veya yapabilmesi gerektiğini tanımlayan açık ve ölçülebilir ifadelerdir. Öğrenme hedefleri, kişiselleştirilmiş sınavların ve geri bildirimlerin temelini oluşturur.
+    *   **Detaylar:** Kullanıcılar, kendi öğrenme hedeflerini manuel olarak belirleyebilir veya platform, kullanıcının seçtiği derslere, konulara veya performansına göre otomatik olarak öğrenme hedefleri önerebilir. Her öğrenme hedefi, ilgili içerik öğeleri ve sınav soruları ile eşleştirilir. Platform, kullanıcının sınav performansını analiz ederek öğrenme hedeflerine ne kadar ulaştığını takip eder ve bu hedeflere yönelik kişiselleştirilmiş çalışma önerileri sunar. Öğrenme hedefleri, kullanıcının ilerlemesine göre dinamik olarak güncellenebilir.
+
+*   **Sınav (Quiz):**
+    *   **Tanım:** Kullanıcının belirli bir konu, ders veya öğrenme hedefi hakkındaki bilgi düzeyini, anlayışını veya becerisini ölçmek amacıyla tasarlanmış bir dizi soru ve değerlendirme aracıdır. Sınavlar, Hızlı Sınav veya Kişiselleştirilmiş Sınav formatında olabilir.
+    *   **Detaylar:** Sınavlar, çoktan seçmeli, doğru/yanlış, boşluk doldurma, eşleştirme, kısa cevaplı veya uzun cevaplı (yapay zeka destekli değerlendirme ile) gibi çeşitli soru türlerini içerebilir. Kişiselleştirilmiş Sınavlar, kullanıcının öğrenme geçmişine, performansına ve hedeflerine göre yapay zeka tarafından dinamik olarak oluşturulur. Sınav sonuçları, detaylı analizler ve geri bildirimlerle birlikte kullanıcıya sunulur. Hızlı Sınav sonuçları, kullanıcının tercihine göre geçici olarak saklanabilirken, Kişiselleştirilmiş Sınav sonuçları kullanıcının profiline kaydedilir ve öğrenme ilerlemesinin takibinde kullanılır.
+
+
+
+
+# Bölüm 3: Genel Kullanıcı Akışı ve Deneyimi
+
+Bu bölüm, Kişiselleştirilmiş Quiz Platformu'ndaki temel kullanıcı etkileşimlerini ve bu etkileşimler sırasında yaşanacak deneyimleri ana hatlarıyla açıklamaktadır. Kullanıcıların platformla nasıl etkileşime gireceği, temel görevleri nasıl yerine getireceği ve bu süreçlerde nasıl bir deneyim yaşayacağı üzerinde durulmaktadır.
+
+## 3.1. Ana Sayfa Erişimi ve Sınav Türü Seçimi
+
+**Kullanıcı Akışı:**
+
+1.  **Platforma Erişim:** Kullanıcı, web tarayıcısı veya mobil uygulama (gelecekteki bir sürümde) aracılığıyla platformun ana URL'sine erişir.
+2.  **Karşılama Ekranı:** Kullanıcıyı, platformun genel tanıtımını yapan, temel özelliklerini vurgulayan ve iki ana sınav türünü (Hızlı Sınav ve Kişiselleştirilmiş Sınav) net bir şekilde sunan bir ana sayfa karşılar.
+3.  **Giriş/Kayıt Seçeneği (Opsiyonel):** Ana sayfada, Kişiselleştirilmiş Sınav özelliklerinden faydalanmak isteyen kullanıcılar için belirgin bir "Giriş Yap" ve "Kayıt Ol" butonu bulunur. Hızlı Sınav için bu adım zorunlu değildir.
+4.  **Sınav Türü Seçimi:** Kullanıcı, ana sayfada sunulan iki seçenekten birini tercih eder:
+    *   **Hızlı Sınav:** "Hızlı Sınav Başla" veya benzeri bir çağrı ile doğrudan sınav oluşturma arayüzüne yönlendirilir.
+    *   **Kişiselleştirilmiş Sınav:** "Kişiselleştirilmiş Deneyime Başla" veya benzeri bir çağrı ile giriş yapma/kayıt olma ekranına yönlendirilir. Eğer kullanıcı zaten giriş yapmışsa, doğrudan kişiselleştirilmiş ana paneline (dashboard) erişir.
+
+**Kullanıcı Deneyimi Beklentileri:**
+
+*   **Netlik ve Basitlik:** Ana sayfa, karmaşadan uzak, anlaşılır ve kullanıcıyı yormayan bir tasarıma sahip olmalıdır. Sınav türleri arasındaki fark ve hangi durumda hangisinin tercih edileceği açıkça belirtilmelidir.
+*   **Hızlı Erişim:** Kullanıcılar, istedikleri sınav türüne minimum tıklama ile ulaşabilmelidir.
+*   **Davetkar Tasarım:** Platformun modern, güvenilir ve profesyonel bir imaj çizmesi hedeflenir.
+
+## 3.2. Hızlı Sınav Akışı
+
+**Kullanıcı Akışı:**
+
+1.  **Sınav Türü Seçimi:** Kullanıcı ana sayfadan "Hızlı Sınav" seçeneğini seçer.
+2.  **Konu/Ders Seçimi:** Kullanıcıya, popüler konuların bir listesi sunulur veya bir arama çubuğu aracılığıyla istediği konuyu/dersi araması istenir. Platform, geniş bir konu yelpazesi sunmalıdır.
+3.  **Sınav Parametreleri (Opsiyonel):** Kullanıcıya, soru sayısı, zorluk seviyesi gibi temel sınav parametrelerini (eğer platform destekliyorsa ve kullanıcı isterse) ayarlama seçeneği sunulabilir. Varsayılan olarak, platform dengeli bir sınav oluşturur.
+4.  **Sınav Başlatma:** Kullanıcı, "Sınavı Başlat" butonuna tıklar.
+5.  **Sınav Arayüzü:** Kullanıcı, soruları tek tek veya toplu halde görebileceği, cevaplarını işaretleyebileceği, kalan süreyi (eğer varsa) takip edebileceği kullanıcı dostu bir sınav arayüzüne yönlendirilir.
+6.  **Sınavı Tamamlama/Bitirme:** Kullanıcı tüm soruları cevapladıktan sonra "Sınavı Bitir" butonuna tıklar veya süre dolduğunda sınav otomatik olarak sonlanır.
+7.  **Sonuç Ekranı:** Kullanıcıya anında sınav sonucu (doğru/yanlış sayısı, başarı yüzdesi) gösterilir. Her sorunun doğru cevabı ve kullanıcının verdiği cevap karşılaştırmalı olarak sunulur. Kısa açıklamalar veya referans materyallere bağlantılar (eğer varsa) gösterilebilir.
+8.  **Sonuçları Kaydetme Seçeneği (Geçici):** Kullanıcıya, sınav sonuçlarını geçici olarak (örneğin, tarayıcı çerezleri veya yerel depolama ile) kaydetme seçeneği sunulur. Bu, kullanıcının daha sonra bu sonuçları bir hesap oluşturarak Kişiselleştirilmiş Sınav profiline aktarmasına olanak tanıyabilir. Bu mekanizma, kullanıcının açık rızasıyla çalışmalıdır.
+9.  **Tekrar Deneme veya Farklı Konu Seçme:** Kullanıcıya, aynı konuda tekrar sınav olma, farklı bir konu seçme veya ana sayfaya dönme seçenekleri sunulur.
+
+**Kullanıcı Deneyimi Beklentileri:**
+
+*   **Anonimlik ve Hız:** Giriş yapma zorunluluğu olmaması, kullanıcıların platformu hızlıca deneyimlemesini sağlar.
+*   **Anında Geri Bildirim:** Sınav biter bitmez sonuçların ve doğru cevapların gösterilmesi, öğrenme sürecine katkıda bulunur.
+*   **Kullanıcı Dostu Arayüz:** Sınav arayüzü, dikkat dağıtıcı unsurlardan arındırılmış, soruların ve seçeneklerin net bir şekilde okunabildiği bir yapıda olmalıdır.
+*   **Esneklik:** Sonuçları geçici kaydetme ve daha sonra hesaba aktarma imkanı, kullanıcıya değer katar.
+
+## 3.3. Kişiselleştirilmiş Sınav Akışı
+
+**Kullanıcı Akışı:**
+
+1.  **Giriş Yapma/Kayıt Olma:** Kullanıcı, ana sayfadan "Kişiselleştirilmiş Sınav" seçeneğini seçer. Eğer hesabı yoksa, e-posta, kullanıcı adı ve şifre gibi temel bilgilerle hızlıca kayıt olur. Sosyal medya hesaplarıyla (Google, Facebook vb.) giriş seçeneği sunulabilir. Eğer hesabı varsa, giriş yapar.
+2.  **Kullanıcı Paneli (Dashboard):** Giriş yapan kullanıcı, kişiselleştirilmiş ana paneline yönlendirilir. Bu panelde şunlar yer alabilir:
+    *   Genel ilerleme özeti ve istatistikler.
+    *   Devam eden dersler ve öğrenme hedefleri.
+    *   Önerilen sınavlar veya çalışma materyalleri.
+    *   Yeni bir kişiselleştirilmiş sınav başlatma seçeneği.
+    *   Ders oluşturma/yönetme, içerik ekleme gibi özelliklere erişim linkleri.
+3.  **Sınav Oluşturma Seçenekleri:** Kullanıcı, yeni bir kişiselleştirilmiş sınav başlatmak istediğinde farklı seçeneklerle karşılaşabilir:
+    *   **Belirli Bir Dersten/Konudan Sınav:** Kayıtlı olduğu veya oluşturduğu derslerden birini seçerek o dersin konularından bir sınav oluşturabilir.
+    *   **Öğrenme Hedefine Yönelik Sınav:** Belirlediği bir öğrenme hedefine ulaşma durumunu test etmek için özel bir sınav oluşturabilir.
+    *   **Zayıf Olduğu Alanlara Yönelik Sınav:** Platformun, kullanıcının geçmiş performansına göre zayıf olduğu alanları belirleyip bu alanlara odaklanan bir sınav önermesi.
+    *   **Karma Sınav:** Birden fazla ders veya konuyu içeren karma bir sınav oluşturabilir.
+4.  **Sınav Parametreleri (Yapay Zeka Destekli):** Kullanıcı, sınavın uzunluğu, zorluk derecesi gibi parametreleri belirleyebilir veya bu parametrelerin yapay zeka tarafından kendi öğrenme seviyesine ve hedeflerine göre otomatik olarak ayarlanmasını tercih edebilir.
+5.  **Sınav Başlatma:** Kullanıcı, "Sınavı Başlat" butonuna tıklar.
+6.  **Sınav Arayüzü:** Hızlı Sınav ile benzer, ancak kullanıcının profil resmini veya adını gösterebilecek, kişiselleştirilmiş bir sınav arayüzü sunulur. Sorular, kullanıcının seviyesine ve hedeflerine göre dinamik olarak seçilir.
+7.  **Sınavı Tamamlama/Bitirme:** Kullanıcı sınavı tamamlar.
+8.  **Detaylı Sonuç ve Analiz Ekranı:** Kullanıcıya sınav sonucu, doğru/yanlış sayısı, başarı yüzdesi, her sorunun analizi (doğru cevap, verilen cevap, harcanan süre vb.) sunulur. Ayrıca, performansının öğrenme hedefleriyle nasıl örtüştüğü, hangi konularda güçlü veya zayıf olduğu gibi detaylı analizler ve grafiksel gösterimler sunulur.
+9.  **Kişiselleştirilmiş Geri Bildirim ve Öneriler:** Yapay zeka, sınav sonuçlarına dayanarak kullanıcıya özel geri bildirimler (örneğin, "Bu konudaki temel kavramları tekrar gözden geçirmen faydalı olacaktır.") ve bir sonraki adım için öneriler (örneğin, belirli içerik öğelerini çalışma, ek sınavlar çözme) sunar.
+10. **İlerleme Takibi:** Sınav sonuçları otomatik olarak kullanıcının profiline kaydedilir ve genel ilerleme grafikleri güncellenir. Öğrenme hedeflerine ulaşma durumu takip edilir.
+11. **Panel'e Dönüş veya Yeni Aktivite:** Kullanıcı, ana paneline dönebilir, önerilen aktivitelerden birini seçebilir veya yeni bir sınav/çalışma başlatabilir.
+
+**Kullanıcı Deneyimi Beklentileri:**
+
+*   **Kişiselleştirme:** Platformun her adımda kullanıcının bireysel ihtiyaçlarına, bilgi seviyesine ve öğrenme hedeflerine göre adapte olması.
+*   **Anlamlı Geri Bildirim:** Sadece doğru/yanlış bilgisinin ötesinde, kullanıcının gelişimine katkı sağlayacak, eyleme geçirilebilir geri bildirimler ve öneriler sunulması.
+*   **Motivasyon ve Etkileşim:** Kullanıcının ilerlemesini net bir şekilde görmesi, hedeflerine ulaştıkça motive olması ve platformla etkileşimde kalması.
+*   **Kontrol ve Esneklik:** Kullanıcının kendi öğrenme sürecini yönetebilmesi, derslerini ve içeriklerini organize edebilmesi.
+*   **Güvenli ve Özel:** Kullanıcı verilerinin gizliliğinin ve güvenliğinin en üst düzeyde sağlanması.
+
+
+
+
+# Bölüm 4: Platform Yetenekleri ve Özellikler
+
+Bu bölüm, Kişiselleştirilmiş Quiz Platformu'nun sunacağı temel yetenekleri ve bu yetenekleri destekleyen özellikleri detaylandırmaktadır. Her bir özellik, kullanıcının platformla etkileşimini nasıl zenginleştireceği ve öğrenme deneyimini nasıl iyileştireceği göz önünde bulundurularak tasarlanmıştır.
+
+## 4.1. Kullanıcı Yönetimi ve Erişim Kontrolü
+
+*   **Kullanıcı Kaydı:**
+    *   **Özellik:** E-posta/şifre ile standart kayıt, Google/Facebook gibi sosyal medya hesaplarıyla hızlı kayıt seçenekleri.
+    *   **Detay:** Kayıt sırasında kullanıcıdan temel profil bilgileri (isim, soyisim, isteğe bağlı olarak eğitim seviyesi/ilgi alanları) alınabilir. Şifre politikaları (minimum uzunluk, karakter çeşitliliği) uygulanır. E-posta doğrulaması ile hesap aktivasyonu sağlanır.
+*   **Kullanıcı Girişi:**
+    *   **Özellik:** Güvenli kullanıcı girişi (e-posta/şifre, sosyal medya hesapları).
+    *   **Detay:** "Şifremi Unuttum" fonksiyonu ile şifre sıfırlama imkanı. Başarısız giriş denemelerine karşı koruma mekanizmaları (örneğin, belirli sayıda denemeden sonra geçici hesap kilitleme).
+*   **Profil Yönetimi:**
+    *   **Özellik:** Kullanıcıların kişisel bilgilerini (isim, e-posta, profil resmi, şifre, ilgi alanları vb.) güncelleyebilmesi.
+    *   **Detay:** Hesap ayarları (bildirim tercihleri, gizlilik ayarları vb.) yönetimi. Hesap silme seçeneği (veri anonimleştirme veya silme politikalarına uygun olarak).
+*   **Rol Tabanlı Erişim Kontrolü (RBAC):**
+    *   **Özellik:** Farklı kullanıcı türleri (örneğin, öğrenci, eğitmen, içerik üreticisi, platform yöneticisi) için farklı yetki seviyeleri ve erişim hakları tanımlanması.
+    *   **Detay:** Öğrenciler kendi sınavlarına ve derslerine erişirken, eğitmenler kendi oluşturdukları dersleri ve öğrenci ilerlemelerini yönetebilir. Yöneticiler platform genelinde ayarları ve kullanıcıları yönetebilir.
+*   **Oturum Yönetimi:**
+    *   **Özellik:** Güvenli oturum yönetimi, oturum süre aşımı, aktif oturumları görüntüleme ve sonlandırma (kullanıcı tarafından).
+    *   **Detay:** "Beni Hatırla" seçeneği ile kalıcı oturum (kullanıcının tercihine bağlı).
+
+## 4.2. Ana Sayfa ve Sınav Türleri
+
+*   **Dinamik Ana Sayfa:**
+    *   **Özellik:** Giriş yapmamış kullanıcılar için genel platform tanıtımı, Hızlı Sınav ve Kişiselleştirilmiş Sınav seçeneklerinin net sunumu. Giriş yapmış kullanıcılar için kişiselleştirilmiş bir karşılama (örneğin, "Hoş geldin [Kullanıcı Adı]!"), son aktiviteler, önerilen dersler/sınavlar ve ilerleme özetini içeren bir panel.
+*   **Hızlı Sınav Modülü Erişimi:**
+    *   **Özellik:** Ana sayfadan doğrudan, üyelik gerektirmeden Hızlı Sınav başlatma seçeneği.
+    *   **Detay:** Kullanıcıyı konu seçimi veya arama arayüzüne yönlendirir.
+*   **Kişiselleştirilmiş Sınav Modülü Erişimi:**
+    *   **Özellik:** Ana sayfadan Kişiselleştirilmiş Sınav modülüne erişim (giriş yapma/kayıt olma gerektirir).
+    *   **Detay:** Giriş yapmış kullanıcıyı doğrudan kişisel paneline (dashboard) yönlendirir.
+
+## 4.3. Hızlı Sınav Özellikleri
+
+*   **Giriş Zorunluluğu Olmaması:**
+    *   **Özellik:** Kullanıcıların platformu anonim olarak deneyimleyebilmesi.
+    *   **Detay:** Herhangi bir kişisel bilgi veya üyelik gerektirmeden sınav çözebilme.
+*   **Konu/Ders Seçimi:**
+    *   **Özellik:** Geniş bir konu/ders kütüphanesinden seçim yapabilme veya arama çubuğu ile spesifik bir konu arayabilme.
+    *   **Detay:** Popüler konular, kategorilere ayrılmış konu listeleri sunulabilir.
+*   **Anında Sınav Oluşturma:**
+    *   **Özellik:** Seçilen konuya göre platform tarafından otomatik olarak dengeli bir sınav (soru sayısı, zorluk seviyesi) oluşturulması.
+    *   **Detay:** Kullanıcıya isteğe bağlı olarak temel sınav parametrelerini (örneğin, 10 soru, orta zorluk) seçme imkanı sunulabilir.
+*   **Kullanıcı Dostu Sınav Arayüzü:**
+    *   **Özellik:** Net, anlaşılır ve dikkat dağıtmayan bir sınav ekranı. Sorular, seçenekler, ilerleme çubuğu, kalan süre (varsa) gibi temel unsurları içerir.
+*   **Anında Sonuç ve Geri Bildirim:**
+    *   **Özellik:** Sınav biter bitmez doğru/yanlış sayısı, başarı yüzdesi ve her sorunun doğru cevabının gösterilmesi.
+    *   **Detay:** Kullanıcının verdiği cevaplarla doğru cevapların karşılaştırılması. Mümkünse, kısa açıklamalar veya ilgili bilgi kaynaklarına yönlendirmeler.
+*   **Hızlı Sınav Sonuçlarının Kaydedilmesi Mekanizması (Geçici ve İsteğe Bağlı):**
+    *   **Özellik:** Kullanıcının, Hızlı Sınav sonuçlarını (puan, cevaplanan sorular, doğru/yanlışlar) anonim olarak geçici bir süreliğine (örneğin, 24 saat veya tarayıcı oturumu boyunca) kaydetme seçeneği.
+    *   **Detay:** Bu kayıt işlemi, kullanıcının açık onayı ile tarayıcı yerel depolaması (localStorage) veya çerezler (cookies) aracılığıyla gerçekleştirilir. Kullanıcıya, bu geçici sonuçları daha sonra bir hesap oluşturarak/giriş yaparak kalıcı profiline aktarma imkanı sunulur. Bu aktarım sırasında, geçici verinin hangi kullanıcıya ait olduğu güvenli bir şekilde eşleştirilir (örneğin, benzersiz bir geçici ID ile). Gizlilik ve veri güvenliği ön planda tutulur; kullanıcıya verilerinin nasıl kullanılacağı konusunda şeffaf bilgi verilir.
+*   **Tekrar Deneme ve Farklı Konu Seçme:**
+    *   **Özellik:** Aynı konuda tekrar sınav olma veya farklı bir konuya geçerek yeni bir Hızlı Sınav başlatma seçenekleri.
+
+## 4.4. Kişiselleştirilmiş Sınav Özellikleri
+
+*   **Giriş Zorunluluğu Olması:**
+    *   **Özellik:** Tüm kişiselleştirme özelliklerinden, ilerleme takibinden ve veri depolamadan faydalanmak için kullanıcı girişi zorunludur.
+*   **Kişiselleştirilmiş Kullanıcı Paneli (Dashboard):**
+    *   **Özellik:** Kullanıcının öğrenme yolculuğuna genel bir bakış sunan, ilerlemesini, hedeflerini, önerilen içerikleri ve sınavları gösteren merkezi bir alan.
+*   **Yapay Zeka Destekli Adaptif Sınav Oluşturma:**
+    *   **Özellik:** Kullanıcının geçmiş performansı, öğrenme hızı, güçlü/zayıf olduğu konular ve belirlediği öğrenme hedeflerine göre dinamik olarak sınavlar oluşturulması.
+    *   **Detay:** Soruların zorluk seviyesi, konu dağılımı ve sayısı kullanıcıya göre ayarlanır. Platform, kullanıcının en çok ihtiyaç duyduğu alanlara odaklanır.
+*   **Çeşitli Sınav Başlatma Seçenekleri:**
+    *   **Özellik:** Belirli bir dersten, konudan, öğrenme hedefinden veya zayıf olunan alanlardan sınav başlatabilme.
+*   **Detaylı Performans Analizi ve Raporlama:**
+    *   **Özellik:** Sınav sonrası sadece puan değil, konu bazında başarı, zaman yönetimi, öğrenme hedeflerine ulaşma durumu gibi kapsamlı analizler.
+    *   **Detay:** Anlaşılır grafikler, tablolar ve karşılaştırmalı verilerle kullanıcının performansını görselleştirme. Güçlü ve geliştirilmesi gereken yönlerin vurgulanması.
+*   **Kişiselleştirilmiş Geri Bildirim ve Öneriler:**
+    *   **Özellik:** Yapay zekanın, sınav sonuçlarına göre kullanıcıya özel, eyleme geçirilebilir geri bildirimler (örneğin, "X konusunda daha fazla pratik yapmalısın, şu kaynaklara göz atabilirsin") ve sonraki adımlar için çalışma planı önerileri sunması.
+*   **İlerleme Takibi ve Rozetler/Başarılar (Gamification):**
+    *   **Özellik:** Kullanıcının zaman içindeki gelişimini takip etme, tamamladığı dersler, ulaştığı öğrenme hedefleri ve sınav başarıları için motive edici rozetler veya puanlar kazanması.
+
+## 4.5. Ders (Çalışma Alanı) Yönetimi
+
+*   **Ders Oluşturma ve Özelleştirme:**
+    *   **Özellik:** Kullanıcıların (özellikle eğitmen rolündekilerin veya kendi kendine çalışanların) kendi özel derslerini/çalışma alanlarını oluşturabilmesi.
+    *   **Detay:** Ders adı, açıklaması, kapak resmi, kategori, hedef kitle gibi bilgilerin girilmesi. Dersin gizlilik ayarları (herkese açık, özel, davetle erişim).
+*   **Konu ve Alt Konu Hiyerarşisi Oluşturma:**
+    *   **Özellik:** Ders içerisinde mantıksal bir yapıda konular ve alt konular oluşturabilme.
+    *   **Detay:** Sürükle-bırak arayüzü ile kolayca konu hiyerarşisi düzenleme.
+*   **Derslere Kaydolma/Ayrılma:**
+    *   **Özellik:** Kullanıcıların platformdaki herkese açık veya kendi erişimine izin verilen derslere kaydolabilmesi ve istediklerinde ayrılabilmesi.
+*   **Ders İlerleme Takibi:**
+    *   **Özellik:** Kullanıcının bir dersteki tamamladığı içerik öğelerini, çözdüğü sınavları ve ulaştığı öğrenme hedeflerini takip edebilmesi.
+
+## 4.6. İçerik Yönetimi ve İşleme
+
+*   **Çeşitli İçerik Türlerini Destekleme:**
+    *   **Özellik:** Metin, resim (JPG, PNG, GIF), video (gömülü veya yüklenmiş), PDF, sunum (PPT, Google Slides linki), ses dosyaları ve dış web bağlantıları gibi farklı formatlarda içerik öğeleri eklenebilmesi.
+*   **İçerik Yükleme ve Düzenleme Arayüzü:**
+    *   **Özellik:** Kullanıcı dostu bir arayüz ile kolayca içerik yükleme, düzenleme, silme ve organize etme.
+    *   **Detay:** Zengin metin editörü (WYSIWYG) ile formatlı metinler oluşturma. İçeriklerin konularla ve öğrenme hedefleriyle ilişkilendirilmesi.
+*   **Konu Analizi ve Seçimi Süreçleri:**
+    *   **Özellik:** Kullanıcı tarafından yüklenen metin tabanlı içeriklerin (PDF, DOCX, TXT) yapay zeka tarafından analiz edilerek otomatik olarak anahtar konuların, alt konuların ve önemli kavramların çıkarılması.
+    *   **Detay:** Yapay zeka, doğal dil işleme (NLP) teknikleri kullanarak içeriğin semantik yapısını anlar ve ilgili konu başlıklarını önerir. Kullanıcı bu önerileri onaylayabilir, düzenleyebilir veya kendi konu etiketlerini ekleyebilir. Bu süreç, içeriğin daha iyi organize edilmesini ve kişiselleştirilmiş sınavlar için daha doğru soru üretilmesini sağlar. Kullanıcı, bir metin bloğu veya doküman yüklediğinde, sistemden bu içeriğe uygun potansiyel konu başlıkları ve alt başlıklar listesi alabilir ve bunlar arasından seçim yapabilir veya yenilerini tanımlayabilir.
+*   **Otomatik Etiketleme ve Kategorizasyon (AI Destekli):**
+    *   **Özellik:** Yüklenen içeriklerin, analiz sonuçlarına göre otomatik olarak ilgili derslere, konulara ve öğrenme hedeflerine etiketlenmesi.
+*   **İçerik Kütüphanesi ve Arama:**
+    *   **Özellik:** Kullanıcıların kendi içeriklerini veya erişim izni olan diğer içerikleri kolayca bulabilmesi için gelişmiş arama ve filtreleme seçenekleri (konuya, türe, anahtar kelimeye göre).
+
+## 4.7. Yapay Zeka Destekli İçerik Üretimi
+
+*   **Metinden Soru Üretme:**
+    *   **Özellik:** Kullanıcının yüklediği metin tabanlı içeriklerden (ders notları, makaleler vb.) yapay zeka tarafından otomatik olarak çeşitli türlerde (çoktan seçmeli, doğru/yanlış, boşluk doldurma) sınav soruları üretilmesi.
+    *   **Detay:** Kullanıcı, üretilen soruları gözden geçirebilir, düzenleyebilir veya doğrudan sınavlarına ekleyebilir.
+*   **Konu Özeti Oluşturma:**
+    *   **Özellik:** Uzun metin içeriklerinden veya bir konu başlığı altındaki birden fazla içerik öğesinden yapay zeka tarafından kısa ve anlaşılır özetler oluşturulması.
+*   **Alternatif Açıklamalar Üretme:**
+    *   **Özellik:** Karmaşık bir kavram veya konu için yapay zekanın farklı açılardan veya daha basit bir dille alternatif açıklamalar sunması.
+*   **Yanlış Cevaplar İçin Açıklayıcı Geri Bildirim Üretme (Distractor Rationale):**
+    *   **Özellik:** Çoktan seçmeli sorularda, sadece doğru cevabı değil, yanlış seçeneklerin neden yanlış olduğuna dair yapay zeka tarafından mantıklı açıklamalar üretilmesi.
+
+## 4.8. Öğrenme Hedefleri ve Takibi
+
+*   **Öğrenme Hedefi Belirleme:**
+    *   **Özellik:** Kullanıcıların manuel olarak kendi öğrenme hedeflerini (örneğin, "X konusundaki temel formülleri ezberlemek", "Y teorisini anlayabilmek") tanımlayabilmesi veya platformun ders/konu içeriğine göre hedefler önermesi.
+    *   **Detay:** Hedefler SMART (Specific, Measurable, Achievable, Relevant, Time-bound) prensiplerine uygun olarak tanımlanabilir.
+*   **Hedef-İçerik-Soru Eşleştirmesi:**
+    *   **Özellik:** Her öğrenme hedefinin, ilgili ders içerikleri ve sınav soruları ile ilişkilendirilmesi.
+*   **Öğrenme Hedeflerine Ulaşma Durumunun Takibi:**
+    *   **Özellik:** Kullanıcının sınav performansları ve içerik tamamlama durumlarına göre her bir öğrenme hedefine ne kadar yaklaştığının görsel olarak (örneğin, ilerleme çubukları ile) takip edilmesi.
+    *   **Detay:** Yapay zeka, kullanıcının belirli bir hedefe ulaşmak için hangi alanlarda daha fazla çalışması gerektiğini analiz eder ve buna yönelik öneriler sunar.
+*   **Öğrenme Hedeflerinin Dinamik Güncellenmesi:**
+    *   **Özellik:** Kullanıcının ilerlemesine, performansındaki değişimlere veya yeni ilgi alanlarına göre mevcut öğrenme hedeflerinin platform tarafından güncellenmesi veya kullanıcıya yeni hedefler önerilmesi.
+    *   **Detay:** Örneğin, bir kullanıcı belirli bir konuda beklenenden daha hızlı ilerliyorsa, platform daha ileri seviye hedefler önerebilir. Ya da bir konuda sürekli zorlanıyorsa, o konuyu daha temel alt hedeflere bölerek yeniden yapılandırabilir. Kullanıcı, bu otomatik güncellemeleri kabul etme veya reddetme seçeneğine sahip olmalıdır.
+
+## 4.9. Sınav Sistemi Detayları
+
+*   **Çeşitli Soru Tipleri Desteği:**
+    *   **Özellik:** Çoktan seçmeli (tek/çoklu doğru cevap), doğru/yanlış, boşluk doldurma, eşleştirme, kısa cevaplı (anahtar kelime tabanlı otomatik değerlendirme veya eğitmen değerlendirmesi), uzun cevaplı/kompozisyon (yapay zeka destekli ön değerlendirme ve/veya eğitmen değerlendirmesi).
+*   **Soru Bankası Yönetimi:**
+    *   **Özellik:** Kullanıcıların (özellikle eğitmenlerin) kendi soru bankalarını oluşturabilmesi, soruları kategorize edebilmesi (konu, zorluk seviyesi, öğrenme hedefi), düzenleyebilmesi ve arayabilmesi.
+    *   **Detay:** Sorulara resim, video veya ses eklenebilmesi.
+*   **Zamanlı Sınav Seçeneği:**
+    *   **Özellik:** Sınavlar için toplam süre veya soru başına süre limiti belirlenebilmesi.
+*   **Rastgele Soru ve Seçenek Sıralaması:**
+    *   **Özellik:** Her kullanıcı için veya aynı kullanıcının farklı denemelerinde soruların ve/veya seçeneklerin sırasının rastgele karıştırılması (kopya çekmeyi zorlaştırmak için).
+*   **Sınav İlerlemesini Kaydetme ve Devam Etme:**
+    *   **Özellik:** Uzun sınavlarda, kullanıcının sınavı yarıda bırakıp daha sonra kaldığı yerden devam edebilmesi (özellikle Kişiselleştirilmiş Sınavlar için).
+*   **Anında veya Gecikmeli Geri Bildirim Seçeneği:**
+    *   **Özellik:** Sınavın her sorudan sonra mı yoksa sınav bittikten sonra mı geri bildirim vereceğinin ayarlanabilmesi.
+
+## 4.10. Performans Değerlendirme ve Geri Bildirim
+
+*   **Otomatik Puanlama:**
+    *   **Özellik:** Kapalı uçlu soruların (çoktan seçmeli, doğru/yanlış, boşluk doldurma, eşleştirme) anında ve otomatik olarak puanlanması.
+*   **Yapay Zeka Destekli Açık Uçlu Soru Değerlendirmesi (Ön Değerlendirme):**
+    *   **Özellik:** Kısa ve uzun cevaplı sorular için yapay zekanın ön bir değerlendirme yaparak eğitmenlere yardımcı olması veya belirli kriterlere göre otomatik puanlama denemesi yapması.
+*   **Detaylı Sonuç Raporları:**
+    *   **Özellik:** Kullanıcılara ve eğitmenlere yönelik, sınav genel performansı, konu bazlı başarı, soru bazlı analizler, harcanan zaman gibi detayları içeren kapsamlı raporlar.
+*   **Görselleştirilmiş Veriler:**
+    *   **Özellik:** Performans verilerinin anlaşılır grafikler (çubuk, pasta, çizgi grafikler vb.) ve tablolarla sunulması.
+*   **Kişiselleştirilmiş Güçlü/Zayıf Yön Analizi:**
+    *   **Özellik:** Yapay zekanın, kullanıcının sınav sonuçlarına ve öğrenme geçmişine dayanarak hangi konularda veya becerilerde güçlü, hangilerinde zayıf olduğunu belirlemesi.
+*   **Eyleme Geçirilebilir Geri Bildirim ve İyileştirme Önerileri:**
+    *   **Özellik:** Sadece sonuçları göstermekle kalmayıp, kullanıcının zayıf olduğu alanları nasıl geliştirebileceğine dair somut öneriler, ek kaynaklar ve çalışma stratejileri sunulması.
+
+
+
+
+# Bölüm 5: Kullanıcı Deneyimi (UX/UI) ve Tasarım
+
+Kişiselleştirilmiş Quiz Platformu, kullanıcıların öğrenme süreçlerini keyifli, etkili ve sorunsuz bir şekilde yönetebilmeleri için üstün bir kullanıcı deneyimi (UX) ve çekici bir kullanıcı arayüzü (UI) sunmayı hedefler. Tasarım felsefemiz, kullanıcı odaklılık, basitlik, erişilebilirlik ve tutarlılık ilkelerine dayanmaktadır.
+
+**Genel Tasarım İlkeleri:**
+
+*   **Kullanıcı Odaklılık:** Tüm tasarım kararları, hedef kullanıcı kitlelerinin ihtiyaçları, beklentileri ve davranışları göz önünde bulundurularak alınacaktır. Kullanıcı araştırmaları, kullanılabilirlik testleri ve geri bildirim döngüleri tasarım sürecinin ayrılmaz bir parçası olacaktır.
+*   **Basitlik ve Anlaşılırlık:** Arayüzler karmaşadan uzak, net ve sezgisel olmalıdır. Kullanıcılar, platformun özelliklerini kolayca keşfedebilmeli ve istedikleri işlemleri minimum eforla gerçekleştirebilmelidir.
+*   **Tutarlılık:** Platform genelinde kullanılan tasarım öğeleri (renk paleti, tipografi, ikonografi, buton stilleri, navigasyon yapısı vb.) tutarlı olmalıdır. Bu, kullanıcıların platforma aşina olmalarını ve farklı bölümler arasında kolayca geçiş yapmalarını sağlar.
+*   **Erişilebilirlik (Accessibility - WCAG Standartları):** Platform, engelli kullanıcılar da dahil olmak üzere herkes tarafından rahatlıkla kullanılabilir olmalıdır. Web İçeriği Erişilebilirlik Yönergeleri (WCAG) AA seviyesine uyum hedeflenmektedir. Bu, uygun renk kontrastları, klavye ile navigasyon desteği, ekran okuyucularla uyumluluk ve anlaşılır metin alternatifleri gibi özellikleri içerir.
+*   **Görsel Çekicilik ve Modernlik:** Arayüz, estetik açıdan hoş, modern ve profesyonel bir görünüme sahip olmalıdır. Kullanıcıyı yormayan, öğrenmeye teşvik eden bir atmosfer yaratılmalıdır.
+*   **Performans ve Hız:** Sayfa yükleme süreleri ve etkileşim tepki süreleri optimize edilerek kullanıcıların akıcı bir deneyim yaşaması sağlanacaktır.
+*   **Mobil Uyumluluk (Responsive Design):** Platform, farklı ekran boyutlarına (masaüstü, tablet, mobil) ve çözünürlüklerine uyum sağlayan duyarlı bir tasarıma sahip olacaktır. Mobil öncelikli bir yaklaşım benimsenebilir.
+
+**Kullanıcı Arayüzü (UI) Detayları:**
+
+*   **Renk Paleti:** Güven veren, sakinleştirici ve odaklanmayı kolaylaştıran renkler tercih edilecektir. Ana renkler, platformun marka kimliğini yansıtacak, ikincil renkler ve vurgu renkleri ise önemli eylemleri ve bilgileri öne çıkarmak için kullanılacaktır. Renk körlüğü olan kullanıcılar için yeterli kontrast sağlanacaktır.
+*   **Tipografi:** Okunabilirliği yüksek, modern ve web dostu font aileleri seçilecektir. Farklı başlık seviyeleri, paragraflar ve etiketler için tutarlı bir tipografi hiyerarşisi oluşturulacaktır.
+*   **İkonografi:** Anlamları kolayca anlaşılabilen, tutarlı ve modern bir ikon seti kullanılacaktır. İkonlar, metin etiketleriyle birlikte kullanılarak anlaşılırlık artırılacaktır.
+*   **Görsel Öğeler ve İllüstrasyonlar:** Platformun genel temasını destekleyen, kullanıcıyı motive eden ve karmaşık bilgileri basitleştiren özgün veya lisanslı görseller ve illüstrasyonlar kullanılabilir. Yapay zeka tarafından üretilen görseller de bu amaca hizmet edebilir.
+*   **Boşluk Kullanımı (Whitespace):** Arayüzde yeterli beyaz alan bırakılarak öğelerin birbirine karışması engellenecek, okunabilirlik artırılacak ve daha ferah bir görünüm elde edilecektir.
+*   **Navigasyon:**
+    *   **Ana Navigasyon:** Platformun ana bölümlerine (Panel, Derslerim, Sınavlar, Ayarlar vb.) kolay erişim sağlayan, sabit veya kolayca erişilebilir bir ana menü (örneğin, üst menü çubuğu veya yan menü).
+    *   **İkincil Navigasyon:** Her bölüm içinde, ilgili alt sayfalara veya özelliklere erişimi sağlayan tutarlı bir navigasyon yapısı.
+    *   **Breadcrumbs (İz Sürme Navigasyonu):** Kullanıcının platform içindeki mevcut konumunu gösteren ve önceki sayfalara kolayca dönmesini sağlayan bir iz sürme navigasyonu.
+*   **Formlar ve Giriş Alanları:** Formlar basit, anlaşılır ve kullanıcı dostu olmalıdır. Gerekli alanlar net bir şekilde belirtilmeli, giriş hataları anında ve yapıcı bir şekilde kullanıcıya bildirilmelidir. Otomatik tamamlama ve giriş ipuçları gibi özellikler kullanılabilir.
+*   **Butonlar ve Çağrı-Eylem (CTA) Öğeleri:** Birincil ve ikincil eylemler için farklılaştırılmış buton stilleri kullanılacaktır. CTA butonları, kullanıcıyı istenen eyleme yönlendirmek için belirgin ve dikkat çekici olmalıdır.
+*   **Bildirimler ve Uyarılar:** Kullanıcıyı önemli olaylar (yeni sınav sonucu, yaklaşan hedef tarihi, sistem mesajları vb.) hakkında bilgilendiren, rahatsız etmeyen ve anlaşılır bildirimler (örneğin, anlık bildirimler, e-posta bildirimleri, uygulama içi mesajlar).
+*   **Yükleme Durumları ve İlerleme Göstergeleri:** Sayfa yüklenirken veya bir işlem gerçekleştirilirken kullanıcıya görsel geri bildirim (yükleme animasyonları, ilerleme çubukları) sağlanarak bekleme süresinin daha katlanılabilir olması hedeflenir.
+
+**Kullanıcı Deneyimi (UX) Akışları ve Etkileşimler:**
+
+*   **Onboarding (Platforma Alıştırma):** Yeni kullanıcılar için platformun temel özelliklerini ve faydalarını tanıtan kısa ve etkileşimli bir alıştırma süreci (isteğe bağlı).
+*   **Hızlı Sınav Deneyimi:** Minimum adımla, hızlı ve akıcı bir sınav çözme ve sonuç alma deneyimi.
+*   **Kişiselleştirilmiş Sınav Deneyimi:** Kullanıcının öğrenme yolculuğunu merkeze alan, hedeflerine ve ihtiyaçlarına göre şekillenen, motive edici ve yönlendirici bir deneyim.
+*   **İçerik Oluşturma ve Yönetimi:** İçerik ekleme, düzenleme ve organize etme süreçlerinin basit ve verimli olması.
+*   **Yapay Zeka Etkileşimleri:** Yapay zeka destekli özelliklerin (soru üretme, özet çıkarma, geri bildirim verme) kullanıcı tarafından kolayca anlaşılabilir ve kontrol edilebilir olması. Yapay zekanın önerileri şeffaf bir şekilde sunulmalı ve kullanıcıya son kararı verme imkanı tanınmalıdır.
+*   **Geri Bildirim Mekanizmaları:** Kullanıcıların platformla ilgili geri bildirimlerini (öneri, hata raporu vb.) kolayca iletebilecekleri kanallar sunulmalıdır.
+*   **Hata Yönetimi:** Olası hatalar durumunda kullanıcıya anlaşılır, kibar ve çözüm odaklı hata mesajları gösterilmelidir. Kullanıcının ne yapması gerektiği konusunda yönlendirme yapılmalıdır.
+*   **Karanlık Mod (Dark Mode) Seçeneği:** Kullanıcıların tercihine bağlı olarak açık ve koyu tema arasında geçiş yapabilme imkanı sunulması, göz yorgunluğunu azaltabilir ve farklı ortam koşullarında daha iyi bir deneyim sağlayabilir.
+
+**Kullanılabilirlik Testleri ve İyileştirmeler:**
+
+Tasarım süreci boyunca ve platform yayınlandıktan sonra düzenli olarak kullanılabilirlik testleri (prototiplerle, erken sürümle veya canlı sistemle) yapılacaktır. Gerçek kullanıcılardan elde edilen geri bildirimler ve gözlemler, tasarımın ve kullanıcı deneyiminin sürekli olarak iyileştirilmesi için kullanılacaktır. A/B testleri gibi yöntemlerle farklı tasarım alternatiflerinin etkinliği ölçülebilir.
+
+
+
+
+# Bölüm 6: Teknik Mimari ve Teknoloji Seçimleri
+
+Bu bölüm, Kişiselleştirilmiş Quiz Platformu için önerilen teknik mimariyi, kullanılacak teknolojileri ve bu seçimlerin gerekçelerini detaylandırmaktadır. Amaç, ölçeklenebilir, güvenli, sürdürülebilir ve performansı yüksek bir sistem inşa etmektir.
+
+## 6.1. Genel Mimari Yaklaşımı
+
+Platform için **mikroservis tabanlı bir mimari** veya **modüler monolit** bir yaklaşım değerlendirilebilir. Projenin başlangıç aşamasındaki karmaşıklığı ve geliştirme ekibinin büyüklüğü göz önüne alındığında, iyi yapılandırılmış bir **modüler monolit** ile başlamak ve gelecekte ihtiyaç duyuldukça belirli modülleri mikroservislere dönüştürmek daha yönetilebilir olabilir. Ancak, yapay zeka özellikleri, içerik işleme ve sınav motoru gibi yoğun işlem gerektirebilecek veya bağımsız olarak ölçeklenmesi gerekebilecek bileşenler için baştan itibaren ayrı servisler (veya en azından çok net ayrılmış modüller) düşünülmelidir.
+
+**Temel Katmanlar:**
+
+1.  **Sunum Katmanı (Presentation Layer - Frontend):** Kullanıcı arayüzünü (UI) ve kullanıcı deneyimini (UX) yönetir. Web tarayıcıları ve gelecekte mobil uygulamalar üzerinden erişilir.
+2.  **Uygulama Katmanı (Application Layer - Backend):** İş mantığını, API'leri, kullanıcı yönetimini, sınav mantığını, içerik yönetimini ve diğer temel platform fonksiyonlarını barındırır.
+3.  **Veri Katmanı (Data Layer):** Kullanıcı verileri, ders içerikleri, sınavlar, sorular, öğrenme hedefleri ve diğer tüm kalıcı verilerin depolanmasından ve yönetilmesinden sorumludur.
+4.  **Yapay Zeka ve İşleme Katmanı (AI & Processing Layer):** İçerik analizi, soru üretimi, kişiselleştirme algoritmaları, performans değerlendirme ve diğer yapay zeka destekli görevleri yürüten servisleri veya modülleri içerir. Bu katman, uygulama katmanıyla API'ler aracılığıyla iletişim kurabilir ve asenkron işlemler için bir mesaj kuyruğu sistemi kullanabilir.
+
+**İletişim Akışı:**
+
+*   Kullanıcılar, frontend aracılığıyla backend API'lerine istek gönderir.
+*   Backend, iş mantığını uygular, gerekirse veri katmanından veri alır/yazar ve yapay zeka katmanındaki servisleri tetikler.
+*   Yapay zeka servisleri, yoğun hesaplama gerektiren işlemleri (örneğin, NLP, makine öğrenmesi modellerinin çalıştırılması) gerçekleştirir ve sonuçları backend'e API veya mesaj kuyruğu aracılığıyla iletir.
+
+## 6.7. Alt Konu Normalizasyonu
+
+*   **Problem:** Farklı kullanıcılar veya sistemler tarafından girilen benzer anlamdaki alt konuların (örneğin, "Cebirsel İfadeler", "Cebir İfadeleri", "Algebraic Expressions") farklı varlıklar olarak algılanması, içerik tutarlılığını ve arama/analiz etkinliğini düşürebilir.
+*   **Çözüm Yaklaşımı:**
+    1.  **Kontrollü Vokabüler/Taksonomi:** Mümkün olduğunca, platform genelinde kullanılacak standart bir konu ve alt konu hiyerarşisi (taksonomi) oluşturulmaya çalışılacaktır. Yeni alt konu girişlerinde bu taksonomiye uygunluk teşvik edilebilir.
+    2.  **Yapay Zeka Destekli Normalizasyon:**
+        *   **Benzerlik Analizi:** Yeni bir alt konu girildiğinde veya mevcut içerikler analiz edildiğinde, NLP teknikleri (örneğin, kelime gömme modelleri - Word Embeddings, anlamsal benzerlik algoritmaları) kullanılarak mevcut alt konularla benzerliği ölçülür.
+        *   **Öneri Sistemi:** Yüksek benzerlik durumunda, kullanıcıya mevcut standart bir alt konu başlığı önerilir (örneğin, "Girdiğiniz 'Cebir İfadeleri' yerine standart 'Cebirsel İfadeler' terimini kullanmak ister misiniz?").
+        *   **Otomatik Eşleştirme (Dikkatli Kullanım):** Çok yüksek güven skorlarıyla otomatik eşleştirme yapılabilir, ancak genellikle kullanıcı onayı tercih edilir.
+    3.  **Manuel Kürasyon ve Yönetim Arayüzü:** Platform yöneticileri veya konu uzmanları için, alt konuları gözden geçirebilecekleri, birleştirebilecekleri, standart terimler atayabilecekleri bir yönetim arayüzü sağlanabilir.
+    4.  **Eşanlamlılar (Synonyms) Yönetimi:** Bir alt konunun farklı eşanlamlıları tanımlanarak, arama ve analiz sırasında bu eşanlamlıların da dikkate alınması sağlanabilir.
+
+
+
+
+# Bölüm 7: Veri Modelleri (Firestore Önerisi) - Güncellenmiş
+
+Bu bölüm, Kişiselleştirilmiş Quiz Platformu için önerilen veri modellerini, Google Cloud Firestore NoSQL veritabanı yapısı temel alınarak detaylandırmaktadır. Firestore, esnek şeması, ölçeklenebilirliği ve gerçek zamanlı yetenekleriyle bu tür bir platform için uygun bir seçenektir. Veri modelleri, platformun temel varlıklarını ve aralarındaki ilişkileri yansıtacak şekilde tasarlanmıştır.
+
+**Temel Firestore Kavramları:**
+
+*   **Koleksiyon (Collection):** Dokümanlar için bir kapsayıcıdır. Örneğin, `users`, `courses`, `quizzes` gibi.
+*   **Doküman (Document):** Verilerin depolandığı birimdir. JSON benzeri bir yapıya sahiptir ve alanlardan (fields) oluşur.
+*   **Alan (Field):** Bir doküman içindeki anahtar-değer çiftidir.
+*   **Alt Koleksiyon (Subcollection):** Bir dokümana bağlı olan koleksiyonlardır. Hiyerarşik veri yapıları oluşturmak için kullanılır.
+
+**Ana Koleksiyonlar ve Doküman Yapıları:**
+
+1.  **`users` Koleksiyonu**
+    *   **Doküman ID:** `userId` (Benzersiz kullanıcı kimliği, Firebase Auth UID olabilir)
+    *   **Alanlar:**
+        *   `email`: (String) Kullanıcının e-posta adresi (benzersiz olmalı).
+        *   `hashedPassword`: (String) Güvenli bir şekilde hashlenmiş kullanıcı şifresi (Firebase Auth kullanılıyorsa Firestore'da tutulmayabilir).
+        *   `displayName`: (String) Kullanıcının görünen adı.
+        *   `photoURL`: (String, Opsiyonel) Kullanıcının profil fotoğrafının URL'si.
+        *   `role`: (String) Kullanıcının rolü (örneğin, `student`, `instructor`, `admin`). Varsayılan: `student`.
+        *   `createdAt`: (Timestamp) Kullanıcı hesabının oluşturulma tarihi.
+        *   `updatedAt`: (Timestamp) Kullanıcı profilinin son güncellenme tarihi.
+        *   `preferences`: (Map, Opsiyonel)
+            *   `theme`: (String) `light` veya `dark`.
+            *   `notifications`: (Map) `emailEnabled`, `inAppEnabled` gibi ayarlar.
+        *   `lastLoginAt`: (Timestamp, Opsiyonel) Son giriş tarihi.
+        *   `interests`: (Array<String>, Opsiyonel) Kullanıcının ilgi alanları (konu etiketleri).
+        *   `learningGoalsSummary`: (Map, Opsiyonel) Genel öğrenme hedefleri ve ilerleme özeti.
+            *   `activeGoalsCount`: (Number)
+            *   `completedGoalsCount`: (Number)
+
+2.  **`courses` (Dersler/Çalışma Alanları) Koleksiyonu**
+    *   **Doküman ID:** `courseId` (Benzersiz ders kimliği)
+    *   **Alanlar:**
+        *   `title`: (String) Dersin başlığı.
+        *   `description`: (String) Dersin açıklaması.
+        *   `creatorId`: (String) Dersi oluşturan kullanıcının `userId`'si (Referans: `users/{userId}`).
+        *   `coverImageURL`: (String, Opsiyonel) Dersin kapak fotoğrafının URL'si.
+        *   `category`: (String, Opsiyonel) Dersin kategorisi (örneğin, `Matematik`, `Yazılım`).
+        *   `tags`: (Array<String>, Opsiyonel) Dersle ilgili etiketler.
+        *   `visibility`: (String) `public`, `private`, `unlisted`.
+        *   `createdAt`: (Timestamp) Dersin oluşturulma tarihi.
+        *   `updatedAt`: (Timestamp) Dersin son güncellenme tarihi.
+        *   `enrolledUserCount`: (Number) Derse kayıtlı kullanıcı sayısı (denormalize edilebilir).
+    *   **Alt Koleksiyonlar:**
+        *   **`topics` (Konular):** Bu ders içindeki ana konular.
+            *   **Doküman ID:** `topicId`
+            *   **Alanlar:**
+                *   `title`: (String) Konu başlığı.
+                *   `order`: (Number) Ders içindeki sıralaması.
+                *   `description`: (String, Opsiyonel) Konu açıklaması.
+            *   **Alt Koleksiyonlar:**
+                *   **`subTopics` (Alt Konular):**
+                    *   **Doküman ID:** `subTopicId`
+                    *   **Alanlar:**
+                        *   `title`: (String) Alt konu başlığı.
+                        *   `normalizedTitle`: (String) Normalleştirilmiş alt konu başlığı (arama ve analiz için).
+                        *   `order`: (Number) Ana konu içindeki sıralaması.
+                *   **`contentItems` (İçerik Öğeleri):** Bu konuya/alt konuya ait içerikler.
+                    *   **Doküman ID:** `contentItemId`
+                    *   **Alanlar:**
+                        *   `title`: (String) İçerik başlığı.
+                        *   `type`: (String) `text`, `video`, `pdf`, `image`, `external_link`.
+                        *   `sourceURL`: (String, Opsiyonel) Video URL, PDF URL, dış bağlantı.
+                        *   `textContent`: (String, Opsiyonel) Metin tabanlı içerik.
+                        *   `uploaderId`: (String) İçeriği yükleyen `userId`.
+                        *   `createdAt`: (Timestamp).
+                        *   `learningObjectiveIds`: (Array<String>, Opsiyonel) Bu içerikle ilişkili öğrenme hedefleri.
+                *   **`questions` (Sorular):** Bu konuya/alt konuya ait sorular (Soru Bankası).
+                    *   **Doküman ID:** `questionId`
+                    *   **Alanlar:** (Detaylar `questions` ana koleksiyonunda)
+        *   **`learningObjectives` (Öğrenme Hedefleri):** Bu derse özel öğrenme hedefleri.
+            *   **Doküman ID:** `learningObjectiveId`
+            *   **Alanlar:**
+                *   `description`: (String) Öğrenme hedefinin açıklaması.
+                *   `relatedTopicIds`: (Array<String>) İlgili konu/alt konu ID'leri.
+                *   `difficulty`: (String, Opsiyonel) `easy`, `medium`, `hard`.
+        *   **`enrollments` (Kayıtlar):** Bu derse kayıtlı kullanıcılar.
+            *   **Doküman ID:** `userId`
+            *   **Alanlar:**
+                *   `enrolledAt`: (Timestamp)
+                *   `progress`: (Number) 0-100 arası ders tamamlama yüzdesi.
+                *   `lastAccessedTopicId`: (String, Opsiyonel)
+
+3.  **`quizzes` (Sınavlar) Koleksiyonu**
+    *   **Doküman ID:** `quizId` (Benzersiz sınav kimliği)
+    *   **Alanlar:**
+        *   `title`: (String) Sınav başlığı (örneğin, "Cebir Temel Kavramlar Hızlı Sınavı", "[Kullanıcı Adı] - Kişiselleştirilmiş Geometri Sınavı").
+        *   `type`: (String) `quick_quiz` veya `personalized_quiz`.
+        *   `userId`: (String, Opsiyonel) Eğer kişiselleştirilmiş bir sınavsa veya hızlı sınav sonucu bir kullanıcıya bağlanmışsa ilgili `userId`. Anonim hızlı sınavlar için boş olabilir.
+        *   `courseId`: (String, Opsiyonel) Sınavın ilişkili olduğu dersin ID'si.
+        *   `topicIds`: (Array<String>, Opsiyonel) Sınavın kapsadığı konu/alt konu ID'leri.
+        *   `learningObjectiveIds`: (Array<String>, Opsiyonel) Sınavın hedeflediği öğrenme hedefleri.
+        *   `status`: (String) `pending`, `in_progress`, `completed`, `cancelled`.
+        *   `createdAt`: (Timestamp) Sınavın oluşturulma/başlatılma tarihi.
+        *   `completedAt`: (Timestamp, Opsiyonel) Sınavın tamamlanma tarihi.
+        *   `durationMinutes`: (Number, Opsiyonel) Sınav süresi (dakika).
+        *   `score`: (Number, Opsiyonel) Elde edilen puan.
+        *   `totalQuestions`: (Number) Sınavdaki toplam soru sayısı.
+        *   `correctAnswers`: (Number, Opsiyonel) Doğru cevap sayısı.
+        *   `settings`: (Map, Opsiyonel) Sınav ayarları (örneğin, `difficulty`, `questionCountTarget`).
+        *   `aiGenerated`: (Boolean) Sınavın yapay zeka tarafından mı oluşturulduğu.
+    *   **Alt Koleksiyonlar:**
+        *   **`quizQuestions` (Sınav Soruları):** Bu sınava dahil edilen soruların bir kopyası veya referansı.
+            *   **Doküman ID:** `quizQuestionId` (veya `questionId` referansı)
+            *   **Alanlar:**
+                *   `questionId_ref`: (String) `questions` koleksiyonundaki orijinal soruya referans.
+                *   `questionText`: (String) Soru metni (denormalize edilmiş).
+                *   `options`: (Array<Map>) Seçenekler (denormalize edilmiş).
+                    *   `optionText`: (String)
+                    *   `isCorrect`: (Boolean)
+                *   `userAnswer`: (Varies) Kullanıcının verdiği cevap.
+                *   `isCorrectUserAnswer`: (Boolean, Opsiyonel) Kullanıcının cevabının doğruluğu.
+                *   `order`: (Number) Sınav içindeki soru sırası.
+                *   `timeSpentSeconds`: (Number, Opsiyonel) Bu soruda harcanan süre.
+
+4.  **`questions` (Genel Soru Bankası) Koleksiyonu**
+    *   **Doküman ID:** `questionId` (Benzersiz soru kimliği)
+    *   **Alanlar:**
+        *   `questionText`: (String) Sorunun metni.
+        *   `questionType`: (String) `multiple_choice_single`, `multiple_choice_multiple`, `true_false`, `fill_in_the_blank`, `short_answer`, `essay`.
+        *   `options`: (Array<Map>, Opsiyonel) Çoktan seçmeli sorular için seçenekler.
+            *   `optionId`: (String) Benzersiz seçenek ID'si.
+            *   `text`: (String) Seçenek metni.
+            *   `isCorrect`: (Boolean) Bu seçeneğin doğru olup olmadığı.
+            *   `feedback`: (String, Opsiyonel) Bu seçenek seçildiğinde verilecek geri bildirim.
+        *   `correctAnswers`: (Array<String>, Opsiyonel) Doğru cevap(lar) (boşluk doldurma, kısa cevap için).
+        *   `explanation`: (String, Opsiyonel) Sorunun doğru cevabının açıklaması.
+        *   `difficulty`: (String) `easy`, `medium`, `hard`.
+        *   `topicIds`: (Array<String>) Bu sorunun ilişkili olduğu konu/alt konu ID'leri.
+        *   `subTopicNormalizedTitles`: (Array<String>) İlişkili normalleştirilmiş alt konu başlıkları.
+        *   `learningObjectiveIds`: (Array<String>, Opsiyonel) Bu sorunun ölçtüğü öğrenme hedefi ID'leri.
+        *   `creatorId`: (String) Soruyu oluşturan `userId` veya `system` (AI için).
+        *   `tags`: (Array<String>, Opsiyonel) Soruyla ilgili etiketler.
+        *   `usageCount`: (Number) Sorunun sınavlarda kullanılma sayısı.
+        *   `averageTimeSeconds`: (Number, Opsiyonel) Bu soruyu cevaplamak için ortalama harcanan süre.
+        *   `aiGenerated`: (Boolean) Sorunun yapay zeka tarafından mı üretildiği.
+        *   `createdAt`: (Timestamp).
+        *   `updatedAt`: (Timestamp).
+
+5.  **`userLearningObjectives` (Kullanıcı Öğrenme Hedefleri) Koleksiyonu**
+    *   **Doküman ID:** `userLearningObjectiveId` (Benzersiz kullanıcı öğrenme hedefi kimliği)
+    *   **Alanlar:**
+        *   `userId`: (String) İlgili `userId`.
+        *   `learningObjectiveId_ref`: (String, Opsiyonel) `courses/{courseId}/learningObjectives/{learningObjectiveId}` referansı (eğer dersle ilişkiliyse).
+        *   `customDescription`: (String, Opsiyonel) Kullanıcının tanımladığı özel hedef açıklaması (eğer `learningObjectiveId_ref` yoksa).
+        *   `courseId_ref`: (String, Opsiyonel) İlgili dersin ID'si.
+        *   `topicIds_ref`: (Array<String>, Opsiyonel) İlgili konu/alt konu ID'leri.
+        *   `status`: (String) `active`, `achieved`, `on_hold`, `abandoned`.
+        *   `progress`: (Number) 0-100 arası hedefe ulaşma ilerlemesi.
+        *   `targetDate`: (Timestamp, Opsiyonel) Hedeflenen tamamlanma tarihi.
+        *   `createdAt`: (Timestamp).
+        *   `updatedAt`: (Timestamp).
+        *   `achievedAt`: (Timestamp, Opsiyonel).
+
+6.  **`quickQuizResults` (Hızlı Sınav Geçici Sonuçları) Koleksiyonu**
+    *   **Doküman ID:** `quickQuizResultId` (Benzersiz geçici sonuç kimliği, tarayıcıda saklanan bir ID olabilir)
+    *   **Alanlar:**
+        *   `quizData`: (Map) Hızlı sınavın temel bilgileri (sorular, cevaplar, puan, konu vb.). `quizzes` koleksiyonundaki yapıya benzer olabilir ancak daha basittir.
+        *   `createdAt`: (Timestamp) Sonucun oluşturulma tarihi (TTL ile otomatik silinme için kullanılabilir).
+        *   `userId_candidate`: (String, Opsiyonel) Kullanıcı hesap oluşturursa bu sonuçların aktarılacağı potansiyel `userId` (aktarım sonrası bu alan temizlenebilir veya doküman silinebilir).
+
+**Veri İlişkileri ve Denormalizasyon:**
+
+*   **Referanslar:** Yukarıdaki modellerde `...Id_ref` ile biten alanlar, başka bir koleksiyondaki dokümana referans belirtir. Firestore'da doğrudan join işlemleri olmadığı için, bu referanslar uygulama katmanında çözülür.
+*   **Denormalizasyon:** Okuma performansını artırmak ve karmaşık sorguları azaltmak için bazı veriler denormalize edilebilir. Örneğin, bir ders dokümanında `enrolledUserCount` tutulması veya bir sınav sorusu dokümanında orijinal sorunun metninin (`questionText`) bir kopyasının saklanması gibi. Denormalizasyon, veri tutarlılığını sağlamak için ek güncelleme mantığı gerektirir (örneğin, bir kullanıcı bir derse kaydolduğunda hem `enrollments` alt koleksiyonuna kayıt eklenir hem de `courses` dokümanındaki `enrolledUserCount` artırılır).
+*   **Diziler (Arrays) ve Haritalar (Maps):** Firestore, alanlar içinde dizileri ve iç içe haritaları destekler, bu da bazı ilişkili verileri tek bir doküman içinde tutmayı kolaylaştırır.
+
+**İndeksleme:**
+
+Firestore, tek alanlı sorgular için otomatik indeksler oluşturur. Ancak, birden fazla alanda filtreleme veya sıralama yapan kompozit sorgular için manuel olarak kompozit indeksler oluşturulması gerekecektir. Örneğin, `users` koleksiyonunda `role` ve `createdAt` alanlarına göre sorgulama yapmak için bir kompozit indeks gerekebilir. `questions` koleksiyonunda `topicIds` (bir dizi olduğu için `array-contains` sorguları için) ve `difficulty` alanlarına göre filtreleme yapmak için de indeksler önemlidir.
+
+Bu veri modelleri, platformun temel gereksinimlerini karşılamak üzere tasarlanmıştır ve geliştirme süreci ilerledikçe veya yeni özellikler eklendikçe evrimleşebilir.
+
+
+
+
+# Bölüm 8: Kalite Güvencesi ve Güvenlik
+
+Kişiselleştirilmiş Quiz Platformu'nun başarısı, kullanıcılarına güvenilir, stabil ve emniyetli bir deneyim sunmasına bağlıdır. Bu nedenle, kalite güvencesi (QA) ve güvenlik, geliştirme yaşam döngüsünün her aşamasında en üst düzeyde önceliklendirilecektir.
+
+## 8.2. Kod Kalitesi Standartları
+
+Yüksek kaliteli kod, platformun sürdürülebilirliği, ölçeklenebilirliği ve bakım kolaylığı için hayati öneme sahiptir.
+
+*   **Kodlama Stil Kılavuzları (Coding Style Guides):**
+    *   **Amaç:** Kodun tutarlı, okunabilir ve anlaşılır olmasını sağlamak.
+    *   **Uygulama:** Kullanılan programlama dilleri için standart stil kılavuzları benimsenecektir (örneğin, Python için PEP 8, JavaScript/TypeScript için ESLint ve Prettier ile yapılandırılmış kurallar).
+*   **Kod Gözden Geçirmeleri (Code Reviews):**
+    *   **Amaç:** Hataları erken aşamada tespit etmek, kod kalitesini artırmak, bilgi paylaşımını sağlamak ve ekip içinde ortak bir anlayış geliştirmek.
+    *   **Uygulama:** Her kod değişikliği (pull request/merge request) en az bir başka geliştirici tarafından gözden geçirilecektir. Gözden geçirme kriterleri (doğruluk, performans, güvenlik, okunabilirlik, test kapsamı) belirlenecektir.
+*   **Statik Kod Analizi (Static Code Analysis):**
+    *   **Amaç:** Kodu çalıştırmadan potansiyel hataları, bug'ları, stil ihlallerini ve güvenlik açıklarını otomatik olarak tespit etmek.
+    *   **Araçlar:** SonarQube, ESLint, Pylint, Bandit (Python güvenlik için).
+    *   **Uygulama:** CI/CD süreçlerine entegre edilerek otomatik analizler yapılacaktır.
+*   **Sürüm Kontrol Sistemi (Version Control):**
+    *   **Araç:** Git.
+    *   **Dallanma Stratejisi (Branching Strategy):** Projenin ihtiyaçlarına uygun bir dallanma stratejisi (örneğin, GitFlow veya GitHub Flow) benimsenecektir. Bu, paralel geliştirmeyi, özellik izolasyonunu ve stabil sürüm yönetimini kolaylaştırır.
+*   **Dokümantasyon:**
+    *   **Kod İçi Dokümantasyon (Comments):** Karmaşık veya anlaşılması zor kod blokları için açıklayıcı yorumlar eklenecektir.
+    *   **API Dokümantasyonu:** Backend API'leri için Swagger/OpenAPI gibi araçlarla otomatik veya manuel olarak detaylı ve güncel dokümantasyon oluşturulacaktır.
+    *   **Sistem Mimarisi Dokümantasyonu:** Platformun genel mimarisi, bileşenleri ve aralarındaki ilişkiler dokümante edilecektir.
+
+## 8.3. Güvenlik Öncelikleri ve Stratejileri
+
+Platformun ve kullanıcı verilerinin güvenliği en üst düzeyde tutulacaktır.
+
+*   **Veri Şifreleme:**
+    *   **Aktarım Sırasında (In Transit):** Tüm iletişim HTTPS/TLS kullanılarak şifrelenecektir.
+    *   **Depolama Sırasında (At Rest):** Hassas kullanıcı verileri (örneğin, şifreler - zaten hashlenmiş olacak, kişisel tanımlayıcı bilgiler) veritabanında şifrelenerek saklanacaktır. Firestore gibi bulut veritabanları genellikle sunucu tarafı şifrelemeyi varsayılan olarak sunar.
+*   **Kimlik Doğrulama ve Yetkilendirme (Authentication & Authorization):**
+    *   **Güçlü Şifre Politikaları:** Kullanıcı şifreleri için minimum uzunluk, karmaşıklık (büyük/küçük harf, rakam, özel karakter) gereksinimleri uygulanacaktır.
+    *   **Çok Faktörlü Kimlik Doğrulama (MFA):** Özellikle yönetici ve eğitmen rolleri için MFA seçeneği sunulacaktır.
+    *   **Güvenli Oturum Yönetimi:** JWT (JSON Web Tokens) veya benzeri güvenli oturum token'ları kullanılacaktır. Token'lar kısa ömürlü olacak ve güvenli bir şekilde saklanacaktır.
+    *   **Rol Tabanlı Erişim Kontrolü (RBAC):** Kullanıcıların sadece yetkileri dahilindeki verilere ve işlevlere erişebilmesi sağlanacaktır.
+*   **Girdi Doğrulama ve Temizleme (Input Validation & Sanitization):**
+    *   **Amaç:** Siteler Arası Komut Dosyası Çalıştırma (XSS), NoSQL Enjeksiyonu (Firestore için sorgu parametrelerinin doğru kullanımı) gibi enjeksiyon saldırılarını önlemek.
+    *   **Uygulama:** Hem frontend hem de backend tarafında tüm kullanıcı girdileri sıkı bir şekilde doğrulanacak ve temizlenecektir. Güvenilir kütüphaneler ve ORM/ODM (Object-Relational Mapper/Object-Document Mapper) özellikleri kullanılacaktır.
+*   **Yaygın Web Zafiyetlerine Karşı Koruma (OWASP Top 10):**
+    *   **Uygulama:** OWASP Top 10 listesindeki (Enjeksiyon, Kırık Kimlik Doğrulama, Hassas Veri İfşası, XML Harici Varlıkları (XXE), Kırık Erişim Kontrolü, Güvenlik Yanlış Yapılandırmaları, Siteler Arası Komut Dosyası Çalıştırma (XSS), Güvensiz Nesne BaşvuruDeserializasyonu, Bilinen Güvenlik Açıklarına Sahip Bileşenleri Kullanma, Yetersiz Günlüğe Kaydetme ve İzleme) zafiyetlere karşı proaktif önlemler alınacaktır.
+*   **Firestore Güvenlik Kuralları:**
+    *   **Uygulama:** Firestore veritabanına erişimi kontrol etmek için detaylı ve katı güvenlik kuralları yazılacaktır. Bu kurallar, kullanıcıların yalnızca kendi verilerine veya yetkileri olan verilere erişebilmesini sağlar.
+*   **Bağımlılık Yönetimi ve Güvenlik Taraması:**
+    *   **Amaç:** Kullanılan üçüncü parti kütüphanelerdeki ve bağımlılıklardaki bilinen güvenlik açıklarını tespit etmek ve güncellemek.
+    *   **Araçlar:** npm audit, Snyk, GitHub Dependabot.
+    *   **Uygulama:** Bağımlılıklar düzenli olarak taranacak ve güncellenecektir.
+*   **Düzenli Güvenlik Denetimleri ve Sızma Testleri:**
+    *   **Uygulama:** Bağımsız güvenlik uzmanları tarafından veya kurum içi güvenlik ekibi tarafından düzenli aralıklarla (örneğin, yılda bir veya büyük güncellemelerden sonra) sızma testleri ve kapsamlı güvenlik denetimleri yapılacaktır.
+*   **Olay Müdahale Planı (Incident Response Plan):**
+    *   **Amaç:** Olası bir güvenlik ihlali durumunda atılacak adımları, sorumlulukları ve iletişim prosedürlerini içeren bir plan oluşturmak.
+*   **Veri Gizliliği ve Uyumluluk:**
+    *   **Uygulama:** GDPR, KVKK gibi ilgili veri koruma yönetmeliklerine tam uyum sağlanacaktır. Kullanıcıların verileri üzerindeki hakları (bilgi alma, düzeltme, silme vb.) gözetilecektir. Şeffaf bir gizlilik politikası yayınlanacaktır.
+
+

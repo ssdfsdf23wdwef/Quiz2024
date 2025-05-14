@@ -73,7 +73,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`hidden lg:block fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200
+      className={`sidebar-visible fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200
         ${isDarkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
     >
       {isInitializing ? (
