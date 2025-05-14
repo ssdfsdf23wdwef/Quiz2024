@@ -505,4 +505,171 @@ export function startFlow(category: FlowCategory, name: string): FlowTracker {
     return new FlowTracker("dummy-id", mapToTrackerCategory(category), name);
   }
   return flowTrackerInstance.startFlow(mapToTrackerCategory(category), name);
+}
+
+/**
+ * Gelişmiş hata izleme ve konsolda gösterme
+ */
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+/**
+ * Hata yığınını (stack trace) işler ve önemli parçaları vurgular
+ * @param errorStack Hata yığını metni
+ * @returns Formatlanmış hata yığını
+ */
+export function formatErrorStack(errorStack: string): string[] {
+  if (!errorStack) return ['Hata yığını (stack trace) bulunamadı'];
+  
+  // Stack trace'i satırlara ayır
+  const stackLines = errorStack.split('\n');
+  
+  // Stack trace satırlarını işle
+  return stackLines.map((line, index) => {
+    // İlk satır hata mesajıdır
+    if (index === 0) {
+      return `%c${line}%c`; // Kırmızı renk
+    }
+    
+    // Uygulama kodunu içeren satırları vurgula
+    if (line.includes('/src/') || line.includes('/app/') || line.includes('/components/')) {
+      // Uygulama kodu - sarı renkli ve kalın
+      return `%c${line.trim()}%c`;
+    }
+    
+    // Diğer satırlar
+    return `%c${line.trim()}%c`;
+  });
+}
+
+/**
+ * Konsolda renkli hata gösterimi
+ * @param error Yakalanan hata
+ * @param info Ek bağlam bilgisi
+ */
+export function prettyErrorLog(error: Error, info?: Record<string, any>): void {
+  if (!error) return;
+  
+  const errorName = error.name || 'Error';
+  const errorMessage = error.message || 'Bilinmeyen hata';
+  const errorStack = error.stack || '';
+  
+  // Hata başlığı ve mesajı
+  console.group(`%c🚨 ${errorName}: ${errorMessage}`, 'color: #e74c3c; font-weight: bold; font-size: 1.2em;');
+  
+  // Zaman damgası
+  console.log(`%c⏱️ Zaman: ${new Date().toISOString()}`, 'color: #7f8c8d');
+  
+  // URL ve bileşen bilgisi
+  console.log(`%c🔗 URL: ${window.location.href}`, 'color: #3498db');
+  
+  // Bağlam bilgisi varsa göster
+  if (info && Object.keys(info).length > 0) {
+    console.log('%c📋 Bağlam:', 'color: #f39c12; font-weight: bold;');
+    console.table(info);
+  }
+  
+  // Hata yığınını formatla ve göster
+  console.log('%c📚 Hata Yığını:', 'color: #9b59b6; font-weight: bold;');
+  
+  const formattedStackLines = formatErrorStack(errorStack);
+  
+  // Renkli gösterim için stil dizilerini oluştur
+  const styles = formattedStackLines.flatMap(() => [
+    'color: #e74c3c; font-weight: bold;', // Hata satırı stili
+    'color: #7f8c8d; font-weight: normal;' // Normal satır stili
+  ]);
+  
+  // Renkli log
+  console.log(formattedStackLines.join('\n'), ...styles);
+  
+  console.groupEnd();
+}
+
+/**
+ * Global hata yakalama mekanizması
+ */
+export function setupGlobalErrorHandling(): void {
+  if (typeof window !== 'undefined') {
+    const originalConsoleError = console.error;
+    const originalWindowOnerror = window.onerror;
+    const originalUnhandledRejection = window.onunhandledrejection;
+    
+    // console.error override
+    console.error = (...args) => {
+      originalConsoleError.apply(console, args);
+      
+      // İlk argüman bir Error nesnesi mi kontrol et
+      if (args[0] instanceof Error) {
+        prettyErrorLog(args[0], { source: 'console.error', args: args.slice(1) });
+      }
+    };
+    
+    // window.onerror override
+    window.onerror = (message, source, lineno, colno, error) => {
+      if (originalWindowOnerror) {
+        originalWindowOnerror.apply(window, [message, source, lineno, colno, error]);
+      }
+      
+      if (error) {
+        prettyErrorLog(error, { 
+          source: 'window.onerror', 
+          location: `${source}:${lineno}:${colno}`, 
+          message 
+        });
+      }
+      
+      return false; // Hata işlemesinin varsayılan davranışa devam etmesine izin ver
+    };
+    
+    // Unhandled promise rejection override
+    window.onunhandledrejection = (event) => {
+      if (originalUnhandledRejection) {
+        originalUnhandledRejection.apply(window, [event]);
+      }
+      
+      const error = event.reason instanceof Error 
+        ? event.reason 
+        : new Error(String(event.reason || 'Unhandled Promise Rejection'));
+      
+      prettyErrorLog(error, { source: 'unhandledrejection', reason: event.reason });
+    };
+    
+    console.log('%c🛡️ Global hata izleme aktif edildi', 'color: #2ecc71; font-weight: bold');
+  }
+}
+
+// Geliştirme ortamında otomatik olarak kur
+if (isDevelopment && typeof window !== 'undefined') {
+  setupGlobalErrorHandling();
+}
+
+/**
+ * Hata bilgisini günlüğe kaydetme ve gösterme
+ * @param error Yakalanan hata
+ * @param componentName Hatanın oluştuğu bileşen
+ * @param extraData Ekstra veri
+ */
+export function prettyLogError(error: unknown, componentName: string, extraData?: Record<string, any>): void {
+  const err = error instanceof Error ? error : new Error(String(error));
+  
+  const logInfo = {
+    component: componentName,
+    timestamp: new Date().toISOString(),
+    url: typeof window !== 'undefined' ? window.location.href : '',
+    ...extraData
+  };
+  
+  // Geliştirilmiş hata gösterimi 
+  prettyErrorLog(err, logInfo);
+  
+  // Üretim ortamında hata izleme servisine gönder
+  if (!isDevelopment) {
+    // Burada bir hata izleme servisine gönderme kodu eklenebilir (Sentry, LogRocket, vb.)
+    try {
+      // TODO: Hata izleme servisi entegrasyonu eklenebilir
+      // sendToErrorTrackingService(err, logInfo);
+    } catch (trackingError) {
+      console.error('Hata izleme servisi hatası:', trackingError);
+    }
+  }
 } 

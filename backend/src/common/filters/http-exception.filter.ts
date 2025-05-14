@@ -12,9 +12,12 @@ import { Request, Response } from 'express';
 import { LoggerService } from '../services/logger.service';
 import { FlowTrackerService } from '../services/flow-tracker.service';
 
-@Catch()
+/**
+ * Tüm HTTP istisnaları için özel filter
+ * Daha zengin hata mesajları ve loglama sağlar
+ */
+@Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly standardLogger = new Logger(HttpExceptionFilter.name);
   private readonly logger: LoggerService;
   private readonly flowTracker: FlowTrackerService;
 
@@ -27,45 +30,84 @@ export class HttpExceptionFilter implements ExceptionFilter {
     this.flowTracker = FlowTrackerService.getInstance();
   }
 
-  catch(exception: any, host: ArgumentsHost) {
+  catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status: number;
-    let message: string;
-    let error: string;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    if (exception instanceof HttpException) {
-      // Handle standard HTTP exceptions
-      status = exception.getStatus();
-      const errorResponse = exception.getResponse();
+    // Hata detaylarını al
+    let errorResponse: any = exception.getResponse
+      ? exception.getResponse()
+      : { message: exception.message };
+    const errorMessage =
+      typeof errorResponse === 'string'
+        ? errorResponse
+        : errorResponse.message || exception.message;
 
-      if (typeof errorResponse === 'object') {
-        message = (errorResponse as any).message || exception.message;
-        error = (errorResponse as any).error || 'HTTP Hatası';
-      } else {
-        message = errorResponse;
-        error = exception.message;
-      }
-    } else {
-      // Handle unexpected errors
-      status = HttpStatus.INTERNAL_SERVER_ERROR;
-      message = 'Beklenmeyen bir hata oluştu';
-      error = 'Sunucu Hatası';
+    // İstek bilgilerini topla
+    const requestInfo = {
+      path: request.url,
+      method: request.method,
+      ip: request.ip,
+      headers: this.sanitizeHeaders(request.headers),
+      params: request.params,
+      query: request.query,
+      body: this.sanitizeBody(request.body),
+      timestamp: new Date().toISOString(),
+    };
 
-      // Log the full error for unexpected exceptions
-      this.standardLogger.error(
-        `Beklenmeyen hata: ${exception.message}`,
-        exception.stack,
-      );
+    // Hata yanıtı oluştur
+    const responseBody = {
+      statusCode: status,
+      message: status >= 500 ? 'Internal server error' : errorMessage, // 500'ler için genel mesaj ver
+      path: request.url,
+      timestamp: new Date().toISOString(),
+      traceId:
+        request.headers['x-trace-id'] ||
+        `trace-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
+      errorDetails: Array.isArray(errorResponse.message)
+        ? errorResponse.message
+        : undefined,
+    };
 
-      // Akış takibine ekle
-      this.flowTracker.track(
-        `❌ Beklenmeyen hata: ${exception.message}`,
-        'HttpExceptionFilter',
-      );
+    // Hata seviyesine göre doğru log metodunu seç
+    const logMethod =
+      status >= 500
+        ? this.logger.error.bind(this.logger)
+        : this.logger.warn.bind(this.logger);
+
+    // Detaylı log
+    logMethod(
+      `HTTP Hata [${status}]: ${errorMessage}`,
+      `HttpExceptionFilter.catch`,
+      __filename,
+      undefined, // satır numarası
+      {
+        exception: {
+          name: exception.name,
+          message: exception.message,
+          status,
+        },
+        request: requestInfo,
+        response: responseBody,
+        stack: exception.stack,
+      },
+    );
+
+    // Geliştirme ortamında stack trace ekle
+    if (process.env.NODE_ENV !== 'production' && status >= 500) {
+      responseBody['stack'] = exception.stack
+        ?.split('\n')
+        .map((line) => line.trim());
     }
+
+    // Yanıtı gönder
+    response.status(status).json(responseBody);
 
     // Send error to Sentry if it's a server error (500+)
     if (status >= 500 && this.sentryClient) {
@@ -99,37 +141,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
           'HttpExceptionFilter',
         );
       } else {
-        this.standardLogger.warn('Sentry entegrasyonu yapılandırılmamış');
+        this.logger.warn(
+          'Sentry entegrasyonu yapılandırılmamış',
+          'HttpExceptionFilter.catch',
+          __filename,
+        );
       }
-    }
-
-    // Log detaylı hata bilgisini dosyaya yaz
-    this.logger.error(
-      `HTTP hata yakalandı: ${message}`,
-      'HttpExceptionFilter.catch',
-      __filename,
-      undefined,
-      exception,
-      {
-        method: request.method,
-        url: request.url,
-        statusCode: status,
-        body: this.sanitizeRequestBody(request.body),
-        headers: this.sanitizeRequestBody(request.headers),
-        params: request.params,
-        query: request.query,
-      },
-    );
-
-    // Log the error to standard logger (with different levels based on status)
-    if (status >= 500) {
-      this.standardLogger.error(
-        `${request.method} ${request.url} ${status} - ${message}`,
-      );
-    } else if (status >= 400) {
-      this.standardLogger.warn(
-        `${request.method} ${request.url} ${status} - ${message}`,
-      );
     }
 
     // Akış takibine ekle
@@ -137,15 +154,59 @@ export class HttpExceptionFilter implements ExceptionFilter {
       `🔴 HTTP ${status} yanıtı gönderiliyor: ${request.method} ${request.url}`,
       'HttpExceptionFilter',
     );
+  }
 
-    // Return a standardized error response
-    response.status(status).json({
-      statusCode: status,
-      message,
-      error,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-    });
+  /**
+   * İstek header'larını temizler, hassas bilgileri maskeler
+   */
+  private sanitizeHeaders(headers: any): any {
+    const sanitized = { ...headers };
+
+    // Hassas header'ları maskele
+    const sensitiveHeaders = ['authorization', 'cookie', 'set-cookie'];
+    for (const header of sensitiveHeaders) {
+      if (sanitized[header]) {
+        sanitized[header] = '[REDACTED]';
+      }
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * İstek gövdesini temizler, hassas bilgileri maskeler
+   */
+  private sanitizeBody(body: any): any {
+    if (!body) return body;
+
+    const sanitized = { ...body };
+
+    // Hassas alanları maskele
+    const sensitiveFields = [
+      'password',
+      'token',
+      'secret',
+      'apiKey',
+      'credit_card',
+    ];
+
+    const maskSensitiveFields = (obj: any): any => {
+      if (!obj || typeof obj !== 'object') return obj;
+
+      Object.keys(obj).forEach((key) => {
+        if (
+          sensitiveFields.some((field) => key.toLowerCase().includes(field))
+        ) {
+          obj[key] = '[REDACTED]';
+        } else if (typeof obj[key] === 'object') {
+          obj[key] = maskSensitiveFields(obj[key]);
+        }
+      });
+
+      return obj;
+    };
+
+    return maskSensitiveFields(sanitized);
   }
 
   /**

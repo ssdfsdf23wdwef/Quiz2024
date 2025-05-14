@@ -5,6 +5,8 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { AiService } from '../ai/ai.service';
@@ -19,6 +21,22 @@ import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
 
+interface CreateQuizParams {
+  userId: string;
+  quizType: 'quick' | 'personalized';
+  sourceDocument?: {
+    documentId: string;
+    text: string;
+  };
+  subTopics: any[];
+  preferences: {
+    questionCount: number;
+    difficulty: string;
+    timeLimit?: number;
+    prioritizeWeakAndMediumTopics?: boolean;
+  };
+}
+
 @Injectable()
 export class QuizzesService {
   private readonly logger: LoggerService;
@@ -26,10 +44,11 @@ export class QuizzesService {
   findAll: any;
 
   constructor(
-    private firebaseService: FirebaseService,
-    private aiService: AiService,
+    private readonly firebaseService: FirebaseService,
+    private readonly aiService: AiService,
+    @Inject(forwardRef(() => LearningTargetsService))
     private readonly learningTargetsService: LearningTargetsService,
-    private quizAnalysisService: QuizAnalysisService,
+    private readonly quizAnalysisService: QuizAnalysisService,
   ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
@@ -1174,5 +1193,90 @@ export class QuizzesService {
 
     const doc = target.docs[0];
     return doc.data().id;
+  }
+
+  /**
+   * Belge metni ve alt konulardan sınav oluştur
+   */
+  @LogMethod({ trackParams: true })
+  async createQuiz(params: CreateQuizParams) {
+    this.flowTracker.trackStep('Sınav oluşturuluyor', 'QuizzesService');
+
+    try {
+      // Alt konu kontrolü
+      if (
+        !params.subTopics ||
+        !Array.isArray(params.subTopics) ||
+        params.subTopics.length === 0
+      ) {
+        throw new BadRequestException('En az bir alt konu belirtilmelidir');
+      }
+
+      // Sorular oluştur
+      const questions = await this.aiService.generateQuizQuestions({
+        subTopics: params.subTopics,
+        questionCount: params.preferences.questionCount,
+        difficulty: params.preferences.difficulty as any,
+      });
+
+      if (!questions || questions.length === 0) {
+        throw new BadRequestException('Sorular oluşturulamadı');
+      }
+
+      this.logger.info(
+        `${questions.length} soru oluşturuldu`,
+        'QuizzesService.createQuiz',
+        __filename,
+        undefined,
+        { questionCount: questions.length },
+      );
+
+      // Sınav için model oluştur
+      const quizModel = {
+        userId: params.userId,
+        title: `Hızlı Sınav - ${new Date().toLocaleDateString('tr-TR')}`,
+        type: params.quizType,
+        questions: questions,
+        status: 'active',
+        sourceDocument: params.sourceDocument
+          ? {
+              documentId: params.sourceDocument.documentId,
+              fileName: `Belge_${params.sourceDocument.documentId}`,
+            }
+          : null,
+        createdAt: new Date(),
+        preferences: {
+          questionCount: params.preferences.questionCount,
+          difficulty: params.preferences.difficulty,
+          timeLimit: params.preferences.timeLimit,
+        },
+        metadata: {
+          subTopics: params.subTopics.map((topic) => topic.subTopicName),
+        },
+      };
+
+      // Firestore'a kaydet
+      const savedQuiz = await this.firebaseService.create('quizzes', quizModel);
+
+      this.logger.info(
+        `Sınav başarıyla oluşturuldu, ID: ${savedQuiz.id}`,
+        'QuizzesService.createQuiz',
+        __filename,
+        undefined,
+        { quizId: savedQuiz.id },
+      );
+
+      return {
+        ...savedQuiz,
+        questionCount: questions.length,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Sınav oluşturma hatası: ${error.message}`,
+        'QuizzesService.createQuiz',
+        __filename,
+      );
+      throw error;
+    }
   }
 }

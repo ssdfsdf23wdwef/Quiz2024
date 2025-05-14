@@ -41,22 +41,38 @@ export class DocumentsService {
     );
 
     try {
-      // Basit bir çözüm - gerçek uygulamada farklı dosya türlerine göre işlem yapılmalı
-      // PDF, DOCX, TXT gibi dosya türlerini işleyen bir servis entegrasyonu gerekiyor
-      if (file.mimetype.includes('text/plain')) {
-        return file.buffer.toString('utf-8');
-      }
+      // DocumentProcessingService'i kullanarak metin çıkartma
+      const extractedText = await this.documentProcessingService.extractText(
+        file.buffer,
+        file.mimetype,
+      );
 
-      // Diğer dosya türleri için örnek metin döndür
-      return `Bu dosya türü (${file.mimetype}) için metin çıkarma henüz desteklenmiyor. 
-      Örnek metin olarak bu içerik oluşturuldu. Gerçek uygulamada OCR veya belge işleme servisleri kullanılmalıdır.`;
+      // Çıkarılan metni normalize et
+      const normalizedText =
+        this.documentProcessingService.normalizeText(extractedText);
+
+      this.logger.debug(
+        `Metin çıkarma başarılı (${normalizedText.length} karakter)`,
+        'DocumentsService.extractTextFromFile',
+        __filename,
+        undefined,
+        {
+          fileName: file.originalname,
+          fileType: file.mimetype,
+          extractedLength: normalizedText.length,
+        },
+      );
+
+      return normalizedText;
     } catch (error) {
       this.logger.error(
         `Metin çıkarma hatası: ${error.message}`,
         'DocumentsService.extractTextFromFile',
         __filename,
       );
-      return '';
+      throw new BadRequestException(
+        `Belgeden metin çıkarılırken hata oluştu: ${error.message}`,
+      );
     }
   }
 

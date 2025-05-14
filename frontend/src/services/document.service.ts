@@ -10,6 +10,47 @@ import { FlowCategory } from "@/constants/logging.constants";
 import { mapToTrackerCategory } from "../lib/logger.utils";
 import { DetectedSubTopic } from "@/types";
 
+// Tip tanımlamaları
+interface UploadAndDetectTopicsResponse {
+  document: {
+    id: string;
+    fileName: string;
+    fileUrl: string;
+    extractedTextLength: number;
+  };
+  topics: DetectedSubTopic[];
+}
+
+interface QuizFromDocumentOptions {
+  subTopics: {
+    subTopicName: string;
+    normalizedSubTopicName: string;
+  }[];
+  questionCount: number;
+  difficulty: string;
+  timeLimit?: number;
+}
+
+interface QuizResponse {
+  id: string;
+  title: string;
+  questions: Array<{
+    id: string;
+    questionText: string;
+    options: string[];
+    correctAnswer: string;
+    subTopicName: string;
+    normalizedSubTopicName: string;
+    difficulty: string;
+  }>;
+  questionCount: number;
+  sourceDocument: {
+    documentId: string;
+    fileName: string;
+  };
+  createdAt: string;
+}
+
 /**
  * Belge servisi
  * Belgelerle ilgili API isteklerini yönetir
@@ -302,6 +343,91 @@ class DocumentService {
         287,
         { id, error }
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Belge yükle ve konuları tespit et
+   */
+  @LogMethod('DocumentService', FlowCategory.API)
+  async uploadAndDetectTopics(file: File, courseId?: string): Promise<UploadAndDetectTopicsResponse> {
+    const flow = startAppFlow(FlowCategory.API, "DocumentService.uploadAndDetectTopics");
+    
+    try {
+      trackFlow(
+        `Belge yükle ve konuları tespit et: ${file.name}`,
+        "DocumentService.uploadAndDetectTopics",
+        FlowCategory.API
+      );
+      
+      // Form verisi oluştur
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      if (courseId) {
+        formData.append('courseId', courseId);
+      }
+      
+      // API isteği yap
+      const response = await httpClient.post<UploadAndDetectTopicsResponse>(
+        "/documents/upload-and-detect-topics",
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      
+      flow.end("Successfully uploaded document and detected topics");
+      return response.data;
+    } catch (error) {
+      this.logger.error(
+        'Belge yükleme ve konu tespiti hatası',
+        'DocumentService.uploadAndDetectTopics',
+        __filename,
+        undefined,
+        { fileName: file.name, error }
+      );
+      
+      flow.end(`Error: ${(error as Error).message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Belge ID'sinden sınav oluştur
+   */
+  @LogMethod('DocumentService', FlowCategory.API)
+  async createQuizFromDocument(documentId: string, options: QuizFromDocumentOptions): Promise<QuizResponse> {
+    const flow = startAppFlow(FlowCategory.API, "DocumentService.createQuizFromDocument");
+    
+    try {
+      trackFlow(
+        `Belgeden sınav oluştur: ${documentId}`,
+        "DocumentService.createQuizFromDocument",
+        FlowCategory.API
+      );
+      
+      // API isteği yap
+      const response = await httpClient.post<QuizResponse>(
+        `/documents/${documentId}/create-quiz`,
+        options
+      );
+      
+      flow.end("Successfully created quiz from document");
+      return response.data;
+    } catch (error) {
+      this.logger.error(
+        'Belgeden sınav oluşturma hatası',
+        'DocumentService.createQuizFromDocument',
+        __filename,
+        undefined,
+        { documentId, options, error }
+      );
+      
+      flow.end(`Error: ${(error as Error).message}`);
       throw error;
     }
   }

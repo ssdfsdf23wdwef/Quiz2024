@@ -235,6 +235,7 @@ export class AiService {
   async detectTopics(
     documentText: string,
     existingTopics: string[] = [],
+    cacheKey?: string,
   ): Promise<TopicDetectionResult> {
     try {
       this.logger.debug(
@@ -244,6 +245,26 @@ export class AiService {
       );
 
       this.flowTracker.trackStep('Dokümandan konular algılanıyor', 'AiService');
+
+      // Eğer metin çok kısaysa uyarı ver
+      if (documentText.length < 100) {
+        this.logger.warn(
+          `Analiz için çok kısa metin (${documentText.length} karakter)`,
+          'AiService.detectTopics',
+          __filename,
+        );
+      }
+
+      // Önbellek kontrolü - eğer cacheKey verilmişse
+      if (cacheKey) {
+        // Burada bir önbellek sistemi entegrasyonu yapılabilir
+        // Örnek: Redis, in-memory cache, vs.
+        this.logger.debug(
+          `Önbellek anahtarı ile kontrol: ${cacheKey}`,
+          'AiService.detectTopics',
+          __filename,
+        );
+      }
 
       // Truncate document text if too long
       const truncatedText =
@@ -263,8 +284,9 @@ export class AiService {
         promptContent = fs.readFileSync(promptFilePath, 'utf8');
       } catch (error) {
         this.logger.error(
-          `Error reading prompt file: ${error.message}`,
-          'AiService',
+          `Prompt dosyası okuma hatası: ${error.message}`,
+          'AiService.detectTopics',
+          __filename,
         );
         promptContent = DEFAULT_TOPIC_DETECTION_PROMPT_TR;
       }
@@ -284,51 +306,87 @@ export class AiService {
       // Get AI service configuration
       const llmConfig = this.configService.get('llm');
       this.logger.debug(
-        `Using LLM config: ${JSON.stringify(llmConfig)}`,
-        'AiService',
+        `LLM yapılandırması: ${JSON.stringify(llmConfig)}`,
+        'AiService.detectTopics',
         __filename,
       );
 
       // Track the AI service being used
       this.flowTracker.trackStep(
-        `Using AI service: ${llmConfig.provider}`,
+        `Kullanılan AI servisi: ${llmConfig.provider}`,
         'AiService',
       );
 
       let result: TopicDetectionResult = { topics: [] };
 
-      // Choose AI service based on configuration
-      if (llmConfig.provider === 'gemini') {
-        result = await this.getTopicsWithGemini(fullPrompt);
-      } else if (llmConfig.provider === 'openai') {
-        result = await this.getTopicsWithOpenAI(fullPrompt);
-      } else {
-        throw new Error(`Unsupported LLM provider: ${llmConfig.provider}`);
-      }
+      // Her durumda yeniden deneme mekanizması kullan
+      result = await pRetry(async () => {
+        // Choose AI service based on configuration
+        if (llmConfig.provider === 'gemini') {
+          return await this.getTopicsWithGemini(fullPrompt);
+        } else if (llmConfig.provider === 'openai') {
+          return await this.getTopicsWithOpenAI(fullPrompt);
+        } else {
+          throw new Error(
+            `Desteklenmeyen LLM sağlayıcısı: ${llmConfig.provider}`,
+          );
+        }
+      }, this.RETRY_OPTIONS);
 
       // Check if we got valid results
       if (!result || !result.topics || !Array.isArray(result.topics)) {
         throw new Error(
-          'Invalid topic detection result format from AI service',
+          'AI servisinden geçersiz konu algılama sonuç formatı alındı',
+        );
+      }
+
+      // Sonuç boşsa veya çok az konu içeriyorsa uyarı log'u
+      if (result.topics.length === 0) {
+        this.logger.warn(
+          'Belgede hiçbir konu algılanamadı',
+          'AiService.detectTopics',
+          __filename,
+        );
+      } else if (result.topics.length < 3 && documentText.length > 1000) {
+        this.logger.warn(
+          `Uzun belgede çok az konu algılandı (${result.topics.length})`,
+          'AiService.detectTopics',
+          __filename,
         );
       }
 
       // Log the results
       this.logger.info(
-        `Detected ${result.topics.length} topics from document text`,
-        'AiService',
+        `Belgeden ${result.topics.length} konu tespit edildi`,
+        'AiService.detectTopics',
         __filename,
       );
+
+      // Önbellekte saklama işlemi burada yapılabilir
 
       return result;
     } catch (error) {
       this.logger.error(
-        `Error detecting topics: ${error.message}`,
-        'AiService',
+        `Konu tespit hatası: ${error.message}`,
+        'AiService.detectTopics',
+        __filename,
       );
-      throw new BadRequestException(
-        `Failed to detect topics: ${error.message}`,
-      );
+
+      // Kullanıcı dostu hata mesajı oluştur
+      let errorMessage = 'Konular tespit edilemedi';
+
+      if (error.message.includes('rate limit')) {
+        errorMessage =
+          'AI servisi şu anda yoğun, lütfen daha sonra tekrar deneyin';
+      } else if (error.message.includes('network')) {
+        errorMessage =
+          'Ağ bağlantı hatası, lütfen internet bağlantınızı kontrol edin';
+      } else if (error.message.includes('timeout')) {
+        errorMessage =
+          'İşlem zaman aşımına uğradı, lütfen daha kısa bir belge ile deneyin';
+      }
+
+      throw new BadRequestException(errorMessage);
     }
   }
 
@@ -371,12 +429,12 @@ export class AiService {
           }
         } else if (typeof topic === 'string' || topic.subTopicName) {
           // Handle legacy format (flat list)
-            const subTopicName =
+          const subTopicName =
             typeof topic === 'string' ? topic : topic.subTopicName;
           normalizedResult.topics.push({
-              subTopicName,
-              normalizedSubTopicName:
-                this.normalizationService.normalizeSubTopicName(subTopicName),
+            subTopicName,
+            normalizedSubTopicName:
+              this.normalizationService.normalizeSubTopicName(subTopicName),
             isMainTopic: true,
           });
         }

@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { FirebaseService } from '../firebase/firebase.service';
 import { AiService } from '../ai/ai.service';
@@ -28,6 +30,7 @@ export class LearningTargetsService {
     private firebaseService: FirebaseService,
     private aiService: AiService,
     private normalizationService: NormalizationService,
+    @Inject(forwardRef(() => DocumentsService))
     private documentsService: DocumentsService,
   ) {
     this.logger = LoggerService.getInstance();

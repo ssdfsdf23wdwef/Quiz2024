@@ -54,6 +54,14 @@ export class LoggerService {
   private readonly logToConsole: boolean;
   private readonly logToFile: boolean;
   private readonly minLevel: LogLevel;
+  private readonly performanceMarks: Record<
+    string,
+    {
+      label: string;
+      startTime: number;
+      memory: NodeJS.MemoryUsage;
+    }
+  > = {};
 
   constructor(options?: LoggerOptions) {
     // Seçenekleri başlat
@@ -457,5 +465,328 @@ export class LoggerService {
         ? mergedAdditionalInfo
         : undefined,
     );
+  }
+
+  /**
+   * Detaylı hata yığınını (stack trace) formatlayıp döndürür
+   * @param error Hata nesnesi
+   * @returns Formatlanmış hata yığını
+   */
+  private formatDetailedStack(error: Error): string {
+    if (!error || !error.stack) return 'Hata yığını (stack trace) bulunamadı';
+
+    // Stack trace detayını ayırma
+    const stackLines = error.stack.split('\n');
+    const formattedStack = stackLines
+      .map((line, index) => {
+        // İlk satır hata mesajıdır, onu farklı formatlayalım
+        if (index === 0) return `\x1b[31m${line}\x1b[0m`; // Kırmızı renk
+
+        // Uygulama kodunu içeren satırları vurgulayalım
+        if (line.includes('/src/')) {
+          return `\x1b[33m${line.trim()}\x1b[0m`; // Sarı renk - uygulama kodu
+        }
+
+        // Diğer satırlar için gri renk
+        return `\x1b[90m${line.trim()}\x1b[0m`;
+      })
+      .join('\n');
+
+    return formattedStack;
+  }
+
+  /**
+   * Fonksiyon çağrı detaylarını çıkarır
+   * @param depth Kaç seviye geriye gideceği
+   * @returns Fonksiyon çağrı bilgileri
+   */
+  private getCallerDetails(depth: number = 2): {
+    fileName: string;
+    line: number;
+    column: number;
+    functionName: string;
+  } {
+    const stack = new Error().stack;
+    if (!stack)
+      return {
+        fileName: 'unknown',
+        line: 0,
+        column: 0,
+        functionName: 'unknown',
+      };
+
+    const stackLines = stack.split('\n');
+    // depth + 1 çünkü ilk satır 'Error' satırı ve getCallerDetails'in kendisi var
+    const callerLine = stackLines[depth + 1] || '';
+
+    // Regex ile dosya yolunu, satır ve sütun numarasını ve fonksiyon adını çıkar
+    const regexResult = /at\s+(.*)\s+\((.*):(\d+):(\d+)\)/.exec(callerLine);
+    const [_, functionName, fileName, line, column] = regexResult || [
+      '',
+      '',
+      'unknown',
+      '0',
+      '0',
+    ];
+
+    return {
+      fileName: fileName || 'unknown',
+      line: parseInt(line, 10) || 0,
+      column: parseInt(column, 10) || 0,
+      functionName: functionName || 'unknown',
+    };
+  }
+
+  /**
+   * Renkli terminal log çıktısı oluşturur
+   * @param level Log seviyesi
+   * @param message Mesaj
+   * @param details Ek detaylar
+   * @returns Renkli terminal log çıktısı
+   */
+  private colorizeTerminalLog(
+    level: string,
+    message: string,
+    details: any,
+  ): string {
+    // Log seviyeleri için renkler
+    const colors = {
+      ERROR: '\x1b[31m', // Kırmızı
+      WARN: '\x1b[33m', // Sarı
+      INFO: '\x1b[36m', // Açık Mavi
+      DEBUG: '\x1b[90m', // Gri
+      CUSTOM: '\x1b[35m', // Mor
+    };
+
+    const resetColor = '\x1b[0m';
+    const levelColor = colors[level] || colors.CUSTOM;
+
+    // Zaman damgası
+    const timestamp = new Date().toISOString();
+
+    // Çağrı detayları
+    const caller = this.getCallerDetails(3); // 3 seviye geriye git (error, logWithFormat, log metodları)
+
+    // Temel log
+    let logString = `${levelColor}[${timestamp}] [${level}]${resetColor} ${message}`;
+
+    // Dosya ve satır bilgisi
+    if (caller.fileName !== 'unknown') {
+      const shortFileName = caller.fileName.split('/').pop() || caller.fileName;
+      logString += ` ${colors.DEBUG}(${shortFileName}:${caller.line})${resetColor}`;
+    }
+
+    // Detaylar varsa ekle
+    if (details && Object.keys(details).length > 0) {
+      try {
+        logString += `\n${colors.DEBUG}Details: ${JSON.stringify(details, null, 2)}${resetColor}`;
+      } catch (e) {
+        logString += `\n${colors.DEBUG}Details: [Serileştirilemeyen nesne]${resetColor}`;
+      }
+    }
+
+    return logString;
+  }
+
+  /**
+   * Performans ölçümü başlatır ve bir izleme ID'si döndürür
+   * @param label Performans ölçümü için etiket
+   * @returns İzleme ID'si
+   */
+  public startPerformanceTracking(label: string): string {
+    const trackingId = `perf_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    this.performanceMarks[trackingId] = {
+      label,
+      startTime: performance.now(),
+      memory: process.memoryUsage(),
+    };
+    return trackingId;
+  }
+
+  /**
+   * Performans ölçümünü sonlandırır ve sonuçları döndürür
+   * @param trackingId İzleme ID'si
+   * @returns Performans sonuçları
+   */
+  public endPerformanceTracking(trackingId: string): {
+    label: string;
+    durationMs: number;
+    memoryDiff: {
+      rss: number;
+      heapTotal: number;
+      heapUsed: number;
+      external: number;
+    };
+  } {
+    if (!this.performanceMarks[trackingId]) {
+      this.warn(
+        `Performans izleme ID'si bulunamadı: ${trackingId}`,
+        'LoggerService.endPerformanceTracking',
+        __filename,
+      );
+      return {
+        label: 'unknown',
+        durationMs: 0,
+        memoryDiff: { rss: 0, heapTotal: 0, heapUsed: 0, external: 0 },
+      };
+    }
+
+    const mark = this.performanceMarks[trackingId];
+    const endTime = performance.now();
+    const endMemory = process.memoryUsage();
+
+    const memoryDiff = {
+      rss: endMemory.rss - mark.memory.rss,
+      heapTotal: endMemory.heapTotal - mark.memory.heapTotal,
+      heapUsed: endMemory.heapUsed - mark.memory.heapUsed,
+      external: endMemory.external - mark.memory.external,
+    };
+
+    const result = {
+      label: mark.label,
+      durationMs: endTime - mark.startTime,
+      memoryDiff,
+    };
+
+    // Performans sonuçlarını logla
+    this.debug(
+      `Performans ölçümü: ${mark.label} - ${result.durationMs.toFixed(2)}ms`,
+      'LoggerService.endPerformanceTracking',
+      __filename,
+      undefined,
+      {
+        trackingId,
+        durationMs: result.durationMs,
+        memoryDiffMB: {
+          rss: (memoryDiff.rss / 1024 / 1024).toFixed(2) + ' MB',
+          heapTotal: (memoryDiff.heapTotal / 1024 / 1024).toFixed(2) + ' MB',
+          heapUsed: (memoryDiff.heapUsed / 1024 / 1024).toFixed(2) + ' MB',
+          external: (memoryDiff.external / 1024 / 1024).toFixed(2) + ' MB',
+        },
+      },
+    );
+
+    // İzleme bilgisini temizle
+    delete this.performanceMarks[trackingId];
+
+    return result;
+  }
+
+  // Log seviyesine göre mesajları formatlayarak loglar
+  private logWithFormat(
+    level: LogLevel,
+    message: string,
+    source?: string,
+    fileName?: string,
+    line?: number,
+    contextData?: any,
+  ): void {
+    if (this.shouldLog(level)) {
+      try {
+        // Temel log bilgileri
+        const timestamp = new Date().toISOString();
+        const formattedLevel = level.padEnd(7, ' ');
+        const fileInfo = fileName
+          ? ` (${fileName}${line ? `:${line}` : ''})`
+          : '';
+        const formattedSource = source ? `[${source}]` : '';
+
+        // Ana log metni
+        const logText = `[${timestamp}] [${formattedLevel}] ${formattedSource}${message}${fileInfo}`;
+
+        // Terminal için renkli log
+        const coloredLog = this.colorizeTerminalLog(
+          level,
+          `${formattedSource} ${message}`,
+          contextData,
+        );
+        console.log(coloredLog);
+
+        // Dosyaya yazılacak log metni (renkli değil)
+        let fileLogText = logText;
+
+        // Hata objesi varsa stack trace ekle
+        if (contextData?.error instanceof Error) {
+          const errorStack =
+            contextData.error.stack || contextData.error.toString();
+          fileLogText += `\n${errorStack}`;
+
+          // Terminal kaydına da ekleyelim
+          console.log(this.formatDetailedStack(contextData.error));
+        }
+
+        // Context data varsa JSON olarak ekle (dosyaya)
+        if (contextData && Object.keys(contextData).length > 0) {
+          try {
+            const contextString = JSON.stringify(contextData);
+            fileLogText += `\nContext: ${contextString}`;
+          } catch (e) {
+            fileLogText += '\nContext: [Non-serializable object]';
+          }
+        }
+
+        // Dosyaya yazma
+        if (this.logToFile) {
+          const logFileName = this.getLogFileName(level);
+          if (logFileName) {
+            this.appendToFile(logFileName, fileLogText);
+          }
+        }
+      } catch (error) {
+        // Logger içinde hata oluşursa güvenli bir şekilde konsola yazdır
+        console.error('Logger error:', error);
+      }
+    }
+  }
+
+  /**
+   * Belirtilen seviyedeki logların kaydedilip kaydedilmeyeceğini kontrol eder
+   * @param level Log seviyesi
+   * @returns Log kaydedilmeli mi?
+   */
+  private shouldLog(level: LogLevel): boolean {
+    // Eğer loglama kapalıysa hiçbir şey loglama
+    if (!this.enabled) {
+      return false;
+    }
+
+    // Log seviyelerine sayısal değerler ata
+    const levelValues: Record<LogLevel, number> = {
+      [LogLevel.ERROR]: 3,
+      [LogLevel.WARN]: 2,
+      [LogLevel.INFO]: 1,
+      [LogLevel.DEBUG]: 0,
+    };
+
+    // Minimum log seviyesine göre kontrol et
+    return levelValues[level] >= levelValues[this.minLevel];
+  }
+
+  /**
+   * Log seviyesine göre log dosyası adını döndürür
+   * @param level Log seviyesi
+   * @returns Log dosyası adı
+   */
+  private getLogFileName(level: LogLevel): string | null {
+    // Tüm loglar için ortak dosya kullanıyoruz
+    return this.errorLogPath;
+  }
+
+  /**
+   * Log dosyasına veri ekler
+   * @param fileName Dosya adı
+   * @param content Eklenecek içerik
+   */
+  private appendToFile(fileName: string, content: string): void {
+    try {
+      // Dosyaya asenkron olarak ekle
+      fs.appendFile(fileName, content + '\n', { encoding: 'utf8' }, (err) => {
+        if (err) {
+          console.error(`Log dosyasına yazılırken hata: ${err.message}`);
+        }
+      });
+    } catch (error) {
+      console.error(`Log dosyasına yazma hatası: ${(error as Error).message}`);
+    }
   }
 }

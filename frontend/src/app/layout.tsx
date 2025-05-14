@@ -4,8 +4,7 @@ import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers";
-import ClientAnalytics from "../components/analytics/ClientAnalytics";
-import MainLayout from "@/components/layout/MainLayout";
+import ClientLayout from "@/components/layout/ClientLayout";
 
 const fontSans = FontSans({ subsets: ["latin"] });
 
@@ -50,10 +49,9 @@ export default function RootLayout({
       </head>
       <body className={cn("min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased", fontSans.className)}>
         <Providers>
-          <MainLayout>
+          <ClientLayout>
             {children}
-          </MainLayout>
-          <ClientAnalytics />
+          </ClientLayout>
         </Providers>
       </body>
     </html>
