@@ -2135,10 +2135,24 @@ Yanıtını aşağıdaki JSON formatında ver:
             },
           );
 
-          // JSON yanıtını ayrıştır
-          const jsonParseStart = Date.now();
-          const parsedResponse = this.parseTopicDetectionResponse(responseText);
-          const parseTime = Date.now() - jsonParseStart;
+          // Önce kendi manuel JSON çıkarma işlemini yapalım
+          const rawResponse = this.extractJsonManually(responseText, traceId);
+
+          // Eğer manuel çıkarma başarılı olduysa bunu kullan, değilse parseTopicDetectionResponse ile dene
+          let parsedResponse;
+          if (rawResponse.success) {
+            try {
+              parsedResponse = JSON.parse(rawResponse.jsonText);
+            } catch (e) {
+              // Manuel çıkarma başarısız olduysa, normal yolu dene
+              parsedResponse = this.parseTopicDetectionResponse(responseText);
+            }
+          } else {
+            // Manuel çıkarma yapılamadıysa standart metodu kullan
+            parsedResponse = this.parseTopicDetectionResponse(responseText);
+          }
+
+          const parseTime = Date.now() - attemptStartTime;
 
           this.logger.debug(
             `[${traceId}] Gemini yanıtı başarıyla JSON'a çevrildi (${parseTime}ms, toplam: ${Date.now() - attemptStartTime}ms)`,
@@ -2160,6 +2174,78 @@ Yanıtını aşağıdaki JSON formatında ver:
 
           return parsedResponse;
         } catch (error) {
+          // Hata alındığında, manuel kurtarma yöntemini dene
+          try {
+            const responseText = error.response?.text() || '';
+            if (responseText.length > 0) {
+              // Eğer yanıt var ama JSON parse edilememişse, manuel kurtarma dene
+              const extractResult = this.extractJsonManually(
+                responseText,
+                traceId,
+              );
+              if (extractResult.success) {
+                // Parantez dengesini kontrol et ve düzelt
+                const balancedJson = this.balanceJsonBraces(
+                  extractResult.jsonText,
+                );
+                try {
+                  const parsedData = JSON.parse(balancedJson);
+                  // Temel JSON yapısını kontrol et
+                  if (parsedData && typeof parsedData === 'object') {
+                    // En azından boş bir topics dizisi oluştur
+                    if (!parsedData.topics) {
+                      parsedData.topics = [];
+                    }
+                    // Başarılı kurtarma
+                    this.logger.info(
+                      `[${traceId}] AI yanıtından JSON manuel olarak kurtarıldı`,
+                      'AiService.getTopicsWithGemini',
+                      __filename,
+                      1200,
+                      {
+                        recoveryMethod: 'manual-extraction',
+                        hasTopics: !!parsedData.topics,
+                        topicsCount: Array.isArray(parsedData.topics)
+                          ? parsedData.topics.length
+                          : 0,
+                        processingEvent: 'json-recovery-success',
+                        traceId,
+                      },
+                    );
+                    return parsedData;
+                  }
+                } catch (parseError) {
+                  // Manuel kurtarma da başarısız oldu, hatayı logla
+                  this.logger.warn(
+                    `[${traceId}] Manuel JSON kurtarma başarısız oldu: ${parseError.message}`,
+                    'AiService.getTopicsWithGemini',
+                    __filename,
+                    1215,
+                    {
+                      originalError: error.message,
+                      recoveryError: parseError.message,
+                      processingEvent: 'manual-recovery-failed',
+                      traceId,
+                    },
+                  );
+                }
+              }
+            }
+          } catch (recoveryError) {
+            // Kurtarma sırasında hata, orjinal hataya devam et
+            this.logger.warn(
+              `[${traceId}] Kurtarma denemesi başarısız: ${recoveryError.message}`,
+              'AiService.getTopicsWithGemini',
+              __filename,
+              1230,
+              {
+                originalError: error.message,
+                processingEvent: 'recovery-attempt-failed',
+                traceId,
+              },
+            );
+          }
+
           // Hata detayları
           this.logger.error(
             `[${traceId}] Gemini API yanıtı işlenirken hata oluştu (deneme: ${attemptNumber}): ${error.message}`,
@@ -2191,147 +2277,8 @@ Yanıtını aşağıdaki JSON formatında ver:
         1161,
       );
 
-      const normalizedResult = this.normalizeTopicResult(aiResponse);
-
-      // Topics dizisinin var olduğundan emin ol ve SubTopic formatına dönüştür
-      const result: TopicDetectionResult = { topics: [] };
-
-      // Asıl çözüm: aiResponse içindeki konuları doğrudan işle
-      if (aiResponse && aiResponse.topics && Array.isArray(aiResponse.topics)) {
-        // aiResponse içindeki topicler direkt olarak işlenebilir
-        result.topics = aiResponse.topics;
-
-        this.logger.info(
-          `Konu tespiti tamamlandı: ${result.topics.length} konu bulundu`,
-          'AiService.getTopicsWithGemini',
-          __filename,
-          1169,
-          {
-            topicCount: result.topics.length,
-            mainTopicCount: result.topics.filter((t) => t.isMainTopic).length,
-            subTopicCount: result.topics.filter((t) => !t.isMainTopic).length,
-          },
-        );
-        return result;
-      }
-
-      // Önceki normalizeTopicResult'a dayalı yaklaşımı dene
-      if (
-        normalizedResult &&
-        normalizedResult.topics &&
-        Array.isArray(normalizedResult.topics)
-      ) {
-        // Gemini'den gelen konu formatını SubTopic formatına çevir
-        normalizedResult.topics.forEach((topicItem) => {
-          // topicItem'ı any olarak işle
-          const anyTopic = topicItem as any;
-
-          if (typeof anyTopic === 'object' && anyTopic !== null) {
-            // Ana konular
-            if (anyTopic.mainTopic || anyTopic.name || anyTopic.title) {
-              const mainTopicName =
-                anyTopic.mainTopic ||
-                anyTopic.name ||
-                anyTopic.title ||
-                'Isimsiz Konu';
-              const normalizedMainTopicName =
-                this.normalizationService.normalizeSubTopicName(mainTopicName);
-
-              // SubTopic arayüzüne uygun biçimde ekle
-              result.topics.push({
-                subTopicName: mainTopicName,
-                normalizedSubTopicName: normalizedMainTopicName,
-                isMainTopic: true,
-              });
-
-              // Alt konular
-              if (Array.isArray(anyTopic.subTopics)) {
-                anyTopic.subTopics.forEach((subTopicItem) => {
-                  if (typeof subTopicItem === 'string') {
-                    // String olarak gelen alt konu
-                    result.topics.push({
-                      subTopicName: subTopicItem,
-                      normalizedSubTopicName:
-                        this.normalizationService.normalizeSubTopicName(
-                          subTopicItem,
-                        ),
-                      parentTopic: mainTopicName,
-                      isMainTopic: false,
-                    });
-                  } else if (
-                    typeof subTopicItem === 'object' &&
-                    subTopicItem !== null
-                  ) {
-                    // Nesne olarak gelen alt konu
-                    const anySubTopic = subTopicItem as any;
-                    const subTopicName =
-                      anySubTopic.subTopicName ||
-                      anySubTopic.name ||
-                      'Alt konu';
-                    result.topics.push({
-                      subTopicName: subTopicName,
-                      normalizedSubTopicName:
-                        this.normalizationService.normalizeSubTopicName(
-                          subTopicName,
-                        ),
-                      parentTopic: mainTopicName,
-                      isMainTopic: false,
-                    });
-                  }
-                });
-              }
-            } else if (anyTopic.subTopicName) {
-              // Direkt SubTopic formatında gelen konu
-              result.topics.push({
-                subTopicName: anyTopic.subTopicName,
-                normalizedSubTopicName:
-                  anyTopic.normalizedSubTopicName ||
-                  this.normalizationService.normalizeSubTopicName(
-                    anyTopic.subTopicName,
-                  ),
-                isMainTopic: !!anyTopic.isMainTopic,
-              });
-            }
-          } else if (typeof anyTopic === 'string') {
-            // String olarak gelen konu (ana konu olarak kabul et)
-            result.topics.push({
-              subTopicName: anyTopic,
-              normalizedSubTopicName:
-                this.normalizationService.normalizeSubTopicName(anyTopic),
-              isMainTopic: true,
-            });
-          }
-        });
-
-        this.logger.info(
-          `Konu tespiti tamamlandı: ${result.topics.length} konu bulundu`,
-          'AiService.getTopicsWithGemini',
-          __filename,
-          1169,
-          {
-            topicCount: result.topics.length,
-            mainTopicCount: result.topics.filter((t) => t.isMainTopic).length,
-            subTopicCount: result.topics.filter((t) => !t.isMainTopic).length,
-          },
-        );
-      } else {
-        // Eğer normalizedResult.topics dizisi yoksa veya dizi değilse
-        this.logger.warn(
-          `[${traceId}] Konu tespiti tamamlandı ancak geçerli sonuç bulunamadı`,
-          'AiService.getTopicsWithGemini',
-          __filename,
-          1204,
-          {
-            normalizedResultType: typeof normalizedResult,
-            hasTopics: !!normalizedResult?.topics,
-            isArray: Array.isArray(normalizedResult?.topics),
-            processingEvent: 'topics-not-found',
-            traceId,
-          },
-        );
-      }
-
-      return result;
+      // Farklı yanıt formatlarını işleyebilen geliştirilmiş normalleştirme kodu
+      return this.processAIResponse(aiResponse, traceId);
     } catch (error) {
       // Tüm işlem sırasında oluşan hatalar
       this.logger.error(
@@ -2353,6 +2300,225 @@ Yanıtını aşağıdaki JSON formatında ver:
       // Hata durumunda boş bir sonuç döndür
       return { topics: [] };
     }
+  }
+
+  /**
+   * Manuel JSON çıkarma işlemi
+   */
+  private extractJsonManually(
+    text: string,
+    traceId: string,
+  ): { success: boolean; jsonText: string } {
+    try {
+      // JSON dizesini bulmak için kullanabileceğimiz farklı regex kalıpları
+      const patterns = [
+        /```json\s*([\s\S]*?)\s*```/i, // Code block with json tag
+        /```\s*([\s\S]*?)\s*```/i, // Any code block
+        /\{\s*"topics"\s*:\s*\[[\s\S]*?\]\s*\}/i, // Direct JSON with topics array
+        /\{\s*[\s\S]*"topics"[\s\S]*\}/i, // Looser JSON with topics
+        /\{[\s\S]*\}/i, // Any JSON-like object
+      ];
+
+      for (const pattern of patterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+          this.logger.debug(
+            `[${traceId}] Manuel JSON çıkarma başarılı (pattern: ${pattern})`,
+            'AiService.extractJsonManually',
+            __filename,
+            1500,
+            {
+              patternUsed: pattern.toString(),
+              extractedLength: match[1].length,
+              processingEvent: 'manual-extraction-success',
+              traceId,
+            },
+          );
+          return { success: true, jsonText: match[1].trim() };
+        } else if (match) {
+          return { success: true, jsonText: match[0].trim() };
+        }
+      }
+
+      return { success: false, jsonText: '' };
+    } catch (error) {
+      this.logger.warn(
+        `[${traceId}] Manuel JSON çıkarma başarısız: ${error.message}`,
+        'AiService.extractJsonManually',
+        __filename,
+        1520,
+        {
+          errorMessage: error.message,
+          processingEvent: 'manual-extraction-failed',
+          traceId,
+        },
+      );
+      return { success: false, jsonText: '' };
+    }
+  }
+
+  /**
+   * JSON parantez dengesini kontrol edip düzeltir
+   */
+  private balanceJsonBraces(jsonText: string): string {
+    try {
+      const openBraces = (jsonText.match(/\{/g) || []).length;
+      const closeBraces = (jsonText.match(/\}/g) || []).length;
+
+      if (openBraces !== closeBraces) {
+        if (openBraces > closeBraces) {
+          // Eksik kapanış parantezlerini ekle
+          return jsonText + '}'.repeat(openBraces - closeBraces);
+        } else {
+          // Eksik açılış parantezlerini ekle
+          return '{'.repeat(closeBraces - openBraces) + jsonText;
+        }
+      }
+
+      return jsonText;
+    } catch (e) {
+      // Hata olursa orijinal metni döndür
+      return jsonText;
+    }
+  }
+
+  /**
+   * AI yanıtını işleyerek farklı formatları destekler
+   */
+  private processAIResponse(
+    aiResponse: any,
+    traceId: string,
+  ): TopicDetectionResult {
+    // Eğer AI yanıtı uygun formatta ise doğrudan kullan
+    if (aiResponse && aiResponse.topics && Array.isArray(aiResponse.topics)) {
+      // Her alt konu için normalizedSubTopicName alanını güvenceye al
+      const result: TopicDetectionResult = {
+        topics: aiResponse.topics
+          .map((topic) => {
+            // Ana konu işleme
+            if (topic.mainTopic && Array.isArray(topic.subTopics)) {
+              // Alt konuları işle ve her birine ana konu bilgisi ekle
+              const subTopics = topic.subTopics
+                .map((st) => {
+                  // Farklı alt konu formatlarını işleyebilmek için
+                  let subTopic;
+                  if (typeof st === 'string') {
+                    // Alt konu string ise, nesneye dönüştür
+                    subTopic = {
+                      subTopicName: st,
+                      normalizedSubTopicName:
+                        this.normalizationService.normalizeSubTopicName(st),
+                      parentTopic: topic.mainTopic,
+                      isMainTopic: false,
+                    };
+                  } else if (typeof st === 'object' && st !== null) {
+                    // Alt konu nesne ise, eksik alanları tamamla
+                    const subTopicName =
+                      st.subTopicName || st.name || 'Alt Konu';
+                    subTopic = {
+                      subTopicName: subTopicName,
+                      normalizedSubTopicName:
+                        st.normalizedSubTopicName ||
+                        this.normalizationService.normalizeSubTopicName(
+                          subTopicName,
+                        ),
+                      parentTopic: topic.mainTopic,
+                      isMainTopic: false,
+                      difficulty: st.difficulty || 'orta',
+                      learningObjective: st.learningObjective || null,
+                      reference: st.reference || null,
+                    };
+                  }
+                  return subTopic;
+                })
+                .filter(Boolean); // undefined veya null değerleri filtrele
+
+              // Ana konu için de bir SubTopic nesnesi oluştur
+              const mainTopicItem = {
+                subTopicName: topic.mainTopic,
+                normalizedSubTopicName:
+                  this.normalizationService.normalizeSubTopicName(
+                    topic.mainTopic,
+                  ),
+                isMainTopic: true,
+              };
+
+              // Ana konu ve tüm alt konuları birleştir
+              return [mainTopicItem, ...subTopics];
+            } else if (topic.subTopicName || typeof topic === 'string') {
+              // Doğrudan SubTopic nesnesi veya string ise
+              const topicName = topic.subTopicName || topic;
+              return {
+                subTopicName: topicName,
+                normalizedSubTopicName:
+                  topic.normalizedSubTopicName ||
+                  this.normalizationService.normalizeSubTopicName(topicName),
+                isMainTopic: !!topic.isMainTopic,
+                difficulty: topic.difficulty || 'orta',
+                learningObjective: topic.learningObjective || null,
+                reference: topic.reference || null,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) // null değerleri filtrele
+          .flat(), // İç içe dizileri düzleştir
+      };
+
+      this.logger.info(
+        `[${traceId}] Konu tespiti tamamlandı: ${result.topics.length} konu işlendi`,
+        'AiService.processAIResponse',
+        __filename,
+        1600,
+        {
+          topicCount: result.topics.length,
+          mainTopicCount: result.topics.filter((t) => t.isMainTopic).length,
+          subTopicCount: result.topics.filter((t) => !t.isMainTopic).length,
+          processingEvent: 'topics-processing-completed',
+          traceId,
+        },
+      );
+
+      return result;
+    }
+
+    // Eski yaklaşımla normalleştirmeyi dene
+    const normalizedResult = this.normalizeTopicResult(aiResponse);
+
+    if (
+      normalizedResult &&
+      normalizedResult.topics &&
+      normalizedResult.topics.length > 0
+    ) {
+      this.logger.info(
+        `[${traceId}] Eski normalleştirme metodu ile ${normalizedResult.topics.length} konu bulundu`,
+        'AiService.processAIResponse',
+        __filename,
+        1615,
+        {
+          topicCount: normalizedResult.topics.length,
+          processingEvent: 'legacy-normalization-success',
+          traceId,
+        },
+      );
+      return normalizedResult;
+    }
+
+    // Hiçbir konu bulunamadıysa, boş sonuç döndür
+    this.logger.warn(
+      `[${traceId}] Hiçbir konu tespit edilemedi veya yanıt beklenmeyen formatta`,
+      'AiService.processAIResponse',
+      __filename,
+      1625,
+      {
+        responseType: typeof aiResponse,
+        hasTopicsField: !!(aiResponse && aiResponse.topics),
+        processingEvent: 'no-topics-detected',
+        traceId,
+      },
+    );
+
+    return { topics: [] };
   }
 
   /**

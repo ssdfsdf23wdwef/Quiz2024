@@ -16,18 +16,41 @@
 7. Konu başlıkları özel isimlerden oluşmamalı, açıklayıcı olmalı
 
 **Çıktı Formatı:**
-Analiz sonucunu JSON formatında aşağıdaki yapıda döndür:
+Analiz sonucunu **KESINLIKLE** aşağıdaki JSON formatında döndür ve JSON'un geçerli ve tam olduğundan emin ol:
 
 ```json
 {
   "topics": [
     {
       "mainTopic": "Ana Konu 1",
-      "subTopics": ["Alt Konu 1.1", "Alt Konu 1.2", "Alt Konu 1.3"]
+      "subTopics": [
+        {
+          "subTopicName": "Alt Konu 1.1",
+          "normalizedSubTopicName": "alt_konu_1_1",
+          "difficulty": "kolay",
+          "learningObjective": "Öğrenci, alt konuyla ilgili Bloom taksonomisine uygun öğrenme hedefi.",
+          "reference": null
+        },
+        {
+          "subTopicName": "Alt Konu 1.2",
+          "normalizedSubTopicName": "alt_konu_1_2",
+          "difficulty": "orta",
+          "learningObjective": "Öğrenci, alt konuyla ilgili Bloom taksonomisine uygun öğrenme hedefi.",
+          "reference": null
+        }
+      ]
     },
     {
       "mainTopic": "Ana Konu 2",
-      "subTopics": ["Alt Konu 2.1", "Alt Konu 2.2"]
+      "subTopics": [
+        {
+          "subTopicName": "Alt Konu 2.1",
+          "normalizedSubTopicName": "alt_konu_2_1",
+          "difficulty": "zor",
+          "learningObjective": "Öğrenci, alt konuyla ilgili Bloom taksonomisine uygun öğrenme hedefi.",
+          "reference": null
+        }
+      ]
     }
   ]
 }
@@ -44,6 +67,15 @@ Analiz sonucunu JSON formatında aşağıdaki yapıda döndür:
 * Önemsiz Detaylar/Yüzeysel Bilgiler: Çok spesifik örnekler, liste maddeleri (özellikle içeriği olmayan), figür/tablo açıklamaları, dipnotlar, tek cümlelik veya yeterince geliştirilmemiş, öğrenme değeri düşük noktalar, çok kısa veya anlamsız başlıklar.
 * Derin Hiyerarşi: İki seviyeden (Ana Konu/Kavram -> Temel Alt Konu/Kavram) daha fazlası.
 * Ek Metin: Yorumlar, açıklamalar, giriş/sonuç cümleleri, formatlama dışı her şey.
+
+**ÇOK ÖNEMLİ: JSON FORMATINDA ÇIKTI KURALLARI:**
+* Yanıt SADECE geçerli bir JSON nesnesi olmalıdır
+* Eksiksiz bir JSON yapısı olduğundan emin ol - tüm parantez ve tırnak işaretleri dengeli olmalı
+* Her bir alan için uygun JSON sözdizimi kullanılmalı
+* Değerleri uygun tırnak işaretleri içine almalısın
+* JSON'da ek açıklama, metin veya yorum OLMAMALI
+* Çıktının JSON formatına uygun olduğunu, bozuk olmadığını kontrol et
+* Bir önceki **Çıktı Formatı** bölümünde tam olarak verilen yapıya uy
 
 **İzlenecek Adımlar:**
 1. Derinlemesine Anlama (Kavramsal Odak): Metni dikkatlice oku. Hangi temel KAVRAMLARIN, İLKELERİN, TEORİLERİN, TANIMLARIN, YÖNTEMLERİN (teorik yönlerinin), FAYDA/DEZAVANTAJLARIN veya ÖNEMLİ EN İYİ UYGULAMA İLKELERİNİN sunulduğunu belirle. Pratik uygulama adımlarını değil, kavramsal özü anla.
@@ -71,13 +103,19 @@ Analiz sonucunu JSON formatında aşağıdaki yapıda döndür:
           "normalizedSubTopicName": "alt_konu_1_1",
           "difficulty": "kolay|orta|zor",
           "learningObjective": "Öğrenci, [alt konuyla ilgili Bloom taksonomisine uygun öğrenme hedefi].",
-          "reference": "Bölüm X.Y (opsiyonel)"
-        },
-        // ... diğer alt konular
+          "reference": null
+        }
       ]
-    },
-    // ... diğer ana konular
+    }
   ]
+}
+```
+
+**ÖNEMLİ SON KONTROL: Çıktının geçerli bir JSON olduğundan emin ol. Eğer metin analizi sonrasında tespit ettiğin konular yoksa, aşağıdaki gibi boş bir dizi döndür:**
+
+```json
+{
+  "topics": []
 }
 ```
 
@@ -168,16 +206,9 @@ Analiz sonucunu JSON formatında aşağıdaki yapıda döndür:
 }
 ```
 
-**Hata Durumu:**
-* Eğer metnin analizinden, yukarıdaki tüm filtreleme ve seçme kriterlerine uyan hiçbir önemli ve TEMEL KAVRAMSAL öğrenme konusu başlığı seçemezsen, SADECE şunu yaz:
-```json
-{
-  "topics": []
-}
-```
-
 **Tutarlılık ve Kalite Kontrol:**
 * Bu talimatları harfiyen uygula.
 * Her bir alt konu için anlamlı ve ölçülebilir bir öğrenme hedefi tanımladığından emin ol.
 * Zorluk seviyelerini verilen içerik karmaşıklığına göre dengeli dağıt.
-* Çıktı formatını kesinlikle JSON olarak yapılandır ve geçerli bir JSON yapısı olduğundan emin ol. 
+* Çıktı formatını kesinlikle JSON olarak yapılandır ve geçerli bir JSON yapısı olduğundan emin ol.
+* Yanıtını vermeden önce ürettiğin JSON'un geçerli olduğunu bir kez daha kontrol et. Tüm parantezlerin ve tırnak işaretlerinin dengeli olduğundan emin ol. 

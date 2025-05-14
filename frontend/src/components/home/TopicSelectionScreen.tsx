@@ -11,6 +11,8 @@ import {
   FiPlus,
 } from "react-icons/fi";
 import { LearningTargetStatus } from "@/types/learningTarget";
+import { Button } from "@/components/ui/Button";
+import { useRouter } from "next/navigation";
 
 // TopicData arayüzünü de import et
 import type { DetectedSubTopic as TopicData } from "@/types/learningTarget";
@@ -104,11 +106,10 @@ export default function TopicSelectionScreen({
   onCourseChange,
   onCancel,
 }: TopicSelectionScreenProps) {
-  // Sınav türüne göre görüntülenecek konuları belirle
-  const [filteredTopics, setFilteredTopics] = useState<TopicData[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<
-    "all" | "new" | "existing"
-  >("all");
+  // Mevcut konuları tut
+  const [filteredTopics, setFilteredTopics] = useState<TopicData[]>(detectedTopics);
+  const [selectedFilter, setSelectedFilter] = useState("all"); // Filtre durumunu ekleyelim
+  const router = useRouter();
 
   // Seçili kurs kontrolü
   const [currentCourseId, setCurrentCourseId] = useState(
@@ -122,6 +123,14 @@ export default function TopicSelectionScreen({
       onCourseChange?.(courseId);
     },
     [onCourseChange],
+  );
+  
+  // Filtre değişikliğini yönet
+  const handleFilterChange = useCallback(
+    (filter: "all" | "new" | "existing") => {
+      setSelectedFilter(filter);
+    },
+    [],
   );
 
   // Sınav türüne göre görüntülenecek konuları filtrele
@@ -166,14 +175,6 @@ export default function TopicSelectionScreen({
     personalizedQuizType,
     isLoading,
   ]);
-
-  // Filtreleme seçeneğini değiştir
-  const handleFilterChange = useCallback(
-    (filter: "all" | "new" | "existing") => {
-      setSelectedFilter(filter);
-    },
-    [],
-  );
 
   // Seçilen konuları takip et
   const handleToggleTopic = useCallback((topicId: string) => {
@@ -328,60 +329,60 @@ export default function TopicSelectionScreen({
         </h3>
         <div className="text-gray-700 dark:text-gray-300 mb-4 text-center max-w-lg">
           {personalizedQuizType === "weakTopicFocused" ? (
-            <p>Daha fazla sınav çözerek öğrenme durumunuzu güncelleyebilirsiniz.</p>
+            <p>
+              Sınavları çözmeye devam ettikçe, performansınıza göre zayıf ve güçlü olduğunuz konuları belirlemeye başlayacağız.
+            </p>
           ) : (
-            <>
-              <p className="mb-2">
-                Yapay zeka modelimiz yüklenen belgeden konu çıkarırken bir sorun oluştu. Bu şu sebeplerden kaynaklanabilir:
+            <div>
+              <p>
+                AI tarafından yüklenen belgede öğrenilebilir konular tespit edilemedi. Bu şu nedenlerden kaynaklanabilir:
               </p>
-              <ul className="list-disc text-left text-sm ml-6 mb-4 space-y-1">
-                <li>Belge formatı uygun olmayabilir veya metin çıkarılamayabilir</li>
-                <li>Belge çok kısa veya yetersiz içeriğe sahip olabilir</li>
-                <li>Yapay zeka modelimiz belgenin dilini veya konusunu tanıyamamış olabilir</li>
-                <li>Teknik bir sorun oluşmuş olabilir</li>
+              <ul className="list-disc mt-2 ml-6 text-left">
+                <li>Belge içeriği çok kısa veya yeterli kavramsal içerik bulunmuyor olabilir</li>
+                <li>Belge formatı veya yapısı AI tarafından doğru analiz edilememiş olabilir</li>
+                <li>Metin dili veya uzmanlık alanı AI tarafından işlenememiş olabilir</li>
               </ul>
-              <p className="text-sm mb-4">
-                Aşağıdaki çözümleri deneyebilirsiniz:
-              </p>
-            </>
+            </div>
           )}
         </div>
-        
-        <div className="w-full max-w-md space-y-3 mb-4">
-          {personalizedQuizType !== "weakTopicFocused" && (
-            <>
-              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Başka bir belge yükleyin</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Farklı bir doküman veya farklı bir format (PDF, DOCX, TXT) deneyebilirsiniz.
-                </p>
-              </div>
-              
-              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Farklı bir sınav türü seçin</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Kişiselleştirilmiş sınav yerine "Hızlı Sınav&quot; seçeneğini veya mevcut konularınız varsa "Zayıf Konular&quot; odaklı modu deneyebilirsiniz.
-                </p>
-              </div>
-              
-              <div className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Daha sonra tekrar deneyin</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Sistem şu anda yoğun olabilir. Daha sonra tekrar denemeniz durumunda hata çözülebilir.
-                </p>
-              </div>
-            </>
-          )}
+
+        <div className="space-y-4 w-full max-w-lg">
+          <div className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+            <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Manuel konu girişi yapın</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+              Çalışmak istediğiniz konuları kendiniz ekleyerek devam edebilirsiniz.
+            </p>
+            <Button 
+              variant="secondary"
+              className="w-full"
+              onClick={() => router.push('/learning-goals/dashboard')}
+            >
+              <FiPlus className="mr-2" />
+              Yeni Konu Ekle
+            </Button>
+          </div>
+
+          <div className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+            <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Farklı bir belge yükleyin</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+              Daha fazla kavramsal içerik içeren bir ders materyali veya dokümandan tekrar yükleme yapabilirsiniz.
+            </p>
+            <Button 
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push('/')}
+            >
+              Belge Yükleme Ekranına Dön
+            </Button>
+          </div>
+
+          <div className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+            <h4 className="font-medium text-indigo-600 dark:text-indigo-400 mb-1">Farklı bir sınav türü seçin</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Kişiselleştirilmiş sınav yerine &quot;Hızlı Sınav&quot; seçeneğini veya mevcut konularınız varsa &quot;Zayıf Konular&quot; odaklı modu deneyebilirsiniz.
+            </p>
+          </div>
         </div>
-        
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white rounded-md shadow-sm text-sm font-medium transition-colors"
-          >
-            Geri Dön
-          </button>
-        )}
       </div>
     );
   }
@@ -511,8 +512,13 @@ export default function TopicSelectionScreen({
                   />
                   <div>
                     <div className="font-medium text-gray-900 dark:text-gray-100">
-                      {topic.name}
+                      {topic.name || topic.subTopicName}
                     </div>
+                    {topic.parentTopic && !topic.isMainTopic && (
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {topic.parentTopic}
+                      </div>
+                    )}
                     {topic.status && (
                       <div className={`text-sm ${statusInfo.color}`}>
                         {statusInfo.label}
