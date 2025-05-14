@@ -47,8 +47,12 @@ export class FirebaseService implements OnModuleInit {
       // initializeApp zaten tekrar başlatmayı engeller.
       admin.initializeApp({
         credential: admin.credential.cert(absolutePath),
-        // Storage bucket'ı da burada veya .env'den alıp ekleyebiliriz. Şimdilik kaldıralım.
-        // storageBucket: this.configService.get<string>('FIREBASE_STORAGE_BUCKET')
+        // Storage bucket'ı belirtmezsek Firebase otomatik olarak default bucket'ı kullanır
+        // Bu formatlar denenebilir:
+        // storageBucket: 'my-app-71530.appspot.com',
+        // storageBucket: 'my-app-71530.appspot.com',
+        // storageBucket: 'my-app-71530',
+        // İsim olmadan da çalışabilir, bu durumda default bucket kullanılır
       });
 
       this.logger.info(
