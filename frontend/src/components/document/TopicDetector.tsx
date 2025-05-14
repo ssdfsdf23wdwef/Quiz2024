@@ -5,7 +5,7 @@ import { LearningTargetStatusLiteral, DetectedSubTopic } from "@/types";
 import documentService from "@/services/document.service";
 
 interface TopicDetectorProps {
-  fileUrl: string;
+  documentId: string;
   fileName?: string;
   onTopicsSelected: (selectedTopics: string[]) => void;
   onCancel: () => void;
@@ -13,7 +13,7 @@ interface TopicDetectorProps {
 }
 
 export default function TopicDetector({
-  fileUrl,
+  documentId,
   fileName,
   onTopicsSelected,
   onCancel,
@@ -26,9 +26,9 @@ export default function TopicDetector({
 
   // Konu tespiti işlemi
   useEffect(() => {
-    // Boş fileUrl kontrolü
-    if (!fileUrl) {
-      setError("Dosya URL'si bulunamadı.");
+    // Boş documentId kontrolü
+    if (!documentId) {
+      setError("Belge ID'si bulunamadı.");
       setIsLoading(false);
       return;
     }
@@ -39,36 +39,31 @@ export default function TopicDetector({
         setError(null);
 
         // API'den konuları getir
-        // Not: Bu metod şu anda implementasyonu olmadığından, hata fırlatır
-        // TODO: Gerçek API entegrasyonu tamamlandığında bu kısmı güncelle
         try {
-          // API'yi çağır (Bu şu an çalışmayacak)
-          const detectedTopics = await documentService.detectTopics(fileUrl);
-          // Sonuçları ayarla
-          setTopics(detectedTopics);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (_) {
-          // Geçici olarak sahte veri kullan
-          const mockTopics: DetectedSubTopic[] = [
-            { 
-              id: "topic1", 
-              subTopicName: "Geçici Konu 1",
-              normalizedSubTopicName: "gecici_konu_1",
-              isSelected: true, 
-              name: "Geçici Konu 1",
-              status: "pending", 
-              isNew: true 
-            },
-            { 
-              id: "topic2", 
-              subTopicName: "Geçici Konu 2",
-              normalizedSubTopicName: "gecici_konu_2",
-              isSelected: true,
-              name: "Geçici Konu 2",
-              status: "pending" 
-            }
-          ];
-          setTopics(mockTopics);
+          // Backend API'yi çağır
+          const detectedTopics = await documentService.detectTopics(documentId);
+          
+          // Tespit edilen konuları işle ve görüntüleme için hazırla
+          const processedTopics = detectedTopics.map(topic => ({
+            ...topic,
+            id: topic.normalizedSubTopicName, // ID olarak normalize edilmiş konu adını kullan
+            name: topic.subTopicName, // Görüntüleme için konu adını kullan
+            isSelected: true, // Varsayılan olarak seçili
+            status: topic.isMainTopic ? "mastered" : "pending" as LearningTargetStatusLiteral,
+            isNew: !topic.parentTopic // Eğer bir üst konusu yoksa yeni kabul et
+          }));
+          
+          setTopics(processedTopics);
+        } catch (error) {
+          console.error("API hatası:", error);
+          
+          // Gerçek hata durumunda hata göster
+          setError((error as Error)?.message || "Konular tespit edilemedi.");
+          
+          // Hata callback'ini çağır
+          if (onError) {
+            onError((error as Error)?.message || "Konular tespit edilemedi.");
+          }
         }
       } catch (error) {
         // Hata durumunu güncelle
@@ -89,24 +84,24 @@ export default function TopicDetector({
 
     // Konu tespiti işlemini başlat
     detectTopics();
-  }, [fileUrl, onError]);
+  }, [documentId, onError]);
 
   // Tüm konuları seçme/seçimi kaldırma
-  const toggleAll = useCallback((select: boolean) => {
-    setTopics((prevTopics) =>
+  const toggleAll = useCallback((selectAll: boolean) => {
+    setTopics((prevTopics: DetectedSubTopic[]) => 
       prevTopics.map((topic) => ({
         ...topic,
-        isSelected: select,
-      })),
+        isSelected: selectAll,
+      }))
     );
   }, []);
 
   // Tek bir konunun seçimini değiştirme
-  const toggleTopic = useCallback((id: string) => {
-    setTopics((prevTopics) =>
-      prevTopics.map((topic) =>
-        topic.id === id ? { ...topic, isSelected: !topic.isSelected } : topic,
-      ),
+  const toggleTopic = useCallback((topicId: string) => {
+    setTopics((prevTopics: DetectedSubTopic[]) => 
+      prevTopics.map((topic) => 
+        topic.id === topicId ? { ...topic, isSelected: !topic.isSelected } : topic
+      )
     );
   }, []);
 

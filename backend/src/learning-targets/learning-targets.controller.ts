@@ -12,6 +12,10 @@ import {
   Query,
   BadRequestException,
   Request,
+  HttpCode,
+  HttpStatus,
+  SetMetadata,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,28 +27,32 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { LearningTargetsService } from './learning-targets.service';
-import { UpdateLearningTargetDto } from './dto/update-learning-target.dto';
-import { FirebaseGuard } from '../auth/firebase/firebase.guard';
-import { DetectTopicsDto } from './dto/detect-topics.dto';
-import { CreateBatchLearningTargetsDto } from './dto/create-batch-learning-targets.dto';
-import { UpdateMultipleStatusesDto } from './dto/update-multiple-statuses.dto';
-import { RequestWithUser } from '../common/interfaces';
+import {
+  UpdateLearningTargetDto,
+  DetectTopicsDto,
+  CreateBatchLearningTargetsDto,
+  UpdateMultipleStatusesDto,
+} from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { LearningTargetWithQuizzes } from '../common/interfaces';
+import { RequestWithUser } from '../common/types';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
-
-// LearningTargetWithQuizzes arayüzünü import ediyorum
-import { LearningTargetWithQuizzes } from '../common/interfaces';
+import { DocumentsService } from '../documents/documents.service';
 
 @ApiTags('Öğrenme Hedefleri')
 @ApiBearerAuth('Firebase JWT')
-@UseGuards(FirebaseGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('learning-targets')
 export class LearningTargetsController {
   private readonly logger: LoggerService;
   private readonly flowTracker: FlowTrackerService;
 
-  constructor(private readonly learningTargetsService: LearningTargetsService) {
+  constructor(
+    private readonly learningTargetsService: LearningTargetsService,
+    private readonly documentsService: DocumentsService,
+  ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
     this.logger.debug(
@@ -230,12 +238,16 @@ export class LearningTargetsController {
   }
 
   @Post('detect-topics')
-  @ApiOperation({ summary: 'Bir metin içerisindeki konuları tespit eder' })
-  @ApiBody({ type: DetectTopicsDto })
-  @ApiResponse({ status: 201, description: 'Konular başarıyla tespit edildi' })
-  @ApiResponse({ status: 400, description: 'Geçersiz istek' })
-  @ApiResponse({ status: 404, description: 'Ders bulunamadı' })
-  @LogMethod()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Detect topics from document text' })
+  @ApiResponse({
+    status: 200,
+    description: 'Topics detected successfully',
+    type: String,
+    isArray: true,
+  })
+  @UseGuards(JwtAuthGuard)
+  @SetMetadata('anonymousAllowed', false)
   async detectTopics(@Body() dto: DetectTopicsDto, @Req() req: any) {
     const userId = req.user.uid;
 
@@ -254,19 +266,50 @@ export class LearningTargetsController {
           userId,
           courseId: dto.courseId,
           textLength: dto.documentText.length,
+          hasDocumentId: !!dto.documentId,
         },
       );
 
-      return await this.learningTargetsService.detectTopics(
-        dto.documentText,
-        dto.courseId,
-        userId,
-      );
+      // Belge ID'si var mı kontrol et
+      if (dto.documentId) {
+        this.logger.info(
+          `Belge ID'si kullanılarak konular tespit ediliyor: ${dto.documentId}`,
+          'LearningTargetsController.detectTopics',
+          __filename,
+        );
+
+        // Belge ID'si ile konu tespiti yap
+        return await this.learningTargetsService.analyzeDocumentForTopics(
+          dto.documentId,
+          userId,
+        );
+      } else {
+        this.logger.info(
+          `Doğrudan metin kullanılarak konular tespit ediliyor (${dto.documentText.length} karakter)`,
+          'LearningTargetsController.detectTopics',
+          __filename,
+        );
+
+        // AI servisini doğrudan çağırarak konu tespiti yap
+        const result = await this.learningTargetsService.analyzeDocumentText(
+          dto.documentText,
+          userId,
+        );
+
+        this.logger.debug(
+          `Doğrudan metinden konu tespiti tamamlandı: ${result.length} konu bulundu`,
+          'LearningTargetsController.detectTopics',
+          __filename,
+        );
+
+        return result;
+      }
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.detectTopics', {
         userId,
         courseId: dto.courseId,
-        textLength: dto.documentText.length,
+        documentId: dto.documentId,
+        textLength: dto.documentText?.length || 0,
         additionalInfo: 'Konular tespit edilirken hata oluştu',
       });
       throw error;

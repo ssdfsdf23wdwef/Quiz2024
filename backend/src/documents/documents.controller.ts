@@ -31,6 +31,7 @@ import { UploadDocumentDto } from './dto';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
+import { AiService } from '../ai/ai.service';
 
 @ApiTags('Belgeler')
 @ApiBearerAuth('Firebase JWT')
@@ -40,7 +41,10 @@ export class DocumentsController {
   private readonly logger: LoggerService;
   private readonly flowTracker: FlowTrackerService;
 
-  constructor(private readonly documentsService: DocumentsService) {
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly aiService: AiService,
+  ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
     this.logger.debug(
@@ -271,6 +275,65 @@ export class DocumentsController {
         userId,
         documentId: id,
         additionalInfo: 'Belge silinirken hata oluştu',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Analyze document and extract topics
+   */
+  @Post(':id/analyze')
+  @UseGuards(FirebaseGuard)
+  @ApiOperation({ summary: 'Belgeyi analiz et ve konuları çıkar' })
+  @ApiParam({ name: 'id', description: 'Belge ID' })
+  @ApiResponse({ status: 200, description: 'Belge analiz edildi' })
+  @ApiResponse({ status: 404, description: 'Belge bulunamadı' })
+  @LogMethod()
+  async analyzeDocument(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user.uid;
+
+    this.flowTracker.trackStep(
+      `${id} ID'li belge analiz ediliyor`,
+      'DocumentsController',
+    );
+
+    try {
+      // Belge metni getir
+      const documentText = await this.documentsService.getDocumentText(
+        id,
+        userId,
+      );
+
+      // Yapay zeka ile konuları tespit et
+      const topicResult = await this.aiService.detectTopics(
+        documentText.text,
+        [], // existingTopics boş başlasın
+      );
+
+      this.logger.info(
+        `Belge analiz edildi: ${id}`,
+        'DocumentsController.analyzeDocument',
+        __filename,
+        undefined,
+        {
+          userId,
+          documentId: id,
+          topicCount: topicResult.topics.length,
+        },
+      );
+
+      return {
+        success: true,
+        documentId: id,
+        topics: topicResult.topics,
+        analysisTime: new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.logError(error, 'DocumentsController.analyzeDocument', {
+        userId,
+        documentId: id,
+        additionalInfo: 'Belge analiz edilirken hata oluştu',
       });
       throw error;
     }

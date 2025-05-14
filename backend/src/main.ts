@@ -43,11 +43,21 @@ async function bootstrap() {
         'http://127.0.0.1:3000',
         'http://localhost:4000',
         'http://localhost:5000',
+        'http://localhost:3002',
+        'http://localhost:8000',
+        'http://localhost',
+        'http://127.0.0.1',
+        'capacitor://localhost',
         configService.get('CORS_ORIGIN'),
       ].filter(Boolean);
 
-      // Eğer origin null ise (örn. Postman isteği) veya izin verilen listede ise
-      if (!origin || whitelist.indexOf(origin) !== -1) {
+      // Localhost üzerinden gelen tüm isteklere izin ver
+      if (
+        !origin ||
+        whitelist.indexOf(origin) !== -1 ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('http://127.0.0.1')
+      ) {
         callback(null, true);
       } else {
         const msg = `CORS politikası bu kaynağa erişimi reddetti: ${origin}`;
@@ -57,8 +67,17 @@ async function bootstrap() {
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'X-Access-Token',
+      'Accept',
+      'Origin',
+    ],
     exposedHeaders: ['Authorization'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
     maxAge: 3600, // 1 saat önbellek
   });
 

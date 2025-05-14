@@ -17,14 +17,48 @@ import {
   QuizQuestion,
   QuizGenerationOptions,
 } from './interfaces';
-import { promises as fs } from 'fs';
 import * as path from 'path';
+import * as fs from 'fs';
 import { NormalizationService } from '../shared/normalization/normalization.service';
 import { QuizQuestionDto } from './dto/generate-personalized-feedback.dto';
 import pRetry from 'p-retry';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
+
+// Varsayılan Türkçe konu tespiti prompt'u
+const DEFAULT_TOPIC_DETECTION_PROMPT_TR = `
+## GÖREV: Eğitim Materyalinden Konuları ve Alt Konuları Algılama
+
+Aşağıdaki eğitim materyali metnini analiz et ve içindeki ana konuları ve alt konuları tespit et.
+
+### Talimatlar:
+1. Metni okuyarak ana konuları ve bunlara ait alt konuları belirle
+2. Her ana konunun altında, o konuyla ilgili alt konuları listele
+3. Çok genel konulardan kaçın, mümkün olduğunca spesifik ol
+4. Metinde geçen terimler ve kavramlar arasındaki ilişkileri koru
+5. En önemli/belirgin 5-10 konu ve alt konuyu belirle
+
+### Yanıt Formatı:
+Sonuçları JSON formatında, aşağıdaki yapıda döndür:
+
+\`\`\`json
+{
+  "topics": [
+    {
+      "mainTopic": "Ana Konu Adı 1",
+      "subTopics": ["Alt Konu 1.1", "Alt Konu 1.2"]
+    },
+    {
+      "mainTopic": "Ana Konu Adı 2",
+      "subTopics": ["Alt Konu 2.1", "Alt Konu 2.2"]
+    }
+  ]
+}
+\`\`\`
+
+Sadece JSON döndür, başka açıklama yapma.
+`;
 
 @Injectable()
 export class AiService {
@@ -195,40 +229,172 @@ export class AiService {
   }
 
   /**
+   * Detect topics from the provided document text
+   */
+  @LogMethod({ trackParams: true })
+  async detectTopics(
+    documentText: string,
+    existingTopics: string[] = [],
+  ): Promise<TopicDetectionResult> {
+    try {
+      this.logger.debug(
+        `AI servisi metin analizi başlatılıyor (${documentText.length} karakter)`,
+        'AiService.detectTopics',
+        __filename,
+      );
+
+      this.flowTracker.trackStep('Dokümandan konular algılanıyor', 'AiService');
+
+      // Truncate document text if too long
+      const truncatedText =
+        documentText.length > 15000
+          ? documentText.slice(0, 15000) + '...'
+          : documentText;
+
+      // Building the prompt using the content from detect-topics-tr.txt file
+      const promptFilePath = path.resolve(
+        __dirname,
+        'prompts',
+        'detect-topics-tr.txt',
+      );
+      let promptContent = '';
+
+      try {
+        promptContent = fs.readFileSync(promptFilePath, 'utf8');
+      } catch (error) {
+        this.logger.error(
+          `Error reading prompt file: ${error.message}`,
+          'AiService',
+        );
+        promptContent = DEFAULT_TOPIC_DETECTION_PROMPT_TR;
+      }
+
+      // Append the document text to the prompt
+      const prompt = `${promptContent}\n\n**Input Text to Analyze:**\n${truncatedText}`;
+
+      // Build existing topics list if any
+      const existingTopicsText =
+        existingTopics.length > 0
+          ? `\n\nExisting topics: ${existingTopics.join(', ')}`
+          : '';
+
+      // Combine prompt with existing topics
+      const fullPrompt = prompt + existingTopicsText;
+
+      // Get AI service configuration
+      const llmConfig = this.configService.get('llm');
+      this.logger.debug(
+        `Using LLM config: ${JSON.stringify(llmConfig)}`,
+        'AiService',
+        __filename,
+      );
+
+      // Track the AI service being used
+      this.flowTracker.trackStep(
+        `Using AI service: ${llmConfig.provider}`,
+        'AiService',
+      );
+
+      let result: TopicDetectionResult = { topics: [] };
+
+      // Choose AI service based on configuration
+      if (llmConfig.provider === 'gemini') {
+        result = await this.getTopicsWithGemini(fullPrompt);
+      } else if (llmConfig.provider === 'openai') {
+        result = await this.getTopicsWithOpenAI(fullPrompt);
+      } else {
+        throw new Error(`Unsupported LLM provider: ${llmConfig.provider}`);
+      }
+
+      // Check if we got valid results
+      if (!result || !result.topics || !Array.isArray(result.topics)) {
+        throw new Error(
+          'Invalid topic detection result format from AI service',
+        );
+      }
+
+      // Log the results
+      this.logger.info(
+        `Detected ${result.topics.length} topics from document text`,
+        'AiService',
+        __filename,
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `Error detecting topics: ${error.message}`,
+        'AiService',
+      );
+      throw new BadRequestException(
+        `Failed to detect topics: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Normalize topic detection result
+   */
+  @LogMethod()
+  private normalizeTopicResult(result: any): TopicDetectionResult {
+    const normalizedResult: TopicDetectionResult = {
+      topics: [],
+    };
+
+    if (result.topics && Array.isArray(result.topics)) {
+      // Convert to the expected format and normalize topic names
+      result.topics.forEach((topic) => {
+        // Handle main topics
+        if (topic.mainTopic) {
+          const mainTopic = {
+            subTopicName: topic.mainTopic,
+            normalizedSubTopicName:
+              this.normalizationService.normalizeSubTopicName(topic.mainTopic),
+            isMainTopic: true,
+          };
+
+          normalizedResult.topics.push(mainTopic);
+
+          // Handle sub-topics if they exist
+          if (topic.subTopics && Array.isArray(topic.subTopics)) {
+            topic.subTopics.forEach((subTopic) => {
+              const normalizedSubTopic = {
+                subTopicName: subTopic,
+                normalizedSubTopicName:
+                  this.normalizationService.normalizeSubTopicName(subTopic),
+                parentTopic: topic.mainTopic,
+                isMainTopic: false,
+              };
+
+              normalizedResult.topics.push(normalizedSubTopic);
+            });
+          }
+        } else if (typeof topic === 'string' || topic.subTopicName) {
+          // Handle legacy format (flat list)
+          const subTopicName =
+            typeof topic === 'string' ? topic : topic.subTopicName;
+          normalizedResult.topics.push({
+            subTopicName,
+            normalizedSubTopicName:
+              this.normalizationService.normalizeSubTopicName(subTopicName),
+            isMainTopic: true,
+          });
+        }
+      });
+    }
+
+    return normalizedResult;
+  }
+
+  /**
    * Parses the AI response for topic detection
    */
   @LogMethod()
-  private parseTopicDetectionResponse(response: string): TopicDetectionResult {
+  private parseTopicDetectionResponse(response: string): any {
     try {
       this.flowTracker.trackStep('Konu algılama yanıtı işleniyor', 'AiService');
       // Parse JSON using the generic method
-      const jsonResponse = this.parseJsonResponse<{
-        topics: Array<string | { name?: string; subTopicName?: string }>;
-      }>(response);
-
-      // Validate and transform the response
-      if (!jsonResponse.topics || !Array.isArray(jsonResponse.topics)) {
-        throw new Error('Invalid response format: topics array not found');
-      }
-
-      // Normalize each topic name
-      const result: TopicDetectionResult = {
-        topics: jsonResponse.topics.map(
-          (topic: string | { name?: string; subTopicName?: string }) => {
-            const subTopicName =
-              typeof topic === 'string'
-                ? topic
-                : topic.name || topic.subTopicName || 'Bilinmeyen Konu';
-            return {
-              subTopicName,
-              normalizedSubTopicName:
-                this.normalizationService.normalizeSubTopicName(subTopicName),
-            };
-          },
-        ),
-      };
-
-      return result;
+      return this.parseJsonResponse(response);
     } catch (error) {
       this.logger.logError(error, 'AiService.parseTopicDetectionResponse', {
         responseLength: response?.length || 0,
@@ -306,66 +472,6 @@ export class AiService {
   }
 
   /**
-   * Bir metinden öğrenme hedeflerini (konu başlıklarını) tespit eden metot
-   * @param documentText İçeriğinde konu tespiti yapılacak metin
-   * @param existingTopics Varolan konu başlıkları (tekrarı önlemek için)
-   * @returns Tespit edilen konuların listesi
-   */
-  @LogMethod({ trackParams: true })
-  async detectTopics(
-    documentText: string,
-    existingTopics: string[] = [],
-  ): Promise<string[]> {
-    try {
-      this.flowTracker.trackStep(
-        'Dokümandaki konular algılanıyor',
-        'AiService',
-      );
-      // Prompt dosyasını oku
-      const promptPath = path.join(
-        __dirname,
-        'prompts',
-        'detect-topics-tr.txt',
-      );
-      const basePrompt = await fs.readFile(promptPath, 'utf-8');
-
-      // Mevcut konuları prompt başına ekle (tekrarı önlemek için)
-      const existingTopicsString =
-        existingTopics.length > 0
-          ? `Mevcut konular (tekrar etme): ${existingTopics.join(', ')}`
-          : '';
-
-      // Promptu birleştir
-      const promptText = `${existingTopicsString}\n\n${basePrompt}\n\n---\n\nBelge İçeriği:\n${documentText.substring(0, 15000)}`;
-
-      // p-retry ile gelişmiş yeniden deneme mekanizması
-      const parsedResult = await pRetry(async () => {
-        const result: GenerateContentResult = await this.model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: promptText }] }],
-        });
-
-        const response = result.response;
-        const text = response.text();
-
-        if (!text) {
-          throw new Error("AI'dan boş yanıt alındı");
-        }
-
-        return this.parseTopicDetectionResponse(text);
-      }, this.RETRY_OPTIONS);
-
-      // Sadece topic adlarını içeren string dizisini döndür
-      return parsedResult.topics.map((topic) => topic.subTopicName);
-    } catch (error) {
-      this.logger.logError(error, 'AiService.detectTopics', {
-        documentLength: documentText?.length || 0,
-        existingTopicsCount: existingTopics?.length || 0,
-      });
-      throw error;
-    }
-  }
-
-  /**
    * Generate quiz questions based on provided topics and options
    */
   @LogMethod({ trackParams: true })
@@ -380,7 +486,7 @@ export class AiService {
         'prompts',
         'generate-quiz-tr.txt',
       );
-      const basePrompt = await fs.readFile(promptPath, 'utf-8');
+      const basePrompt = await fs.promises.readFile(promptPath, 'utf-8');
 
       // Konu ve ayarları prompt başına ekle
       let topicsText: string;
@@ -860,5 +966,40 @@ Yanıtını aşağıdaki JSON formatında ver:
       });
       throw error;
     }
+  }
+
+  /**
+   * Get topics using Gemini AI model
+   */
+  private async getTopicsWithGemini(
+    prompt: string,
+  ): Promise<TopicDetectionResult> {
+    // Use p-retry for resilience
+    const aiResponse = await pRetry(async () => {
+      const result = await this.model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+      return this.parseTopicDetectionResponse(text);
+    }, this.RETRY_OPTIONS);
+
+    // Normalize the topics
+    return this.normalizeTopicResult(aiResponse);
+  }
+
+  /**
+   * Get topics using OpenAI model
+   */
+  private async getTopicsWithOpenAI(
+    prompt: string,
+  ): Promise<TopicDetectionResult> {
+    // Bu metod şu an için uygulanmadı, OpenAI entegrasyonu gerektiğinde eklenecek
+    this.logger.warn(
+      'OpenAI integration not yet implemented',
+      'AiService',
+      __filename,
+    );
+
+    // Şimdilik Gemini kullanarak devam et
+    return this.getTopicsWithGemini(prompt);
   }
 }

@@ -1,13 +1,20 @@
 import { LoggerService } from '../../common/services/logger.service';
 
 /**
+ * Alt konu arayüzü
+ */
+export interface SubTopic {
+  subTopicName: string;
+  normalizedSubTopicName: string;
+  parentTopic?: string; // Ana konunun adı (eğer bir alt konu ise)
+  isMainTopic?: boolean; // Ana konu mu alt konu mu
+}
+
+/**
  * Konu tespiti sonuç arayüzü
  */
 export interface TopicDetectionResult {
-  topics: {
-    subTopicName: string;
-    normalizedSubTopicName: string;
-  }[];
+  topics: SubTopic[];
 }
 
 // Log kaydı
@@ -17,7 +24,7 @@ try {
     'Topic Detection interface yüklendi',
     'topic-detection.interface',
     __filename,
-    15,
+    25,
   );
 } catch (error) {
   console.error('Interface yüklenirken hata:', error);

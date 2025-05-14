@@ -18,14 +18,42 @@ import { DetectedSubTopic } from "@/types";
 class DocumentService {
   /**
    * Bir belgedeki konuları tespit eder
-   * @param fileUrl Belge URL'si
+   * @param documentId Belge ID'si
    * @returns Tespit edilen konuları içeren dizi
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async detectTopics(_fileUrl: string): Promise<DetectedSubTopic[]> {
-    // TODO: API entegrasyonu
-    // İlerleyen aşamalarda gerçek API endpointi ile değiştirilecek
-    throw new Error("Bu metod henüz uygulanmadı");
+  @LogMethod('DocumentService', FlowCategory.API)
+  async detectTopics(documentId: string): Promise<DetectedSubTopic[]> {
+    const flow = startAppFlow(FlowCategory.API, "DocumentService.detectTopics");
+    
+    try {
+      trackFlow(`Detecting topics for document ID: ${documentId}`, "DocumentService.detectTopics", FlowCategory.API);
+      
+      // API isteği yap
+      const response = await apiService.post<{
+        success: boolean;
+        documentId: string;
+        topics: DetectedSubTopic[];
+        analysisTime: string;
+      }>(`/documents/${documentId}/analyze`);
+      
+      // Başarılı sonuç
+      const duration = this.flowTracker.markEnd(`detectTopics_${documentId}`, mapToTrackerCategory(FlowCategory.API), 'DocumentService');
+      this.logger.info(
+        `Belge konuları tespit edildi: ${documentId}`,
+        'DocumentService.detectTopics',
+        __filename,
+        undefined,
+        { documentId, topicCount: response.topics.length, duration }
+      );
+      
+      flow.end("Successfully detected topics");
+      return response.topics;
+    } catch (error) {
+      this.flowTracker.markEnd(`detectTopics_${documentId}`, mapToTrackerCategory(FlowCategory.API), 'DocumentService');
+      this.logger.error('Error detecting topics', 'DocumentService.detectTopics', __filename, undefined, { documentId, error });
+      flow.end(`Error: ${(error as Error).message}`);
+      throw error;
+    }
   }
 
   private readonly logger = getLogger();

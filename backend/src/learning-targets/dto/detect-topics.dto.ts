@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, IsOptional } from 'class-validator';
 
 export class DetectTopicsDto {
   @ApiProperty({
@@ -17,4 +17,13 @@ export class DetectTopicsDto {
   @IsString()
   @IsNotEmpty()
   courseId: string;
+
+  @ApiProperty({
+    description: 'Belge ID',
+    example: '507f1f77bcf86cd799439012',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  documentId?: string;
 }

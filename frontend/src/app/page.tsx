@@ -85,9 +85,24 @@ export default function Home() {
   const handleExamCreationComplete = (result: {
     file: File | null;
     quizType: "quick" | "personalized";
+    personalizedQuizType?: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive";
     preferences: QuizPreferences;
   }) => {
-    const url = `/exams/create?type=${result.quizType}&fileName=${encodeURIComponent(result.file?.name || "")}`;
+    // URL'e quiz türünü ve dosya adını ekle
+    const params = new URLSearchParams();
+    params.set("type", result.quizType);
+    
+    // Personalized quiz tipi varsa onu da ekle
+    if (result.personalizedQuizType) {
+      params.set("personalizedType", result.personalizedQuizType);
+    }
+    
+    // Dosya adını ekle (varsa)
+    if (result.file) {
+      params.set("fileName", encodeURIComponent(result.file.name));
+    }
+    
+    const url = `/exams/create?${params.toString()}`;
     router.push(url);
   };
   

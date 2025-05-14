@@ -28,8 +28,8 @@ if (typeof window !== "undefined") {
 }
 
 // API istek konfigürasyonu
-const DEFAULT_TIMEOUT = 15000; // 15 saniye
-const MAX_RETRY_COUNT = 3;
+const DEFAULT_TIMEOUT = 30000; // 30 saniye (daha uzun bir timeout)
+const MAX_RETRY_COUNT = 5; // Daha fazla deneme
 const RETRY_DELAY = 1000; // 1 saniye
 
 /**
@@ -352,6 +352,7 @@ axiosInstance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
 
+      console.log(`🌐 API İsteği: ${config.method?.toUpperCase()} ${config.url}`);
       return config;
     } catch (error) {
       console.error("Kimlik doğrulama hatası:", error);
@@ -359,6 +360,7 @@ axiosInstance.interceptors.request.use(
     }
   },
   (error) => {
+    console.error('❌ API istek hatası:', error.message);
     return Promise.reject(error);
   },
 );
@@ -372,8 +374,24 @@ interface ApiErrorResponse {
 
 // Cevap interceptor'ı - hata yönetimi ve token yenileme
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Yanıtı: ${response.status} ${response.config.url}`);
+    return response;
+  },
   async (error: AxiosError) => {
+    if (error.message === 'Network Error') {
+      console.error('🔄 Ağ hatası. Bağlantı tekrar deneniyor...');
+      
+      // API URL'ini kontrol et ve gerekirse güncelle
+      try {
+        const workingUrl = await checkApiAvailability();
+        axiosInstance.defaults.baseURL = workingUrl;
+        console.log(`🔄 API URL güncellendi: ${workingUrl}`);
+      } catch (e) {
+        console.error('❌ API URL güncellenemedi:', e);
+      }
+    }
+    
     // Original request config
     const originalRequest = error.config;
     if (!originalRequest) {

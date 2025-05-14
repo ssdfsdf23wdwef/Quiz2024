@@ -451,60 +451,102 @@ class AuthService {
       let retryCount = 0;
       const MAX_RETRY = 3;
       
-      try {
-        const backendUser = await apiService.get<User>("/users/profile");
-        
-        this.logger.debug(
-          'Kullanıcı profili başarıyla alındı',
-          'AuthService.getProfile',
-          __filename,
-          297
-        );
-        
-        return adaptUserFromBackend(backendUser);
-      } catch (error) {
-        // Axios hatası mı kontrol et
-        if (axios.isAxiosError(error) && error.response?.status === 401 && retryCount < MAX_RETRY) {
-          this.logger.warn(
-            '401 Unauthorized hatası, token yenileme deneniyor',
-            'AuthService.getProfile',
+      const attemptProfileFetch = async (): Promise<User> => {
+        try {
+          this.logger.debug(
+            `Profil bilgisi isteniyor (Deneme: ${retryCount + 1}/${MAX_RETRY})`,
+            'AuthService.getProfile.attemptProfileFetch',
             __filename,
-            307
+            297
           );
           
-          retryCount++;
+          // API'den profil bilgisini al
+          const backendUser = await apiService.get<User>("/users/profile");
           
-          // Önce Firebase token'ı yenile
-          const user = auth.currentUser;
-          if (!user) {
-            throw new Error("Kullanıcı oturumu bulunamadı");
+          this.logger.debug(
+            'Kullanıcı profili başarıyla alındı',
+            'AuthService.getProfile',
+            __filename,
+            297
+          );
+          
+          return adaptUserFromBackend(backendUser);
+        } catch (error) {
+          // API hatası yakalandı, tekrar deneme stratejisi
+          // Axios hatası mı kontrol et
+          if (axios.isAxiosError(error)) {
+            if (error.message === 'Network Error') {
+              this.logger.warn(
+                `Ağ hatası - Backend bağlantısı kurulamadı (Deneme: ${retryCount + 1}/${MAX_RETRY})`,
+                'AuthService.getProfile',
+                __filename,
+                308
+              );
+              
+              // Bağlantı hatası durumunda biraz bekleyip tekrar dene
+              if (retryCount < MAX_RETRY) {
+                retryCount++;
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Giderek artan bekleme
+                return attemptProfileFetch(); // Recursively try again
+              }
+            }
+            
+            if (error.response?.status === 401 && retryCount < MAX_RETRY) {
+              this.logger.warn(
+                `401 Unauthorized hatası, token yenileme deneniyor (Deneme: ${retryCount + 1}/${MAX_RETRY})`,
+                'AuthService.getProfile',
+                __filename,
+                307
+              );
+              
+              retryCount++;
+              
+              // Firebase token'ı yenile
+              const user = auth.currentUser;
+              if (!user) {
+                throw new Error("Kullanıcı oturumu bulunamadı");
+              }
+              
+              try {
+                // Force refresh ile token'ı yenile
+                const idToken = await user.getIdToken(true);
+                
+                // Backend'e token'ı tekrar gönder
+                await apiService.post<AuthResponse>("/auth/login-via-idtoken", { idToken });
+                
+                // Token yenileme sonrası profil bilgisini tekrar dene
+                this.logger.debug(
+                  `Token yenilendi, profil bilgisi tekrar isteniyor (${retryCount}/${MAX_RETRY})`,
+                  'AuthService.getProfile',
+                  __filename,
+                  325
+                );
+                
+                // Kısa bir bekleme ekleyerek sunucunun yeni token'ı işlemesine zaman tanı
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Profil bilgisini tekrar iste
+                return attemptProfileFetch();
+              } catch (tokenError) {
+                this.logger.error(
+                  'Token yenileme sırasında hata oluştu',
+                  'AuthService.getProfile',
+                  __filename,
+                  335,
+                  { error: tokenError }
+                );
+                throw tokenError;
+              }
+            }
           }
           
-          // Force refresh ile token'ı yenile
-          const idToken = await user.getIdToken(true);
-          
-          // Backend'e token'ı tekrar gönder
-          await apiService.post<AuthResponse>("/auth/login-via-idtoken", { idToken });
-          
-          // Token yenileme sonrası profil bilgisini tekrar dene
-          this.logger.debug(
-            `Token yenilendi, profil bilgisi tekrar isteniyor (${retryCount}/${MAX_RETRY})`,
-            'AuthService.getProfile',
-            __filename,
-            325
-          );
-          
-          // Kısa bir bekleme ekleyerek sunucunun yeni token'ı işlemesine zaman tanı
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Profil bilgisini tekrar iste
-          const refreshedUser = await apiService.get<User>("/users/profile");
-          return adaptUserFromBackend(refreshedUser);
+          // Diğer hatalar veya maksimum deneme sayısına ulaşıldıysa hatayı fırlat
+          throw error;
         }
-        
-        // Diğer hatalar veya maksimum deneme sayısına ulaşıldıysa hatayı fırlat
-        throw error;
-      }
+      };
+      
+      // İlk denemeyi başlat
+      return await attemptProfileFetch();
     } catch (error: unknown) {
       this.logger.error(
         'Profil getirme hatası',

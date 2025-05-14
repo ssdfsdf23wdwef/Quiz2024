@@ -15,6 +15,7 @@ import { FIRESTORE_COLLECTIONS } from '../common/constants';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
+import { DocumentsService } from '../documents/documents.service';
 
 type LearningTargetStatus = 'pending' | 'failed' | 'medium' | 'mastered';
 
@@ -27,6 +28,7 @@ export class LearningTargetsService {
     private firebaseService: FirebaseService,
     private aiService: AiService,
     private normalizationService: NormalizationService,
+    private documentsService: DocumentsService,
   ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
@@ -514,43 +516,75 @@ export class LearningTargetsService {
    * Use AI to detect topics in document text
    */
   @LogMethod({ trackParams: true })
-  async detectTopics(
-    documentText: string,
-    courseId: string,
+  async analyzeDocumentForTopics(
+    documentId: string,
     userId: string,
   ): Promise<string[]> {
     try {
-      this.flowTracker.trackStep(
-        `Metin içerisinden konular tespit ediliyor`,
+      this.logger.debug(
+        `Belge analizi başlatılıyor: ${documentId}`,
         'LearningTargetsService',
+        __filename,
       );
 
-      // Verify course ownership
-      await this.validateCourseOwnership(courseId, userId);
+      // Belge metnini al
+      this.logger.info(
+        `Belge ID ${documentId} için belge metnini getiriliyor...`,
+        'LearningTargetsService.analyzeDocumentForTopics',
+        __filename,
+      );
+
+      const documentText = await this.documentsService.getDocumentText(
+        documentId,
+        userId,
+      );
+
+      if (!documentText || !documentText.text) {
+        this.logger.error(
+          `Belge ID ${documentId} için metin bulunamadı!`,
+          'LearningTargetsService.analyzeDocumentForTopics',
+          __filename,
+        );
+        throw new NotFoundException('Belge metni bulunamadı');
+      }
 
       this.logger.debug(
-        `AI servisi ile konu tespiti yapılıyor`,
-        'LearningTargetsService.detectTopics',
+        `Belge metni alındı (${documentText.text.length} karakter)`,
+        'LearningTargetsService.analyzeDocumentForTopics',
         __filename,
-        400,
-        {
-          userId,
-          courseId,
-          textLength: documentText.length,
-        },
       );
 
-      // Call AI service to detect topics
-      const topics = await this.aiService.detectTopics(documentText);
+      // AI servisi ile konuları tespit et
+      this.logger.info(
+        `AI servisi ile konu tespiti başlatılıyor...`,
+        'LearningTargetsService.analyzeDocumentForTopics',
+        __filename,
+      );
+
+      const topicResult = await this.aiService.detectTopics(documentText.text);
+
+      // TopicDetectionResult nesnesini string dizisine dönüştür
+      const topics = topicResult.topics.map(
+        (topic) =>
+          topic.subTopicName ||
+          topic.normalizedSubTopicName ||
+          'Bilinmeyen konu',
+      );
 
       this.logger.info(
         `${topics.length} adet konu tespit edildi`,
-        'LearningTargetsService.detectTopics',
+        'LearningTargetsService.analyzeDocumentForTopics',
         __filename,
-        412,
+      );
+
+      this.logger.debug(
+        'Belgeden çıkarılan konular',
+        'LearningTargetsService.analyzeDocumentForTopics',
+        __filename,
+        undefined,
         {
           userId,
-          courseId,
+          documentId,
           topicCount: topics.length,
           topics: topics.join(', '),
         },
@@ -558,13 +592,75 @@ export class LearningTargetsService {
 
       return topics;
     } catch (error) {
-      this.logger.logError(error, 'LearningTargetsService.detectTopics', {
-        userId,
-        courseId,
-        textLength: documentText.length,
-        additionalInfo: 'Konular tespit edilirken hata oluştu',
-      });
+      this.logger.logError(
+        error,
+        'LearningTargetsService.analyzeDocumentForTopics',
+        {
+          userId,
+          documentId,
+          additionalInfo: 'Belge analizinde hata oluştu',
+        },
+      );
       throw error;
+    }
+  }
+
+  /**
+   * Doğrudan metin içeriğinden konuları tespit eder
+   */
+  @LogMethod({ trackParams: true })
+  async analyzeDocumentText(
+    documentText: string,
+    userId: string,
+  ): Promise<string[]> {
+    try {
+      this.logger.debug(
+        `Doğrudan metin analizi başlatılıyor (${documentText.length} karakter)`,
+        'LearningTargetsService',
+        __filename,
+      );
+
+      // AI servisi ile konuları tespit et
+      const topicResult = await this.aiService.detectTopics(documentText);
+
+      // TopicDetectionResult nesnesini string dizisine dönüştür
+      const topics = topicResult.topics.map(
+        (topic) =>
+          topic.subTopicName ||
+          topic.normalizedSubTopicName ||
+          'Bilinmeyen konu',
+      );
+
+      this.logger.info(
+        `${topics.length} adet konu tespit edildi`,
+        'LearningTargetsService',
+        __filename,
+      );
+
+      this.logger.debug(
+        'Metinden çıkarılan konular',
+        'LearningTargetsService',
+        __filename,
+        undefined,
+        {
+          userId,
+          topicCount: topics.length,
+          topics: topics.join(', '),
+        },
+      );
+
+      return topics;
+    } catch (error) {
+      this.logger.logError(
+        error,
+        'LearningTargetsService.analyzeDocumentText',
+        {
+          userId,
+          textLength: documentText?.length || 0,
+          additionalInfo: 'Metin içinden konular tespit edilirken hata oluştu',
+        },
+      );
+      return [];
     }
   }
 

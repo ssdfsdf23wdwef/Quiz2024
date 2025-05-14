@@ -12,7 +12,7 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { QuizPreferences } from "@/types/quiz";
+import { QuizPreferences, DetectedSubTopic, Course } from "@/types";
 import { DocumentUploader } from "../document";
 import TopicSelectionScreen from "./TopicSelectionScreen";
 import { ErrorService } from "@/services/error.service";
@@ -20,8 +20,7 @@ import ExamCreationProgress from "./ExamCreationProgress";
 import CourseTopicSelector from "./CourseTopicSelector";
 import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
-import type { Course } from "@/types/course";
-import type { DetectedSubTopic } from "@/types/learningTarget";
+import documentService from "@/services/document.service";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -77,6 +76,9 @@ export default function ExamCreationWizard({
   const [courseTopics, setCourseTopics] = useState<DetectedSubTopic[]>([]);
   const [topicSubTopics, setTopicSubTopics] = useState<DetectedSubTopic[]>([]);
 
+  // Tespit edilen konular
+  const [detectedTopics, setDetectedTopics] = useState<DetectedSubTopic[]>([]);
+
   // Kursları yükle
   useEffect(() => {
     courseService.getCourses().then((data) => {
@@ -110,13 +112,6 @@ export default function ExamCreationWizard({
     );
   }, [selectedTopicIds, courseTopics]);
 
-  // Kurs değişimi handler
-  const handleCourseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCourseId(e.target.value);
-    setSelectedTopicIds([]);
-    setSelectedSubTopicIds([]);
-  };
-
   // Konu seçimi değiştiğinde alt konu seçimlerini güncelle
   useEffect(() => {
     // Önceki seçilen alt konuları filtrele
@@ -149,23 +144,71 @@ export default function ExamCreationWizard({
   }, [selectedTopicIds, selectedSubTopicIds, topicSubTopics]);
 
   // Dosya yükleme işlemi tamamlandığında
-  const handleFileUploadComplete = (file: File) => {
+  const handleFileUploadComplete = async (file: File) => {
     setSelectedFile(file);
     setUploadStatus("success");
 
-    // Kişiselleştirilmiş sınav ve Zayıf/Orta odaklı seçilmişse direkt tercihlere geç
-    if (
-      quizType === "personalized" &&
-      personalizedQuizType === "weakTopicFocused"
-    ) {
-      setCurrentStep(3); // Zayıf/Orta odaklıysa direkt tercihlere (artık adım 3)
-    } else {
-      setCurrentStep(2); // Diğer durumlarda Konu Seçimi adımına (artık adım 2)
+    try {
+      console.log(`📂 Dosya yükleme başarılı: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+      
+      // Backend tarafından yeni eklenen Document yanıtından ID'yi alıyoruz
+      console.log(`📤 Belge sunucuya yükleniyor...`);
+      const uploadedDocument = await documentService.uploadDocument(
+        file,
+        undefined,
+        (progress) => {
+          console.log(`📤 Yükleme ilerleme: %${progress.toFixed(0)}`);
+        }
+      );
+      
+      const documentId = uploadedDocument.id;
+      console.log(`📄 Belge yükleme tamamlandı! Belge ID: ${documentId}`);
+      
+      // Kişiselleştirilmiş sınav ve Zayıf/Orta odaklı seçilmişse direkt tercihlere geç
+      if (
+        quizType === "personalized" &&
+        personalizedQuizType === "weakTopicFocused"
+      ) {
+        console.log(`🔄 Zayıf/Orta odaklı türü için direkt tercihlere (adım 3) yönlendiriliyor...`);
+        setCurrentStep(3); // Zayıf/Orta odaklıysa direkt tercihlere (artık adım 3)
+      } else {
+        try {
+          // Backend'den belgedeki konuları tespit et
+          console.log(`🔍 Backend'den belge konuları tespit ediliyor... (Belge ID: ${documentId})`);
+          const detectedTopics = await documentService.detectTopics(documentId);
+          console.log(`✅ Konu tespiti başarılı: ${detectedTopics.length} adet konu tespit edildi`);
+          console.log(`📋 Tespit edilen konular: ${detectedTopics.map(t => t.subTopicName).join(', ')}`);
+          
+          // Tespit edilen konuları state'e kaydet ve TopicSelectionScreen'e geç
+          setDetectedTopics(detectedTopics);
+          
+          // Normal akışta adım 2'ye geçip konuları tespit etmeye çalışıyoruz
+          console.log(`🔄 Adım 2'ye (Konu Seçimi) geçiliyor...`);
+          setCurrentStep(2); // Konu Seçimi adımına (artık adım 2)
+        } catch (error) {
+          console.error(`❌ HATA: Konu tespiti başarısız! ${(error as Error).message}`);
+          ErrorService.showToast(
+            `Konu tespiti sırasında hata: ${(error as Error).message}`,
+            "error"
+          );
+          // Hata olsa da konu seçim ekranına git, boş liste göster
+          console.log(`🔄 Hata olsa da Adım 2'ye (Konu Seçimi) geçiliyor...`);
+          setCurrentStep(2);
+        }
+      }
+    } catch (error) {
+      console.error(`❌ HATA: Dosya yükleme başarısız! ${(error as Error).message}`);
+      ErrorService.showToast(
+        `Dosya yükleme hatası: ${(error as Error).message}`,
+        "error"
+      );
+      setUploadStatus("error");
     }
   };
 
   // Dosya yükleme hatası
   const handleFileUploadError = (errorMsg: string) => {
+    console.error(`❌ HATA: Dosya yükleme hatası: ${errorMsg}`);
     setUploadStatus("error");
     ErrorService.showToast(errorMsg, "error");
   };
@@ -173,25 +216,35 @@ export default function ExamCreationWizard({
   // Konuları tespit et
   const handleTopicsDetected = (selectedTopics: string[]) => {
     // Tespit edilen konular seçildiğinde
+    console.log(`📋 KONULAR SEÇİLDİ: ${selectedTopics.length} adet konu seçildi`);
+    console.log(`🔍 Seçilen konular: ${selectedTopics.join(', ')}`);
+    
     if (selectedTopics.length > 0) {
       setSelectedTopicIds(selectedTopics);
+      console.log(`✅ Seçilen konular state'e kaydedildi: ${selectedTopics.length} adet`);
 
       // Tercihleri güncelle
       setPreferences((prev: QuizPreferences) => ({
         ...prev,
         topicIds: selectedTopics,
       }));
+      console.log(`✅ Quiz tercihleri güncellendi. Konu ID'leri: ${selectedTopics.length} adet`);
+    } else {
+      console.warn(`⚠️ Hiç konu seçilmedi!`);
     }
 
-    // Konu seçiminden sonra tercihler adımına geç
-    setCurrentStep(4);
+    // Konu seçiminden sonra tercihler adımına geç (artık adım 3)
+    console.log(`🔄 Adım 3'e (Tercihler) geçiliyor...`);
+    setCurrentStep(3);
   };
 
   // Konu tespiti iptal
   const handleTopicDetectionCancel = () => {
+    console.log(`❌ Konu tespiti kullanıcı tarafından iptal edildi!`);
     // Konu seçimi zorunlu olduğundan (weakTopicFocused hariç), iptal edilirse kullanıcı bilgilendirilmeli veya akış durmalı
     // Şimdilik bir sonraki adıma (tercihler) geçiyoruz, ancak bu mantık iyileştirilebilir.
-    setCurrentStep(4);
+    console.log(`🔄 Adım 3'e (Tercihler) geçiliyor...`);
+    setCurrentStep(3);
   };
 
   // Konu seçimini değiştir
@@ -205,15 +258,23 @@ export default function ExamCreationWizard({
 
   // Alt konu seçimini değiştir
   const handleSubTopicToggle = (subTopicId: string) => {
+    console.log(`🔄 Alt konu seçimi değişiyor: ${subTopicId}`);
+    
     setSelectedSubTopicIds((prev) => {
       const updated = prev.includes(subTopicId)
         ? prev.filter((id) => id !== subTopicId)
         : [...prev, subTopicId];
+      
+      console.log(`${prev.includes(subTopicId) ? "➖ Alt konu kaldırıldı:" : "➕ Alt konu eklendi:"} ${subTopicId}`);
+      console.log(`✅ Güncel alt konu sayısı: ${updated.length}`);
+      
       // Tercihleri güncelle
       setPreferences((prev: QuizPreferences) => ({
         ...prev,
         subTopicIds: updated,
       }));
+      console.log(`✅ Quiz tercihleri güncellendi. Alt konu ID'leri: ${updated.length} adet`);
+      
       return updated;
     });
   };
@@ -222,6 +283,7 @@ export default function ExamCreationWizard({
   const handlePersonalizedQuizTypeSelect = (
     type: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive",
   ) => {
+    console.log(`🔄 Kişiselleştirilmiş sınav alt türü değişiyor: ${personalizedQuizType} -> ${type}`);
     setPersonalizedQuizType(type);
     
     // Tip hatası giderme: QuizPreferences tipine uygun olacak şekilde
@@ -230,6 +292,7 @@ export default function ExamCreationWizard({
       personalizedQuizType: type,
     };
     
+    console.log(`✅ Quiz tercihleri güncellendi: personalizedQuizType = ${type}`);
     setPreferences(updatedPreferences);
   };
 
@@ -273,8 +336,11 @@ export default function ExamCreationWizard({
 
   // Adım işlemleri
   const nextStep = () => {
+    console.log(`📋 SINAV OLUŞTURMA AŞAMASI: ${currentStep}/${totalSteps} adımdan bir sonrakine geçiliyor...`);
+    
     // Adım 1 Doğrulama: Dosya Yükleme
     if (currentStep === 1 && (!selectedFile || uploadStatus !== "success")) {
+      console.error(`❌ HATA: Dosya yükleme başarısız. Durum: ${uploadStatus}`);
       ErrorService.showToast("Lütfen geçerli bir dosya yükleyin.", "error");
       return;
     }
@@ -286,12 +352,13 @@ export default function ExamCreationWizard({
       personalizedQuizType !== "weakTopicFocused" &&
       selectedTopicIds.length === 0
     ) {
+      console.error(`❌ HATA: Konu seçimi yapılmadı. Seçilen konular: ${selectedTopicIds.length}`);
       ErrorService.showToast("Lütfen en az bir konu seçin.", "error");
       return;
     }
 
     if (currentStep < totalSteps) {
-      let nextStepTarget = currentStep + 1;
+      let nextStep = currentStep + 1;
 
       // Akış Atlama Mantığı
       // Zayıf/Orta Odaklı: Adım 1'den Adım 3'e atla (Konu Seçimi yok)
@@ -300,12 +367,15 @@ export default function ExamCreationWizard({
         personalizedQuizType === "weakTopicFocused" &&
         currentStep === 1
       ) {
-        nextStepTarget = 3; // Direkt tercihlere
+        console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 1'den Adım 3'e atlıyoruz`);
+        nextStep = 3;
       }
 
-      setCurrentStep(nextStepTarget);
+      console.log(`✅ Adım ${currentStep}'den Adım ${nextStep}'e ilerletiliyor...`);
+      setCurrentStep(nextStep);
     } else {
       // Tamamlandı
+      console.log(`🏁 Tüm adımlar tamamlandı (${currentStep}/${totalSteps}). Sınav oluşturma için gerekli veriler hazırlanıyor...`);
       if (onComplete) {
         // Son tercihleri oluştur
         const finalPreferences: QuizPreferences = {
@@ -322,6 +392,17 @@ export default function ExamCreationWizard({
               : undefined,
         };
 
+        console.log(`📊 SINAV BİLGİLERİ:
+        - Tür: ${quizType}
+        - Alt tür: ${quizType === "personalized" ? personalizedQuizType : "N/A"}
+        - Soru sayısı: ${preferences.questionCount}
+        - Zorluk: ${preferences.difficulty}
+        - Süre: ${preferences.timeLimit ? preferences.timeLimit + ' dakika' : 'Limitsiz'}
+        - Seçilen konular: ${selectedTopicIds.length > 0 ? selectedTopicIds.length : 'Yok'}
+        - Seçilen alt konular: ${selectedSubTopicIds.length > 0 ? selectedSubTopicIds.length : 'Yok'}
+        `);
+
+        console.log(`🔄 onComplete fonksiyonu çağrılıyor...`);
         onComplete({
           file:
             quizType === "personalized" &&
@@ -345,28 +426,55 @@ export default function ExamCreationWizard({
         }
 
         const url = `/exams/create?${params.toString()}`;
+        console.log(`🔄 Yönlendirme: ${url} adresine yönlendiriliyor...`);
         router.push(url);
       }
     }
   };
 
+  // Bir önceki adıma dön
   const prevStep = () => {
+    console.log(`⏪ GERİ: Adım ${currentStep}'den bir öncekine dönülüyor...`);
+    
     if (currentStep > 1) {
-      let prevStepTarget = currentStep - 1;
+      let prevStep = currentStep - 1;
 
-      // Akış Geri Atlama Mantığı
-      // Zayıf/Orta: Adım 3'ten Adım 1'e dön (Konu Seçimi olmadığı için)
+      // Konu Seçimini Atlayan Durumlar İçin Geri Gitme Mantığı
       if (
-        currentStep === 3 &&
         quizType === "personalized" &&
-        personalizedQuizType === "weakTopicFocused"
+        personalizedQuizType === "weakTopicFocused" &&
+        currentStep === 3
       ) {
-        prevStepTarget = 1;
+        console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 3'ten Adım 1'e dönüyoruz`);
+        prevStep = 1;
       }
 
-      setCurrentStep(prevStepTarget);
+      console.log(`✅ Adım ${currentStep}'den Adım ${prevStep}'e geri dönülüyor...`);
+      setCurrentStep(prevStep);
     }
   };
+
+  // CourseTopicSelector ve TopicSelectionScreen arasında uyumluluk sağlayan adapter fonksiyonları
+  
+  // TopicSelectionScreen için courseId string alacak şekilde adapter
+  const handleCourseChangeForTopicSelection = (courseId: string) => {
+    setSelectedCourseId(courseId);
+    
+    // Kurs değiştiğinde seçilen konuları sıfırla
+    setSelectedTopicIds([]);
+    setSelectedSubTopicIds([]);
+  };
+  
+  // CourseTopicSelector için event alacak şekilde adapter
+  const handleCourseChangeAdapter = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const courseId = e.target.value;
+    handleCourseChangeForTopicSelection(courseId);
+  };
+
+  /**
+   * TopicSelectionScreen bileşeni
+   */
+  // TopicSelectionScreenWithAdapter bileşenini kaldırıyorum
 
   // Render
   return (
@@ -577,12 +685,15 @@ export default function ExamCreationWizard({
                     </p>
                     {/* AI Konu Tespiti ve Seçim Ekranı */}
                     <TopicSelectionScreen
-                      detectedTopics={[]}
-                      onTopicsSelected={handleTopicsDetected}
-                      onCancel={handleTopicDetectionCancel}
-                      isLoading={false}
-                      error={undefined}
+                      detectedTopics={detectedTopics}
+                      existingTopics={courseTopics} 
+                      availableCourses={courses}
+                      selectedCourseId={selectedCourseId}
                       quizType={quizType}
+                      personalizedQuizType={personalizedQuizType}
+                      onTopicsSelected={handleTopicsDetected}
+                      onCourseChange={handleCourseChangeForTopicSelection}
+                      onCancel={handleTopicDetectionCancel}
                     />
                   </>
                 )}
@@ -596,7 +707,7 @@ export default function ExamCreationWizard({
                     <CourseTopicSelector
                       courses={courses}
                       selectedCourseId={selectedCourseId}
-                      handleCourseChange={handleCourseChange}
+                      handleCourseChange={handleCourseChangeAdapter}
                       courseTopics={courseTopics}
                       selectedTopicIds={selectedTopicIds}
                       handleTopicToggle={handleTopicToggle}
