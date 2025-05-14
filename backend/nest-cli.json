@@ -9,6 +9,11 @@
         "include": "../prisma",
         "outDir": "dist/prisma",
         "watchAssets": true
+      },
+      {
+        "include": "ai/prompts/**/*",
+        "outDir": "dist",
+        "watchAssets": true
       }
     ],
     "watchAssets": true

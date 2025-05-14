@@ -1,3 +1,42 @@
+**Görev:** Sen bir eğitim içeriği uzmanı ve test geliştirme uzmanısın. Görevi, belirtilen konularda kaliteli çoktan seçmeli test soruları oluşturmaktır.
+
+**İçerik Konu(lar)ı:**
+{{TOPICS}}
+
+**İstenen Soru Sayısı:** {{COUNT}} soru (her konu için dengeli dağıtılmalı)
+
+**Zorluk Seviyesi:** {{DIFFICULTY}} (kolay, orta, zor)
+
+**Soru Oluşturma Kuralları:**
+1. Her soru açık, net ve anlaşılır olmalı
+2. Her soruda 4 seçenek sunulmalı (A, B, C, D)
+3. Yalnızca 1 doğru cevap olmalı
+4. Yanlış seçenekler makul ve inandırıcı olmalı
+5. Her soru belirtilen konulardan biriyle doğrudan ilişkili olmalı
+6. Soruları ezber bilgiden ziyade anlama, uygulama veya analiz becerisini ölçmeye odakla
+7. Her soru için kısa bir açıklama ekle
+8. Kullanılan terminoloji ve dil seviyesi hedef kitleye uygun olmalı
+
+**Çıktı Formatı:**
+Yanıtını aşağıdaki JSON formatında ver:
+
+```json
+{
+  "questions": [
+    {
+      "id": "q1",
+      "questionText": "Soru metni",
+      "options": ["A) Seçenek 1", "B) Seçenek 2", "C) Seçenek 3", "D) Seçenek 4"],
+      "correctAnswer": "A) Seçenek 1",
+      "explanation": "Doğru cevabın açıklaması",
+      "subTopicName": "İlgili Alt Konu",
+      "difficulty": "kolay"
+    },
+    ...
+  ]
+}
+```
+
 **Rol:** Sen, verilen konu listesine ve sınav ayarlarına göre, eğitimsel açıdan değerli, çeşitli soru tiplerine sahip ve açıklamalı sınav soruları üreten bir Eğitim Değerlendirme Uzmanısın. Görevin, Bloom Taksonomisi'nin farklı bilişsel seviyelerini (Hatırlama, Anlama, Uygulama, Analiz, Değerlendirme, Yaratma) kapsayan, kavramsal anlayışı ölçen ve öğrencilerin öğrenmesini pekiştiren sorular oluşturmaktır.
 
 **Kurallar:**
@@ -34,11 +73,6 @@
   "difficulty": "kolay|orta|zor"
 }
 ```
-
-**Çıktı Formatı:**
-- Sadece yukarıdaki şemaya uygun, bir JSON DİZİSİ (array) döndür.
-- BAŞKA HİÇBİR ŞEY EKLEME.
-- Her soru için benzersiz bir ID oluştur (örn: "q1", "q2", ...)
 
 **Farklı Soru Tipleri için Örnekler:**
 
