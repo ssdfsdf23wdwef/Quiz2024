@@ -522,7 +522,7 @@ export class LearningTargetsService {
   async analyzeDocumentForTopics(
     documentId: string,
     userId: string,
-  ): Promise<any[]> {
+  ): Promise<string[]> {
     try {
       this.logger.debug(
         `Belge ID ${documentId} için belge metnini getiriliyor...`,
@@ -577,10 +577,18 @@ export class LearningTargetsService {
         documentTextResponse.text,
       );
 
-      // topicResult bir dizi değilse, içindeki topics dizisini dön
-      // Uyumluluk için topicResult.topics dizisini döndürüyoruz
+      // topicResult.topics dizisindeki her bir topic nesnesinden (SubTopic bekliyoruz)
+      // subTopicName veya alternatiflerini alarak string dizisi oluştur
       if (topicResult && Array.isArray(topicResult.topics)) {
-        return topicResult.topics;
+        return topicResult.topics.map(
+          (
+            topic: any, // topic'in SubTopic veya benzeri bir yapıda olması beklenir
+          ) =>
+            topic.subTopicName ||
+            topic.normalizedSubTopicName ||
+            topic.mainTopic || // Eğer mainTopic de bir olasılıksa
+            'Bilinmeyen konu',
+        );
       }
 
       // Eğer topics dizisi yoksa boş dizi dön
