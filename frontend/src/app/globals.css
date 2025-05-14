@@ -30,3 +30,11 @@ body {
   /* font-family: var(--font-sans); */ /* Eğer font değişkenleri kullanılacaksa yorumu kaldırın */
   font-family: Arial, Helvetica, sans-serif; /* Varsayılan font ailesi */
 }
+
+/* Sidebar'ın görünürlüğü için özel stil */
+@media (min-width: 0px) {
+  .sidebar-visible {
+    display: block !important;
+    visibility: visible !important;
+  }
+}

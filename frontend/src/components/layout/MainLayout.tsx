@@ -14,12 +14,10 @@ const LoadingPlaceholder = () => (
 
 // Lazy load components with loading priority
 const Header = dynamic(() => import("@/components/layout/Header").then(mod => mod.Header), { 
-  ssr: false, 
   loading: () => <LoadingPlaceholder /> 
 });
 
 const Sidebar = dynamic(() => import("@/components/layout/Sidebar"), { 
-  ssr: false, 
   loading: () => <LoadingPlaceholder /> 
 });
 
@@ -30,42 +28,43 @@ interface MainLayoutProps {
 function MainLayoutBase({ children }: MainLayoutProps) {
   // useTheme hook'undan isDarkMode değişkenini al
   const { isDarkMode } = useTheme();
-  const [isClient, setIsClient] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Hydration mismatch sorunlarını önlemek için client tarafı render kontrolü
   useEffect(() => {
-    setIsClient(true);
+    setIsMounted(true);
   }, []);
 
-  if (!isClient) {
-    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900"></div>;
-  }
-
-  return (
+  // Temel layout yapısı - sonradan içerik doldurulacak
+  const layoutStructure = (
     <DevLoggerProvider>
       <div
         className={`min-h-screen transition-colors duration-200 ${
-          isDarkMode 
+          isMounted && isDarkMode 
             ? "bg-gray-900 text-white" 
             : "bg-gray-50 text-gray-900"
         }`}
       >
-        <Header />
+        {isMounted && <Header />}
 
         <div className="flex w-full">
-          {/* Sidebar her zaman görünür */}
-          <div className="fixed top-0 left-0 h-full z-30">
-            <Sidebar />
-          </div>
+          {/* Sidebar sadece client tarafında render edilir */}
+          {isMounted && (
+            <div className="fixed top-0 left-0 h-full z-30">
+              <Sidebar />
+            </div>
+          )}
 
           {/* Ana içerik - sidebar'a göre kenarlık ayarı */}
-          <main className="flex-1 w-full ml-64 pt-[70px] px-4 py-6 transition-colors duration-200">
+          <main className={`flex-1 w-full ${isMounted ? "ml-64" : ""} pt-[70px] px-4 py-6 transition-colors duration-200`}>
             <div className="max-w-7xl mx-auto">{children}</div>
           </main>
         </div>
       </div>
     </DevLoggerProvider>
   );
+
+  return layoutStructure;
 }
 
 // Memoize the layout to prevent unnecessary rerenders
