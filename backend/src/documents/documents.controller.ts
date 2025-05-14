@@ -120,8 +120,12 @@ export class DocumentsController {
         { userId, fileSize: file.size, fileType: file.mimetype },
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return await this.documentsService.uploadDocument(file, dto, userId);
+      return await this.documentsService.uploadDocument(
+        file,
+        userId,
+        dto.courseId,
+        dto.fileName,
+      );
     } catch (error) {
       this.logger.logError(error, 'DocumentsController.upload', {
         userId,

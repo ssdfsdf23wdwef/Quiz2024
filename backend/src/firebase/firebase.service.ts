@@ -11,7 +11,7 @@ export class FirebaseService implements OnModuleInit {
   public auth: admin.auth.Auth;
   public firestore: admin.firestore.Firestore;
   public db: admin.firestore.Firestore;
-  public storage: admin.storage.Storage;
+  public storage: admin.storage.Storage | null = null;
   private readonly logger: LoggerService;
   private readonly flowTracker: FlowTrackerService;
 
@@ -47,38 +47,22 @@ export class FirebaseService implements OnModuleInit {
       // initializeApp zaten tekrar başlatmayı engeller.
       admin.initializeApp({
         credential: admin.credential.cert(absolutePath),
-        // Storage bucket'ı belirtmezsek Firebase otomatik olarak default bucket'ı kullanır
-        // Bu formatlar denenebilir:
+        // Storage bucket'ı kullanmayacağız
         // storageBucket: 'my-app-71530.appspot.com',
-        // storageBucket: 'my-app-71530.appspot.com',
-        // storageBucket: 'my-app-71530',
-        // İsim olmadan da çalışabilir, bu durumda default bucket kullanılır
       });
 
       this.logger.info(
-        'Firebase Admin başarıyla başlatıldı (Doğrudan Yol ile)',
+        'Firebase Admin başarıyla başlatıldı. Storage devre dışı bırakıldı.',
         'FirebaseService.constructor',
         __filename,
-        67, // Satır numarası yaklaşık
       );
 
       // Başlatma başarılıysa servisleri ata
       this.auth = admin.auth();
       this.firestore = admin.firestore();
       this.db = this.firestore;
-      // Storage için bucket adı lazım olacak, şimdilik yorumda bırakalım veya varsayılanı kullanır
-      try {
-        this.storage = admin.storage(); // Varsayılan bucket'ı kullanmayı dener
-        this.logger.info(
-          'Storage servisi (varsayılan bucket) atandı.',
-          'FirebaseService.constructor',
-        );
-      } catch (storageError) {
-        this.logger.warn(
-          `Varsayılan Storage bucket'ı başlatılamadı: ${storageError.message}. Storage işlemleri için bucket adı yapılandırılmalı.`,
-          'FirebaseService.constructor',
-        );
-      }
+      // Storage kullanımı devre dışı bırakıldı - kullanıcı isteği
+      this.storage = null;
     } catch (error) {
       this.logger.error(
         `Firebase Admin başlatılamadı (Doğrudan Yol ile): ${error.message}`,
@@ -185,72 +169,25 @@ export class FirebaseService implements OnModuleInit {
     destination: string,
     contentType: string,
   ): Promise<string> {
-    try {
-      this.flowTracker.trackStep(
-        `${destination} yoluna dosya yükleniyor`,
-        'FirebaseService',
-      );
-      const startTime = Date.now();
+    this.logger.info(
+      `Storage devre dışı: Dosya yükleme atlandi - ${destination}`,
+      'FirebaseService.uploadFile',
+    );
 
-      if (!this.storage) {
-        throw new Error(
-          'Firebase Storage servisi başlatılamadı veya mevcut değil.',
-        );
-      }
-      const bucket = this.storage.bucket();
-      const file = bucket.file(destination);
-      await file.save(buffer, {
-        metadata: { contentType },
-        public: true,
-      });
-      // Dosyanın herkese açık URL'sini döndür
-      const endTime = Date.now();
-      this.flowTracker.track(
-        `Dosya yükleme tamamlandı (${endTime - startTime}ms)`,
-        'FirebaseService',
-      );
-      return `https://storage.googleapis.com/${bucket.name}/${destination}`;
-    } catch (error) {
-      this.logger.logError(error, 'FirebaseService.uploadFile', {
-        destination,
-        contentType,
-        additionalInfo: 'Dosya yükleme hatası',
-      });
-      throw error;
-    }
+    // Storage devre dışı olduğu için dosya yükleme simülasyonu
+    // Geçici bir URL döndür ya da alternatif bir yöntem uygula
+    return `https://example.com/simulated-storage/${destination}`;
   }
 
   // Dosya silme fonksiyonu
   @LogMethod({ trackParams: true })
   async deleteFile(storagePath: string): Promise<void> {
-    try {
-      this.flowTracker.trackStep(
-        `${storagePath} yolundaki dosya siliniyor`,
-        'FirebaseService',
-      );
-      const startTime = Date.now();
-
-      if (!this.storage) {
-        throw new Error(
-          'Firebase Storage servisi başlatılamadı veya mevcut değil.',
-        );
-      }
-      const bucket = this.storage.bucket();
-      const file = bucket.file(storagePath);
-      await file.delete();
-
-      const endTime = Date.now();
-      this.flowTracker.track(
-        `Dosya silme tamamlandı (${endTime - startTime}ms)`,
-        'FirebaseService',
-      );
-    } catch (error) {
-      this.logger.logError(error, 'FirebaseService.deleteFile', {
-        storagePath,
-        additionalInfo: 'Dosya silme hatası',
-      });
-      throw error;
-    }
+    this.logger.info(
+      `Storage devre dışı: Dosya silme atlandi - ${storagePath}`,
+      'FirebaseService.deleteFile',
+    );
+    // Storage devre dışı olduğu için işlem atlama
+    return Promise.resolve();
   }
 
   // Firestore Koleksiyon İşlemleri
