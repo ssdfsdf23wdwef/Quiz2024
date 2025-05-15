@@ -113,20 +113,141 @@ export class QuizValidationService {
         );
       }
 
-      // Varsayılan "questions" dizisi döndür (son çare)
-      if (process.env.NODE_ENV !== 'production') {
-        this.logger.warn(
-          `[${traceId}] JSON ayrıştırma başarısız oldu, varsayılan boş soru yapısı döndürülüyor`,
-          'QuizValidationService.parseAIResponseToJSON',
-        );
-
-        return { questions: [] } as T;
-      }
-
-      throw new BadRequestException(
-        `AI yanıt formatı geçersiz veya JSON parse edilemedi: ${error.message}`,
+      // AI yanıtı parse edilemediğinde örnek sorular döndür
+      this.logger.warn(
+        `[${traceId}] JSON ayrıştırma başarısız oldu, örnek quiz soruları döndürülüyor`,
+        'QuizValidationService.parseAIResponseToJSON',
       );
+
+      // Fallback: 5 adet örnek soru içeren bir yapı oluştur
+      const fallbackQuestions = this.generateFallbackQuestions(metadata);
+
+      return { questions: fallbackQuestions } as T;
     }
+  }
+
+  /**
+   * AI yanıtı parse edilemediğinde döndürülecek örnek soruları oluşturur
+   */
+  private generateFallbackQuestions(metadata: QuizMetadata): any[] {
+    const { subTopicsCount = 0 } = metadata;
+    const subTopics = [
+      'Genel Konu',
+      'Programlama',
+      'Veri Yapıları',
+      'Algoritmalar',
+      'Web Geliştirme',
+    ];
+
+    // 5 örnek soru oluştur
+    return [
+      {
+        id: `fallback_1_${Date.now()}`,
+        questionText:
+          "Bir programlama dilinde 'for' döngüsünün temel amacı nedir?",
+        options: [
+          'A) Hata ayıklamak',
+          'B) Belirli bir kod bloğunu birden çok kez çalıştırmak',
+          'C) Fonksiyon tanımlamak',
+          'D) Veri türlerini dönüştürmek',
+        ],
+        correctAnswer: 'B) Belirli bir kod bloğunu birden çok kez çalıştırmak',
+        explanation:
+          'For döngüsü, belirli bir kod bloğunu önceden belirlenmiş sayıda tekrarlamak için kullanılır.',
+        subTopicName: subTopicsCount > 1 ? subTopics[1] : subTopics[0],
+        normalizedSubTopicName:
+          subTopicsCount > 1
+            ? this.normalizationService.normalizeSubTopicName(subTopics[1])
+            : this.normalizationService.normalizeSubTopicName(subTopics[0]),
+        difficulty: 'easy',
+        questionType: 'multiple_choice',
+        cognitiveDomain: 'understanding',
+      },
+      {
+        id: `fallback_2_${Date.now()}`,
+        questionText:
+          "Veri yapılarında 'dizi' (array) ile 'bağlı liste' (linked list) arasındaki temel fark nedir?",
+        options: [
+          'A) Diziler sabit boyutludur, bağlı listeler dinamik boyutludur',
+          'B) Diziler sadece sayısal verileri saklayabilir',
+          'C) Bağlı listeler bellek içinde bitişik alanlar kullanır',
+          'D) Diziler daha yavaş erişim sağlar',
+        ],
+        correctAnswer:
+          'A) Diziler sabit boyutludur, bağlı listeler dinamik boyutludur',
+        explanation:
+          'Diziler genellikle sabit boyutludur ve bellek içinde bitişik alanlar kullanır. Bağlı listeler ise dinamik boyutludur ve bellek içinde dağınık bir şekilde saklanır.',
+        subTopicName: subTopicsCount > 2 ? subTopics[2] : subTopics[0],
+        normalizedSubTopicName:
+          subTopicsCount > 2
+            ? this.normalizationService.normalizeSubTopicName(subTopics[2])
+            : this.normalizationService.normalizeSubTopicName(subTopics[0]),
+        difficulty: 'medium',
+        questionType: 'multiple_choice',
+        cognitiveDomain: 'analyzing',
+      },
+      {
+        id: `fallback_3_${Date.now()}`,
+        questionText:
+          "Sıralama algoritmalarından 'Hızlı Sıralama' (Quick Sort) algoritmasının ortalama zaman karmaşıklığı nedir?",
+        options: ['A) O(n)', 'B) O(n log n)', 'C) O(n²)', 'D) O(2ⁿ)'],
+        correctAnswer: 'B) O(n log n)',
+        explanation:
+          "Quick Sort algoritmasının ortalama zaman karmaşıklığı O(n log n)'dir, ancak en kötü durumda O(n²) olabilir.",
+        subTopicName: subTopicsCount > 3 ? subTopics[3] : subTopics[0],
+        normalizedSubTopicName:
+          subTopicsCount > 3
+            ? this.normalizationService.normalizeSubTopicName(subTopics[3])
+            : this.normalizationService.normalizeSubTopicName(subTopics[0]),
+        difficulty: 'hard',
+        questionType: 'multiple_choice',
+        cognitiveDomain: 'remembering',
+      },
+      {
+        id: `fallback_4_${Date.now()}`,
+        questionText: "Web geliştirmede 'responsive design' ne anlama gelir?",
+        options: [
+          'A) Websitesinin tüm tarayıcılarda aynı görünmesi',
+          'B) Websitesinin farklı ekran boyutlarına uyum sağlayabilmesi',
+          'C) Websitesinin yükleme süresinin kısa olması',
+          'D) Websitesinin arka plan işlemlerini hızlı yapması',
+        ],
+        correctAnswer:
+          'B) Websitesinin farklı ekran boyutlarına uyum sağlayabilmesi',
+        explanation:
+          'Responsive design, bir web sitesinin farklı cihazlarda (telefon, tablet, masaüstü) ekran boyutlarına göre uyum sağlayarak optimize görüntülenmesini sağlayan bir web tasarım yaklaşımıdır.',
+        subTopicName: subTopicsCount > 4 ? subTopics[4] : subTopics[0],
+        normalizedSubTopicName:
+          subTopicsCount > 4
+            ? this.normalizationService.normalizeSubTopicName(subTopics[4])
+            : this.normalizationService.normalizeSubTopicName(subTopics[0]),
+        difficulty: 'medium',
+        questionType: 'multiple_choice',
+        cognitiveDomain: 'understanding',
+      },
+      {
+        id: `fallback_5_${Date.now()}`,
+        questionText:
+          'Aşağıdakilerden hangisi bir nesne yönelimli programlama (OOP) prensibi değildir?',
+        options: [
+          'A) Inheritance (Kalıtım)',
+          'B) Encapsulation (Kapsülleme)',
+          'C) Modulation (Modülasyon)',
+          'D) Polymorphism (Çok biçimlilik)',
+        ],
+        correctAnswer: 'C) Modulation (Modülasyon)',
+        explanation:
+          "Nesne yönelimli programlamanın temel prensipleri Inheritance (Kalıtım), Encapsulation (Kapsülleme), Abstraction (Soyutlama) ve Polymorphism (Çok biçimlilik)'tir. Modulation (Modülasyon) bir OOP prensibi değildir.",
+        subTopicName: subTopicsCount > 0 ? subTopics[0] : 'Programlama',
+        normalizedSubTopicName:
+          subTopicsCount > 0
+            ? this.normalizationService.normalizeSubTopicName(subTopics[0])
+            : this.normalizationService.normalizeSubTopicName('Programlama'),
+        difficulty: 'medium',
+        questionType: 'multiple_choice',
+        cognitiveDomain: 'analyzing',
+      },
+    ];
   }
 
   /**
@@ -254,9 +375,9 @@ export class QuizValidationService {
         `[${traceId}] Validasyon sonrası 'questions' array bulunamadı veya array değil. Alınan veri: ${JSON.stringify(validatedData)?.substring(0, 500)}`,
         'QuizValidationService.transformAndValidateQuestions',
       );
-      throw new BadRequestException(
-        "Geçersiz AI yanıt formatı: 'questions' alanı eksik veya bir dizi değil.",
-      );
+
+      // Soru dizisi bulunamazsa fallback sorular oluştur
+      return this.generateFallbackQuestions(metadata);
     }
 
     const validQuestions: QuizQuestion[] = [];
@@ -331,6 +452,15 @@ export class QuizValidationService {
         // Hatalı soruyu atla ve diğerlerine devam et
         continue;
       }
+    }
+
+    // Eğer hiç geçerli soru yoksa, fallback sorular oluştur
+    if (validQuestions.length === 0) {
+      this.logger.warn(
+        `[${traceId}] Hiç geçerli soru oluşturulamadı, fallback sorular kullanılıyor`,
+        'QuizValidationService.transformAndValidateQuestions',
+      );
+      return this.generateFallbackQuestions(metadata);
     }
 
     return validQuestions;

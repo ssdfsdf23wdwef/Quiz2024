@@ -70,6 +70,18 @@ export class QuizGenerationService {
     );
 
     try {
+      this.logger.debug(
+        `[${traceId}] Quiz soruları oluşturma işlemi başlatılıyor: ${options.questionCount} soru, ${options.difficulty} zorluk`,
+        'QuizGenerationService.generateQuizQuestions',
+        __filename,
+        undefined,
+        {
+          options,
+          hasDocumentText: !!options.documentText,
+          documentTextLength: options.documentText?.length || 0,
+        },
+      );
+
       // 1. Quiz prompt'unu yükle
       const promptText = await this.prepareQuizPrompt(options, metadata);
 
@@ -131,7 +143,25 @@ export class QuizGenerationService {
       DIFFICULTY: options.difficulty || 'medium',
     };
 
-    // 4. Prompt'u derle
+    // 4. Belge metni varsa prompt'a ekle
+    if (options.documentText) {
+      variables['DOCUMENT_TEXT'] = options.documentText;
+      this.logger.debug(
+        `[${traceId}] Quiz promptuna belge metni ekleniyor (${options.documentText.length} karakter)`,
+        'QuizGenerationService.prepareQuizPrompt',
+      );
+    }
+
+    // 5. Kişiselleştirme bağlamı varsa prompt'a ekle
+    if (options.personalizationContext) {
+      variables['PERSONALIZATION_CONTEXT'] = options.personalizationContext;
+      this.logger.debug(
+        `[${traceId}] Quiz promptuna kişiselleştirme bağlamı ekleniyor (${options.personalizationContext.length} karakter)`,
+        'QuizGenerationService.prepareQuizPrompt',
+      );
+    }
+
+    // 6. Prompt'u derle
     return this.promptManager.compilePrompt(basePrompt, variables);
   }
 

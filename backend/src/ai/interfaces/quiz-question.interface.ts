@@ -26,8 +26,11 @@ export interface QuizGenerationOptions {
   questionCount: number;
   difficulty?: string;
   prioritizeWeakAndMediumTopics?: boolean;
-  documentText?: string;
-  personalizationContext?: string;
+  documentText?: string; // Belge metni
+  personalizationContext?: string; // Kişiselleştirme için ek bağlam bilgisi
+  quizType?: 'quick' | 'personalized'; // Sınav tipi
+  courseId?: string | null; // Kurs ID (personalized için)
+  personalizedQuizType?: string | null; // Kişiselleştirilmiş sınav alt tipi
 }
 
 /**

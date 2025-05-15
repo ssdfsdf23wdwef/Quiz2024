@@ -7,6 +7,16 @@
 
 **Zorluk Seviyesi:** {{DIFFICULTY}} (kolay, orta, zor)
 
+{{#DOCUMENT_TEXT}}
+**Belge Metni:**
+{{DOCUMENT_TEXT}}
+{{/DOCUMENT_TEXT}}
+
+{{#PERSONALIZATION_CONTEXT}}
+**Kişiselleştirme Bilgileri:**
+{{PERSONALIZATION_CONTEXT}}
+{{/PERSONALIZATION_CONTEXT}}
+
 **Soru Oluşturma Kuralları:**
 1. Her soru açık, net ve anlaşılır olmalı
 2. Her soruda 4 seçenek sunulmalı (A, B, C, D)

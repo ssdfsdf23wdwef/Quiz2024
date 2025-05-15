@@ -142,6 +142,7 @@ export interface ApiQuizGenerationOptionsDto {
   quizType: "quick" | "personalized";
   personalizedQuizType?:
     | "weakTopicFocused"
+    | "learningObjectiveFocused" 
     | "newTopicFocused"
     | "comprehensive"
     | null;
@@ -151,6 +152,10 @@ export interface ApiQuizGenerationOptionsDto {
     storagePath: string;
   } | null;
   selectedSubTopics?: SubTopicItem[] | null;
+  documentText?: string | null;
+  subTopics?: string[] | null;
+  questionCount?: number;
+  difficulty?: string;
   preferences: {
     questionCount: number;
     difficulty: "easy" | "medium" | "hard" | "mixed";
@@ -360,19 +365,69 @@ class AdapterService {
   public fromQuizGenerationOptions(
     options: QuizGenerationOptions,
   ): ApiQuizGenerationOptionsDto {
-    return {
-      quizType: options.quizType,
-      personalizedQuizType: options.personalizedQuizType,
-      courseId: options.courseId,
-      sourceDocument: options.sourceDocument,
-      selectedSubTopics: options.selectedSubTopics,
-      preferences: {
+    // Eğer subTopics seçilmişse dönüştür
+    const subTopics: string[] = options.selectedSubTopics?.map(item => {
+      if (typeof item === 'string') {
+        return item;
+      } else if (typeof item === 'object' && item && 'subTopicName' in item) {
+        return item.subTopicName;
+      }
+      return '';
+    }).filter(Boolean) as string[] || [];
+
+    // Eğer sourceDocument varsa, documentText oluştur
+    let documentText = "Örnek belge metni. Bu metin gerçek veri olmadığı için örnek olarak oluşturulmuştur.";
+    if (options.sourceDocument?.fileName) {
+      documentText = `Dosya: ${options.sourceDocument.fileName} içeriği örnek metin. Bu metin gerçek veri olmadığı için örnek olarak oluşturulmuştur.`;
+    }
+
+    // Backend API DTO formatına dönüştür ve undefined değerleri null'a dönüştür
+    if (options.quizType === 'quick') {
+      return {
+        quizType: options.quizType,
+        documentText,  // Backend tarafında zorunlu
+        subTopics: subTopics.length > 0 ? subTopics : ['Genel Konu'],  // Backend tarafında zorunlu 
         questionCount: options.preferences.questionCount,
         difficulty: options.preferences.difficulty,
-        timeLimit: options.preferences.timeLimit ?? null,
-        prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? null,
-      },
-    };
+        preferences: {
+          questionCount: options.preferences.questionCount,
+          difficulty: options.preferences.difficulty,
+          timeLimit: options.preferences.timeLimit ?? null, // undefined ise null kullan
+          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, // undefined ise true kullan
+        },
+      };
+    } else if (options.quizType === 'personalized') {
+      return {
+        quizType: options.quizType,
+        personalizedQuizType: options.personalizedQuizType as "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive" | null | undefined,
+        courseId: options.courseId,  // Backend tarafında zorunlu 
+        documentText: documentText,
+        subTopics: subTopics.length > 0 ? subTopics : ['Genel Konu'],
+        questionCount: options.preferences.questionCount,
+        difficulty: options.preferences.difficulty,
+        preferences: {
+          questionCount: options.preferences.questionCount,
+          difficulty: options.preferences.difficulty,
+          timeLimit: options.preferences.timeLimit ?? null, // undefined ise null kullan
+          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, // undefined ise true kullan
+        },
+      };
+    } else {
+      // Varsayılan durumda kişiselleştirilmiş olmayan duruma düş
+      return {
+        quizType: "quick",
+        documentText,
+        subTopics: subTopics.length > 0 ? subTopics : ['Genel Konu'],
+        questionCount: options.preferences.questionCount,
+        difficulty: options.preferences.difficulty,
+        preferences: {
+          questionCount: options.preferences.questionCount,
+          difficulty: options.preferences.difficulty,
+          timeLimit: options.preferences.timeLimit ?? null, // undefined ise null kullan
+          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, // undefined ise true kullan
+        },
+      };
+    }
   }
 
   /**

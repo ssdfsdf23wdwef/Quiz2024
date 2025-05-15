@@ -34,7 +34,7 @@ interface CreateQuizParams {
   preferences: {
     questionCount: number;
     difficulty: string;
-    timeLimit?: number;
+    timeLimit?: number | null;
     prioritizeWeakAndMediumTopics?: boolean;
   };
 }
@@ -1250,7 +1250,7 @@ export class QuizzesService {
         preferences: {
           questionCount: params.preferences.questionCount,
           difficulty: params.preferences.difficulty,
-          timeLimit: params.preferences.timeLimit,
+          timeLimit: params.preferences.timeLimit ?? null,
         },
         metadata: {
           subTopics: params.subTopics.map((topic) => topic.subTopicName),
@@ -1348,6 +1348,8 @@ export class QuizzesService {
         preferences: {
           questionCount,
           difficulty,
+          timeLimit: null, // Firestore için null olarak ayarla
+          prioritizeWeakAndMediumTopics: true, // Varsayılan değer
         },
       };
 

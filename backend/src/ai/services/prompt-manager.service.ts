@@ -79,16 +79,87 @@ export class PromptManagerService implements OnModuleInit {
     }
 
     let compiledPrompt = template;
+
+    // Koşullu içeriği işle ({{#VARIABLE}}...{{/VARIABLE}})
+    const conditionalMatches = template.match(
+      /{{#([^}]+)}}([\s\S]*?){{\/\1}}/g,
+    );
+    if (conditionalMatches) {
+      for (const match of conditionalMatches) {
+        const variableMatch = match.match(/{{#([^}]+)}}/);
+        const contentMatch = match.match(/{{#[^}]+}}([\s\S]*?){{\/[^}]+}}/);
+
+        if (
+          variableMatch &&
+          variableMatch[1] &&
+          contentMatch &&
+          contentMatch[1]
+        ) {
+          const variableName = variableMatch[1];
+          const content = contentMatch[1];
+
+          if (variables[variableName]) {
+            // Değişken mevcutsa, koşullu içeriği ekle (başlık etiketlerini kaldırarak)
+            compiledPrompt = compiledPrompt.replace(match, content);
+          } else {
+            // Değişken mevcut değilse, tüm koşullu içeriği kaldır
+            compiledPrompt = compiledPrompt.replace(match, '');
+          }
+        }
+      }
+    }
+
+    // Alternatif koşullu içerik formatını da işle ({#VARIABLE}...{/VARIABLE})
+    const altCondMatches = template.match(/\{#([^}]+)\}([\s\S]*?)\{\/\1\}/g);
+    if (altCondMatches) {
+      for (const match of altCondMatches) {
+        const variableMatch = match.match(/\{#([^}]+)\}/);
+        const contentMatch = match.match(/\{#[^}]+\}([\s\S]*?)\{\/[^}]+\}/);
+
+        if (
+          variableMatch &&
+          variableMatch[1] &&
+          contentMatch &&
+          contentMatch[1]
+        ) {
+          const variableName = variableMatch[1];
+          const content = contentMatch[1];
+
+          if (variables[variableName]) {
+            // Değişken mevcutsa, koşullu içeriği ekle
+            compiledPrompt = compiledPrompt.replace(match, content);
+          } else {
+            // Değişken mevcut değilse, tüm koşullu içeriği kaldır
+            compiledPrompt = compiledPrompt.replace(match, '');
+          }
+        }
+      }
+    }
+
+    // Normal değişkenleri değiştir
     for (const [key, value] of Object.entries(variables)) {
+      // İki format için de değişkenleri değiştir: {{VAR}} ve {VAR}
       compiledPrompt = compiledPrompt.replace(
         new RegExp(`{{${key}}}`, 'g'),
         value || '',
       );
+
+      compiledPrompt = compiledPrompt.replace(
+        new RegExp(`\{${key}\}`, 'g'),
+        value || '',
+      );
     }
 
-    // Kalan değişkenleri kontrol et
-    const remainingVariables = compiledPrompt.match(/{{[^}]+}}/g);
-    if (remainingVariables) {
+    // Kalan değişkenleri kontrol et (iki format için)
+    const remainingVars1 = compiledPrompt.match(/{{[^}]+}}/g);
+    const remainingVars2 = compiledPrompt.match(/\{[^#\/][^}]*\}/g);
+
+    const remainingVariables = [
+      ...(remainingVars1 || []),
+      ...(remainingVars2 || []),
+    ];
+
+    if (remainingVariables && remainingVariables.length > 0) {
       this.logger.warn(
         `Prompt şablonunda doldurulmamış değişkenler var: ${remainingVariables.join(', ')}`,
         'PromptManagerService.compilePrompt',

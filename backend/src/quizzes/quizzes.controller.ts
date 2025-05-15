@@ -277,10 +277,10 @@ export class QuizzesController {
     @User() user: { uid: string },
     @Body()
     body: {
-      documentText: string;
-      subTopics: string[];
-      questionCount: number;
-      difficulty: string;
+      documentText?: string;
+      subTopics?: string[];
+      questionCount?: number;
+      difficulty?: string;
       documentId?: string;
     },
   ): Promise<Quiz> {
@@ -290,8 +290,20 @@ export class QuizzesController {
         'QuizzesController',
       );
 
-      const { documentText, subTopics, questionCount, difficulty, documentId } =
-        body;
+      // Varsayılan değerler ve tip kontrolü
+      const documentText = body.documentText || '';
+      const subTopics = body.subTopics || [];
+      const questionCount = body.questionCount || 10;
+      const difficulty = body.difficulty || 'medium';
+      const documentId = body.documentId;
+
+      if (!documentText) {
+        throw new BadRequestException('Belge metni zorunludur');
+      }
+
+      if (!subTopics || !Array.isArray(subTopics) || subTopics.length === 0) {
+        throw new BadRequestException('En az bir alt konu seçilmelidir');
+      }
 
       this.logger.info(
         `Hızlı sınav oluşturma isteği: ${questionCount} soru, ${difficulty} zorluk`,
@@ -419,10 +431,10 @@ export class QuizzesController {
     @User() user: { uid: string },
     @Body()
     body: {
-      courseId: string;
-      subTopics: string[];
-      questionCount: number;
-      difficulty: string;
+      courseId?: string;
+      subTopics?: string[];
+      questionCount?: number;
+      difficulty?: string;
       documentId?: string;
       documentText?: string;
     },
@@ -433,14 +445,21 @@ export class QuizzesController {
         'QuizzesController',
       );
 
-      const {
-        courseId,
-        subTopics,
-        questionCount,
-        difficulty,
-        documentId,
-        documentText,
-      } = body;
+      // Varsayılan değerler ve tip kontrolü
+      const courseId = body.courseId || '';
+      const subTopics = body.subTopics || [];
+      const questionCount = body.questionCount || 10;
+      const difficulty = body.difficulty || 'medium';
+      const documentId = body.documentId;
+      const documentText = body.documentText || '';
+
+      if (!courseId) {
+        throw new BadRequestException('Kurs ID zorunludur');
+      }
+
+      if (!subTopics || !Array.isArray(subTopics) || subTopics.length === 0) {
+        throw new BadRequestException('En az bir alt konu seçilmelidir');
+      }
 
       this.logger.info(
         `Kişiselleştirilmiş sınav oluşturma isteği: ${questionCount} soru, ${difficulty} zorluk, kurs: ${courseId}`,
