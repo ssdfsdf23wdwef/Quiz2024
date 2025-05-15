@@ -517,33 +517,58 @@ export class QuizzesController {
     }
   }
 
-  // @Get(':id')
-  // @ApiOperation({ summary: 'Belirli bir sınavı getirir' })
-  // @ApiParam({ name: 'id', description: 'Sınav ID', type: String })
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   description: 'Sınav başarıyla getirildi',
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.NOT_FOUND,
-  //   description: 'Sınav bulunamadı',
-  // })
-  // async findOne(
-  //   @Param('id', ParseUUIDPipe) id: string,
-  // ): Promise<any> {
-  //   try {
-  //     const quiz = await this.quizzesService.findOne(id);
-  //     return quiz;
-  //   } catch (error) {
-  //     if (error instanceof NotFoundException) {
-  //       throw error;
-  //     }
-  //     throw new InternalServerErrorException(
-  //       'Sınav getirilirken bir hata oluştu',
-  //       { cause: error },
-  //     );
-  //   }
-  // }
+  @Get(':id')
+  @LogMethod({ trackParams: true })
+  @ApiOperation({ summary: 'Belirli bir sınavı getirir' })
+  @ApiParam({ name: 'id', description: 'Sınav ID', type: String })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Sınav başarıyla getirildi',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Sınav bulunamadı',
+  })
+  async findOne(
+    @Param('id') id: string,
+    @User() user: { uid: string },
+  ): Promise<Quiz> {
+    try {
+      this.flowTracker.trackStep(
+        `${id} ID'li sınav getiriliyor`,
+        'QuizzesController',
+      );
+
+      const quiz = await this.quizzesService.findOne(id, user.uid);
+
+      this.logger.info(
+        `${id} ID'li sınav başarıyla getirildi`,
+        'QuizzesController.findOne',
+        __filename,
+        undefined,
+        { quizId: id, userId: user.uid },
+      );
+
+      return quiz;
+    } catch (error) {
+      this.logger.error(
+        `Sınav getirilirken hata: ${error.message}`,
+        'QuizzesController.findOne',
+        __filename,
+        undefined,
+        error,
+      );
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Sınav getirilirken bir hata oluştu',
+        { cause: error },
+      );
+    }
+  }
 
   // @Get(':id/analysis')
   // @ApiOperation({ summary: 'Sınav analiz sonuçlarını getirir' })
