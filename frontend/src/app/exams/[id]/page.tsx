@@ -137,7 +137,7 @@ export default function ExamPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="w-16 h-16 border-t-4 border-indigo-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Sınav yükleniyor...</p>
+          <p className="text-gray-600 dark:text-gray-300">Sınav yükleniyor...</p>
         </div>
       </div>
     );
@@ -147,8 +147,8 @@ export default function ExamPage() {
   if (!quiz) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Sınav Bulunamadı</h2>
-        <p className="text-gray-600 mb-6">Aradığınız sınav bulunamadı veya erişim izniniz yok.</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Sınav Bulunamadı</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">Aradığınız sınav bulunamadı veya erişim izniniz yok.</p>
         <Link
           href="/exams"
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
@@ -161,8 +161,8 @@ export default function ExamPage() {
 
   const renderQuestionNavigation = () => {
     return (
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <h3 className="text-lg font-medium text-gray-800 mb-4">Sorular</h3>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">Sorular</h3>
         <div className="grid grid-cols-5 gap-2">
           {quiz.questions &&
             quiz.questions.map((question: Question, index: number) => {
@@ -175,8 +175,8 @@ export default function ExamPage() {
                   key={question.id}
                   className={`w-10 h-10 rounded-md flex items-center justify-center text-sm font-medium
                   ${isCurrent ? "bg-indigo-600 text-white" : ""}
-                  ${isAnswered && !isCurrent ? "bg-indigo-100 text-indigo-800" : ""}
-                  ${!isAnswered && !isCurrent ? "bg-gray-100 text-gray-800" : ""}
+                  ${isAnswered && !isCurrent ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200" : ""}
+                  ${!isAnswered && !isCurrent ? "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200" : ""}
                   ${isFlagged ? "ring-2 ring-amber-500" : ""}
                   hover:bg-indigo-500 hover:text-white transition-colors
                 `}
@@ -199,17 +199,17 @@ export default function ExamPage() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-6 rounded-lg shadow-md"
+        className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
       >
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto bg-indigo-100 rounded-full flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-indigo-600">{score}%</span>
+          <div className="w-20 h-20 mx-auto bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center mb-4">
+            <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-300">{score}%</span>
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
             Sınav Tamamlandı!
           </h2>
-          <p className="text-gray-600">
-            Toplam puanınız: <span className="font-semibold">{score}%</span> (
+          <p className="text-gray-600 dark:text-gray-300">
+            Toplam puanınız: <span className="font-semibold text-gray-800 dark:text-white">{score}%</span> (
             {
               quiz.questions.filter(
                 (q) => userAnswers[q.id] === q.correctAnswer,
@@ -229,8 +229,8 @@ export default function ExamPage() {
                 key={question.id}
                 className={`p-4 rounded-md border ${
                   isCorrect
-                    ? "border-green-200 bg-green-50"
-                    : "border-red-200 bg-red-50"
+                    ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30"
+                    : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30"
                 }`}
               >
                 <div className="flex items-start mb-3">
@@ -243,27 +243,27 @@ export default function ExamPage() {
                   >
                     {isCorrect ? <FiCheck size={14} /> : <FiX size={14} />}
                   </div>
-                  <h3 className="text-gray-800 font-medium">
+                  <h3 className="text-gray-800 dark:text-gray-100 font-medium">
                     Soru {index + 1}: {question.questionText}
                   </h3>
                 </div>
 
                 <div className="ml-8 space-y-2">
-                  <div className="text-sm">
-                    <span className="font-medium">Sizin cevabınız:</span>{" "}
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="font-medium text-gray-800 dark:text-gray-200">Sizin cevabınız:</span>{" "}
                     {userAnswers[question.id] || "Cevap verilmedi"}
                   </div>
 
                   {!isCorrect && (
-                    <div className="text-sm">
-                      <span className="font-medium">Doğru cevap:</span>{" "}
+                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium text-gray-800 dark:text-gray-200">Doğru cevap:</span>{" "}
                       {question.correctAnswer}
                     </div>
                   )}
 
                   {question.explanation && (
-                    <div className="text-sm mt-2 p-2 bg-gray-100 rounded">
-                      <span className="font-medium">Açıklama:</span>{" "}
+                    <div className="text-sm mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">
+                      <span className="font-medium text-gray-800 dark:text-gray-200">Açıklama:</span>{" "}
                       {question.explanation}
                     </div>
                   )}
@@ -276,7 +276,7 @@ export default function ExamPage() {
         <div className="flex gap-4 justify-center">
           <Link
             href="/exams"
-            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
           >
             Sınavlarım
           </Link>
@@ -297,12 +297,12 @@ export default function ExamPage() {
     if (!currentQuestion) return null;
 
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">
             Soru {currentQuestionIndex + 1}/{quiz.questions.length}
           </h2>
-          <p className="text-gray-700">{currentQuestion.questionText}</p>
+          <p className="text-gray-700 dark:text-gray-200">{currentQuestion.questionText}</p>
         </div>
 
         <div className="space-y-3">
@@ -311,8 +311,8 @@ export default function ExamPage() {
               key={index}
               className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                 userAnswers[currentQuestion.id] === option
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50"
+                  ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 dark:text-white"
+                  : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-gray-700 dark:text-gray-200"
               }`}
               onClick={() => {
                 setUserAnswers({
@@ -326,7 +326,7 @@ export default function ExamPage() {
                   className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
                     userAnswers[currentQuestion.id] === option
                       ? "bg-indigo-500 text-white"
-                      : "border border-gray-300"
+                      : "border border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   {userAnswers[currentQuestion.id] === option && (
@@ -347,7 +347,7 @@ export default function ExamPage() {
               }
             }}
             disabled={currentQuestionIndex === 0}
-            className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
           >
             Önceki Soru
           </button>
@@ -377,19 +377,19 @@ export default function ExamPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {!showResults ? (
         <>
           <div className="mb-6 flex justify-between items-center">
             <div>
               <Link
                 href="/exams"
-                className="text-indigo-600 hover:text-indigo-800 flex items-center mb-2"
+                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center mb-2"
               >
                 <FiArrowLeft className="mr-2" />
                 Sınavlarım
               </Link>
-              <h1 className="text-2xl font-bold text-gray-800">
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
                 {quiz.quizType === "quick"
                   ? "Hızlı Sınav"
                   : "Kişiselleştirilmiş Sınav"}
@@ -397,18 +397,18 @@ export default function ExamPage() {
             </div>
 
             {remainingTime !== null && (
-              <div
-                className={`flex items-center py-2 px-4 rounded-full ${
-                  remainingTime < 60
-                    ? "bg-red-100 text-red-800"
+            <div
+              className={`flex items-center py-2 px-4 rounded-full ${
+                remainingTime < 60
+                    ? "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300"
                     : remainingTime < 300
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                <FiClock className="mr-2" />
+                    ? "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
+              }`}
+            >
+              <FiClock className="mr-2" />
                 <span>{formatTime(remainingTime)}</span>
-              </div>
+            </div>
             )}
           </div>
 
@@ -417,13 +417,13 @@ export default function ExamPage() {
               {renderQuestionNavigation()}
 
               <div className="sticky top-8">
-                <div className="bg-white p-4 rounded-lg shadow-md">
-                  <h3 className="text-lg font-medium text-gray-800 mb-4">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">
                     İlerleme
-                  </h3>
+                </h3>
                   <div className="space-y-2">
                     <div>
-                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
                         <span>Tamamlanan</span>
                         <span>
                           {
@@ -431,7 +431,7 @@ export default function ExamPage() {
                           }/{quiz.questions.length}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className="bg-indigo-600 h-2 rounded-full"
                           style={{
@@ -443,16 +443,16 @@ export default function ExamPage() {
                           }}
                         ></div>
                       </div>
-                    </div>
+                  </div>
 
                     <div>
-                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
                         <span>İşaretlenen</span>
                         <span>
                           {flaggedQuestions.size}/{quiz.questions.length}
-                        </span>
+                    </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className="bg-amber-500 h-2 rounded-full"
                           style={{
@@ -486,7 +486,7 @@ export default function ExamPage() {
                       className={`px-4 py-2 border rounded-md ${
                         flaggedQuestions.has(currentQuestionIndex)
                           ? "bg-amber-500 text-white border-amber-500"
-                          : "border-amber-500 text-amber-500"
+                          : "border-amber-500 text-amber-500 dark:text-amber-400 dark:border-amber-400"
                       }`}
                     >
                       {flaggedQuestions.has(currentQuestionIndex)
@@ -498,35 +498,20 @@ export default function ExamPage() {
                   <div className="mt-8">
                     <button
                       onClick={() => {
-                        if (
-                          window.confirm("Sınavı tamamlamak istiyor musunuz?")
-                        ) {
+                        if (window.confirm("Sınavı tamamlamak istiyor musunuz?")) {
                           handleSubmit();
                         }
                       }}
-                      disabled={isSubmitting}
-                      className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                     >
-                      {isSubmitting ? "Gönderiliyor..." : "Sınavı Tamamla"}
+                      Sınavı Tamamla
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="md:col-span-3">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentQuestionIndex}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {renderQuestion()}
-                </motion.div>
-              </AnimatePresence>
-            </div>
+            <div className="md:col-span-3">{renderQuestion()}</div>
           </div>
         </>
       ) : (

@@ -9,11 +9,7 @@ export enum LearningTargetStatus {
 }
 
 // String literal tipini koruyoruz ancak ek olarak enum kullanarak backend uyumluluğunu sağlıyoruz
-export type LearningTargetStatusLiteral =
-  | "pending"
-  | "failed"
-  | "medium"
-  | "mastered";
+export type LearningTargetStatusLiteral = "pending" | "failed" | "medium" | "mastered";
 
 /**
  * Tespit edilen alt konu arayüzü

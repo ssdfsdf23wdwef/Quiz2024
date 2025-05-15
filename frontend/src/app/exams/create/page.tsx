@@ -350,7 +350,8 @@ export default function CreateExamPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <ExamCreationWizard 
               quizType={quizType} 
-              onComplete={handleExamCreationComplete} 
+              onComplete={handleExamCreationComplete}
+              hideDuplicateButtons={true}
             />
 
             {error && (

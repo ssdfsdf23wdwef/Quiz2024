@@ -24,6 +24,7 @@ import { Course, DetectedSubTopic, QuizPreferences } from "@/types";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
+  hideDuplicateButtons?: boolean; // Çakışan butonları gizlemek için
   onComplete?: (result: {
     file: File | null;
     quizType: "quick" | "personalized";
@@ -50,6 +51,7 @@ interface TopicsResponseData {
 
 export default function ExamCreationWizard({
   quizType, // Dışarıdan gelen sınav türü
+  hideDuplicateButtons,
   onComplete,
 }: ExamCreationWizardProps) {
 
@@ -1076,9 +1078,12 @@ export default function ExamCreationWizard({
                       selectedCourseId={selectedCourseId}
                       quizType={quizType}
                       personalizedQuizType={personalizedQuizType}
+                      isLoading={topicDetectionStatus === "loading"}
+                      error={null}
                       onTopicsSelected={handleTopicsDetected}
                       onCourseChange={handleCourseChangeForTopicSelection}
                       onCancel={handleTopicDetectionCancel}
+                      hideButtons={hideDuplicateButtons}
                     />
                   </>
                 )}

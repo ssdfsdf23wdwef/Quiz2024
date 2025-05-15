@@ -44,85 +44,104 @@ export class QuizValidationService {
 
       // First, try to detect JSON code blocks
       if (text.includes('```')) {
-        const codeBlockRegexes = [
-          /```json([\s\S]*?)```/i, // Büyük/küçük harfe duyarsız
-          /```([\s\S]*?)```/, // Herhangi bir dil belirtilmemiş kod bloğu
-        ];
-
-        for (const regex of codeBlockRegexes) {
-          jsonMatch = text.match(regex);
-          if (jsonMatch && jsonMatch[1]) {
-            jsonText = jsonMatch[1].trim();
-            break;
-          }
-        }
-      }
-
-      // Metinden ilk { ile başlayıp son } ile biten bölümü çıkarmaya çalış
-      if (!jsonMatch) {
-        const firstOpen = jsonText.indexOf('{');
-        const lastClose = jsonText.lastIndexOf('}');
-
-        if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
-          jsonText = jsonText.substring(firstOpen, lastClose + 1);
-        }
-      }
-
-      // Temizleme ve düzeltme işlemleri
-      jsonText = this.cleanJsonText(jsonText);
-
-      // Parantez dengesini kontrol et
-      jsonText = this.balanceJsonBrackets(jsonText);
-
-      // Trailing comma temizleme (,] veya ,} gibi geçersiz JSON yapıları)
-      jsonText = jsonText.replace(/,\s*([}\]])/g, '$1');
-
-      this.logger.debug(
-        `[${traceId}] JSON parse hazır. Temizlenmiş metin: ${jsonText.substring(0, 200)}...`,
-        'QuizValidationService.parseAIResponseToJSON',
-      );
-
-      return JSON.parse(jsonText) as T;
-    } catch (error) {
-      this.logger.error(
-        `[${traceId}] JSON parse hatası: ${error.message}. Yanıt (ilk 500kr): ${text.substring(0, 500)}`,
-        'QuizValidationService.parseAIResponseToJSON',
-        undefined,
-        error,
-      );
-
-      // Fallback çözümü dene
-      try {
-        // Eksik tırnak işaretleri gibi yaygın sorunları düzeltmeye çalış
-        const fixedJson = this.attemptToFixJson(text);
-
-        if (fixedJson) {
-          this.logger.info(
-            `[${traceId}] Fallback JSON düzeltme işlemi uygulandı, yeniden deneniyor`,
+        const codeBlockRegex = /```(?:json)?([^`]+)```/gm;
+        jsonMatch = codeBlockRegex.exec(text);
+        if (jsonMatch && jsonMatch[1]) {
+          jsonText = jsonMatch[1].trim();
+          this.logger.debug(
+            `[${traceId}] JSON kod bloğu tespit edildi. İçerik çıkarıldı.`,
             'QuizValidationService.parseAIResponseToJSON',
           );
-
-          return JSON.parse(fixedJson) as T;
         }
-      } catch (fallbackError) {
-        this.logger.error(
-          `[${traceId}] Fallback JSON düzeltme denemesi başarısız: ${fallbackError.message}`,
-          'QuizValidationService.parseAIResponseToJSON',
-          undefined,
-          fallbackError,
-        );
       }
 
-      // AI yanıtı parse edilemediğinde örnek sorular döndür
-      this.logger.warn(
-        `[${traceId}] JSON ayrıştırma başarısız oldu, örnek quiz soruları döndürülüyor`,
+      try {
+        const parsed = JSON.parse(jsonText) as T;
+        return parsed;
+      } catch (firstError) {
+        // First JSON parse failed, try common fixes
+        this.logger.warn(
+          `[${traceId}] İlk JSON parse denemesi başarısız: ${firstError.message}. Alternatif parsing denenecek.`,
+          'QuizValidationService.parseAIResponseToJSON',
+        );
+
+        // Try to fix unescaped quotes in JSON string
+        const fixedText = this.attemptToFixJson(jsonText || '');
+        if (fixedText && fixedText !== jsonText) {
+          try {
+            const parsed = JSON.parse(fixedText) as T;
+            this.logger.info(
+              `[${traceId}] JSON düzeltme başarılı.`,
+              'QuizValidationService.parseAIResponseToJSON',
+            );
+            return parsed;
+          } catch (secondError) {
+            this.logger.warn(
+              `[${traceId}] Düzeltilmiş JSON yine de parse edilemedi`,
+              'QuizValidationService.parseAIResponseToJSON',
+            );
+          }
+        }
+
+        // Try to extract a JSON object if there's non-JSON text before/after
+        try {
+          const jsonExtractRegex = /{[\s\S]*}/;
+          const extracted = jsonText.match(jsonExtractRegex);
+          if (extracted) {
+            const parsed = JSON.parse(extracted[0]) as T;
+            this.logger.info(
+              `[${traceId}] JSON çıkarımı başarılı`,
+              'QuizValidationService.parseAIResponseToJSON',
+            );
+            return parsed;
+          }
+        } catch (extractError) {
+          this.logger.warn(
+            `[${traceId}] JSON çıkarma denemesi başarısız`,
+            'QuizValidationService.parseAIResponseToJSON',
+          );
+        }
+
+        // Last resort: Try to manually parse the content
+        try {
+          // Manuel parsing için ek bir fonksiyon çağırmak yerine
+          // direkt fallback içeriğini kullanalım
+          this.logger.info(
+            `[${traceId}] Manuel parsing denenecek`,
+            'QuizValidationService.parseAIResponseToJSON',
+          );
+        } catch (manualError) {
+          this.logger.warn(
+            `[${traceId}] Manuel parse denemesi başarısız`,
+            'QuizValidationService.parseAIResponseToJSON',
+          );
+        }
+
+        // No fix worked, use fallback content
+        this.logger.error(
+          `[${traceId}] Tüm parsing denemeleri başarısız. Fallback verileri kullanılacak.`,
+          'QuizValidationService.parseAIResponseToJSON',
+        );
+
+        // Önemli: Hata detaylarını sadece development ortamında logla
+        if (process.env.NODE_ENV === 'development') {
+          this.logger.debug(
+            `[${traceId}] Orijinal yanıt: ${text.substring(0, 200)}...`,
+            'QuizValidationService.parseAIResponseToJSON',
+          );
+        }
+
+        // AI yanıtı parse edilemediğinde örnek sorular döndür
+        return { questions: this.generateFallbackQuestions(metadata) } as T;
+      }
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] JSON parse edilirken hata oluştu: ${error.message}`,
         'QuizValidationService.parseAIResponseToJSON',
       );
 
-      // Fallback: 5 adet örnek soru içeren bir yapı oluştur
-      const fallbackQuestions = this.generateFallbackQuestions(metadata);
-
-      return { questions: fallbackQuestions } as T;
+      // AI yanıtı parse edilemediğinde örnek sorular döndür
+      return { questions: this.generateFallbackQuestions(metadata) } as T;
     }
   }
 
