@@ -11,6 +11,7 @@ import adapterService from "./adapter.service";
 import { QuizGenerationOptions, QuizSubmissionPayload } from "../types/quiz";
 import { getLogger, getFlowTracker } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
+import { FlowCategory } from "./flow-tracker.service";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
@@ -38,7 +39,7 @@ class QuizApiService {
    * @param courseId İsteğe bağlı ders ID'si
    * @returns Quiz dizisi
    */
-  @LogMethod('QuizApiService', 'API')
+  @LogMethod('QuizApiService', FlowCategory.API)
   async getQuizzes(courseId?: string) {
     flowTracker.markStart('getQuizzes');
     
@@ -68,7 +69,7 @@ class QuizApiService {
       const quizzes = await apiService.get<ApiQuiz[]>(endpoint, params);
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd('getQuizzes', 'API', 'QuizApiService');
+      const duration = flowTracker.markEnd('getQuizzes', FlowCategory.API, 'QuizApiService');
       logger.debug(
         `Sınav listesi alındı: ${quizzes.length} sınav`,
         'QuizApiService.getQuizzes',
@@ -84,7 +85,7 @@ class QuizApiService {
       return quizzes;
     } catch (error) {
       // Hata durumu
-      flowTracker.markEnd('getQuizzes', 'API', 'QuizApiService');
+      flowTracker.markEnd('getQuizzes', FlowCategory.API, 'QuizApiService');
       logger.error(
         "Sınav listesi alınamadı",
         'QuizApiService.getQuizzes',
@@ -106,7 +107,7 @@ class QuizApiService {
    * @param id Quiz ID
    * @returns Quiz detayları
    */
-  @LogMethod('QuizApiService', 'API')
+  @LogMethod('QuizApiService', FlowCategory.API)
   async getQuizById(id: string) {
     flowTracker.markStart(`getQuiz_${id}`);
     
@@ -131,7 +132,7 @@ class QuizApiService {
       const quiz = await apiService.get<ApiQuiz>(endpoint);
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd(`getQuiz_${id}`, 'API', 'QuizApiService');
+      const duration = flowTracker.markEnd(`getQuiz_${id}`, FlowCategory.API, 'QuizApiService');
       logger.debug(
         `Sınav detayı alındı: ID=${id}`,
         'QuizApiService.getQuizById',
@@ -148,7 +149,7 @@ class QuizApiService {
       return quiz;
     } catch (error) {
       // Hata durumu
-      flowTracker.markEnd(`getQuiz_${id}`, 'API', 'QuizApiService');
+      flowTracker.markEnd(`getQuiz_${id}`, FlowCategory.API, 'QuizApiService');
       logger.error(
         `Sınav alınamadı: ID=${id}`,
         'QuizApiService.getQuizById',
@@ -170,7 +171,7 @@ class QuizApiService {
    * @param id Quiz ID
    * @returns Quiz analiz sonuçları
    */
-  @LogMethod('QuizApiService', 'API')
+  @LogMethod('QuizApiService', FlowCategory.API)
   async getQuizAnalysis(id: string) {
     flowTracker.markStart(`getQuizAnalysis_${id}`);
     
@@ -195,7 +196,7 @@ class QuizApiService {
       const analysis = await apiService.get<ApiAnalysisResult>(endpoint);
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd(`getQuizAnalysis_${id}`, 'API', 'QuizApiService');
+      const duration = flowTracker.markEnd(`getQuizAnalysis_${id}`, FlowCategory.API, 'QuizApiService');
       logger.info(
         `Sınav analizi alındı: ID=${id}`,
         'QuizApiService.getQuizAnalysis',
@@ -213,7 +214,7 @@ class QuizApiService {
       return analysis;
     } catch (error) {
       // Hata durumu
-      flowTracker.markEnd(`getQuizAnalysis_${id}`, 'API', 'QuizApiService');
+      flowTracker.markEnd(`getQuizAnalysis_${id}`, FlowCategory.API, 'QuizApiService');
       logger.error(
         `Sınav analizi alınamadı: ID=${id}`,
         'QuizApiService.getQuizAnalysis',
@@ -235,7 +236,7 @@ class QuizApiService {
    * @param courseId İsteğe bağlı ders ID'si
    * @returns Başarısız sorular dizisi
    */
-  @LogMethod('QuizApiService', 'API')
+  @LogMethod('QuizApiService', FlowCategory.API)
   async getFailedQuestions(courseId?: string) {
     flowTracker.markStart('getFailedQuestions');
     
@@ -265,7 +266,7 @@ class QuizApiService {
       const failedQuestions = await apiService.get<ApiFailedQuestion[]>(endpoint, params);
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd('getFailedQuestions', 'API', 'QuizApiService');
+      const duration = flowTracker.markEnd('getFailedQuestions', FlowCategory.API, 'QuizApiService');
       logger.debug(
         `Yanlış cevaplanan sorular alındı: ${failedQuestions.length} soru`,
         'QuizApiService.getFailedQuestions',
@@ -281,7 +282,7 @@ class QuizApiService {
       return failedQuestions;
     } catch (error) {
       // Hata durumu
-      flowTracker.markEnd('getFailedQuestions', 'API', 'QuizApiService');
+      flowTracker.markEnd('getFailedQuestions', FlowCategory.API, 'QuizApiService');
       logger.error(
         "Yanlış cevaplanan sorular alınamadı",
         'QuizApiService.getFailedQuestions',
@@ -301,7 +302,7 @@ class QuizApiService {
   /**
    * Verilen seçeneklere göre yeni bir sınav oluşturur
    */
-  @LogMethod('QuizApiService', 'API')
+  @LogMethod('QuizApiService', FlowCategory.API)
   async generateQuiz(options: QuizGenerationOptions | ApiQuizGenerationOptionsDto) {
     flowTracker.markStart('generateQuiz');
     
@@ -322,8 +323,8 @@ class QuizApiService {
         275,
         { 
           quizType: apiOptions.quizType,
-          targetIds: apiOptions.targetIds,
-          courseId: apiOptions.courseId
+          courseId: apiOptions.courseId,
+          payload: JSON.stringify(apiPayload).substring(0, 300)
         }
       );
       
@@ -333,25 +334,42 @@ class QuizApiService {
         'QuizApiService.generateQuiz',
         { 
           quizType: apiOptions.quizType,
-          targetCount: apiOptions.targetIds?.length
+          endpoint: this.basePath,
+          payloadSize: JSON.stringify(apiPayload).length
         }
       );
       
       try {
+        logger.debug(
+          `API isteği gönderiliyor: POST ${this.basePath}`,
+          'QuizApiService.generateQuiz',
+          __filename,
+          300,
+          { 
+            endpoint: this.basePath,
+            payloadSize: JSON.stringify(apiPayload).length
+          }
+        );
+        
         // API isteğini gönder
         const quiz = await apiService.post<ApiQuiz>(this.basePath, apiPayload);
         
+        // API yanıtını kontrol et
+        if (!quiz || !quiz.id) {
+          throw new Error('API geçerli bir yanıt döndürmedi: Quiz ID bulunamadı');
+        }
+        
         // Başarılı sonuç
-        const duration = flowTracker.markEnd('generateQuiz', 'API', 'QuizApiService');
+        const duration = flowTracker.markEnd('generateQuiz', FlowCategory.API, 'QuizApiService');
         logger.info(
-          `Sınav oluşturuldu: ${quiz.title}, ${quiz.questions.length} soru`,
+          `Sınav oluşturuldu: ${quiz.title || 'Başlıksız'}, ${quiz.questions?.length || 0} soru`,
           'QuizApiService.generateQuiz',
           __filename,
-          299,
+          320,
           { 
             id: quiz.id,
-            title: quiz.title,
-            questionCount: quiz.questions.length,
+            title: quiz.title || 'Başlıksız',
+            questionCount: quiz.questions?.length || 0,
             duration 
           }
         );
@@ -363,27 +381,44 @@ class QuizApiService {
           "Sınav oluşturma API isteği başarısız",
           'QuizApiService.generateQuiz.apiRequest',
           __filename,
-          314,
-          { error: postError }
+          335,
+          { 
+            error: postError,
+            endpoint: this.basePath,
+            errorMessage: postError instanceof Error ? postError.message : 'Bilinmeyen hata',
+            errorStack: postError instanceof Error ? postError.stack : undefined
+          }
         );
+        
+        // API hatası olduğunda daha detaylı bir hata fırlat
+        if (postError instanceof Error) {
+          throw ErrorService.createApiError(
+            `Sınav oluşturma API isteği başarısız: ${postError.message}`,
+            undefined,
+            { original: { error: postError, context: "generateQuiz.apiRequest" } }
+          );
+        }
+        
         throw postError;
       }
     } catch (error) {
       // Genel hata durumu
-      flowTracker.markEnd('generateQuiz', 'API', 'QuizApiService');
+      flowTracker.markEnd('generateQuiz', FlowCategory.API, 'QuizApiService');
       logger.error(
         "Sınav oluşturma başarısız",
         'QuizApiService.generateQuiz',
         __filename,
-        325,
+        360,
         { 
           options: JSON.stringify(options).substring(0, 200) + '...',
-          error 
+          error,
+          errorMessage: error instanceof Error ? error.message : 'Bilinmeyen hata',
+          errorStack: error instanceof Error ? error.stack : undefined
         }
       );
       
       throw ErrorService.createApiError(
-        "Sınav oluşturulurken bir hata oluştu.",
+        "Sınav oluşturulurken bir hata oluştu: " + (error instanceof Error ? error.message : 'Bilinmeyen hata'),
         undefined,
         { original: { error, context: "generateQuiz", options } },
       );
@@ -393,7 +428,7 @@ class QuizApiService {
   /**
    * Sınav cevaplarını gönderir ve sonuçları alır
    */
-  @LogMethod('QuizApiService', 'API')
+  @LogMethod('QuizApiService', FlowCategory.API)
   async submitQuiz(payload: QuizSubmissionPayload | ApiQuizSubmissionPayloadDto) {
     flowTracker.markStart(`submitQuiz_${payload.quizId}`);
     
@@ -435,7 +470,7 @@ class QuizApiService {
       const result = await apiService.post<ApiQuiz>(endpoint, requestPayload);
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd(`submitQuiz_${payload.quizId}`, 'API', 'QuizApiService');
+      const duration = flowTracker.markEnd(`submitQuiz_${payload.quizId}`, FlowCategory.API, 'QuizApiService');
       logger.info(
         `Sınav yanıtları gönderildi: ID=${apiPayload.quizId}`,
         'QuizApiService.submitQuiz',
@@ -452,7 +487,7 @@ class QuizApiService {
       return result;
     } catch (error) {
       // Hata durumu
-      flowTracker.markEnd(`submitQuiz_${payload.quizId}`, 'API', 'QuizApiService');
+      flowTracker.markEnd(`submitQuiz_${payload.quizId}`, FlowCategory.API, 'QuizApiService');
       logger.error(
         `Sınav yanıtları gönderilemedi: ID=${payload.quizId}`,
         'QuizApiService.submitQuiz',
@@ -476,7 +511,7 @@ class QuizApiService {
    * Sınavı siler
    * @param id Quiz ID
    */
-  @LogMethod('QuizApiService', 'API')
+  @LogMethod('QuizApiService', FlowCategory.API)
   async deleteQuiz(id: string) {
     flowTracker.markStart(`deleteQuiz_${id}`);
     
@@ -501,7 +536,7 @@ class QuizApiService {
       const response = await apiService.delete(endpoint);
       
       // Başarılı sonuç
-      const duration = flowTracker.markEnd(`deleteQuiz_${id}`, 'API', 'QuizApiService');
+      const duration = flowTracker.markEnd(`deleteQuiz_${id}`, FlowCategory.API, 'QuizApiService');
       logger.info(
         `Sınav silindi: ID=${id}`,
         'QuizApiService.deleteQuiz',
@@ -513,7 +548,7 @@ class QuizApiService {
       return response;
     } catch (error) {
       // Hata durumu
-      flowTracker.markEnd(`deleteQuiz_${id}`, 'API', 'QuizApiService');
+      flowTracker.markEnd(`deleteQuiz_${id}`, FlowCategory.API, 'QuizApiService');
       logger.error(
         `Sınav silinemedi: ID=${id}`,
         'QuizApiService.deleteQuiz',

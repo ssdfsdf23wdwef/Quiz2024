@@ -23,6 +23,7 @@ import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
 import quizService from "@/services/quiz.service";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -343,7 +344,7 @@ export default function ExamCreationWizard({
     }
 
     if (currentStep < totalSteps) {
-      let nextStep = currentStep + 1;
+      let nextStepNumber = currentStep + 1;
 
       // Akış Atlama Mantığı
       // Zayıf/Orta Odaklı: Adım 1'den Adım 3'e atla (Konu Seçimi yok)
@@ -353,104 +354,14 @@ export default function ExamCreationWizard({
         currentStep === 1
       ) {
         console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 1'den Adım 3'e atlıyoruz`);
-        nextStep = 3;
+        nextStepNumber = 3;
       }
 
-      console.log(`✅ Adım ${currentStep}'den Adım ${nextStep}'e ilerletiliyor...`);
-      setCurrentStep(nextStep);
+      console.log(`✅ Adım ${currentStep}'den Adım ${nextStepNumber}'e ilerletiliyor...`);
+      setCurrentStep(nextStepNumber);
     } else {
-      // Tamamlandı
-      console.log(`🏁 Tüm adımlar tamamlandı (${currentStep}/${totalSteps}). Sınav oluşturma için gerekli veriler hazırlanıyor...`);
-      if (onComplete) {
-        // Son tercihleri oluştur
-        const finalPreferences: QuizPreferences = {
-          ...preferences,
-          topicIds:
-            quizType === "personalized" &&
-            personalizedQuizType !== "weakTopicFocused"
-              ? selectedTopicIds
-              : undefined,
-          subTopicIds:
-            quizType === "personalized" &&
-            personalizedQuizType !== "weakTopicFocused"
-              ? selectedSubTopicIds
-              : undefined,
-        };
-
-        console.log(`📊 SINAV BİLGİLERİ:
-        - Tür: ${quizType}
-        - Alt tür: ${quizType === "personalized" ? personalizedQuizType : "N/A"}
-        - Soru sayısı: ${preferences.questionCount}
-        - Zorluk: ${preferences.difficulty}
-        - Süre: ${preferences.timeLimit ? preferences.timeLimit + ' dakika' : 'Limitsiz'}
-        - Seçilen konular: ${selectedTopicIds.length > 0 ? selectedTopicIds.length : 'Yok'}
-        - Seçilen alt konular: ${selectedSubTopicIds.length > 0 ? selectedSubTopicIds.length : 'Yok'}
-        `);
-
-        console.log(`🔄 onComplete fonksiyonu çağrılıyor...`);
-        onComplete({
-          file:
-            quizType === "personalized" &&
-            personalizedQuizType === "weakTopicFocused"
-              ? null
-              : selectedFile, // Zayıf odaklıda dosya yok
-          quizType,
-          personalizedQuizType:
-            quizType === "personalized" ? personalizedQuizType : undefined,
-          preferences: finalPreferences,
-        });
-      } else {
-        // Quiz oluşturma seçenekleri
-        const quizOptions: QuizGenerationOptions = {
-          quizType,
-          courseId: quizType === "personalized" ? selectedCourseId : undefined,
-          personalizedQuizType: quizType === "personalized" ? personalizedQuizType : null,
-          selectedSubTopics: selectedTopicIds.length > 0 
-            ? selectedTopicIds.map(id => ({
-                subTopic: detectedTopics.find(t => t.id === id)?.subTopicName || id,
-                normalizedSubTopic: id
-              })) 
-            : undefined,
-          sourceDocument: selectedFile 
-            ? {
-                fileName: selectedFile.name,
-                storagePath: selectedFile.name // Gerçek storage path burada bilinmiyor, API'nin anlaması için isim kullanılıyor
-              } 
-            : null,
-          preferences: {
-            questionCount: preferences.questionCount,
-            difficulty: preferences.difficulty === 'beginner' ? 'easy' : 
-                        preferences.difficulty === 'intermediate' ? 'medium' :
-                        preferences.difficulty === 'advanced' ? 'hard' : 'mixed',
-            timeLimit: preferences.timeLimit,
-            prioritizeWeakAndMediumTopics: true
-          }
-        };
-
-        console.log(`🔄 Sınav oluşturma isteği gönderiliyor...`, quizOptions);
-        setQuizCreationLoading(true); // Sınav oluşturma yükleniyor durumu
-        
-        // Sınavı oluştur
-        quizService.generateQuiz(quizOptions)
-          .then(result => {
-            setQuizCreationLoading(false);
-            console.log(`✅ Sınav başarıyla oluşturuldu:`, result);
-            // Sınav sayfasına yönlendir
-            if (result && result.id) {
-              router.push(`/exams/${result.id}`);
-            } else {
-              ErrorService.showToast("Sınav oluşturuldu ancak ID bilgisi alınamadı.", "warning");
-            }
-          })
-          .catch(error => {
-            setQuizCreationLoading(false);
-            console.error(`❌ HATA: Sınav oluşturma başarısız:`, error);
-            ErrorService.showToast(
-              "Sınav oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
-              "error"
-            );
-          });
-      }
+      // Son adımda handleFinalSubmit fonksiyonunu çağır
+      handleFinalSubmit();
     }
   };
 
@@ -594,10 +505,10 @@ export default function ExamCreationWizard({
       } catch (uploadError) {
         console.error(`❌ HATA: Dosya yükleme başarısız! ${uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata'}`);
         
-        ErrorService.showToast(
-          `Dosya yükleme hatası: ${uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata'}`,
-          "error"
-        );
+          ErrorService.showToast(
+            `Dosya yükleme hatası: ${uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata'}`,
+            "error"
+          );
         
         setTopicDetectionStatus("error");
         return;
@@ -787,10 +698,10 @@ export default function ExamCreationWizard({
               } : {}
             });
             
-            ErrorService.showToast(
+                ErrorService.showToast(
               `Konu tespiti başarısız oldu: ${isAxiosError && error.response ? error.response.status : 'Bağlantı hatası'}`,
-              "error"
-            );
+                  "error"
+                );
             
             // Hızlı sınav için hatasız devam et (PRD'ye göre hata toleransı yüksek olmalı)
             if (quizType === "quick") {
@@ -834,6 +745,77 @@ export default function ExamCreationWizard({
         `Dosya işlenirken bir hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
         "error"
       );
+    }
+  };
+
+  // ExamCreationWizard içindeki onComplete çağrısı kısmını güçlendirelim
+  const handleFinalSubmit = async () => {
+    try {
+      console.log("🏁 Tüm adımlar tamamlandı (3/3). Sınav oluşturma için gerekli veriler hazırlanıyor...");
+      
+        // Son tercihleri oluştur
+        const finalPreferences: QuizPreferences = {
+          ...preferences,
+          topicIds:
+            quizType === "personalized" &&
+            personalizedQuizType !== "weakTopicFocused"
+              ? selectedTopicIds
+              : undefined,
+          subTopicIds:
+            quizType === "personalized" &&
+            personalizedQuizType !== "weakTopicFocused"
+              ? selectedSubTopicIds
+              : undefined,
+        };
+
+      const result = {
+          file:
+            quizType === "personalized" &&
+            personalizedQuizType === "weakTopicFocused"
+              ? null
+              : selectedFile, // Zayıf odaklıda dosya yok
+          quizType,
+          personalizedQuizType:
+            quizType === "personalized" ? personalizedQuizType : undefined,
+          preferences: finalPreferences,
+      };
+
+      console.log(
+        `📊 SINAV BİLGİLERİ:
+        - Tür: ${result.quizType}
+        - Alt tür: ${result.personalizedQuizType || "N/A"}
+        - Soru sayısı: ${result.preferences.questionCount}
+        - Zorluk: ${result.preferences.difficulty}
+        - Süre: ${result.preferences.timeLimit ? `${result.preferences.timeLimit} dakika` : "Limitsiz"}
+        - Seçilen konular: ${result.preferences.topicIds?.length ? result.preferences.topicIds.length : "Yok"}
+        - Seçilen alt konular: ${result.preferences.subTopicIds?.length ? result.preferences.subTopicIds.length : "Yok"}
+        `
+      );
+
+      // Geçerli sonuç kontrolü
+      if (!result || !result.quizType) {
+        console.error("⚠️ Geçersiz sınav oluşturma sonucu");
+        ErrorService.showToast("Sınav oluşturma verileri hazırlanamadı. Lütfen tekrar deneyin.", "error");
+        return;
+      }
+
+      try {
+        console.log("🔄 onComplete fonksiyonu çağrılıyor...");
+        // Burada onComplete özelliğinin var olup olmadığını kontrol ediyoruz
+        if (typeof onComplete === 'function') {
+          // Şimdi daha güvenli bir şekilde onComplete'i çağırıyoruz
+          onComplete(result);
+        } else {
+          console.error("⚠️ onComplete fonksiyonu tanımlı değil");
+          ErrorService.showToast("Sınav oluşturma işlemi tamamlanamadı. İşlev tanımlı değil.", "error");
+        }
+      } catch (completeError) {
+        console.error("❌ onComplete çağrısı sırasında hata:", completeError);
+        ErrorService.showToast("Sınav oluşturma tamamlanırken bir hata oluştu.", "error");
+      }
+    } catch (error) {
+      console.error("❌ handleFinalSubmit hatası:", error);
+      ErrorService.showToast("Sınav oluşturma bilgileri hazırlanamadı. Lütfen tekrar deneyin.", "error");
     }
   };
 
@@ -1311,7 +1293,7 @@ export default function ExamCreationWizard({
             {topicDetectionStatus === "loading" || quizCreationLoading ? (
               <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             ) : (
-              <FiArrowRight className="ml-1.5" size={16} />
+            <FiArrowRight className="ml-1.5" size={16} />
             )}
           </button>
         </div>

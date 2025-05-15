@@ -41,7 +41,7 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // HttpOnly cookie kullanımı için CORS destekli istekler
+  withCredentials: false, // CORS sorunlarını engellemek için false'a çevirildi
   timeout: DEFAULT_TIMEOUT,
 });
 
@@ -611,7 +611,7 @@ class ApiService {
       const response = await this.client.post<T>(endpoint, data, config);
       
       // İstek tamamlandı ölçümü
-      this.flowTracker.markEnd(`POST_${endpoint}`, 'API', 'ApiService.post');
+      this.flowTracker.markEnd(`POST_${endpoint}`, FlowCategory.API, 'ApiService.post');
       this.logger.debug(
         `POST isteği tamamlandı: ${endpoint}`,
         'ApiService.post',
@@ -653,7 +653,7 @@ class ApiService {
       const response = await this.client.put<T>(endpoint, data);
       
       // İstek tamamlandı ölçümü
-      this.flowTracker.markEnd(`PUT_${endpoint}`, 'API', 'ApiService.put');
+      this.flowTracker.markEnd(`PUT_${endpoint}`, FlowCategory.API, 'ApiService.put');
       this.logger.debug(
         `PUT isteği tamamlandı: ${endpoint}`,
         'ApiService.put',
@@ -690,7 +690,7 @@ class ApiService {
       const response = await this.client.delete<T>(endpoint);
       
       // İstek tamamlandı ölçümü
-      this.flowTracker.markEnd(`DELETE_${endpoint}`, 'API', 'ApiService.delete');
+      this.flowTracker.markEnd(`DELETE_${endpoint}`, FlowCategory.API, 'ApiService.delete');
       this.logger.debug(
         `DELETE isteği tamamlandı: ${endpoint}`,
         'ApiService.delete',
@@ -748,7 +748,7 @@ class ApiService {
         ErrorService.showToast(errorMessage, "error");
       }
     } else {
-      this.flowTracker.trackStep('API', 'Beklenmeyen API hatası', 'ApiService.handleError', {
+      this.flowTracker.trackStep(FlowCategory.API, 'Beklenmeyen API hatası', 'ApiService.handleError', {
         error: typeof error === 'object' ? (error as Error).message : String(error)
       });
       
