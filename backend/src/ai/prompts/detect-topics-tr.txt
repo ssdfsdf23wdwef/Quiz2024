@@ -76,6 +76,9 @@ Analiz sonucunu **KESINLIKLE** aşağıdaki JSON formatında döndür ve JSON'un
 * JSON'da ek açıklama, metin veya yorum OLMAMALI
 * Çıktının JSON formatına uygun olduğunu, bozuk olmadığını kontrol et
 * Bir önceki **Çıktı Formatı** bölümünde tam olarak verilen yapıya uy
+* SADECE GEÇERLİ JSON DÖNDÜR, BAŞKA HİÇBİR YORUM, AÇIKLAMA VEYA EK BİLGİ EKLEME. EN ÖNEMLİSİ ```json ve ``` ETİKETLERİNİ DE KULLANMA, DOĞRUDAN JSON DÖNDÜR!
+* JSON içindeki metin alanlarında özel karakterlerden kaçınmaya çalış, özellikle çift tırnak işaretleri kullanırken dikkatli ol
+* Zorunlu kontrol: Çıktını JSON.parse() ile ayrıştırılabilir olduğundan emin ol - ayrıştırıldığında hata vermeyecek şekilde olmalı
 
 **İzlenecek Adımlar:**
 1. Derinlemesine Anlama (Kavramsal Odak): Metni dikkatlice oku. Hangi temel KAVRAMLARIN, İLKELERİN, TEORİLERİN, TANIMLARIN, YÖNTEMLERİN (teorik yönlerinin), FAYDA/DEZAVANTAJLARIN veya ÖNEMLİ EN İYİ UYGULAMA İLKELERİNİN sunulduğunu belirle. Pratik uygulama adımlarını değil, kavramsal özü anla.

@@ -9,6 +9,8 @@ import { AIProviderService } from './providers/ai-provider.service';
 import { GeminiProviderService } from './providers/gemini-provider.service';
 import { TopicDetectionService } from './services/topic-detection.service';
 import { QuizGenerationService } from './services/quiz-generation.service';
+import { PromptManagerService } from './services/prompt-manager.service';
+import { QuizValidationService } from './services/quiz-validation.service';
 // import { NormalizationService } from '../shared/normalization/normalization.service'; // Removed unused import
 
 @Global()
@@ -21,8 +23,10 @@ import { QuizGenerationService } from './services/quiz-generation.service';
     AIProviderService,
     TopicDetectionService,
     QuizGenerationService,
+    PromptManagerService,
+    QuizValidationService,
   ],
-  exports: [AiService],
+  exports: [AiService, QuizGenerationService],
 })
 export class AiModule implements OnModuleInit {
   constructor(

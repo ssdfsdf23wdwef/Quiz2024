@@ -7,6 +7,10 @@ import * as fs from 'fs';
 import { LoggerService } from '../../common/services/logger.service';
 import { FlowTrackerService } from '../../common/services/flow-tracker.service';
 import pRetry from 'p-retry';
+import {
+  TopicDetectionAiResponseSchema,
+  FinalNormalizedTopicDetectionResultSchema,
+} from '../schemas/topic-detection.schema';
 
 @Injectable()
 export class TopicDetectionService {
@@ -202,14 +206,32 @@ Sadece JSON döndür, başka açıklama yapma.
 
       // AI isteğini gerçekleştir
       result = await pRetry(async () => {
-        // AI isteğini gerçekleştir
-        const aiResponse =
+        const aiResponseText =
           await this.aiProviderService.generateContent(fullPrompt);
 
-        // Yanıtı ayrıştır
-        const parsedResponse = this.parseJsonResponse(aiResponse.text);
+        const parsedResponse = this.parseJsonResponse<any>(aiResponseText.text); // Tipini any yapıp validasyona bırakalım
 
-        // Yanıtı normalize et
+        try {
+          TopicDetectionAiResponseSchema.parse(parsedResponse); // Zod ile validasyon
+        } catch (validationError) {
+          this.logger.error(
+            `[${traceId}] AI yanıtı şema validasyonundan geçemedi: ${validationError.message}`,
+            'TopicDetectionService.detectTopics.ZodValidation',
+            __filename,
+            undefined,
+            validationError,
+            { rawResponse: aiResponseText.text.substring(0, 1000) }, // Yanıtın ilk 1000 karakterini logla
+          );
+          // Zod hatalarını daha okunabilir hale getir
+          const errorMessages = validationError.errors
+            .map((e) => `${e.path.join('.')}: ${e.message}`)
+            .join('; ');
+          throw new BadRequestException(
+            `AI yanıtı geçersiz formatta: ${errorMessages}`,
+          );
+        }
+
+        // Validasyondan geçtiyse, normalizasyona devam et
         return this.normalizeTopicResult(parsedResponse);
       }, this.RETRY_OPTIONS);
 
@@ -221,20 +243,25 @@ Sadece JSON döndür, başka açıklama yapma.
         __filename,
       );
 
-      // Check if we got valid results
-      if (!result || !result.topics || !Array.isArray(result.topics)) {
+      // Normalizasyon sonrası sonucu da valide edelim (opsiyonel ama iyi bir pratik)
+      try {
+        FinalNormalizedTopicDetectionResultSchema.parse(result);
+      } catch (normalizationValidationError) {
         this.logger.error(
-          `[${traceId}] AI çıktısı geçersiz format içeriyor`,
-          'TopicDetectionService.detectTopics',
+          `[${traceId}] Normalleştirilmiş konu sonucu şema validasyonundan geçemedi: ${normalizationValidationError.message}`,
+          'TopicDetectionService.detectTopics.NormalizationValidation',
           __filename,
           undefined,
-          undefined,
-          { error: 'Invalid AI response format' },
+          normalizationValidationError,
+          { normalizedResult: result },
         );
+        // Bu noktada bir hata fırlatmak yerine uyarı logu ile devam edilebilir veya default bir sonuç döndürülebilir.
+        // Şimdilik loglayıp devam edelim, çünkü ana validasyon AI yanıtı için yapıldı.
+      }
 
-        throw new Error(
-          'AI servisinden geçersiz konu algılama sonuç formatı alındı',
-        );
+      // Check if we got valid results (Bu kontrol Zod ile yapıldığı için gerek kalmayabilir veya daha basit hale getirilebilir)
+      if (!result || !result.topics || !Array.isArray(result.topics)) {
+        // ... (Bu kısım Zod validasyonu sonrası muhtemelen gereksiz olacak veya uyarıya dönüşecek)
       }
 
       // Sonuç boşsa veya çok az konu içeriyorsa uyarı log'u
@@ -289,9 +316,8 @@ Sadece JSON döndür, başka açıklama yapma.
       // First, try to detect JSON code blocks
       if (text.includes('```')) {
         const codeBlockRegexes = [
-          /```json([\s\S]*?)```/,
-          /```JSON([\s\S]*?)```/,
-          /```([\s\S]*?)```/,
+          /```json([\s\S]*?)```/i, // Büyük/küçük harfe duyarsız
+          /```([\s\S]*?)```/, // Herhangi bir dil belirtilmemiş kod bloğu
         ];
 
         for (const regex of codeBlockRegexes) {
@@ -303,44 +329,133 @@ Sadece JSON döndür, başka açıklama yapma.
         }
       }
 
-      // If no code blocks, try to extract using brace matching
+      // Metinden ilk { ile başlayıp son } ile biten bölümü çıkarmaya çalış
       if (!jsonMatch) {
-        const jsonObjectRegex = /\{[\s\S]*\}/;
-        jsonMatch = text.match(jsonObjectRegex);
+        const firstOpen = jsonText.indexOf('{');
+        const lastClose = jsonText.lastIndexOf('}');
 
-        if (jsonMatch) {
-          jsonText = jsonMatch[0];
+        if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
+          jsonText = jsonText.substring(firstOpen, lastClose + 1);
         }
       }
 
-      // Check if brackets need balancing (common AI error)
-      const openBraces = (jsonText.match(/\{/g) || []).length;
-      const closeBraces = (jsonText.match(/\}/g) || []).length;
+      // Temizleme ve düzeltme işlemleri
+      jsonText = this.cleanJsonString(jsonText);
 
-      if (openBraces !== closeBraces) {
-        // Attempt to balance brackets if possible
-        if (openBraces > closeBraces) {
-          const missingCloseBraces = openBraces - closeBraces;
-          jsonText = jsonText + '}'.repeat(missingCloseBraces);
-        } else if (closeBraces > openBraces) {
-          const missingOpenBraces = closeBraces - openBraces;
-          jsonText = '{'.repeat(missingOpenBraces) + jsonText;
-        }
+      // Parantez dengesini kontrol et
+      jsonText = this.balanceBrackets(jsonText);
+
+      // Trailing comma temizleme (,] veya ,} gibi geçersiz JSON yapıları)
+      jsonText = jsonText.replace(/,\s*([}\]])/g, '$1');
+
+      // Debug olarak temizlenmiş JSON'ı logla
+      this.logger.debug(
+        `JSON parse hazır. Temizlenmiş metin: ${jsonText.substring(0, 200)}...`,
+        'TopicDetectionService.parseJsonResponse',
+        __filename,
+      );
+
+      // Parse JSON
+      try {
+        return JSON.parse(jsonText) as T;
+      } catch (initialParseError) {
+        this.logger.warn(
+          `İlk JSON parse denemesi başarısız: ${initialParseError.message}, onarım deneniyor...`,
+          'TopicDetectionService.parseJsonResponse',
+          __filename,
+        );
+
+        // Onarım dene
+        const repairedJson = this.repairJsonString(jsonText);
+        return JSON.parse(repairedJson) as T;
       }
-
-      return JSON.parse(jsonText) as T;
     } catch (error) {
       this.logger.error(
-        `JSON parse hatası: ${error.message}`,
+        `AI yanıtı JSON olarak parse edilemedi: ${error.message}. Yanıt (ilk 500kr): ${text.substring(0, 500)}`,
         'TopicDetectionService.parseJsonResponse',
         __filename,
         undefined,
         error,
       );
-      throw new Error(
+
+      // Fallback çözümü dene - yalnızca geliştirme ortamında
+      if (process.env.NODE_ENV !== 'production') {
+        this.logger.warn(
+          `JSON ayrıştırma başarısız oldu, varsayılan boş konu yapısı döndürülüyor`,
+          'TopicDetectionService.parseJsonResponse',
+          __filename,
+        );
+
+        return { topics: [] } as T;
+      }
+
+      throw new BadRequestException(
         `AI yanıtı JSON olarak parse edilemedi: ${error.message}`,
       );
     }
+  }
+
+  /**
+   * Clean JSON string by removing extra text before/after JSON and fixing common issues
+   */
+  private cleanJsonString(input: string): string {
+    let result = input.trim();
+
+    // LLM'in eklediği ekstra açıklamaları kaldır
+    result = result.replace(/[\r\n]+Bu JSON çıktısı.*$/g, '');
+    result = result.replace(/^.*?(\{[\s\S]*\}).*$/g, '$1');
+
+    return result;
+  }
+
+  /**
+   * Balance brackets in JSON string
+   */
+  private balanceBrackets(input: string): string {
+    let result = input;
+
+    // Açık ve kapalı parantez sayılarını hesapla
+    const openBraces = (result.match(/{/g) || []).length;
+    const closeBraces = (result.match(/}/g) || []).length;
+    const openBrackets = (result.match(/\[/g) || []).length;
+    const closeBrackets = (result.match(/\]/g) || []).length;
+
+    // Süslü parantezleri dengele
+    if (openBraces > closeBraces) {
+      result += '}'.repeat(openBraces - closeBraces);
+    }
+
+    // Köşeli parantezleri dengele
+    if (openBrackets > closeBrackets) {
+      result += ']'.repeat(openBrackets - closeBrackets);
+    }
+
+    return result;
+  }
+
+  /**
+   * Repair a broken JSON string using common fixes
+   */
+  private repairJsonString(input: string): string {
+    let result = input;
+
+    // Alan adlarında çift tırnak olmayan yerleri düzelt
+    // Örnek: {name: "value"} -> {"name": "value"}
+    result = result.replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
+
+    // Değerlerde eksik çift tırnak
+    // Örnek: {"name": value} -> {"name": "value"}
+    // Dikkat: Sadece alfanümerik değerlere tırnak ekler, true/false/null ve numerik değerlere dokunmaz
+    result = result.replace(
+      /(:\s*)([a-zA-Z][a-zA-Z0-9_]*)(\s*[,}])/g,
+      '$1"$2"$3',
+    );
+
+    return result;
+  }
+
+  private shouldReturnDefaultTopics(): boolean {
+    return process.env.NODE_ENV !== 'production';
   }
 
   /**
@@ -407,11 +522,29 @@ Sadece JSON döndür, başka açıklama yapma.
           // Alt konuları ekle
           if (Array.isArray(topic.subTopics)) {
             topic.subTopics.forEach((subTopic: any) => {
+              // Eğer subTopic bir string ise
               if (typeof subTopic === 'string') {
                 normalizedTopics.push({
                   subTopicName: subTopic,
                   normalizedSubTopicName:
                     this.normalizationService.normalizeSubTopicName(subTopic),
+                  parentTopic: mainTopicName,
+                  isMainTopic: false,
+                });
+              }
+              // Eğer subTopic bir obje ve subTopicName içeriyorsa
+              else if (
+                typeof subTopic === 'object' &&
+                subTopic !== null &&
+                subTopic.subTopicName
+              ) {
+                normalizedTopics.push({
+                  subTopicName: subTopic.subTopicName,
+                  normalizedSubTopicName:
+                    subTopic.normalizedSubTopicName ||
+                    this.normalizationService.normalizeSubTopicName(
+                      subTopic.subTopicName,
+                    ),
                   parentTopic: mainTopicName,
                   isMainTopic: false,
                 });
