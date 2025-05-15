@@ -14,7 +14,19 @@ export interface SubTopic {
  * Konu tespiti sonuç arayüzü
  */
 export interface TopicDetectionResult {
-  topics: SubTopic[];
+  topics: Array<{
+    subTopicName: string;
+    normalizedSubTopicName: string;
+    parentTopic?: string;
+    isMainTopic?: boolean;
+  }>;
+}
+
+export interface TopicDetectionOptions {
+  maxTopics?: number;
+  useCache?: boolean;
+  cacheKey?: string;
+  existingTopics?: string[];
 }
 
 // Log kaydı

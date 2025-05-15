@@ -19,17 +19,17 @@ export default function UploadPage() {
         <h1 className="text-3xl font-bold mb-8 text-center dark:text-white">
           Belge Yükle ve Sınav Oluştur
         </h1>
-        
+
         <div className="max-w-4xl mx-auto">
           <DocumentFlow 
             onComplete={handleUploadComplete}
-          />
-          
+              />
+
           <Card className="mt-8">
             <CardHeader className="flex gap-3">
               <div className="flex flex-col">
                 <p className="text-lg font-medium">Nasıl Çalışır?</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                   Belgelerinizden hızlıca sınav oluşturma rehberi
                 </p>
               </div>
@@ -55,7 +55,7 @@ export default function UploadPage() {
               </ol>
             </CardBody>
           </Card>
-        </div>
+          </div>
       </div>
     </PageTransition>
   );

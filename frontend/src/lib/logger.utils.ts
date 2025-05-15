@@ -505,7 +505,7 @@ export function startFlow(category: FlowCategory, name: string): FlowTracker {
     return new FlowTracker("dummy-id", mapToTrackerCategory(category), name);
   }
   return flowTrackerInstance.startFlow(mapToTrackerCategory(category), name);
-}
+} 
 
 /**
  * Gelişmiş hata izleme ve konsolda gösterme
