@@ -11,8 +11,6 @@ import {
   FiAward,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { QuizPreferences, DetectedSubTopic, Course, QuizGenerationOptions } from "@/types";
 import { DocumentUploader } from "../document";
 import TopicSelectionScreen from "./TopicSelectionScreen";
 import { ErrorService } from "@/services/error.service";
@@ -21,9 +19,8 @@ import CourseTopicSelector from "./CourseTopicSelector";
 import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
-import quizService from "@/services/quiz.service";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import { Course, DetectedSubTopic, QuizPreferences } from "@/types";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -36,6 +33,7 @@ interface ExamCreationWizardProps {
       | "newTopicFocused"
       | "comprehensive";
     preferences: QuizPreferences;
+    topicNameMap: Record<string, string>;
   }) => void;
 }
 
@@ -54,7 +52,6 @@ export default function ExamCreationWizard({
   quizType, // Dışarıdan gelen sınav türü
   onComplete,
 }: ExamCreationWizardProps) {
-  const router = useRouter();
 
   // Adım yönetimi
   const [currentStep, setCurrentStep] = useState(1);
@@ -753,20 +750,49 @@ export default function ExamCreationWizard({
     try {
       console.log("🏁 Tüm adımlar tamamlandı (3/3). Sınav oluşturma için gerekli veriler hazırlanıyor...");
       
+      // Seçilen konu ve alt konuların durumunu kontrol et ve logla
+      console.log("🔍 Seçilen konular kontrol ediliyor:", {
+        selectedTopicIds: selectedTopicIds,
+        selectedSubTopicIds: selectedSubTopicIds,
+        quizType: quizType,
+        personalizedQuizType: personalizedQuizType
+      });
+      
+      // Konuların boş olmamasını sağla
+      const topicsToUse = selectedTopicIds.length > 0 ? selectedTopicIds : 
+        (detectedTopics?.length > 0 ? detectedTopics.filter(t => t.isSelected).map(t => t.id) : []);
+        
+      // Alt konuların boş olmamasını sağla
+      const subTopicsToUse = selectedSubTopicIds.length > 0 ? selectedSubTopicIds : 
+        (detectedTopics?.length > 0 ? detectedTopics.filter(t => t.isSelected).map(t => t.id) : []);
+      
+      console.log("🔄 Kullanılacak konular:", topicsToUse);
+      console.log("🔄 Kullanılacak alt konular:", subTopicsToUse);
+      
         // Son tercihleri oluştur
         const finalPreferences: QuizPreferences = {
           ...preferences,
+        // Her sınav türü için konu ve alt konuları ekle
+        // Zayıf konu odaklı sınavlar hariç tüm sınav türleri için konuları dahil et
           topicIds:
-            quizType === "personalized" &&
-            personalizedQuizType !== "weakTopicFocused"
-              ? selectedTopicIds
-              : undefined,
+          (quizType === "personalized" && personalizedQuizType !== "weakTopicFocused") 
+            ? topicsToUse 
+            : (quizType === "quick" && topicsToUse.length > 0 ? topicsToUse : undefined),
+        
+        // Alt konuları da aynı şekilde dahil et
           subTopicIds:
-            quizType === "personalized" &&
-            personalizedQuizType !== "weakTopicFocused"
-              ? selectedSubTopicIds
-              : undefined,
-        };
+          (quizType === "personalized" && personalizedQuizType !== "weakTopicFocused") 
+            ? subTopicsToUse 
+            : (quizType === "quick" && subTopicsToUse.length > 0 ? subTopicsToUse : undefined)
+      };
+
+      // Konu isimleri için bir map oluştur (sonraki UI gösterimi için)
+      const topicNameMap: Record<string, string> = {};
+      if (detectedTopics) {
+        detectedTopics.forEach(topic => {
+          topicNameMap[topic.id] = topic.subTopicName;
+        });
+      }
 
       const result = {
           file:
@@ -778,6 +804,7 @@ export default function ExamCreationWizard({
           personalizedQuizType:
             quizType === "personalized" ? personalizedQuizType : undefined,
           preferences: finalPreferences,
+        topicNameMap: topicNameMap // Konu isimlerini de ekleyelim
       };
 
       console.log(
@@ -787,8 +814,8 @@ export default function ExamCreationWizard({
         - Soru sayısı: ${result.preferences.questionCount}
         - Zorluk: ${result.preferences.difficulty}
         - Süre: ${result.preferences.timeLimit ? `${result.preferences.timeLimit} dakika` : "Limitsiz"}
-        - Seçilen konular: ${result.preferences.topicIds?.length ? result.preferences.topicIds.length : "Yok"}
-        - Seçilen alt konular: ${result.preferences.subTopicIds?.length ? result.preferences.subTopicIds.length : "Yok"}
+        - Seçilen konular: ${result.preferences.topicIds?.length ? result.preferences.topicIds.length + ' adet' : "Yok"}
+        - Seçilen alt konular: ${result.preferences.subTopicIds?.length ? result.preferences.subTopicIds.length + ' adet' : "Yok"}
         `
       );
 

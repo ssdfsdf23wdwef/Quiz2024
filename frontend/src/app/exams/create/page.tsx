@@ -61,6 +61,10 @@ export default function CreateExamPage() {
     typeParam === "personalized" ? "personalized" : "quick"
   );
 
+  // Ana sayfadan startQuiz=true parametresi ile gelindi mi?
+  const startQuizParam = searchParams.get("startQuiz");
+  const fileNameParam = searchParams.get("fileName");
+
   // Kurs yükleme durumu izleme
   const { isLoading: courseLoading } = useQuery({
     queryKey: ["course", courseId],
@@ -77,6 +81,42 @@ export default function CreateExamPage() {
     }
   }, [courseId, router, quizType]);
 
+  // startQuiz parametresi varsa direkt quiz oluşturma işlemine geçelim
+  useEffect(() => {
+    // Ana sayfadan startQuiz=true ile yönlendirildiyse ve henüz işlem başlatılmadıysa
+    if (startQuizParam === "true" && !processingQuiz && !isSubmitting) {
+      console.log("🚀 startQuiz=true parametresi algılandı, direkt quiz oluşturma işlemine geçiliyor");
+      
+      // Dosya adı bilgisi varsa kullan
+      const documentFile: File | null = null;
+      if (fileNameParam) {
+        console.log(`📄 Dosya adı parametresi algılandı: ${fileNameParam}`);
+        // Not: Gerçek bir File nesnesi oluşturamayız, ama adını bilebiliriz
+      }
+
+      // Personalized quiz tipini doğru tipte tanımla
+      const personalizedType = searchParams.get("personalizedType") as 
+        "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive" | undefined;
+      
+      // ExamCreationResult'a benzer bir yapı oluştur
+      const result: ExamCreationResult = {
+        file: documentFile,
+        quizType: quizType,
+        personalizedQuizType: personalizedType,
+        preferences: {
+          questionCount: 10, // Varsayılan değerler
+          difficulty: "mixed",
+          timeLimit: undefined,
+          topicIds: [],
+          subTopicIds: []
+        }
+      };
+      
+      // Otomatik olarak handleExamCreationComplete çağır
+      handleExamCreationComplete(result);
+    }
+  }, [startQuizParam, processingQuiz, isSubmitting, quizType, searchParams]);
+
   // Quiz oluşturma işlemi
   const handleCreateQuiz = async (formData: CreateQuizFormData) => {
     try {
@@ -88,18 +128,38 @@ export default function CreateExamPage() {
       console.log("✏️ Quiz oluşturuluyor:", formData);
       
       const { quizType, courseId, preferences, selectedTopics } = formData;
+      console.log("🔑 Seçilen konular:", selectedTopics);
+      console.log("🔑 Tercihler içindeki konular:", preferences.topicIds);
+      console.log("🔑 Tercihler içindeki alt konular:", preferences.subTopicIds);
+
+      // Konu bilgilerini kontrol et
+      const hasTopics = Array.isArray(selectedTopics) && selectedTopics.length > 0;
+      // Optional chaining kullanarak daha güvenli bir şekilde subTopicIds kontrol edelim
+      const subTopicIds = preferences?.subTopicIds;
+      const hasSubTopics = Array.isArray(subTopicIds) && subTopicIds.length > 0;
       
       // Quiz oluşturma seçeneklerini hazırla
-      const quizOptions: QuizGenerationOptions = {
-        quizType,
-        courseId: courseId || undefined,
+    const quizOptions: QuizGenerationOptions = {
+      quizType,
+      courseId: courseId || undefined,
         personalizedQuizType: formData.personalizedQuizType || null,
-        selectedSubTopics: selectedTopics.length > 0 
+        
+        // Konu ve alt konu bilgilerini hazırla
+        selectedSubTopics: hasTopics 
           ? selectedTopics.map(topicId => ({
               subTopic: formData.topicNames?.[topicId] || topicId,
               normalizedSubTopic: topicId
             })) 
-          : undefined,
+          : (
+            // Eğer özel alt konular varsa onları kullan
+            hasSubTopics 
+              ? subTopicIds.map(subTopicId => ({
+                  subTopic: formData.topicNames?.[subTopicId] || subTopicId,
+                  normalizedSubTopic: subTopicId
+                }))
+              : undefined
+          ),
+          
         sourceDocument: formData.document 
           ? {
               fileName: formData.document.name,
@@ -116,31 +176,61 @@ export default function CreateExamPage() {
         }
       };
 
+      // Konu bilgilerini log'a yaz
       console.log("📝 Quiz oluşturma seçenekleri:", quizOptions);
+      console.log("📋 Seçilen konular ve alt konular:", {
+        selectedTopics: selectedTopics || [],
+        topicIds: preferences.topicIds || [],
+        subTopicIds: preferences.subTopicIds || [],
+        selectedSubTopicsForAPI: quizOptions.selectedSubTopics || []
+      });
       
       try {
+        console.log("🚀 quizService.generateQuiz çağrılıyor...");
+        console.log("📮 API endpointi: /quizzes");
+        
         // Sınavı oluştur
         const result = await quizService.generateQuiz(quizOptions);
-        console.log("✅ Quiz oluşturuldu:", result);
+        
+        console.log("✅ API isteği başarılı. Quiz oluşturuldu:", result);
+        console.log("🆔 Quiz ID:", result?.id);
         
         // Sınav sayfasına yönlendir
         if (result && result.id) {
+          console.log("🧭 Yönlendirme: /exams/" + result.id);
           router.push(`/exams/${result.id}`);
         } else {
-          console.error("❌ Quiz oluşturuldu ancak ID alınamadı");
-          setError("Sınav oluşturuldu ancak ID alınamadı");
+          console.error("❌ API yanıt verdi ama ID eksik:", result);
+          setError("Sınav oluşturuldu ancak ID alınamadı. Lütfen derslerinizi kontrol edin.");
           setProcessingQuiz(false);
           setIsSubmitting(false);
         }
       } catch (apiError) {
         console.error("❌ Quiz API çağrısı hatası:", apiError);
-        setError("API isteği sırasında bir hata oluştu. Lütfen tekrar deneyin.");
+        
+        // Hata mesajını daha detaylı alalım
+        let errorMessage = "API isteği sırasında bir hata oluştu.";
+        
+        if (apiError instanceof Error) {
+          errorMessage = `Hata: ${apiError.message}`;
+          console.error("❌ Hata detayları:", apiError.message);
+          console.error("❌ Hata tipi:", apiError.name);
+          console.error("❌ Hata yığını:", apiError.stack);
+        }
+        
+        // Kullanıcıya uygun mesaj göster
+        setError(`${errorMessage} Lütfen tekrar deneyin.`);
         setProcessingQuiz(false);
         setIsSubmitting(false);
+        
+        // 3 saniye sonra kullanıcıyı yönlendir
+        setTimeout(() => {
+          router.push("/");
+        }, 3000);
       }
     } catch (error) {
       console.error("❌ Quiz oluşturma genel hatası:", error);
-      setError("Sınav oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+      setError("Sınav oluşturulurken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.");
       setProcessingQuiz(false);
       setIsSubmitting(false);
     }
@@ -157,16 +247,32 @@ export default function CreateExamPage() {
         return;
       }
       
+      // Konu ve alt konuları konsola yazdır (debug)
+      console.log("📋 Konu bilgileri:", {
+        topicIds: result.preferences.topicIds,
+        subTopicIds: result.preferences.subTopicIds
+      });
+      
       // ExamCreationWizard'dan gelen sonuçla direkt olarak quiz oluşturma işlemini başlat
       const formData: CreateQuizFormData = {
         quizType: result.quizType,
         personalizedQuizType: result.personalizedQuizType,
         document: result.file,
-      courseId: courseId || undefined,
-        preferences: result.preferences,
+        courseId: courseId || undefined,
+      preferences: {
+          ...result.preferences,
+          // topicIds ve subTopicIds değerlerini eksplisit olarak kopyala
+          topicIds: result.preferences.topicIds || [],
+          subTopicIds: result.preferences.subTopicIds || []
+        },
+        // Seçilen konuları result.preferences.topicIds'den al ve undefined değilse kullan
         selectedTopics: result.preferences.topicIds || [],
+        // Konu isimleri mapini ekle (boş obje yerine gerçek değerler olmalı)
         topicNames: {}
       };
+      
+      // Oluşturulan formData'yı logla
+      console.log("🔍 Oluşturulan formData:", formData);
       
       handleCreateQuiz(formData);
     } catch (error) {

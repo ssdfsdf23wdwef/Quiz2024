@@ -11,12 +11,12 @@ import { getLogger, getFlowTracker } from "../lib/logger.utils";
  * Öncelik sırası:
  * 1. .env.local dosyasında tanımlanmış NEXT_PUBLIC_API_URL 
  * 2. localStorage'da kaydedilmiş API URL (kullanıcı tarafından değiştirilmiş)
- * 3. Varsayılan değer: http://localhost:3001/api
+ * 3. Varsayılan değer: http://localhost:3001
  */
-let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 // Hata ayıklama için API URL logla
-console.log("🔍 API URL:", API_URL);
+console.log("🔍 API URL (başlangıç):", API_URL);
 
 // LocalStorage'da kayıtlı API URL kontrolü - sadece istemci tarafında çalışırken
 if (typeof window !== "undefined") {

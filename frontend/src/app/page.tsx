@@ -87,23 +87,46 @@ export default function Home() {
     quizType: "quick" | "personalized";
     personalizedQuizType?: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive";
     preferences: QuizPreferences;
+    topicNameMap?: Record<string, string>;
   }) => {
-    // URL'e quiz türünü ve dosya adını ekle
-    const params = new URLSearchParams();
-    params.set("type", result.quizType);
-    
-    // Personalized quiz tipi varsa onu da ekle
-    if (result.personalizedQuizType) {
-      params.set("personalizedType", result.personalizedQuizType);
+    try {
+      // URL'e quiz türünü ve dosya adını ekle
+      const params = new URLSearchParams();
+      params.set("type", result.quizType);
+      
+      // Personalized quiz tipi varsa onu da ekle
+      if (result.personalizedQuizType) {
+        params.set("personalizedType", result.personalizedQuizType);
+      }
+      
+      // Dosya adını ekle (varsa)
+      if (result.file) {
+        params.set("fileName", encodeURIComponent(result.file.name));
+      }
+      
+      console.log("Ana sayfada ExamCreationWizard tamamlandı, doğrudan quiz oluşturma API çağrısı yapılacak");
+      
+      // Form verisi oluştur
+      const formData = {
+        quizType: result.quizType,
+        personalizedQuizType: result.personalizedQuizType,
+        document: result.file,
+        preferences: result.preferences,
+        selectedTopics: result.preferences.topicIds || [],
+        topicNames: result.topicNameMap || {}
+      };
+      
+      // Quiz oluşturma servisi doğrudan çağrılacak
+      // Fakat bu, yaratıcılık yönüyle uygun olmayabilir
+      // En iyisi quiz oluşturma sayfasına yönlendirmek
+      const url = `/exams/create?${params.toString()}&startQuiz=true`;
+      router.push(url);
+    } catch (error) {
+      console.error("ExamCreationWizard tamamlama hatası:", error);
+      // Basit hata durumunda da quiz oluşturma sayfasına yönlendir
+      const url = `/exams/create?type=${result.quizType}`;
+      router.push(url);
     }
-    
-    // Dosya adını ekle (varsa)
-    if (result.file) {
-      params.set("fileName", encodeURIComponent(result.file.name));
-    }
-    
-    const url = `/exams/create?${params.toString()}`;
-    router.push(url);
   };
   
   const navigateTo = (path: string) => {
