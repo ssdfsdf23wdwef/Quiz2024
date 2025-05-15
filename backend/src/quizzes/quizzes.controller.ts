@@ -10,6 +10,10 @@ import {
   ClassSerializerInterceptor,
   NotFoundException,
   InternalServerErrorException,
+  Post,
+  Body,
+  HttpCode,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,6 +22,7 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { QuizzesService } from './quizzes.service';
 import { FirebaseGuard } from '../auth/firebase/firebase.guard';
@@ -27,6 +32,7 @@ import { RequestWithUser } from '../common/types/request.type';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
+import { User } from '../auth/decorators/user.decorator';
 
 @Controller('quizzes')
 @ApiTags('quizzes')
@@ -198,6 +204,295 @@ export class QuizzesController {
 
       throw new InternalServerErrorException(
         'Başarısız sorular getirilirken bir hata oluştu',
+        { cause: error },
+      );
+    }
+  }
+
+  @Post('quick')
+  @HttpCode(HttpStatus.CREATED)
+  @LogMethod({ trackParams: true })
+  @ApiOperation({ summary: 'Hızlı sınav oluşturur' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['documentText', 'subTopics', 'questionCount', 'difficulty'],
+      properties: {
+        documentText: {
+          type: 'string',
+          description: 'Belge metni',
+        },
+        subTopics: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description: 'Alt konular',
+        },
+        questionCount: {
+          type: 'number',
+          minimum: 1,
+          maximum: 30,
+          default: 10,
+          description: 'Soru sayısı',
+        },
+        difficulty: {
+          type: 'string',
+          enum: ['easy', 'medium', 'hard'],
+          default: 'medium',
+          description: 'Zorluk seviyesi',
+        },
+        documentId: {
+          type: 'string',
+          description: 'Belge ID (opsiyonel)',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Hızlı sınav başarıyla oluşturuldu',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        title: { type: 'string' },
+        questions: {
+          type: 'array',
+          items: {
+            type: 'object',
+          },
+        },
+        totalQuestions: { type: 'number' },
+        quizType: { type: 'string' },
+        timestamp: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Geçersiz istek - sınav oluşturulamadı',
+  })
+  async createQuickQuiz(
+    @User() user: { uid: string },
+    @Body()
+    body: {
+      documentText: string;
+      subTopics: string[];
+      questionCount: number;
+      difficulty: string;
+      documentId?: string;
+    },
+  ): Promise<Quiz> {
+    try {
+      this.flowTracker.trackStep(
+        'Hızlı sınav oluşturma isteği alındı',
+        'QuizzesController',
+      );
+
+      const { documentText, subTopics, questionCount, difficulty, documentId } =
+        body;
+
+      this.logger.info(
+        `Hızlı sınav oluşturma isteği: ${questionCount} soru, ${difficulty} zorluk`,
+        'QuizzesController.createQuickQuiz',
+        __filename,
+        undefined,
+        {
+          userId: user.uid,
+          documentId,
+          subTopicsCount: subTopics.length,
+          documentTextLength: documentText.length,
+          questionCount,
+          difficulty,
+        },
+      );
+
+      // Hızlı sınav oluştur
+      const quiz = await this.quizzesService.createQuickQuiz(
+        user.uid,
+        documentText,
+        subTopics,
+        questionCount,
+        difficulty,
+        documentId,
+      );
+
+      this.logger.info(
+        `Hızlı sınav başarıyla oluşturuldu: ${quiz.id}`,
+        'QuizzesController.createQuickQuiz',
+        __filename,
+        undefined,
+        { quizId: quiz.id, questionCount: quiz.totalQuestions },
+      );
+
+      return quiz;
+    } catch (error) {
+      this.logger.error(
+        `Hızlı sınav oluşturulurken hata: ${error.message}`,
+        'QuizzesController.createQuickQuiz',
+        __filename,
+        undefined,
+        error,
+      );
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Hızlı sınav oluşturulurken bir hata oluştu',
+        { cause: error },
+      );
+    }
+  }
+
+  @Post('personalized')
+  @HttpCode(HttpStatus.CREATED)
+  @LogMethod({ trackParams: true })
+  @ApiOperation({ summary: 'Kişiselleştirilmiş sınav oluşturur' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['courseId', 'subTopics', 'questionCount', 'difficulty'],
+      properties: {
+        courseId: {
+          type: 'string',
+          description: 'Kurs ID',
+        },
+        subTopics: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description: 'Alt konular',
+        },
+        questionCount: {
+          type: 'number',
+          minimum: 1,
+          maximum: 30,
+          default: 10,
+          description: 'Soru sayısı',
+        },
+        difficulty: {
+          type: 'string',
+          enum: ['easy', 'medium', 'hard'],
+          default: 'medium',
+          description: 'Zorluk seviyesi',
+        },
+        documentId: {
+          type: 'string',
+          description: 'Belge ID (opsiyonel)',
+        },
+        documentText: {
+          type: 'string',
+          description: 'Belge metni (opsiyonel)',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Kişiselleştirilmiş sınav başarıyla oluşturuldu',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        title: { type: 'string' },
+        questions: {
+          type: 'array',
+          items: {
+            type: 'object',
+          },
+        },
+        totalQuestions: { type: 'number' },
+        quizType: { type: 'string' },
+        timestamp: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Geçersiz istek - sınav oluşturulamadı',
+  })
+  async createPersonalizedQuiz(
+    @User() user: { uid: string },
+    @Body()
+    body: {
+      courseId: string;
+      subTopics: string[];
+      questionCount: number;
+      difficulty: string;
+      documentId?: string;
+      documentText?: string;
+    },
+  ): Promise<Quiz> {
+    try {
+      this.flowTracker.trackStep(
+        'Kişiselleştirilmiş sınav oluşturma isteği alındı',
+        'QuizzesController',
+      );
+
+      const {
+        courseId,
+        subTopics,
+        questionCount,
+        difficulty,
+        documentId,
+        documentText,
+      } = body;
+
+      this.logger.info(
+        `Kişiselleştirilmiş sınav oluşturma isteği: ${questionCount} soru, ${difficulty} zorluk, kurs: ${courseId}`,
+        'QuizzesController.createPersonalizedQuiz',
+        __filename,
+        undefined,
+        {
+          userId: user.uid,
+          courseId,
+          documentId,
+          subTopicsCount: subTopics.length,
+          documentTextLength: documentText?.length || 0,
+          questionCount,
+          difficulty,
+        },
+      );
+
+      // Kişiselleştirilmiş sınav oluştur
+      const quiz = await this.quizzesService.createPersonalizedQuiz(
+        user.uid,
+        courseId,
+        subTopics,
+        questionCount,
+        difficulty,
+        documentId,
+        documentText,
+      );
+
+      this.logger.info(
+        `Kişiselleştirilmiş sınav başarıyla oluşturuldu: ${quiz.id}`,
+        'QuizzesController.createPersonalizedQuiz',
+        __filename,
+        undefined,
+        { quizId: quiz.id, questionCount: quiz.totalQuestions },
+      );
+
+      return quiz;
+    } catch (error) {
+      this.logger.error(
+        `Kişiselleştirilmiş sınav oluşturulurken hata: ${error.message}`,
+        'QuizzesController.createPersonalizedQuiz',
+        __filename,
+        undefined,
+        error,
+      );
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Kişiselleştirilmiş sınav oluşturulurken bir hata oluştu',
         { cause: error },
       );
     }

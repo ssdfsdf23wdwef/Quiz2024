@@ -267,4 +267,168 @@ export class QuizGenerationService {
   private generateTraceId(prefix: string): string {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   }
+
+  /**
+   * Alt konulara dayalı hızlı sınav soruları oluşturur
+   * @param documentText Kaynak belge metni
+   * @param subTopics Seçilen alt konular
+   * @param questionCount Soru sayısı
+   * @param difficulty Zorluk seviyesi
+   * @returns Quiz soruları
+   */
+  async generateQuickQuizQuestions(
+    documentText: string,
+    subTopics: string[],
+    questionCount: number = 10,
+    difficulty: string = 'medium',
+  ): Promise<QuizQuestion[]> {
+    const traceId = this.generateTraceId('quick-quiz');
+
+    this.logger.info(
+      `[${traceId}] Hızlı sınav soruları oluşturuluyor: ${questionCount} soru, ${difficulty} zorluk, ${subTopics.length} alt konu`,
+      'QuizGenerationService.generateQuickQuizQuestions',
+    );
+
+    // Belge metnini kısalt
+    const maxTextLength = 12000;
+    let truncatedText = documentText;
+
+    if (documentText.length > maxTextLength) {
+      truncatedText = documentText.substring(0, maxTextLength) + '...';
+      this.logger.warn(
+        `[${traceId}] Belge metni çok uzun, ${maxTextLength} karaktere kısaltıldı (orijinal: ${documentText.length} karakter)`,
+        'QuizGenerationService.generateQuickQuizQuestions',
+      );
+    }
+
+    // QuizGenerationOptions nesnesini oluştur
+    const options: QuizGenerationOptions = {
+      documentText: truncatedText,
+      subTopics,
+      questionCount,
+      difficulty,
+    };
+
+    // Standart generateQuizQuestions metodunu çağır
+    return this.generateQuizQuestions(options);
+  }
+
+  /**
+   * Kişiselleştirilmiş sınav soruları oluşturur
+   * @param documentText Kaynak belge metni (opsiyonel)
+   * @param subTopics Seçilen alt konular
+   * @param userPerformance Kullanıcının performans verileri
+   * @param questionCount Soru sayısı
+   * @param difficulty Zorluk seviyesi
+   * @param learningTargets Öğrenme hedefleri (opsiyonel)
+   * @returns Quiz soruları
+   */
+  async generatePersonalizedQuizQuestions(
+    subTopics: string[],
+    userPerformance: {
+      weakTopics: string[];
+      mediumTopics: string[];
+      failedQuestions?: { question: string; correctAnswer: string }[];
+    },
+    questionCount: number = 10,
+    difficulty: string = 'medium',
+    documentText?: string,
+    learningTargets?: {
+      targetId: string;
+      description: string;
+      status: string;
+    }[],
+  ): Promise<QuizQuestion[]> {
+    const traceId = this.generateTraceId('personalized-quiz');
+
+    this.logger.info(
+      `[${traceId}] Kişiselleştirilmiş sınav soruları oluşturuluyor: ${questionCount} soru, ${difficulty} zorluk, ${subTopics.length} alt konu`,
+      'QuizGenerationService.generatePersonalizedQuizQuestions',
+    );
+
+    // Belge metnini kısalt (eğer sağlandıysa)
+    let truncatedText = documentText;
+
+    if (documentText && documentText.length > 10000) {
+      truncatedText = documentText.substring(0, 10000) + '...';
+      this.logger.warn(
+        `[${traceId}] Belge metni çok uzun, 10000 karaktere kısaltıldı (orijinal: ${documentText.length} karakter)`,
+        'QuizGenerationService.generatePersonalizedQuizQuestions',
+      );
+    }
+
+    // Yapay zekaya gönderilecek kullanıcı performans bilgilerini hazırla
+    const performanceContext = this.preparePerformanceContext(
+      userPerformance,
+      learningTargets,
+    );
+
+    // QuizGenerationOptions nesnesini oluştur
+    const options: QuizGenerationOptions = {
+      documentText: truncatedText,
+      subTopics,
+      questionCount,
+      difficulty,
+      personalizationContext: performanceContext,
+    };
+
+    // Standart generateQuizQuestions metodunu çağır, ancak kişiselleştirme bağlamıyla
+    return this.generateQuizQuestions(options);
+  }
+
+  /**
+   * Kullanıcı performans verilerini yapay zekaya uygun formata dönüştürür
+   */
+  private preparePerformanceContext(
+    userPerformance: {
+      weakTopics: string[];
+      mediumTopics: string[];
+      failedQuestions?: { question: string; correctAnswer: string }[];
+    },
+    learningTargets?: {
+      targetId: string;
+      description: string;
+      status: string;
+    }[],
+  ): string {
+    let context = 'Kullanıcı Performans Bilgileri:\n';
+
+    // Zayıf konular
+    if (userPerformance.weakTopics.length > 0) {
+      context +=
+        '\nZayıf Konular:\n- ' + userPerformance.weakTopics.join('\n- ');
+    }
+
+    // Orta seviye konular
+    if (userPerformance.mediumTopics.length > 0) {
+      context +=
+        '\nOrta Seviye Konular:\n- ' +
+        userPerformance.mediumTopics.join('\n- ');
+    }
+
+    // Geçmiş hatalı sorular (en fazla 5 tane)
+    if (
+      userPerformance.failedQuestions &&
+      userPerformance.failedQuestions.length > 0
+    ) {
+      const limitedFailedQuestions = userPerformance.failedQuestions.slice(
+        0,
+        5,
+      );
+      context += '\n\nDaha Önce Yanlış Cevaplanan Sorular:\n';
+      limitedFailedQuestions.forEach((q, index) => {
+        context += `${index + 1}. ${q.question}\nDoğru Cevap: ${q.correctAnswer}\n\n`;
+      });
+    }
+
+    // Öğrenme hedefleri
+    if (learningTargets && learningTargets.length > 0) {
+      context += '\nÖğrenme Hedefleri:\n';
+      learningTargets.forEach((target) => {
+        context += `- ${target.description} (Durum: ${target.status})\n`;
+      });
+    }
+
+    return context;
+  }
 }

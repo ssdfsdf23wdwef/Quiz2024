@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import courseService from "@/services/course.service";
 import quizService from "@/services/quiz.service";
-import { LearningTarget } from "@/types/learningTarget";
 import { FiArrowLeft, FiHelpCircle } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -23,11 +22,13 @@ export default function CreateExamPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const courseId = searchParams.get("courseId");
+  const typeParam = searchParams.get("type") as QuizType || "quick";
+  const personalizedTypeParam = searchParams.get("personalizedType") as PersonalizedQuizType | null;
 
   // Form durumu
-  const [quizType, setQuizType] = useState<QuizType>("quick");
+  const [quizType, setQuizType] = useState<QuizType>(typeParam);
   const [personalizedQuizType, setPersonalizedQuizType] =
-    useState<PersonalizedQuizType | null>(null);
+    useState<PersonalizedQuizType | null>(personalizedTypeParam);
   const [questionCount, setQuestionCount] = useState(10);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("medium");
   const [timeLimit, setTimeLimit] = useState<number | null>(null);
@@ -95,7 +96,9 @@ export default function CreateExamPage() {
 
   // Kurs ID değiştiğinde personalized quiz tipini sıfırla
   useEffect(() => {
-    if (!courseId) {
+    // Kişiselleştirilmiş sınav için courseId zorunlu, hızlı sınav için değil
+    if (quizType === "personalized" && !courseId) {
+      ErrorService.showToast("Kişiselleştirilmiş sınav için bir ders seçmelisiniz", "warning");
       router.replace("/courses");
       return;
     }
@@ -105,7 +108,7 @@ export default function CreateExamPage() {
 
     // Seçili konuları sıfırla
     setSelectedTopics([]);
-  }, [courseId, router]);
+  }, [courseId, router, quizType]);
 
   // Quiz tipi değiştiğinde personalized quiz tipini sıfırla
   useEffect(() => {
@@ -181,16 +184,16 @@ export default function CreateExamPage() {
   };
 
   // Yükleniyor durumu
-  const isLoading = courseLoading || relatedLoading;
+  const isLoading = (quizType === "personalized" && courseLoading) || relatedLoading;
 
   // Sınav modunun seçilebilirliğini kontrol et
   const canSelectWeakTopicFocused = weakAndMediumTargets.length > 0;
   const canSelectNewTopicFocused = pendingTargets.length > 0;
 
-  if (!courseId) {
+  if (quizType === "personalized" && !courseId) {
     return (
       <div className="text-center py-10">
-        <p className="text-red-600 mb-4">Ders ID'si bulunamadı.</p>
+        <p className="text-red-600 mb-4">Kişiselleştirilmiş sınav için ders ID'si gereklidir.</p>
         <Link href="/courses" className="text-indigo-600 hover:underline">
           Dersler sayfasına dön
         </Link>
@@ -211,7 +214,9 @@ export default function CreateExamPage() {
         <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
           {isLoading
             ? "Yükleniyor..."
-            : `${course?.name || "Ders"} için Sınav Oluştur`}
+            : quizType === "personalized" 
+              ? `${course?.name || "Ders"} için Sınav Oluştur`
+              : "Hızlı Sınav Oluştur"}
         </h1>
 
         {isLoading ? (

@@ -26,6 +26,8 @@ export interface QuizGenerationOptions {
   questionCount: number;
   difficulty?: string;
   prioritizeWeakAndMediumTopics?: boolean;
+  documentText?: string;
+  personalizationContext?: string;
 }
 
 /**

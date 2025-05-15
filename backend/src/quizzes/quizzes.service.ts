@@ -20,10 +20,12 @@ import { FIRESTORE_COLLECTIONS } from '../common/constants';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
+import { QuizQuestion } from '../ai/interfaces';
 
 interface CreateQuizParams {
   userId: string;
   quizType: 'quick' | 'personalized';
+  courseId?: string;
   sourceDocument?: {
     documentId: string;
     text: string;
@@ -1278,5 +1280,322 @@ export class QuizzesService {
       );
       throw error;
     }
+  }
+
+  /**
+   * Hızlı sınav oluştur
+   * @param userId Kullanıcı ID'si
+   * @param documentId Belge ID'si (opsiyonel)
+   * @param documentText Belge metni
+   * @param subTopics Sınav için seçilen alt konular
+   * @param questionCount Soru sayısı
+   * @param difficulty Zorluk seviyesi
+   * @returns Oluşturulan sınav
+   */
+  @LogMethod({ trackParams: true })
+  async createQuickQuiz(
+    userId: string,
+    documentText: string,
+    subTopics: string[],
+    questionCount: number = 10,
+    difficulty: string = 'medium',
+    documentId?: string,
+  ): Promise<Quiz> {
+    const startTime = Date.now();
+    const traceId = `quick-quiz-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
+
+    try {
+      this.logger.info(
+        `[${traceId}] Hızlı sınav oluşturma başlatılıyor: ${questionCount} soru, ${difficulty} zorluk, ${subTopics.length} alt konu`,
+        'QuizzesService.createQuickQuiz',
+        __filename,
+        undefined,
+        { userId, documentId, subTopics },
+      );
+
+      this.flowTracker.trackStep(
+        'Hızlı sınav oluşturma süreci başlatıldı',
+        'QuizzesService',
+      );
+
+      // 1. AI servisiyle sınav soruları oluştur
+      const questions = await this.aiService.generateQuickQuiz(
+        documentText,
+        subTopics,
+        questionCount,
+        difficulty,
+      );
+
+      this.logger.debug(
+        `[${traceId}] Hızlı sınav soruları oluşturuldu: ${questions.length} soru`,
+        'QuizzesService.createQuickQuiz',
+        __filename,
+        undefined,
+        { questionsCount: questions.length },
+      );
+
+      // 2. Oluşturulan soruları veritabanına kaydet
+      const createParams: CreateQuizParams = {
+        userId,
+        quizType: 'quick',
+        sourceDocument: documentId
+          ? {
+              documentId,
+              text: documentText.substring(0, 500) + '...', // Özet olarak sadece ilk 500 karakter
+            }
+          : undefined,
+        subTopics: subTopics.map((topic) => ({ subTopicName: topic })),
+        preferences: {
+          questionCount,
+          difficulty,
+        },
+      };
+
+      const savedQuiz = await this.createQuiz(createParams);
+
+      // 3. Soruları quiz ile ilişkilendir
+      await this.updateQuizWithQuestions(savedQuiz.id, questions);
+
+      const duration = Date.now() - startTime;
+      this.logger.info(
+        `[${traceId}] Hızlı sınav başarıyla oluşturuldu: ${questions.length} soru (${duration}ms)`,
+        'QuizzesService.createQuickQuiz',
+        __filename,
+        undefined,
+        { quizId: savedQuiz.id, questionsCount: questions.length, duration },
+      );
+
+      return this.findOne(savedQuiz.id, userId);
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Hızlı sınav oluşturulurken hata: ${error.message}`,
+        'QuizzesService.createQuickQuiz',
+        __filename,
+        undefined,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Kişiselleştirilmiş sınav oluştur
+   * @param userId Kullanıcı ID'si
+   * @param courseId Kurs ID'si
+   * @param subTopics Sınav için seçilen alt konular
+   * @param questionCount Soru sayısı
+   * @param difficulty Zorluk seviyesi
+   * @param documentId Belge ID'si (opsiyonel)
+   * @param documentText Belge metni (opsiyonel)
+   * @returns Oluşturulan sınav
+   */
+  @LogMethod({ trackParams: true })
+  async createPersonalizedQuiz(
+    userId: string,
+    courseId: string,
+    subTopics: string[],
+    questionCount: number = 10,
+    difficulty: string = 'medium',
+    documentId?: string,
+    documentText?: string,
+  ): Promise<Quiz> {
+    const startTime = Date.now();
+    const traceId = `personalized-quiz-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
+
+    try {
+      this.logger.info(
+        `[${traceId}] Kişiselleştirilmiş sınav oluşturma başlatılıyor: ${questionCount} soru, ${difficulty} zorluk, ${subTopics.length} alt konu`,
+        'QuizzesService.createPersonalizedQuiz',
+        __filename,
+        undefined,
+        { userId, courseId, subTopics },
+      );
+
+      this.flowTracker.trackStep(
+        'Kişiselleştirilmiş sınav oluşturma süreci başlatıldı',
+        'QuizzesService',
+      );
+
+      // 1. Kullanıcının performans verilerini getir
+      const weakTopics = await this.getWeakTopicsForUser(userId, courseId);
+      const mediumTopics = await this.getMediumTopicsForUser(userId, courseId);
+      const failedQuestions = await this.getFailedQuestionsForUserAndCourse(
+        userId,
+        courseId,
+      );
+
+      // 2. Öğrenme hedeflerini getir
+      const learningTargets = await this.getLearningTargetsForCourse(
+        courseId,
+        userId,
+      );
+
+      // 3. Performans verileri ve öğrenme hedefleriyle kişiselleştirilmiş sınav oluştur
+      const userPerformance = {
+        weakTopics: weakTopics.map((t) => t.subTopicName),
+        mediumTopics: mediumTopics.map((t) => t.subTopicName),
+        failedQuestions: failedQuestions.map((q) => ({
+          question: q.questionText,
+          correctAnswer: q.correctAnswer,
+        })),
+      };
+
+      const targetsList = learningTargets.map((t) => ({
+        targetId: t.id,
+        description: t.subTopicName || '',
+        status: t.status,
+      }));
+
+      // 4. AI servisiyle sınav soruları oluştur
+      const questions = await this.aiService.generatePersonalizedQuiz(
+        subTopics,
+        userPerformance,
+        questionCount,
+        difficulty,
+        documentText,
+        targetsList,
+      );
+
+      this.logger.debug(
+        `[${traceId}] Kişiselleştirilmiş sınav soruları oluşturuldu: ${questions.length} soru`,
+        'QuizzesService.createPersonalizedQuiz',
+        __filename,
+        undefined,
+        { questionsCount: questions.length },
+      );
+
+      // 5. Oluşturulan soruları veritabanına kaydet
+      const createParams: CreateQuizParams = {
+        userId,
+        quizType: 'personalized',
+        courseId,
+        sourceDocument:
+          documentId && documentText
+            ? {
+                documentId,
+                text: documentText.substring(0, 500) + '...', // Özet olarak sadece ilk 500 karakter
+              }
+            : undefined,
+        subTopics: subTopics.map((topic) => ({ subTopicName: topic })),
+        preferences: {
+          questionCount,
+          difficulty,
+          prioritizeWeakAndMediumTopics: true,
+        },
+      };
+
+      const savedQuiz = await this.createQuiz(createParams);
+
+      // 6. Soruları quiz ile ilişkilendir
+      await this.updateQuizWithQuestions(savedQuiz.id, questions);
+
+      const duration = Date.now() - startTime;
+      this.logger.info(
+        `[${traceId}] Kişiselleştirilmiş sınav başarıyla oluşturuldu: ${questions.length} soru (${duration}ms)`,
+        'QuizzesService.createPersonalizedQuiz',
+        __filename,
+        undefined,
+        { quizId: savedQuiz.id, questionsCount: questions.length, duration },
+      );
+
+      return this.findOne(savedQuiz.id, userId);
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Kişiselleştirilmiş sınav oluşturulurken hata: ${error.message}`,
+        'QuizzesService.createPersonalizedQuiz',
+        __filename,
+        undefined,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Kullanıcının zayıf olduğu konuları getir
+   * @private
+   */
+  private async getWeakTopicsForUser(userId: string, courseId: string) {
+    // Firestore'dan zayıf konuları getir
+    const snapshot = await this.firebaseService.firestore
+      .collection(FIRESTORE_COLLECTIONS.LEARNING_TARGETS)
+      .where('userId', '==', userId)
+      .where('courseId', '==', courseId)
+      .where('status', '==', 'failed')
+      .get();
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      subTopicName: doc.data().normalizedSubTopicName,
+    }));
+  }
+
+  /**
+   * Kullanıcının orta düzeyde olduğu konuları getir
+   * @private
+   */
+  private async getMediumTopicsForUser(userId: string, courseId: string) {
+    // Firestore'dan orta düzey konuları getir
+    const snapshot = await this.firebaseService.firestore
+      .collection(FIRESTORE_COLLECTIONS.LEARNING_TARGETS)
+      .where('userId', '==', userId)
+      .where('courseId', '==', courseId)
+      .where('status', '==', 'medium')
+      .get();
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      subTopicName: doc.data().normalizedSubTopicName,
+    }));
+  }
+
+  /**
+   * Kurs için öğrenme hedeflerini getir
+   * @private
+   */
+  private async getLearningTargetsForCourse(courseId: string, userId: string) {
+    // Firestore'dan öğrenme hedeflerini getir
+    return this.learningTargetsService.findByCourse(courseId, userId);
+  }
+
+  /**
+   * Kullanıcının belirli bir kurstaki yanlış cevapladığı soruları getir
+   * @private
+   */
+  private async getFailedQuestionsForUserAndCourse(
+    userId: string,
+    courseId: string,
+  ) {
+    // Firestore'dan yanlış cevaplanan soruları getir
+    const snapshot = await this.firebaseService.firestore
+      .collection(FIRESTORE_COLLECTIONS.FAILED_QUESTIONS)
+      .where('userId', '==', userId)
+      .where('courseId', '==', courseId)
+      .limit(10) // En fazla 10 yanlış soru
+      .get();
+
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  }
+
+  /**
+   * Bir sınavın sorularını güncelle
+   * @param quizId Sınav ID'si
+   * @param questions Sorular
+   * @private
+   */
+  private async updateQuizWithQuestions(
+    quizId: string,
+    questions: QuizQuestion[],
+  ) {
+    // Firestore'da sınavı güncelle
+    await this.firebaseService.firestore
+      .collection(FIRESTORE_COLLECTIONS.QUIZZES)
+      .doc(quizId)
+      .update({
+        questions,
+        totalQuestions: questions.length,
+      });
   }
 }

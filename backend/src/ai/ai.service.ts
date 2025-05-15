@@ -22,8 +22,6 @@ import { TopicDetectionService } from './services/topic-detection.service';
 import { AIProviderService } from './providers/ai-provider.service';
 import { QuizGenerationService } from './services/quiz-generation.service';
 
-
-
 @Injectable()
 export class AiService {
   private readonly logger: LoggerService;
@@ -579,15 +577,207 @@ export class AiService {
   async generateQuizQuestions(
     options: QuizGenerationOptions,
   ): Promise<QuizQuestion[]> {
+    const startTime = Date.now();
+    const traceId = `ai-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
+
     try {
-      this.flowTracker.trackStep('Quiz soruları oluşturuluyor', 'AiService');
-      // Bu metodu QuizGenerationService'e yönlendiriyoruz
-      return await this.quizGenerationService.generateQuizQuestions(options);
-    } catch (error) {
-      this.logger.error(
-        `Quiz soruları oluşturulurken hata: ${error.message}`,
+      this.logger.debug(
+        `[${traceId}] Quiz soruları oluşturma işlemi başlatılıyor`,
         'AiService.generateQuizQuestions',
         __filename,
+        undefined,
+        { options },
+      );
+
+      this.flowTracker.trackStep(
+        'Quiz sorularının oluşturulması için AI çağrısı yapılıyor',
+        'AiService',
+      );
+
+      // Quiz soruları oluştur
+      const questions =
+        await this.quizGenerationService.generateQuizQuestions(options);
+
+      const duration = Date.now() - startTime;
+      this.logger.info(
+        `[${traceId}] Quiz soruları oluşturuldu: ${questions.length} soru (${duration}ms)`,
+        'AiService.generateQuizQuestions',
+        __filename,
+        undefined,
+        {
+          questionCount: questions.length,
+          duration,
+          options,
+        },
+      );
+
+      return questions;
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Quiz soruları oluşturulurken hata: ${error.message}`,
+        'AiService.generateQuizQuestions',
+        __filename,
+        undefined,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Hızlı quiz soruları oluştur
+   * @param documentText Belge metni
+   * @param subTopics Alt konular
+   * @param questionCount Soru sayısı
+   * @param difficulty Zorluk seviyesi
+   * @returns Quiz soruları
+   */
+  async generateQuickQuiz(
+    documentText: string,
+    subTopics: string[],
+    questionCount: number = 10,
+    difficulty: string = 'medium',
+  ): Promise<QuizQuestion[]> {
+    const startTime = Date.now();
+    const traceId = `ai-quick-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
+
+    try {
+      this.logger.debug(
+        `[${traceId}] Hızlı quiz soruları oluşturma işlemi başlatılıyor`,
+        'AiService.generateQuickQuiz',
+        __filename,
+        undefined,
+        {
+          textLength: documentText.length,
+          subTopicsCount: subTopics.length,
+          questionCount,
+          difficulty,
+        },
+      );
+
+      this.flowTracker.trackStep(
+        'Hızlı quiz sorularının oluşturulması için AI çağrısı yapılıyor',
+        'AiService',
+      );
+
+      // Hızlı quiz oluşturma işlemini QuizGenerationService'e devredelim
+      const questions =
+        await this.quizGenerationService.generateQuickQuizQuestions(
+          documentText,
+          subTopics,
+          questionCount,
+          difficulty,
+        );
+
+      const duration = Date.now() - startTime;
+      this.logger.info(
+        `[${traceId}] Hızlı quiz soruları oluşturuldu: ${questions.length} soru (${duration}ms)`,
+        'AiService.generateQuickQuiz',
+        __filename,
+        undefined,
+        {
+          questionCount: questions.length,
+          duration,
+          subTopicsCount: subTopics.length,
+        },
+      );
+
+      return questions;
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Hızlı quiz soruları oluşturulurken hata: ${error.message}`,
+        'AiService.generateQuickQuiz',
+        __filename,
+        undefined,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Kişiselleştirilmiş quiz soruları oluştur
+   * @param subTopics Alt konular
+   * @param userPerformance Kullanıcı performans verileri
+   * @param questionCount Soru sayısı
+   * @param difficulty Zorluk seviyesi
+   * @param documentText Belge metni (opsiyonel)
+   * @param learningTargets Öğrenme hedefleri (opsiyonel)
+   * @returns Quiz soruları
+   */
+  async generatePersonalizedQuiz(
+    subTopics: string[],
+    userPerformance: {
+      weakTopics: string[];
+      mediumTopics: string[];
+      failedQuestions?: { question: string; correctAnswer: string }[];
+    },
+    questionCount: number = 10,
+    difficulty: string = 'medium',
+    documentText?: string,
+    learningTargets?: {
+      targetId: string;
+      description: string;
+      status: string;
+    }[],
+  ): Promise<QuizQuestion[]> {
+    const startTime = Date.now();
+    const traceId = `ai-personalized-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
+
+    try {
+      this.logger.debug(
+        `[${traceId}] Kişiselleştirilmiş quiz soruları oluşturma işlemi başlatılıyor`,
+        'AiService.generatePersonalizedQuiz',
+        __filename,
+        undefined,
+        {
+          subTopicsCount: subTopics.length,
+          questionCount,
+          difficulty,
+          hasDocumentText: !!documentText,
+          hasLearningTargets: !!learningTargets,
+          weakTopicsCount: userPerformance.weakTopics.length,
+          mediumTopicsCount: userPerformance.mediumTopics.length,
+          failedQuestionsCount: userPerformance.failedQuestions?.length || 0,
+        },
+      );
+
+      this.flowTracker.trackStep(
+        'Kişiselleştirilmiş quiz sorularının oluşturulması için AI çağrısı yapılıyor',
+        'AiService',
+      );
+
+      // Kişiselleştirilmiş quiz oluşturma işlemini QuizGenerationService'e devredelim
+      const questions =
+        await this.quizGenerationService.generatePersonalizedQuizQuestions(
+          subTopics,
+          userPerformance,
+          questionCount,
+          difficulty,
+          documentText,
+          learningTargets,
+        );
+
+      const duration = Date.now() - startTime;
+      this.logger.info(
+        `[${traceId}] Kişiselleştirilmiş quiz soruları oluşturuldu: ${questions.length} soru (${duration}ms)`,
+        'AiService.generatePersonalizedQuiz',
+        __filename,
+        undefined,
+        {
+          questionCount: questions.length,
+          duration,
+          subTopicsCount: subTopics.length,
+        },
+      );
+
+      return questions;
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Kişiselleştirilmiş quiz soruları oluşturulurken hata: ${error.message}`,
+        'AiService.generatePersonalizedQuiz',
+        __filename,
+        undefined,
         error,
       );
       throw error;

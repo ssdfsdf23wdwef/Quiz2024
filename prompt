@@ -1,0 +1,14 @@
+şimdi sınav oluşturma aşmalarda şunlar yaptım
+1. belge verip backend metin çıkarma
+2. metin gemini verme ve alt konular çıkarmaya
+3. alt konular kullanıcya sunma ve kullanıcı seçme ve sınav tercihler gitme.
+
+
+kalan kısımlar. şöyle
+1. hızlı sınav için sınav yapma
+a. o alt konular ve belgeden çıkaran metin birlikte ai verme ve one o alt konularde soru isteme ve kullanıcı ya sunma. ve sonra kayıt etme veri tabanda.
+
+
+2. kişiselleştirmiş sınav için. hızlı sınav için ama veri tabanda veri ekleme ve o verilerie göre ai verme ve sınav oluşturma. 
+
+kişiselleştirmiş sınavda hedefler de oluşturur.

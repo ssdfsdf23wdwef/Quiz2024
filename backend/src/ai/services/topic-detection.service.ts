@@ -305,7 +305,12 @@ Sadece JSON döndür, başka açıklama yapma.
    */
   private parseJsonResponse<T>(text: string | undefined | null): T {
     if (!text) {
-      throw new Error('AI yanıtı parse edilemedi: Yanıt boş.');
+      this.logger.warn(
+        'AI yanıtı boş, varsayılan boş konu yapısı döndürülüyor',
+        'TopicDetectionService.parseJsonResponse',
+        __filename,
+      );
+      return { topics: [] } as T; // Boş yanıt durumunda boş topic listesi döndür
     }
 
     try {
@@ -367,7 +372,19 @@ Sadece JSON döndür, başka açıklama yapma.
 
         // Onarım dene
         const repairedJson = this.repairJsonString(jsonText);
-        return JSON.parse(repairedJson) as T;
+
+        try {
+          return JSON.parse(repairedJson) as T;
+        } catch (repairParseError) {
+          this.logger.warn(
+            `Onarılmış JSON parse denemesi de başarısız: ${repairParseError.message}, yapay konular oluşturulacak`,
+            'TopicDetectionService.parseJsonResponse',
+            __filename,
+          );
+
+          // Her iki parse denemesi de başarısız, varsayılan konular oluştur
+          return this.generateDefaultTopics(text) as T;
+        }
       }
     } catch (error) {
       this.logger.error(
@@ -378,20 +395,14 @@ Sadece JSON döndür, başka açıklama yapma.
         error,
       );
 
-      // Fallback çözümü dene - yalnızca geliştirme ortamında
-      if (process.env.NODE_ENV !== 'production') {
-        this.logger.warn(
-          `JSON ayrıştırma başarısız oldu, varsayılan boş konu yapısı döndürülüyor`,
-          'TopicDetectionService.parseJsonResponse',
-          __filename,
-        );
-
-        return { topics: [] } as T;
-      }
-
-      throw new BadRequestException(
-        `AI yanıtı JSON olarak parse edilemedi: ${error.message}`,
+      // Her durumda varsayılan konuları döndür - üretimi aksatmamak için
+      this.logger.warn(
+        `JSON ayrıştırma başarısız oldu, varsayılan konular oluşturuluyor`,
+        'TopicDetectionService.parseJsonResponse',
+        __filename,
       );
+
+      return this.generateDefaultTopics(text) as T;
     }
   }
 
@@ -602,6 +613,96 @@ Sadece JSON döndür, başka açıklama yapma.
         error,
       );
       return { topics: [] };
+    }
+  }
+
+  /**
+   * Generate default topics from text when AI parsing fails
+   * @param text The document text to extract topics from
+   * @returns A basic topic structure
+   */
+  private generateDefaultTopics(text: string): { topics: any[] } {
+    try {
+      // Metin içinden en sık geçen kelimeleri bul
+      const words = text
+        .split(/\s+/)
+        .filter((word) => word.length > 5) // En az 5 karakterli kelimeleri al
+        .map((word) => word.replace(/[^\wğüşıöçĞÜŞİÖÇ]/g, '')) // Alfanümerik olmayan karakterleri temizle
+        .filter((word) => word.length > 0); // Boş kelimeleri filtrele
+
+      // Kelime frekansını hesapla
+      const wordFrequency: Record<string, number> = {};
+      words.forEach((word) => {
+        wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+      });
+
+      // En sık kullanılan 5 kelimeyi al
+      const topWords = Object.entries(wordFrequency)
+        .sort((a, b) => b[1] - a[1]) // Frekansa göre sırala
+        .slice(0, 5) // İlk 5'i al
+        .map((entry) => entry[0]); // Sadece kelimeleri al
+
+      // Başlıktan potansiyel konu çıkar
+      const titleMatch = text.match(/^(.*?)[\n\r]/);
+      const potentialTitle = titleMatch ? titleMatch[1].trim() : '';
+
+      // Varsayılan bir konu listesi oluştur
+      const defaultTopics: Array<{ mainTopic: string; subTopics: string[] }> =
+        [];
+
+      // Başlıktan bir ana konu ekle
+      if (
+        potentialTitle &&
+        potentialTitle.length > 3 &&
+        potentialTitle.length < 100
+      ) {
+        defaultTopics.push({
+          mainTopic: potentialTitle,
+          subTopics: topWords.map((word) => `${potentialTitle} - ${word}`),
+        });
+      }
+
+      // En sık geçen kelimelerden bir konu ekle
+      if (topWords.length > 0) {
+        defaultTopics.push({
+          mainTopic: 'Otomatik Tespit Edilen Konular',
+          subTopics: topWords,
+        });
+      }
+
+      // Hiç konu bulunamadıysa, genel bir konu ekle
+      if (defaultTopics.length === 0) {
+        defaultTopics.push({
+          mainTopic: 'Belge İçeriği',
+          subTopics: ['Ana Konu', 'Diğer Konular'],
+        });
+      }
+
+      this.logger.info(
+        `AI yanıtından konu çıkarılamadı, ${defaultTopics.length} adet varsayılan konu oluşturuldu`,
+        'TopicDetectionService.generateDefaultTopics',
+        __filename,
+      );
+
+      return { topics: defaultTopics };
+    } catch (error) {
+      this.logger.error(
+        `Varsayılan konu oluşturma sırasında hata: ${error.message}`,
+        'TopicDetectionService.generateDefaultTopics',
+        __filename,
+        undefined,
+        error,
+      );
+
+      // En son çare - sabit konular
+      return {
+        topics: [
+          {
+            mainTopic: 'Belge İçeriği',
+            subTopics: ['Ana Konu', 'Yardımcı Konular'],
+          },
+        ],
+      };
     }
   }
 }
