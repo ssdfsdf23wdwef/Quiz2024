@@ -77,190 +77,97 @@ function CreateExamPageContent() {
     }));
     console.log('[CreateExamPage handleCreateQuiz] DETAY: formData.preferences.topicIds:', JSON.stringify(formData.preferences?.topicIds || []));
     console.log('[CreateExamPage handleCreateQuiz] DETAY: formData.selectedTopics:', JSON.stringify(formData.selectedTopics || []));
-    console.log('[CreateExamPage handleCreateQuiz] DETAY: document ve documentId durumu:', {
-      documentVar: !!formData.document,
-      documentIdVar: !!formData.documentId,
-      documentType: formData.document ? typeof formData.document : 'null',
-      documentIdType: formData.documentId ? typeof formData.documentId : 'undefined'
-    });
-    
-    if (isSubmitting && !processingQuiz) return;
-      
-    setIsSubmitting(true);
-    setProcessingQuiz(true);
-    setCreationResultInternal(null); 
+    console.log('[CreateExamPage handleCreateQuiz] DETAY: document:', formData.document ? `${formData.document.name} (${formData.document.size} bytes)` : 'Belge yok');
+    console.log('[CreateExamPage handleCreateQuiz] DETAY: documentId:', formData.documentId || 'ID yok');
 
     try {
-      console.log("✏️ Quiz oluşturuluyor (handleCreateQuiz):", formData);
+      setCurrentStep('processing');
 
-      const { quizType, courseId, preferences: formPreferences, selectedTopics: formSelectedTopics, document, documentId: formDocumentId } = formData;
-      console.log('[CreateExamPage handleCreateQuiz] formPreferences.topicIds:', JSON.stringify(formPreferences?.topicIds || []));
-      console.log('[CreateExamPage handleCreateQuiz] formSelectedTopics:', JSON.stringify(formSelectedTopics || []));
-      console.log('[CreateExamPage handleCreateQuiz] document present:', !!document, 'formDocumentId present:', formDocumentId);
-
-      // Belge kontrolü: Dosya yoksa veya ID yoksa ve seçili konular da yoksa uyarı ver
-      const hasSelectedTopics = 
-        (formPreferences?.topicIds && formPreferences.topicIds.length > 0) || 
-        (formSelectedTopics && formSelectedTopics.length > 0);
-      
-      const isQuickQuiz = quizType === 'quick';
-      
-      if (isQuickQuiz && !document && !formDocumentId && !hasSelectedTopics) {
-        const errorMsg = "Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.";
-        console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
-        toast.error(errorMsg);
-        setProcessingQuiz(false);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Önce belge içeriğini oku, sonra validasyon kontrolü yap
-      let documentTextInternal: string | undefined;
-      if (document) {
-        try {
-          // Dosyanın çok küçük olup olmadığını kontrol et (placeholder dosya hariç)
-          if (document.size < 50 && document.name && document.name.includes("placeholder")) {
-            console.log('[CreateExamPage handleCreateQuiz] Placeholder dosya tespit edildi, belge metni kontrolü atlanıyor');
-          } else {
-            documentTextInternal = await document.text();
-            console.log('[CreateExamPage handleCreateQuiz] Document text extracted, length:', documentTextInternal?.length);
-            
-            // Belge içeriğinin tamamen boş olması durumu
-            if (!documentTextInternal || documentTextInternal.trim().length === 0) {
-              if (!hasSelectedTopics) {
-                const errorMsg = "Belge içeriği boş ve hiçbir konu seçilmemiş. Lütfen geçerli bir belge yükleyin veya en az bir konu seçin.";
-                console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
-                toast.error(errorMsg);
-                setProcessingQuiz(false);
-                setIsSubmitting(false);
-                return;
-              }
-              console.log('[CreateExamPage handleCreateQuiz] Uyarı: Belge içeriği boş, ancak konu seçildiği için devam ediliyor');
-            }
-            // Hızlı sınav için içerik kontrolü sadece gerçek içerik varsa yap
-            else if (documentTextInternal.trim().length < 100 && isQuickQuiz && !hasSelectedTopics) { 
-              const errorMsg = `Belge metni çok kısa (${documentTextInternal.trim().length} karakter). Hızlı sınav için ya en az 100 karakter uzunluğunda metin gerekli ya da konu seçmelisiniz.`;
-              console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
-              toast.error(errorMsg);
-              setProcessingQuiz(false);
-              setIsSubmitting(false);
-              return;
-            }
+      // Belge kontrolü
+      if (formData.quizType === 'quick') {
+        let documentTextInternal = '';
+        
+        if (formData.document) {
+          try {
+            documentTextInternal = await formData.document.text();
+            console.log('[CreateExamPage handleCreateQuiz] Belge metni okundu, uzunluk:', documentTextInternal.length);
+          } catch (error) {
+            console.error('[CreateExamPage handleCreateQuiz] Belge metni okuma hatası:', error);
+            throw new Error("Belge okunamadı. Lütfen geçerli bir belge yükleyin.");
           }
-        } catch (textError) {
-          console.error("[CreateExamPage handleCreateQuiz] Belge metni okunurken hata:", textError);
-          // Sadece placeholder olmayan gerçek dosyalar için hata göster
-          if (document.size > 50) { // Gerçek dosya
-            toast.error("Belge içeriği okunamadı. Lütfen geçerli bir dosya yükleyin.");
-            setProcessingQuiz(false);
-            setIsSubmitting(false);
-            return;
-          } else {
-            console.log("[CreateExamPage handleCreateQuiz] Placeholder dosya okuma hatası, konu seçimi ile devam ediliyor");
-          }
+        }
+        
+        // Belge metni kontrolü (minimum 100 karakter)
+        if (documentTextInternal && documentTextInternal.trim().length < 100) {
+          const errorMsg = `Belge metni çok kısa (${documentTextInternal.trim().length} karakter). En az 100 karakter olmalıdır.`;
+          console.error('[CreateExamPage handleCreateQuiz] Belge metni çok kısa:', errorMsg);
+          toast.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+        
+        // Belge veya konu seçimi kontrolü
+        // Etkili konular: Ya preferences.topicIds var ya da selectedTopics var
+        const effectiveTopics = (formData.preferences?.topicIds?.length ?? 0) > 0 
+          ? formData.preferences.topicIds 
+          : formData.selectedTopics || [];
+        
+        // Belge yoksa ve belge ID yoksa ve konu seçilmemişse hata ver
+        if (!formData.document && !formData.documentId && effectiveTopics.length === 0) {
+          console.error('[CreateExamPage handleCreateQuiz] Hızlı sınav için belge veya konu seçimi gerekli!');
+          toast.error("Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.");
+          throw new Error("Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.");
+        }
+        
+        // Belge ID var ama belge yok ve konu da seçilmemişse uyarı göster
+        if (formData.documentId && !formData.document && effectiveTopics.length === 0) {
+          console.warn('[CreateExamPage handleCreateQuiz] UYARI: DocumentId var ama konu seçilmemiş. Belge içeriğinin alınamama ihtimali var.');
+          toast.warning("Belge ID var ama konu seçilmemiş. Devam edilirse içerik alınamayabilir.");
         }
       }
 
-      const effectiveTopics = (formPreferences?.topicIds && formPreferences.topicIds.length > 0)
-        ? formPreferences.topicIds
-        : (formSelectedTopics && formSelectedTopics.length > 0) 
-        ? formSelectedTopics 
-        : [];
-      console.log('[CreateExamPage handleCreateQuiz] effectiveTopics:', JSON.stringify(effectiveTopics));
+      console.log('[CreateExamPage handleCreateQuiz] Quiz Type:', formData.quizType, 'Course ID:', formData.courseId || 'Kurs ID yok');
 
-      // Validasyon mantığını düzeltiyorum:
-      // 1. Personalized ve weakTopicFocused değilse konu gerekir
-      // 2. Hızlı sınav ve belge/belgeid yoksa konu gerekir
-      // 3. Hızlı sınav ve belge varsa konu isteğe bağlı olabilir
-      const isPersonalizedRequiringTopics = quizType === 'personalized' && personalizedTypeLocal !== 'weakTopicFocused';
-      const hasDocument = !!document || !!formDocumentId || !!documentTextInternal;
-      const isQuickWithoutDocument = quizType === 'quick' && !hasDocument;
-      
-      console.log('[CreateExamPage handleCreateQuiz] Validasyon durumu:', {
-        isPersonalizedRequiringTopics,
-        hasDocument,
-        isQuickWithoutDocument,
-        topicsEmpty: !effectiveTopics || effectiveTopics.length === 0
-      });
-      
-      if ((isPersonalizedRequiringTopics || isQuickWithoutDocument) && (!effectiveTopics || effectiveTopics.length === 0)) {
-        const errorMsg = isQuickWithoutDocument
-          ? "Hızlı sınav için ya belge yüklemeli ya da en az bir konu seçmelisiniz."
-          : "En az bir konu seçmelisiniz. Kişiselleştirilmiş sınavlar için konu seçimi zorunludur.";
-        console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg, 'Effective topics:', JSON.stringify(effectiveTopics));
-        toast.error(errorMsg);
-        setProcessingQuiz(false);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Eğer seçilen konu yok ve belge içeriği de yoksa uyarı ver
-      if (!hasDocument && effectiveTopics.length === 0) { 
-        const errorMsg = "Hızlı sınav için geçerli belge, belge ID veya en az bir konu seçimi gerekli.";
-        console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
-        toast.error(errorMsg);
-        setProcessingQuiz(false);
-        setIsSubmitting(false);
-        return;
-      }
-      
+      // Sınav tipine göre options hazırla
       const quizOptions: QuizGenerationOptions = {
-        quizType: quizType as QuizType,
-        courseId: courseId || undefined,
-        documentText: documentTextInternal, 
-        documentId: formDocumentId,
-        selectedSubTopics: (formPreferences.subTopicIds || []).map((id: string) => ({ subTopic: id, normalizedSubTopic: id }) as SubTopicItem),
-        preferences: { 
-            questionCount: formPreferences.questionCount,
-            difficulty: formPreferences.difficulty as DifficultyLevel,
-            timeLimit: formPreferences.timeLimit, 
-        },
-        personalizedQuizType: quizType === 'personalized' ? (personalizedTypeLocal || formPreferences.personalizedQuizType) : undefined,
-      };
-      console.log('[CreateExamPage handleCreateQuiz] quizOptions to be sent to API:', JSON.stringify(quizOptions));
-
-      const resultQuizFromService: Quiz = await quizService.generateQuiz(quizOptions) as Quiz; 
-      console.log("✅ Quiz oluşturma başarılı (handleCreateQuiz):", resultQuizFromService);
-      
-      if (resultQuizFromService && resultQuizFromService.id) {
-        setCreationResultInternal({
-          file: document || null, 
-          quizType: quizType,
-          personalizedQuizType: quizType === 'personalized' ? (personalizedTypeLocal || formPreferences.personalizedQuizType) : undefined,
-          preferences: formPreferences as CreateQuizFormDataTypeInternal['preferences'], 
-          topicNameMap: formData.topicNames || {},  
-          status: 'success', 
-          quizId: resultQuizFromService.id, 
-          quiz: resultQuizFromService 
-        });
-        toast.success("Sınav başarıyla oluşturuldu!");
-        router.push(`/exams/${resultQuizFromService.id}`);
-      } else {
-        console.error("[CreateExamPage handleCreateQuiz] API'den geçerli bir quiz ID dönmedi:", resultQuizFromService);
-        throw new Error("Sınav oluşturuldu ancak ID alınamadı.");
-      }
-
-    } catch (error) {
-      console.error("❌ Quiz oluşturma hatası (handleCreateQuiz):", error);
-      const errorContext = `[CreateExamPage handleCreateQuiz] Quiz Type: ${formData?.quizType}, Course ID: ${formData?.courseId}`; 
-      ErrorService.handleError(error as Error | AxiosError, errorContext); 
-      const defaultMessage = "Sınav oluşturulurken bir hata oluştu. Daha fazla bilgi için konsolu kontrol edin.";
-      const messageToShow = error instanceof ApiError ? error.message : (error instanceof Error ? error.message : defaultMessage);
-
-      setCreationResultInternal({
-        file: formData.document || null, 
         quizType: formData.quizType,
         personalizedQuizType: formData.personalizedQuizType,
-        preferences: formData.preferences as CreateQuizFormDataTypeInternal['preferences'],
-        topicNameMap: formData.topicNames || {},
-        status: 'error', 
-        error: { name: 'QuizCreationError', message: messageToShow, status: (error as ApiError)?.status || 500 } as ApiError
+        documentText: formData.document ? await formData.document.text() : undefined,
+        documentId: formData.documentId,
+        selectedSubTopics: formData.selectedTopics,
+        preferences: {
+          questionCount: formData.preferences.questionCount || 10,
+          difficulty: formData.preferences.difficulty || 'mixed',
+          timeLimit: formData.preferences.timeLimit || 30,
+          courseId: formData.courseId,
+          topicIds: formData.preferences.topicIds,
+          subTopicIds: formData.preferences.subTopicIds,
+          personalizedQuizType: formData.personalizedQuizType,
+        },
+      };
+
+      // Quiz oluştur
+      const resultQuizFromService = await quizService.generateQuiz(quizOptions);
+      console.log('[CreateExamPage handleCreateQuiz] Quiz oluşturuldu:', resultQuizFromService);
+
+      // Sonuç sayfasına yönlendirme yap
+      if (resultQuizFromService && resultQuizFromService.id) {
+        router.push(`/exams/${resultQuizFromService.id}`);
+      } else {
+        throw new Error("Sınav oluşturuldu ama ID alınamadı.");
+      }
+    } catch (error) {
+      console.error(`[CreateExamPage handleCreateQuiz] Quiz Type: ${formData.quizType}, Course ID: ${formData.courseId}] Sınav oluşturulurken bir hata oluştu:`, error);
+      ErrorService.handleError(error, "Sınav oluşturma");
+      setCurrentStep('error');
+      setCreationResult({
+        status: 'error',
+        error: error instanceof Error ? error.message : String(error)
       });
     } finally {
       setProcessingQuiz(false);
       setIsSubmitting(false);
     }
-  }, [router, personalizedTypeLocal]);
+  }, [router]);
 
   useEffect(() => {
     const typeParam = searchParams.get("type") as QuizType | null;
@@ -344,6 +251,7 @@ function CreateExamPageContent() {
         const hasDocumentInfo = !!result.file || !!result.documentId;
         const isQuickQuiz = result.quizType === 'quick';
 
+        // Hızlı sınav ve belge var, ama documentId yok durumu için işlem yapalım
         if (isQuickQuiz && !hasDocumentInfo && !hasSelectedTopics) {
           console.error('[CreateExamPage useEffect_inline_processing] HATA: Hızlı sınav için belge veya konu seçimi gerekli!');
           toast.error("Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.");
@@ -352,18 +260,104 @@ function CreateExamPageContent() {
           return;
         }
 
-        // Dosya adı URL'den geliyorsa ve documentId yoksa, bu durumu loglayalım
+        // Dosya adı URL'den geliyorsa ve documentId yoksa, bu durumu ele alalım
         if (fileNameParam && !result.documentId) {
           console.log('[CreateExamPage useEffect_inline_processing] UYARI: fileNameParam var ama result.documentId yok!');
           console.log('[CreateExamPage useEffect_inline_processing] fileNameParam:', fileNameParam);
           
-          // DocumentId yoksa ve dosya adı URL'den geldiyse, ama konu seçimi de yoksa uyarı ver
-          if (!hasSelectedTopics) {
-            console.error('[CreateExamPage useEffect_inline_processing] HATA: DocumentId yok, dosya adı var ama konu seçilmemiş');
-            toast.error("Belge ID bulunamadı ve hiçbir konu seçilmemiş. Lütfen en az bir konu seçin.");
-            setProcessingQuiz(false);
-            setIsSubmitting(false);
-            return;
+          // Eğer konular tespit edildiyse (topicNameMap'de varsa) onları kullan
+          if (result.topicNameMap && Object.keys(result.topicNameMap).length > 0) {
+            console.log('[CreateExamPage useEffect_inline_processing] Konu isimleri mevcut, konular kullanılacak:', Object.keys(result.topicNameMap));
+            // İlk tespit edilen konuyu otomatik olarak seç
+            if (!hasSelectedTopics && Object.keys(result.topicNameMap).length > 0) {
+              const firstTopic = Object.keys(result.topicNameMap)[0];
+              console.log('[CreateExamPage useEffect_inline_processing] İlk konu otomatik seçiliyor:', firstTopic);
+              
+              // İlk konuyu seç ve preferences'a ekle
+              result.preferences.topicIds = [firstTopic];
+              toast(`"${result.topicNameMap[firstTopic]}" konusu otomatik olarak seçildi.`);
+            }
+          } else {
+            // Konu isimleri yoksa ve belge varsa konuları otomatik tespit etmeyi dene
+            if (result.file && result.file.size > 0 && !hasSelectedTopics) {
+              try {
+                console.log('[CreateExamPage useEffect_inline_processing] Dosyadan konular tespit edilmeye çalışılıyor...');
+                
+                // Belge metnini oku
+                const formData = new FormData();
+                formData.append('file', result.file);
+                
+                // Dosya yükleme ve konu tespitini aşamalı olarak yapalım
+                const documentUploadResponse = await fetch('/api/documents/upload', {
+                  method: 'POST',
+                  body: formData
+                });
+                
+                if (!documentUploadResponse.ok) {
+                  throw new Error(`Belge yükleme başarısız: ${documentUploadResponse.status} ${documentUploadResponse.statusText}`);
+                }
+                
+                const documentData = await documentUploadResponse.json();
+                console.log('[CreateExamPage useEffect_inline_processing] Belge yüklendi:', documentData);
+                
+                // Belge ID'sini kaydet
+                if (documentData && documentData.id) {
+                  result.documentId = documentData.id;
+                  console.log('[CreateExamPage useEffect_inline_processing] Belge ID alındı:', result.documentId);
+                  
+                  // Konuları tespit et
+                  const topicsResponse = await fetch('/api/learning-targets/detect-topics', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ documentId: result.documentId }),
+                  });
+                  
+                  if (!topicsResponse.ok) {
+                    throw new Error(`Konu tespiti başarısız: ${topicsResponse.status} ${topicsResponse.statusText}`);
+                  }
+                  
+                  const topicsData = await topicsResponse.json();
+                  console.log('[CreateExamPage useEffect_inline_processing] Tespit edilen konular:', topicsData);
+                  
+                  if (topicsData && topicsData.topics && topicsData.topics.length > 0) {
+                    // Konu ID ve isimlerini kaydet
+                    const topicNameMap: Record<string, string> = {};
+                    const topicIds: string[] = [];
+                    
+                    for (const topic of topicsData.topics) {
+                      topicNameMap[topic.id] = topic.name;
+                      topicIds.push(topic.id);
+                    }
+                    
+                    // En az bir konu varsa, ilk konuyu otomatik seç
+                    if (topicIds.length > 0) {
+                      result.topicNameMap = topicNameMap;
+                      result.preferences.topicIds = [topicIds[0]];
+                      toast(`"${topicNameMap[topicIds[0]]}" konusu otomatik olarak tespit edildi ve seçildi.`);
+                      console.log('[CreateExamPage useEffect_inline_processing] Konu otomatik seçildi:', topicNameMap[topicIds[0]]);
+                      // Artık konu seçildi, devam edebiliriz
+                      // Not: hasSelectedTopics state değişkenidir, burada topicIds kontrolü ile devam ediyoruz
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('[CreateExamPage useEffect_inline_processing] Konu tespiti sırasında hata:', error);
+                // Hata oluşsa bile devam etmeyi deneyelim
+              }
+            }
+          
+            // Konular hala yoksa ve konu seçilmemişse hata ver
+            // Konu ID'lerini yeniden kontrol et
+            const updatedHasSelectedTopics = (result.preferences.topicIds || []).length > 0;
+            if (!updatedHasSelectedTopics) {
+              console.error('[CreateExamPage useEffect_inline_processing] HATA: DocumentId yok, dosya adı var ama konu seçilmemiş');
+              toast.error("Belge ID bulunamadı ve hiçbir konu seçilmemiş. Lütfen en az bir konu seçin.");
+              setProcessingQuiz(false);
+              setIsSubmitting(false);
+              return;
+            }
           }
         }
 
@@ -374,20 +368,23 @@ function CreateExamPageContent() {
           document: result.file,
           documentId: result.documentId,
           courseId: result.preferences.courseId || courseIdLocal,
-          preferences: {
-            ...JSON.parse(JSON.stringify(result.preferences)),
-            topicIds: topicIds.slice(),
-            subTopicIds: subTopicIds.slice(),
-          },
-          selectedTopics: topicIds.slice(),
-          topicNames: { ...result.topicNameMap },
+          preferences: JSON.parse(JSON.stringify(result.preferences)),
+          selectedTopics: topicIds.slice(), // Array kopyası
+          topicNames: JSON.parse(JSON.stringify(result.topicNameMap || {})),
         };
 
-        console.log('[CreateExamPage useEffect_inline_processing] Constructed formData for handleCreateQuiz:', JSON.stringify(formData));
-        console.log('[CreateExamPage useEffect_inline_processing] KONTROL: formData.preferences.topicIds:', formData.preferences.topicIds);
-        console.log('[CreateExamPage useEffect_inline_processing] KONTROL: formData.selectedTopics:', formData.selectedTopics);
-        
-        await handleCreateQuiz(formData);
+        console.log('[CreateExamPage useEffect_inline_processing] FormData hazırlandı:', JSON.stringify({
+          ...formData,
+          document: formData.document ? { name: formData.document.name, size: formData.document.size } : null
+        }));
+
+        try {
+          await handleCreateQuiz(formData);
+        } catch (error) {
+          console.error('[CreateExamPage useEffect_inline_processing] Quiz oluşturulurken hata:', error);
+          setProcessingQuiz(false);
+          setIsSubmitting(false);
+        }
       })(resultData);
     }
   }, [searchParams, startQuizParam, handleCreateQuiz, courseIdLocal]);
@@ -428,13 +425,13 @@ function CreateExamPageContent() {
       toast.error("Kişiselleştirilmiş sınav için en az bir konu seçmelisiniz.");
       setProcessingQuiz(false);
       setIsSubmitting(false);
-      return; 
-    }
-
+        return;
+      }
+      
     const formData: CreateQuizFormDataTypeInternal = {
-      quizType: result.quizType,
-      personalizedQuizType: result.personalizedQuizType,
-      document: result.file,
+        quizType: result.quizType,
+        personalizedQuizType: result.personalizedQuizType,
+        document: result.file,
       documentId: result.documentId,
       courseId: result.preferences.courseId || courseIdLocal,
       preferences: {

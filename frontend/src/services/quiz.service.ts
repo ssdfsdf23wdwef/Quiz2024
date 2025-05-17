@@ -326,6 +326,15 @@ class QuizApiService {
           } else if (textLength < 100) {
             throw new Error(`Belge metni çok kısa. Sınav oluşturmak için en az 100 karakter gereklidir. Şu anki uzunluk: ${textLength} karakter.`);
           }
+        } else if (quizGenOptions.documentId && !quizGenOptions.documentText) {
+          // Belge ID var ama metin yok - seçilen konular var mı kontrol et
+          if ((!quizGenOptions.topicIds || 
+              (Array.isArray(quizGenOptions.topicIds) && quizGenOptions.topicIds.length === 0)) && 
+              (!quizGenOptions.selectedSubTopics || 
+              (Array.isArray(quizGenOptions.selectedSubTopics) && quizGenOptions.selectedSubTopics.length === 0))) {
+            console.warn('Belge ID var ama metni yok ve seçili konu da yok. En az bir konu seçilmelidir.');
+            throw new Error('Belge için içerik alınamadı. Lütfen en az bir konu seçin veya geçerli bir belge yükleyin.');
+          }
         }
       }
       
