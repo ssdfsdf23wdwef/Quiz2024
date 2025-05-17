@@ -6,12 +6,13 @@ import {
   ApiQuizSubmissionPayloadDto,
 } from "./adapter.service";
 import apiService from "./api.service";
-import { ErrorService } from "./error.service";
+import { ApiError, ErrorService } from "./error.service";
 import adapterService from "./adapter.service";
 import { QuizGenerationOptions, QuizSubmissionPayload } from "../types/quiz";
 import { getLogger, getFlowTracker } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory } from "./flow-tracker.service";
+import { AxiosError } from "axios";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
@@ -94,11 +95,13 @@ class QuizApiService {
         { courseId, error }
       );
       
-      throw ErrorService.createApiError(
+      const apiError = new ApiError(
         "Sınav listesi yüklenirken bir hata oluştu.",
-        undefined,
-        { original: { error, context: "getQuizzes", courseId } },
+        { original: { error, context: "getQuizzes", courseId } }
       );
+      
+      ErrorService.handleError(apiError, "Sınav listesi");
+      throw apiError;
     }
   }
 
@@ -158,11 +161,13 @@ class QuizApiService {
         { id, error }
       );
       
-      throw ErrorService.createApiError(
+      const apiError = new ApiError(
         "Sınav detayları yüklenirken bir hata oluştu.",
-        undefined,
-        { original: { error, context: "getQuizById", quizId: id } },
+        { original: { error, context: "getQuizById", quizId: id } }
       );
+      
+      ErrorService.handleError(apiError, "Sınav detayları");
+      throw apiError;
     }
   }
 
@@ -219,15 +224,17 @@ class QuizApiService {
         `Sınav analizi alınamadı: ID=${id}`,
         'QuizApiService.getQuizAnalysis',
         __filename,
-        185,
+        191,
         { id, error }
       );
       
-      throw ErrorService.createApiError(
+      const apiError = new ApiError(
         "Sınav analizi yüklenirken bir hata oluştu.",
-        undefined,
-        { original: { error, context: "getQuizAnalysis", quizId: id } },
+        { original: { error, context: "getQuizAnalysis", quizId: id } }
       );
+      
+      ErrorService.handleError(apiError, "Sınav analizi");
+      throw apiError;
     }
   }
 
@@ -287,15 +294,17 @@ class QuizApiService {
         "Yanlış cevaplanan sorular alınamadı",
         'QuizApiService.getFailedQuestions',
         __filename,
-        244,
+        280,
         { courseId, error }
       );
       
-      throw ErrorService.createApiError(
+      const apiError = new ApiError(
         "Yanlış cevaplanan sorular yüklenirken bir hata oluştu.",
-        undefined,
-        { original: { error, context: "getFailedQuestions", courseId } },
+        { original: { error, context: "getFailedQuestions", courseId } }
       );
+      
+      ErrorService.handleError(apiError, "Yanlış cevaplanan sorular");
+      throw apiError;
     }
   }
 
@@ -312,227 +321,104 @@ class QuizApiService {
         // Belge metninin uzunluğunu kontrol et
         const quizGenOptions = options as unknown as Record<string, unknown>;
         
-        // Belge metni kontrolü - minimum 100 karakter olmalı (eski değer 200'dü)
-        // Ayrıca belge içeriğinin boş olması durumunu da kontrol et
-        if (!quizGenOptions.documentText && !quizGenOptions.documentId) {
-          throw new Error('Hızlı sınav için belge metni veya belge ID gereklidir.');
-        } else if (quizGenOptions.documentText && 
-            typeof quizGenOptions.documentText === 'string') {
-          
-          const textLength = quizGenOptions.documentText.trim().length;
-          
-          if (textLength === 0) {
-            throw new Error('Belge metni boş. Lütfen geçerli bir belge metni girin veya belge yükleyin.');
-          } else if (textLength < 100) {
-            throw new Error(`Belge metni çok kısa. Sınav oluşturmak için en az 100 karakter gereklidir. Şu anki uzunluk: ${textLength} karakter.`);
+        // Belge metni kontrolü - minimum 100 karakter olmalı (eskisi 200 karakter)
+        // Ayrıca belge içeriğinin boş olması durumunda ve konu seçilmeme durumunu da kontrol et
+        if (!quizGenOptions.documentText && !quizGenOptions.documentId && (!quizGenOptions.selectedSubTopics || (Array.isArray(quizGenOptions.selectedSubTopics) && quizGenOptions.selectedSubTopics.length === 0))) {
+          console.error('[QuizApiService] Belge metni ve belge ID yok ve konu seçilmemiş');
+          throw new Error('Hızlı sınav için belge metni veya belge ID veya en az bir konu seçimi gereklidir');
+        }
+        
+        if (quizGenOptions.documentText && typeof quizGenOptions.documentText === 'string') {
+          const documentText = quizGenOptions.documentText as string;
+          if (documentText.trim().length < 100) {
+            console.error('[QuizApiService] Belge metni çok kısa:', documentText.trim().length);
+            throw new Error(`Belge metni çok kısa (${documentText.trim().length} karakter). En az 100 karakter olmalıdır.`);
           }
-        } else if (quizGenOptions.documentId && !quizGenOptions.documentText) {
-          // Belge ID var ama metin yok - seçilen konular var mı kontrol et
-          if ((!quizGenOptions.topicIds || 
-              (Array.isArray(quizGenOptions.topicIds) && quizGenOptions.topicIds.length === 0)) && 
-              (!quizGenOptions.selectedSubTopics || 
-              (Array.isArray(quizGenOptions.selectedSubTopics) && quizGenOptions.selectedSubTopics.length === 0))) {
-            console.warn('Belge ID var ama metni yok ve seçili konu da yok. En az bir konu seçilmelidir.');
-            throw new Error('Belge için içerik alınamadı. Lütfen en az bir konu seçin veya geçerli bir belge yükleyin.');
-          }
+        }
+        
+        // Belge ID varsa ama konu seçilmemişse ve metin de yoksa, log yapalım
+        if (quizGenOptions.documentId && !quizGenOptions.documentText && 
+            (!quizGenOptions.selectedSubTopics || (Array.isArray(quizGenOptions.selectedSubTopics) && quizGenOptions.selectedSubTopics.length === 0))) {
+          console.warn('[QuizApiService] DocumentId var ama konu seçilmemiş ve metin yok');
         }
       }
       
-      // Eğer halihazırda dönüştürülmüş bir options nesnesi gelmediyse adapter'ı kullan
-      const apiOptions = 'quizType' in options && 'preferences' in options 
-        ? adapterService.fromQuizGenerationOptions(options as QuizGenerationOptions)
-        : options as ApiQuizGenerationOptionsDto;
-        
-      // JSON.stringify + JSON.parse kullanarak API nesnesini Record<string, unknown> olarak dönüştür
-      const apiPayload = JSON.parse(JSON.stringify(apiOptions)) as Record<string, unknown>;
+      // Backend'e istek yapılmadan önce son kontroller:
+      let requestLogger;
       
-      // Quiz tipine göre endpoint belirle
-      let endpoint = this.basePath; // Varsayılan /quizzes
-      if (apiOptions.quizType === 'quick') {
-        endpoint = `${this.basePath}/quick`;
-      } else if (apiOptions.quizType === 'personalized') {
-        // Kişiselleştirilmiş sınav için farklı bir endpoint varsa buraya eklenir.
-        // Örneğin: endpoint = `${this.basePath}/personalized`;
-        // Şimdilik backend controller'da /personalized için ayrı bir POST yoksa
-        // /quizzes endpoint'ine gidip, quizType üzerinden ayrım yapılıyor olabilir.
-        // Bu durumda endpoint this.basePath olarak kalabilir ya da backend'e göre düzenlenmelidir.
-        // Backend loglarına göre direkt /api/quizzes POST arıyor, bu nedenle quizType ayrımı olmadan genel endpoint'e göndermeyi deneyebiliriz
-        // ANCAK, controller'da /quick için @Post('quick') olduğu için bu mantık hatalı.
-        // Backend controller'da genel bir @Post() yoksa, quizType'a göre endpoint değiştirmek zorunlu.
-        // Eğer kişiselleştirilmiş sınavlar için de /quizzes/personalized gibi bir endpoint varsa onu kullanmalıyız.
-        // Şimdilik, backend'de sadece /quick olduğu için, kişiselleştirilmiş için genel bir endpoint olmadığını varsayarak, 
-        // ve backend'in genel /quizzes POST'u desteklemediğini varsayarak hata verebilir.
-        // Bu durumu netleştirmek için backend controller'ında genel POST veya /personalized için POST olup olmadığına bakılmalı.
-        // Geçici olarak, eğer backend'de kişiselleştirilmiş için ayrı bir endpoint yoksa ve 
-        // /quizzes ana endpoint'i POST kabul etmiyorsa, bu bir mantık hatasıdır.
-        // Controller'ı tekrar incelediğimde /quick ve (muhtemelen) /personalized için POST metodları var.
-        // Bu yüzden quizType 'personalized' ise ve backend'de buna özel bir path yoksa, uygun bir path belirtilmeli.
-        // Eğer backend genel /quizzes POST'unu destekliyorsa (ki controller yapısı öyle görünmüyor),
-        // o zaman endpoint this.basePath kalmalı.
-        // Şu anki backend controller yapısına göre, kişiselleştirilmiş quizler için de spesifik bir endpoint olmalı.
-        // QuizzesController'da @Post('personalized') varsa, onu kullanacağız.
-        // Eğer yoksa, backend'de bu rota eksik demektir.
-        // Dosyanın devamını okuduğumda @Post(':quizId/questions') gibi yapılar var ama direkt /personalized POST yok.
-        // Bu durumda, backend'in quiz tipini body içinden alıp ona göre işlem yapması bekleniyor olabilir
-        // ve frontend sadece /quizzes adresine POST yapmalıdır. Ancak 404 alıyoruz.
-        // Tekrar controller'a bakınca @Post('quick') var. @Post('personalized') yok ama @Post(':id/submit') gibi şeyler var.
-        // Bu, quiz oluşturma mantığının frontend tarafında quizType'a göre endpoint seçmesini gerektirir.
-        // Eğer backend genel bir POST /quizzes destekliyorsa ve quiz tipini body'den alıyorsa, endpoint this.basePath kalmalı.
-        // Ancak 404 aldığımıza göre bu varsayım yanlış.
-        // Backend Controller'da `/api/quizzes` için POST handleri yok, sadece `/api/quizzes/quick` var.
-        // Bu durumda, kişiselleştirilmiş quiz oluşturma için de backend'de bir endpoint olmalı.
-        // Şimdilik, eğer quizType quick değilse, backend'de karşılığı olmadığı için bu isteğin başarısız olması beklenir.
-        // Ya da backend kişiselleştirilmiş quizleri de /quick üzerinden alıyor olabilir (RequestBody içinde ayrım yaparak)
-        // Ya da backend'de /api/quizzes POST altında quizType'a göre ayrım yapan bir logic vardır.
-        // Mevcut hata (Cannot POST /api/quizzes) backend'in /api/quizzes altında POST beklemediğini gösteriyor.
-        // Frontend quizService'deki basePath /quizzes olduğuna göre, /api/quizzes/quick gibi bir yola gitmeli.
+      // 'quizType' in options olup olmadığını kontrol et (tip koruma)
+      if ('quizType' in options) {
+        requestLogger = options.quizType === 'quick' ? 'generateQuickQuiz' : 'generatePersonalizedQuiz';
+      } else {
+        requestLogger = 'generateQuiz-unknown-type';
+      }
+      
+      console.log(`[QuizApiService] Sınav oluşturma isteği gönderiliyor...`, {
+        quizType: 'quizType' in options ? options.quizType : 'unknown',
+        hasDocumentText: 'quizType' in options && 'documentText' in options && !!options.documentText,
+        hasDocumentId: 'quizType' in options && 'documentId' in options && !!options.documentId,
+        hasTopics: 'quizType' in options && 'selectedSubTopics' in options && Array.isArray(options.selectedSubTopics) && options.selectedSubTopics.length > 0,
+        personalizedType: 'quizType' in options && 'personalizedQuizType' in options ? options.personalizedQuizType : undefined
+      });
+      
+      const response = await apiService.post<ApiQuiz>(
+        options.quizType === 'quick'
+          ? `${this.basePath}/quick`
+          : `${this.basePath}/personalized`,
+        options,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
 
-        // Backend controller'ında createPersonalizedQuiz metodu var ama bir @Post dekoratörü göremedim.
-        // Eğer createPersonalizedQuiz metodu bir POST endpointine bağlı değilse, çağrılamaz.
-        // Varsayılan olarak /quizzes endpointine POST yapıyoruz, ama controller bunu desteklemiyor.
-        // Eğer quizType 'personalized' ise ve backend'de /quizzes/personalized gibi bir endpoint yoksa,
-        // bu bir sorun. Şimdilik, backend loglarından /api/quizzes için POST arandığı anlaşılıyor ama controllerda yok.
-        // Tekrar controller'a baktığımda, doğrudan @Post() dekoratörüne sahip bir createQuiz metodu görünmüyor.
-        // Bunun yerine @Post('quick') ve muhtemelen (dosyanın devamında) @Post('personalized') olmalı.
-        // Tekrar QuizzesController'ı inceliyorum...
-        // Evet, controllerda @Post('quick') var. Dosyanın devamında @Post('personalized') olmalı.
-        // Eğer @Post('personalized') varsa endpoint'i ona göre set etmeliyiz.
-        // Eğer yoksa ve backend /quizzes POST altında quizType ayrımı yapıyorsa, frontend /quizzes POST yapmalı.
-        // Ama 404 aldığımıza göre backend /quizzes POST kabul etmiyor.
-        // Bu durumda en mantıklısı, quizType'a göre endpointi dinamik yapmak.
-        endpoint = `${this.basePath}/${apiOptions.quizType}`;
+      // Yanıtı işle
+      console.log(`[QuizApiService] Sınav oluşturma yanıtı alındı:`, {
+        status: response.status,
+        hasQuizId: !!response.data?.id,
+        questionCount: response.data?.questions?.length
+      });
+      
+      if (!response.data) {
+        console.error('[QuizApiService] Yanıtta quiz verisi bulunamadı');
+        throw new Error('Sınav oluşturulamadı: Geçersiz yanıt');
+      }
+
+      if (!response.data.id) {
+        console.error('[QuizApiService] Oluşturulan sınav ID değeri bulunamadı', response.data);
+        throw new Error('Sınav oluşturuldu ancak ID değeri bulunamadı');
       }
       
-      // Loglama ve akış izleme
-      logger.debug(
-        'Sınav oluşturma isteği hazırlanıyor',
-        'QuizApiService.generateQuiz',
-        __filename,
-        275,
-        { 
-          quizType: apiOptions.quizType,
-          courseId: apiOptions.courseId,
-          finalEndpoint: endpoint, // Log endpoint
-          payload: JSON.stringify(apiPayload).substring(0, 300)
-        }
-      );
+      const quiz = response.data;
+      flowTracker.markEnd('generateQuiz');
       
-      flowTracker.trackApiCall(
-        endpoint, 
-        'POST', 
-        'QuizApiService.generateQuiz',
-        { 
-          quizType: apiOptions.quizType,
-          endpoint: endpoint, // Use dynamic endpoint
-          payloadSize: JSON.stringify(apiPayload).length
-        }
-      );
-      
-      try {
-        logger.debug(
-          `API isteği gönderiliyor: POST ${endpoint}`,
-          'QuizApiService.generateQuiz',
-          __filename,
-          300,
-          { 
-            endpoint: endpoint, // Use dynamic endpoint
-            payloadSize: JSON.stringify(apiPayload).length
-          }
-        );
-        
-        // Konsola API isteği detaylarını logla
-        console.log(`⚡ API isteği başlatılıyor: POST ${endpoint}`);
-        console.log(`📄 İstek gövdesi (ilk 500 karakter): ${JSON.stringify(apiPayload).substring(0, 500)}`);
-        
-        // API isteğini gönder
-        const quiz = await apiService.post<ApiQuiz>(endpoint, apiPayload); // Use dynamic endpoint
-        
-        console.log(`✅ API yanıtı alındı: ${quiz?.id ? 'Quiz ID: ' + quiz.id : 'Quiz ID yok'}`);
-        
-        // API yanıtını kontrol et
-        if (!quiz || !quiz.id) {
-          console.error("❌ API yanıtı geçersiz:", quiz);
-          throw new Error('API geçerli bir yanıt döndürmedi: Quiz ID bulunamadı');
-        }
-        
-        // Başarılı sonuç
-        const duration = flowTracker.markEnd('generateQuiz', FlowCategory.API, 'QuizApiService');
-        logger.info(
-          `Sınav oluşturuldu: ${quiz.title || 'Başlıksız'}, ${quiz.questions?.length || 0} soru`,
-          'QuizApiService.generateQuiz',
-          __filename,
-          320,
-          { 
-            id: quiz.id,
-            title: quiz.title || 'Başlıksız',
-            questionCount: quiz.questions?.length || 0,
-            duration 
-          }
-        );
-        
-        return quiz;
-      } catch (postError) {
-        // Detaylı API hatası loglama
-        console.error("❌ API POST hatası:", postError);
-        if (postError instanceof Error) {
-          console.error("❌ Hata mesajı:", postError.message);
-          console.error("❌ Hata tipi:", postError.name);
-          
-          // Eğer API kaynaklı bir hata ise ekstra bilgiler göster
-          if ('response' in postError && postError.response) {
-            const response = postError.response as Record<string, unknown>;
-            console.error("❌ API yanıt durumu:", response.status);
-            console.error("❌ API yanıt verisi:", response.data);
-          }
-        }
-        
-        // API isteği hatası
-        logger.error(
-          "Sınav oluşturma API isteği başarısız",
-          'QuizApiService.generateQuiz.apiRequest',
-          __filename,
-          335,
-          { 
-            error: postError,
-            endpoint: endpoint,
-            errorMessage: postError instanceof Error ? postError.message : 'Bilinmeyen hata',
-            errorStack: postError instanceof Error ? postError.stack : undefined
-          }
-        );
-        
-        // API hatası olduğunda daha detaylı bir hata fırlat
-        if (postError instanceof Error) {
-          throw ErrorService.createApiError(
-            `Sınav oluşturma API isteği başarısız: ${postError.message}`,
-            undefined,
-            { original: { error: postError, context: "generateQuiz.apiRequest" } }
-          );
-        }
-        
-        throw postError;
-      }
+      return quiz;
     } catch (error) {
-      // Genel hata durumu
-      console.error("❌ QuizService.generateQuiz genel hatası:", error);
-      flowTracker.markEnd('generateQuiz', FlowCategory.API, 'QuizApiService');
-      logger.error(
-        "Sınav oluşturma başarısız",
-        'QuizApiService.generateQuiz',
-        __filename,
-        360,
-        { 
-          options: JSON.stringify(options).substring(0, 200) + '...',
-          error,
-          errorMessage: error instanceof Error ? error.message : 'Bilinmeyen hata',
-          errorStack: error instanceof Error ? error.stack : undefined
-        }
-      );
+      flowTracker.markEnd('generateQuiz');
+      console.error('Sınav oluşturma hatası:', error);
       
-      throw ErrorService.createApiError(
-        "Sınav oluşturulurken bir hata oluştu: " + (error instanceof Error ? error.message : 'Bilinmeyen hata'),
-        undefined,
-        { original: { error, context: "generateQuiz", options } },
-      );
+      if (error instanceof AxiosError && error.response?.data) {
+        // API'den dönen hata mesajını ErrorService üzerinden işle
+        const apiError = new ApiError(
+          "Sınav oluşturulurken bir hata oluştu",
+          { 
+            original: { 
+              error, 
+              context: "generateQuiz" 
+            } 
+          }
+        );
+        
+        ErrorService.handleError(apiError, "Sınav oluşturma");
+        throw apiError;
+      }
+      
+      // Diğer hata türleri
+      const message = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      const genericError = new Error(`Sınav oluşturulurken bir hata oluştu: ${message}`);
+      ErrorService.handleError(genericError, "Sınav oluşturma");
+      throw genericError;
     }
   }
 
@@ -610,11 +496,13 @@ class QuizApiService {
         }
       );
       
-      throw ErrorService.createApiError(
+      const apiError = new ApiError(
         "Sınav yanıtları gönderilirken bir hata oluştu.",
-        undefined,
-        { original: { error, context: "submitQuiz", quizId: payload.quizId } },
+        { original: { error, context: "submitQuiz", quizId: payload.quizId } }
       );
+      
+      ErrorService.handleError(apiError, "Sınav yanıtları");
+      throw apiError;
     }
   }
 
@@ -668,11 +556,13 @@ class QuizApiService {
         { id, error }
       );
       
-      throw ErrorService.createApiError(
+      const apiError = new ApiError(
         "Sınav silinirken bir hata oluştu.",
-        undefined,
-        { original: { error, context: "deleteQuiz", quizId: id } },
+        { original: { error, context: "deleteQuiz", quizId: id } }
       );
+      
+      ErrorService.handleError(apiError, "Sınav silme");
+      throw apiError;
     }
   }
 }

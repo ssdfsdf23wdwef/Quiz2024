@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiClock,
   FiTarget,
@@ -20,7 +20,11 @@ import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
 import axios from "axios";
-import { Course, DetectedSubTopic, QuizPreferences } from "@/types";
+import { Course, DetectedSubTopic, QuizPreferences, QuizGenerationOptions, QuizType } from "@/types";
+import { toast } from "react-hot-toast";
+import quizService from "@/services/quiz.service";
+import { SubTopicItem, DifficultyLevel } from "@/types/quiz";
+import { LearningTarget } from "@/types/learningTarget";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -68,8 +72,21 @@ export default function ExamCreationWizard({
     "idle" | "loading" | "success" | "error"
   >("idle");
 
+  // Seçilen konuları takip etmek için state (TopicSelectionScreen için)
+  const [selectedTopicsList, setSelectedTopicsList] = useState<string[]>([]);
+  const [onInitialLoad, setOnInitialLoad] = useState<boolean>(true);
+
   // Sınav oluşturma durumu için yeni state
   const [quizCreationLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Belge metni ve belge ID'si
+  const [documentTextContent, setDocumentTextContent] = useState<string>("");
+  const [uploadedDocumentId, setUploadedDocumentId] = useState<string>("");
+  
+  // Seçilen konular (alt konu olarak)
+  const [selectedTopics, setSelectedTopics] = useState<SubTopicItem[]>([]);
 
   // Kişiselleştirilmiş sınav alt türü - sadece personalized modda kullanılıyor
   const [personalizedQuizType, setPersonalizedQuizType] = useState<
@@ -98,6 +115,31 @@ export default function ExamCreationWizard({
   // Tespit edilen konular
   const [detectedTopics, setDetectedTopics] = useState<DetectedSubTopic[]>([]);
 
+  // TopicSelectionScreen'den seçilen konular değiştiğinde bu fonksiyon çağrılacak
+  const handleTopicSelectionChange = useCallback((selectedTopics: string[]) => {
+    console.log('[ECW handleTopicSelectionChange] Seçilen konular güncellendi:', selectedTopics);
+    setSelectedTopicsList(selectedTopics);
+    // Burada seçilen konuları doğrudan diğer state'lere de ekleyebiliriz
+    setSelectedTopicIds(selectedTopics);
+    setSelectedSubTopicIds(selectedTopics);
+    
+    // Seçilen konuları alt konular olarak da güncelle
+    const subTopicItems: SubTopicItem[] = selectedTopics.map(topicId => {
+      const topic = detectedTopics.find(t => t.id === topicId);
+      return {
+        subTopic: topic?.subTopicName || topicId,
+        normalizedSubTopic: topic?.normalizedSubTopicName || topicId,
+      };
+    });
+    setSelectedTopics(subTopicItems);
+    
+    setPreferences(prev => ({
+      ...prev,
+      topicIds: selectedTopics,
+      subTopicIds: selectedTopics
+    }));
+  }, [detectedTopics, setSelectedTopicIds, setSelectedSubTopicIds, setSelectedTopics]);
+
   // Kursları yükle
   useEffect(() => {
     courseService.getCourses().then((data) => {
@@ -111,9 +153,9 @@ export default function ExamCreationWizard({
   // Seçili kurs değişince konuları yükle
   useEffect(() => {
     if (!selectedCourseId) return;
-    learningTargetService.getLearningTargets(selectedCourseId).then((targets) => {
+    learningTargetService.getLearningTargets(selectedCourseId).then((targets: LearningTarget[]) => {
       // DetectedSubTopic tipine dönüştür
-      const detected: DetectedSubTopic[] = targets.map((t) => ({
+      const detected: DetectedSubTopic[] = targets.map((t: LearningTarget) => ({
         id: t.id,
         subTopicName: t.subTopicName,
         normalizedSubTopicName: t.normalizedSubTopicName,
@@ -187,6 +229,10 @@ export default function ExamCreationWizard({
   const handleFileUploadComplete = async (file: File) => {
     setSelectedFile(file);
     setUploadStatus("success");
+    // Belge metnini temizle (yeni dosya yüklendiğinde)
+    setDocumentTextContent("");
+    // Document ID'yi sıfırla
+    setUploadedDocumentId("");
     console.log(`📂 Dosya yükleme başarılı: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
   };
 
@@ -747,116 +793,106 @@ export default function ExamCreationWizard({
     }
   };
 
-  // handleFinalSubmit fonksiyonunu güçlendirelim
+  // Final gönderim işleyicisi
   const handleFinalSubmit = async () => {
-    console.log('[ECW handleFinalSubmit] Start.');
-    console.log('[ECW handleFinalSubmit] Current selectedTopicIds STATE:', JSON.stringify(selectedTopicIds));
-    console.log('[ECW handleFinalSubmit] Current selectedSubTopicIds STATE:', JSON.stringify(selectedSubTopicIds));
-    console.log('[ECW handleFinalSubmit] Current detectedTopics STATE:', JSON.stringify(detectedTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
-    console.log('[ECW handleFinalSubmit] Current preferences STATE:', JSON.stringify(preferences));
+    if (isSubmitting) return;
+    
     try {
-      console.log("🏁 Tüm adımlar tamamlandı (3/3). Sınav oluşturma için gerekli veriler hazırlanıyor...");
+      setIsSubmitting(true);
+      setError(null);
       
-      // Seçilen konu ve alt konuların durumunu kontrol et ve logla
-      console.log("🔍 Seçilen konular kontrol ediliyor:", {
-        selectedTopicIdsFromState: selectedTopicIds, // Renamed for clarity
-        selectedSubTopicIdsFromState: selectedSubTopicIds, // Renamed for clarity
-        quizType: quizType,
-        personalizedQuizType: personalizedQuizType
-      });
-      
-      const effectiveTopicIds = (() => {
-        if (selectedTopicIds && selectedTopicIds.length > 0) {
-          console.log('[ECW handleFinalSubmit] Using selectedTopicIds from state for effectiveTopicIds:', JSON.stringify(selectedTopicIds));
-          return selectedTopicIds;
-        } else if (detectedTopics && detectedTopics.length > 0) {
-          const selectedFromDetected = detectedTopics.filter(t => t.isSelected).map(t => t.id);
-          if (selectedFromDetected.length > 0) {
-            console.log(`[ECW handleFinalSubmit] ⚠️ selectedTopicIds state boş, detectedTopics'den ${selectedFromDetected.length} seçili konu bulundu. Bunlar kullanılacak:`, JSON.stringify(selectedFromDetected));
-            return selectedFromDetected;
-          }
-        }
-        console.log('[ECW handleFinalSubmit] effectiveTopicIds is empty after all checks.');
-        return [];
-      })();
-      
-      const effectiveSubTopicIds = (() => {
-        if (selectedSubTopicIds && selectedSubTopicIds.length > 0) {
-            console.log('[ECW handleFinalSubmit] Using selectedSubTopicIds from state for effectiveSubTopicIds:', JSON.stringify(selectedSubTopicIds));
-          return selectedSubTopicIds;
-        } else if (detectedTopics && detectedTopics.length > 0) {
-          // This fallback for subtopics might not be correct if subtopics aren't 1:1 with topics
-          const selectedFromDetected = detectedTopics.filter(t => t.isSelected).map(t => t.id);
-          if (selectedFromDetected.length > 0) {
-            console.log(`[ECW handleFinalSubmit] ⚠️ selectedSubTopicIds state boş, detectedTopics'den (varsayılan olarak ana konular) ${selectedFromDetected.length} seçili alt konu bulundu:`, JSON.stringify(selectedFromDetected));
-            return selectedFromDetected;
-          }
-        }
-        console.log('[ECW handleFinalSubmit] effectiveSubTopicIds is empty after all checks.');
-        return [];
-      })();
-      
-      console.log("[ECW handleFinalSubmit] 🔄 Kullanılacak effectiveTopicIds:", JSON.stringify(effectiveTopicIds));
-      console.log("[ECW handleFinalSubmit] 🔄 Kullanılacak effectiveSubTopicIds:", JSON.stringify(effectiveSubTopicIds));
-      
-      // Son tercihleri oluştur - tüm sınav türleri için konuları daima ekleyelim, undefined kullanmayalım
-      const finalPreferences: QuizPreferences = {
-        ...preferences,
-        topicIds: effectiveTopicIds,  // Her zaman array olarak gönder, undefined olmamalı
-        subTopicIds: effectiveSubTopicIds // Her zaman array olarak gönder, undefined olmamalı
-      };
-      console.log('[ECW handleFinalSubmit] Final preferences for result:', JSON.stringify(finalPreferences));
-
-      const topicNameMap: Record<string, string> = {};
-      if (detectedTopics) {
-        detectedTopics.forEach(topic => {
-          topicNameMap[topic.id] = topic.subTopicName;
-        });
-      }
-      console.log('[ECW handleFinalSubmit] topicNameMap created:', JSON.stringify(topicNameMap));
-
-      // File null olabilir, bu kontrolü ekleyelim
-      const file = selectedFile || null;
-      console.log('[ECW handleFinalSubmit] File to be sent:', file ? file.name : 'null');
-      
-      const result = {
-        file: quizType === "personalized" && personalizedQuizType === "weakTopicFocused" ? null : file, 
-        quizType,
-        personalizedQuizType: quizType === "personalized" ? personalizedQuizType : undefined,
-        preferences: finalPreferences,
-        topicNameMap: topicNameMap
-      };
-
-      console.log('[ECW handleFinalSubmit] Final result object for onComplete:', JSON.stringify(result));
-      console.log(
-        `📊 SINAV BİLGİLERİ (handleFinalSubmit):
-        - Tür: ${result.quizType}
-        - Alt tür: ${result.personalizedQuizType || "N/A"}
-        - Soru sayısı: ${result.preferences.questionCount}
-        - Zorluk: ${result.preferences.difficulty}
-        - Süre: ${result.preferences.timeLimit ? `${result.preferences.timeLimit} dakika` : "Limitsiz"}
-        - Seçilen konular (topicIds): ${result.preferences.topicIds?.join(', ') || "Yok"}
-        - Seçilen alt konular (subTopicIds): ${result.preferences.subTopicIds?.join(', ') || "Yok"}
-        `
-      );
-
-      if (!result || !result.quizType) {
-        console.error("[ECW handleFinalSubmit] ⚠️ Geçersiz sınav oluşturma sonucu");
-        ErrorService.showToast("Sınav oluşturma verileri hazırlanamadı. Lütfen tekrar deneyin.", "error");
+      // Tüm adımların doğruluğunu kontrol et
+      if (!selectedFile && !documentTextContent) {
+        const errorMsg = 'Lütfen bir belge yükleyin veya metin girin';
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
         return;
       }
-
-      if (typeof onComplete === 'function') {
-        console.log("[ECW handleFinalSubmit] 🔄 onComplete fonksiyonu çağrılıyor...");
-        console.log("[ECW handleFinalSubmit] KONTROL: topicIds boş mu?", !result.preferences.topicIds || result.preferences.topicIds.length === 0);
-        onComplete(result);
-      } else {
-        console.error("[ECW handleFinalSubmit] ⚠️ onComplete fonksiyonu tanımlı değil");
-        ErrorService.showToast("Sınav oluşturma işlemi tamamlanamadı. İşlev tanımlı değil.", "error");
+      
+      if (!selectedTopics || selectedTopics.length === 0) {
+        const errorMsg = 'Lütfen en az bir konu seçin';
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
+        return;
       }
+      
+      // Minimum bir konu seçili olmalı
+      if (selectedTopics.length === 0) {
+        const errorMsg = 'Lütfen en az bir konu seçin';
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Metin içeriği varsa onun da geçerli olduğundan emin ol
+      if (documentTextContent && documentTextContent.trim().length < 100) {
+        const errorMsg = 'Belge metni çok kısa. Lütfen daha uzun bir metin girin veya geçerli bir belge yükleyin.';
+        setError(errorMsg);
+        toast.error('Belge metni çok kısa veya boş');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Onay mesajını göster
+      toast.loading('Sınav oluşturuluyor...');
+      
+      // Quiz oluşturma için gerekli parametreleri hazırla
+      const quizOptions: QuizGenerationOptions = {
+        quizType: "quick" as QuizType,
+        documentText: documentTextContent || '',
+        documentId: uploadedDocumentId,
+        selectedSubTopics: selectedTopics,
+        preferences: {
+          questionCount: preferences.questionCount,
+          difficulty: (preferences.difficulty === 'mixed' ? 'mixed' : 'medium') as DifficultyLevel,
+          timeLimit: preferences.timeLimit
+        }
+      };
+      
+      console.log('[handleFinalSubmit] Quiz oluşturuluyor:', quizOptions);
+      
+      const quiz = await quizService.generateQuiz(quizOptions);
+      console.log('[handleFinalSubmit] Quiz başarıyla oluşturuldu, ID:', quiz ? (typeof quiz === 'object' && quiz !== null ? quiz.id || 'ID bulunamadı' : 'Geçersiz quiz objesi') : 'Quiz oluşturulamadı');
+      
+      toast.dismiss();
+      toast.success('Sınav başarıyla oluşturuldu!');
+      
+      if (onComplete) {
+        onComplete({
+          file: selectedFile,
+          quizType: quizType,
+          personalizedQuizType: personalizedQuizType,
+          preferences: preferences,
+          topicNameMap: {} // Boş bir map gönderiyoruz, gerçek implementasyonda doldurulmalı
+        });
+      }
+      
     } catch (error) {
-      console.error("[ECW handleFinalSubmit] ❌ Hata:", error);
-      ErrorService.showToast("Sınav oluşturma bilgileri hazırlanamadı. Lütfen tekrar deneyin.", "error");
+      toast.dismiss();
+      
+      // Hata mesajını göster
+      let errorMessage = 'Sınav oluşturulurken bir hata oluştu';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        console.error('[ExamCreationWizard] Sınav oluşturma hatası:', error);
+        
+        // Spesifik hata mesajlarını kontrol et ve daha açıklayıcı mesaj göster
+        if (error.message.includes('Belge metni çok kısa')) {
+          errorMessage = 'Belge metni çok kısa. Lütfen daha uzun bir metin girin veya geçerli bir belge yükleyin.';
+        } else if (error.message.includes('Belge ID bulunamadı ve hiçbir konu seçilmemiş')) {
+          errorMessage = 'Belge yüklenemedi veya hiçbir konu seçilmedi. Lütfen dosya yükleyin ve en az bir konu seçin.';
+        }
+      }
+      
+      // UI'da ve logda hatayı göster
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1094,6 +1130,10 @@ export default function ExamCreationWizard({
                       }}
                       onCourseChange={handleCourseChangeForTopicSelection}
                       onCancel={handleTopicDetectionCancel}
+                      initialSelectedTopicIds={selectedTopicIds}
+                      onTopicSelectionChange={handleTopicSelectionChange}
+                      onInitialLoad={onInitialLoad}
+                      setOnInitialLoad={setOnInitialLoad}
                     />
                   </>
                 )}

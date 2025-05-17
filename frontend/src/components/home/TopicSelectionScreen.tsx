@@ -10,7 +10,7 @@ import {
   FiAlertTriangle,
   FiPlus,
 } from "react-icons/fi";
-import { LearningTargetStatus, LearningTargetStatusLiteral } from "@/types/learningTarget";
+import { LearningTargetStatusLiteral } from "@/types/learningTarget";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
@@ -91,6 +91,10 @@ interface TopicSelectionScreenProps {
   onTopicsSelected: (selectedTopicIds: string[], courseId: string) => void;
   onCourseChange?: (courseId: string) => void;
   onCancel?: () => void;
+  initialSelectedTopicIds?: string[];
+  onTopicSelectionChange: (selectedTopicIds: string[]) => void;
+  onInitialLoad: boolean;
+  setOnInitialLoad: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function TopicSelectionScreen({
@@ -105,6 +109,10 @@ export default function TopicSelectionScreen({
   onTopicsSelected,
   onCourseChange,
   onCancel,
+  initialSelectedTopicIds,
+  onTopicSelectionChange = () => {},
+  onInitialLoad = true,
+  setOnInitialLoad = () => {},
 }: TopicSelectionScreenProps) {
   // Mevcut konuları tut
   const [filteredTopics, setFilteredTopics] = useState<TopicData[]>(detectedTopics);
@@ -135,13 +143,37 @@ export default function TopicSelectionScreen({
 
   // Tüm konuları seç/kaldır
   const handleToggleAll = useCallback((selectAll: boolean) => {
-    setFilteredTopics((prevTopics) =>
-      prevTopics.map((topic) => ({
-        ...topic,
-        isSelected: selectAll,
-      }))
-    );
-  }, []);
+    console.log('[TopicSelectionScreen] handleToggleAll çağrıldı, selectAll:', selectAll);
+    const updatedTopics = filteredTopics.map(topic => ({
+      ...topic,
+      isSelected: selectAll
+    }));
+    
+    setFilteredTopics(updatedTopics);
+    
+    // Seçilen konu ID'lerini props olarak ilet
+    const selectedIds = selectAll ? updatedTopics.map(t => t.id) : [];
+    console.log('[TopicSelectionScreen] Tüm konular için seçim güncellendi:', selectedIds);
+    onTopicSelectionChange(selectedIds);
+  }, [filteredTopics, onTopicSelectionChange]);
+
+  // Seçilen konuları takip et
+  const handleTopicToggle = useCallback((id: string) => {
+    console.log('[TopicSelectionScreen] handleTopicToggle çağrıldı:', id);
+    const updatedTopics = filteredTopics.map(topic => {
+      if (topic.id === id) {
+        return { ...topic, isSelected: !topic.isSelected };
+      }
+      return topic;
+    });
+    
+    setFilteredTopics(updatedTopics);
+    
+    // Seçilen konu ID'lerini props olarak ilet
+    const selectedIds = updatedTopics.filter(t => t.isSelected).map(t => t.id);
+    console.log('[TopicSelectionScreen] Seçilen konular güncellendi:', selectedIds);
+    onTopicSelectionChange(selectedIds);
+  }, [filteredTopics, onTopicSelectionChange]);
 
   // Sınav türüne göre görüntülenecek konuları filtrele
   useEffect(() => {
@@ -209,42 +241,37 @@ export default function TopicSelectionScreen({
     isLoading,
   ]);
 
-  // Seçilen konuları takip et
-  const handleToggleTopic = useCallback((topicId: string) => {
-    setFilteredTopics((prevTopics) =>
-      prevTopics.map((topic) =>
-        topic.id === topicId
-          ? { ...topic, isSelected: !topic.isSelected }
-          : topic,
-      ),
-    );
-  }, []);
-
-  // Durum bilgisi için stil
-  const getStatusInfo = useCallback((status?: LearningTargetStatus | LearningTargetStatusLiteral | string) => {
-    if (!status) {
-      return {
-        color: "text-indigo-600 dark:text-indigo-400",
-        bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
-        borderColor: "border-indigo-200 dark:border-indigo-700",
-        label: "Yeni",
-        icon: FiPlus,
-      };
+  // useEffect ile tespit edilen konuların otomatik işaretlenmesi
+  useEffect(() => {
+    if (onInitialLoad && initialSelectedTopicIds && initialSelectedTopicIds.length > 0) {
+      console.log('[TopicSelectionScreen] initialSelectedTopicIds var, bu konuları seçeceğiz:', initialSelectedTopicIds);
+      // Burada kullanılacak güncel filteredTopics, props'tan gelen veya initialSelectedTopicIds'den filtrelenen olabilir
+      const newFilteredTopics = filteredTopics.map(topic => ({
+        ...topic,
+        isSelected: initialSelectedTopicIds.includes(topic.id)
+      }));
+      
+      setFilteredTopics(newFilteredTopics);
+      
+      // Seçili konu yoksa ve konular varsa ilk konuyu otomatik seç
+      const hasAnySelected = newFilteredTopics.some(t => t.isSelected);
+      if (!hasAnySelected && newFilteredTopics.length > 0) {
+        console.log('[TopicSelectionScreen] Hiç seçili konu yok, ilk konu otomatik seçilecek:', newFilteredTopics[0].id);
+        const updatedTopics = [...newFilteredTopics];
+        updatedTopics[0].isSelected = true;
+        setFilteredTopics(updatedTopics);
+        // Seçim değişikliğini üst bileşene bildir
+        const selectedIds = [updatedTopics[0].id];
+        onTopicSelectionChange(selectedIds);
+      } else if (hasAnySelected) {
+        // Seçilen konuları üst bileşene bildir
+        const selectedIds = newFilteredTopics.filter(t => t.isSelected).map(t => t.id);
+        onTopicSelectionChange(selectedIds);
+      }
+      
+      setOnInitialLoad(false);
     }
-
-    // LearningTargetStatus türünden LearningTargetStatusLiteral türüne dönüştür
-    const validStatusValues: LearningTargetStatusLiteral[] = ["pending", "medium", "failed", "mastered"];
-    
-    // String değerine dönüştür
-    const statusStr = typeof status === 'string' ? status : String(status);
-    
-    // Desteklenen değerlerle eşleştir
-    const statusLiteral = validStatusValues.includes(statusStr as LearningTargetStatusLiteral) 
-      ? statusStr as LearningTargetStatusLiteral 
-      : "pending";
-    
-    return getStatusStyle(statusLiteral);
-  }, []);
+  }, [filteredTopics, initialSelectedTopicIds, onInitialLoad, onTopicSelectionChange]);
 
   // Çeşitli konu sayıları
   const topicCounts = useMemo(
@@ -309,6 +336,32 @@ export default function TopicSelectionScreen({
     // Hızlı sınav için kurs ID'si "quick" veya boş string olabilir, backend bunu handle etmeli. Şimdilik boş gönderelim.
     onTopicsSelected(topicsToSubmit, quizType === 'quick' ? "" : currentCourseId);
   };
+
+  // Durum bilgisi için stil
+  const getStatusInfo = useCallback((status?: LearningTargetStatusLiteral | string) => {
+    if (!status) {
+      return {
+        color: "text-indigo-600 dark:text-indigo-400",
+        bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
+        borderColor: "border-indigo-200 dark:border-indigo-700",
+        label: "Yeni",
+        icon: FiPlus,
+      };
+    }
+
+    // Desteklenen değerlerle eşleştir
+    const validStatusValues: LearningTargetStatusLiteral[] = ["pending", "medium", "failed", "mastered"];
+    
+    // String değerine dönüştür
+    const statusStr = typeof status === 'string' ? status : String(status);
+    
+    // Desteklenen değerlerle eşleştir
+    const statusLiteral = validStatusValues.includes(statusStr as LearningTargetStatusLiteral) 
+      ? statusStr as LearningTargetStatusLiteral 
+      : "pending";
+    
+    return getStatusStyle(statusLiteral);
+  }, []);
 
   if (isLoading) {
     return (
@@ -516,7 +569,7 @@ export default function TopicSelectionScreen({
                 <TopicCard 
                   key={topic.id} 
                   topic={topic} 
-                  onToggle={handleToggleTopic} 
+                  onToggle={handleTopicToggle} 
                   statusInfo={getStatusInfo(topic.status)}
                 />
               ))}
