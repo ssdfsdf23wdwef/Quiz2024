@@ -91,9 +91,11 @@ export function useFailedQuestions(courseId?: string) {
   });
 }
 
-export default {
+const quizApi = {
   useQuizzes,
   useQuiz,
   useQuizAnalysis,
   useFailedQuestions,
-}; 
+};
+
+export default quizApi; 

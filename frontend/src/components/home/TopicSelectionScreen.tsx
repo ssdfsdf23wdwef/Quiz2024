@@ -133,6 +133,16 @@ export default function TopicSelectionScreen({
     [],
   );
 
+  // Tüm konuları seç/kaldır
+  const handleToggleAll = useCallback((selectAll: boolean) => {
+    setFilteredTopics((prevTopics) =>
+      prevTopics.map((topic) => ({
+        ...topic,
+        isSelected: selectAll,
+      }))
+    );
+  }, []);
+
   // Sınav türüne göre görüntülenecek konuları filtrele
   useEffect(() => {
     if (isLoading) return;
@@ -158,6 +168,7 @@ export default function TopicSelectionScreen({
       topics = [...uniqueDetectedTopics, ...existingTopics];
     }
 
+    // Tüm konuları otomatik olarak seçili hale getir (quick sınav türünde veya konular henüz seçilmemişse)
     if (personalizedQuizType === "weakTopicFocused") {
       topics = topics.map((topic) => ({ ...topic, isSelected: true }));
     } else if (personalizedQuizType === "comprehensive" || personalizedQuizType === "learningObjectiveFocused") {
@@ -165,9 +176,19 @@ export default function TopicSelectionScreen({
         ...topic,
         isSelected: topic.status === "failed" || topic.status === "medium",
       }));
+    } else {
+      // Hızlı sınav için veya diğer türlerde tüm konuları otomatik seç
+      topics = topics.map((topic) => ({
+        ...topic,
+        isSelected: true // Tüm konuları otomatik olarak seçili hale getir
+      }));
     }
 
     setFilteredTopics(topics);
+    console.log('[TSS useEffect] Detected topics prop:', JSON.stringify(detectedTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
+    console.log('[TSS useEffect] Existing topics prop:', JSON.stringify(existingTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
+    console.log('[TSS useEffect] quizType:', quizType, 'personalizedQuizType:', personalizedQuizType);
+    console.log('[TSS useEffect] Final topics for setFilteredTopics:', JSON.stringify(topics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
     
     // Frontend'de tespit edilen konuları console'a yazdır
     console.log('\n=== FRONTEND - TESPİT EDİLEN KONULAR ===');
@@ -198,26 +219,6 @@ export default function TopicSelectionScreen({
       ),
     );
   }, []);
-
-  // Konuların tümünü seç/kaldır
-  const handleToggleAll = useCallback(
-    (selected: boolean) => {
-      // Şu anda görüntülenen filtreye göre uygula
-      setFilteredTopics((prevTopics) =>
-        prevTopics.map((topic) => {
-          if (
-            selectedFilter === "all" ||
-            (selectedFilter === "new" && topic.isNew) ||
-            (selectedFilter === "existing" && !topic.isNew)
-          ) {
-            return { ...topic, isSelected: selected };
-          }
-          return topic;
-        }),
-      );
-    },
-    [selectedFilter],
-  );
 
   // Durum bilgisi için stil
   const getStatusInfo = useCallback((status?: LearningTargetStatus | LearningTargetStatusLiteral | string) => {
@@ -287,21 +288,26 @@ export default function TopicSelectionScreen({
 
   // Konuları seçip devam etme fonksiyonu
   const handleContinue = () => {
-    if (!currentCourseId) {
+    if (!currentCourseId && quizType === 'personalized') { // Kişiselleştirilmiş sınav için kurs ID zorunlu
       alert("Lütfen bir ders seçin");
       return;
     }
 
-    const selectedTopicIds = filteredTopics
+    const topicsToSubmit = filteredTopics
       .filter((t) => t.isSelected)
       .map((t) => t.id);
       
-    if (selectedTopicIds.length === 0) {
+    console.log('[TSS handleContinue] filteredTopics:', JSON.stringify(filteredTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
+    console.log('[TSS handleContinue] Topics being submitted to onTopicsSelected:', JSON.stringify(topicsToSubmit));
+    console.log('[TSS handleContinue] currentCourseId:', currentCourseId);
+
+    if (topicsToSubmit.length === 0 && personalizedQuizType !== 'weakTopicFocused') { // Zayıf odaklı değilse konu seçimi zorunlu
       alert("Lütfen en az bir konu seçin");
       return;
     }
     
-    onTopicsSelected(selectedTopicIds, currentCourseId);
+    // Hızlı sınav için kurs ID'si "quick" veya boş string olabilir, backend bunu handle etmeli. Şimdilik boş gönderelim.
+    onTopicsSelected(topicsToSubmit, quizType === 'quick' ? "" : currentCourseId);
   };
 
   if (isLoading) {

@@ -130,6 +130,8 @@ export interface QuizGenerationOptions {
   quizType: QuizType;
   courseId?: string;
   personalizedQuizType?: PersonalizedQuizType | null;
+  documentText?: string;
+  documentId?: string;
   sourceDocument?: {
     fileName: string;
     storagePath: string;
