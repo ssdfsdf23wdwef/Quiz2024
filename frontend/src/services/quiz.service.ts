@@ -312,11 +312,20 @@ class QuizApiService {
         // Belge metninin uzunluğunu kontrol et
         const quizGenOptions = options as unknown as Record<string, unknown>;
         
-        // Belge metni kontrolü
-        if (quizGenOptions.documentText && 
-            typeof quizGenOptions.documentText === 'string' && 
-            quizGenOptions.documentText.length < 200) {
-          throw new Error('Belge metni çok kısa. En az 200 karakter olmalıdır.');
+        // Belge metni kontrolü - minimum 100 karakter olmalı (eski değer 200'dü)
+        // Ayrıca belge içeriğinin boş olması durumunu da kontrol et
+        if (!quizGenOptions.documentText && !quizGenOptions.documentId) {
+          throw new Error('Hızlı sınav için belge metni veya belge ID gereklidir.');
+        } else if (quizGenOptions.documentText && 
+            typeof quizGenOptions.documentText === 'string') {
+          
+          const textLength = quizGenOptions.documentText.trim().length;
+          
+          if (textLength === 0) {
+            throw new Error('Belge metni boş. Lütfen geçerli bir belge metni girin veya belge yükleyin.');
+          } else if (textLength < 100) {
+            throw new Error(`Belge metni çok kısa. Sınav oluşturmak için en az 100 karakter gereklidir. Şu anki uzunluk: ${textLength} karakter.`);
+          }
         }
       }
       

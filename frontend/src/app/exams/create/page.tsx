@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import quizService from "@/services/quiz.service";
 import { FiClipboard } from "react-icons/fi";
@@ -46,7 +46,7 @@ interface CreateQuizFormDataTypeInternal {
   documentId?: string;
   courseId?: string;
   preferences: GlobalQuizPreferences & { topicIds?: string[]; subTopicIds?: string[]; personalizedQuizType?: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive" | null; };
-  selectedTopics: string[]; 
+  selectedTopics: string[];
   topicNames: Record<string, string>; 
 }
 
@@ -67,11 +67,25 @@ function CreateExamPageContent() {
 
   const coursesLoading = false; 
 
+  const hasAttemptedInitialProcessing = useRef(false);
+
   // handleCreateQuiz fonksiyonunu useCallback ile sarmala
   const handleCreateQuiz = useCallback(async (formData: CreateQuizFormDataTypeInternal) => {
-    console.log('[CreateExamPage handleCreateQuiz] Received formData:', JSON.stringify(formData));
+    console.log('[CreateExamPage handleCreateQuiz] Received formData:', JSON.stringify({
+      ...formData,
+      document: formData.document ? { name: formData.document.name, size: formData.document.size } : null
+    }));
+    console.log('[CreateExamPage handleCreateQuiz] DETAY: formData.preferences.topicIds:', JSON.stringify(formData.preferences?.topicIds || []));
+    console.log('[CreateExamPage handleCreateQuiz] DETAY: formData.selectedTopics:', JSON.stringify(formData.selectedTopics || []));
+    console.log('[CreateExamPage handleCreateQuiz] DETAY: document ve documentId durumu:', {
+      documentVar: !!formData.document,
+      documentIdVar: !!formData.documentId,
+      documentType: formData.document ? typeof formData.document : 'null',
+      documentIdType: formData.documentId ? typeof formData.documentId : 'undefined'
+    });
+    
     if (isSubmitting && !processingQuiz) return;
-
+      
     setIsSubmitting(true);
     setProcessingQuiz(true);
     setCreationResultInternal(null); 
@@ -80,9 +94,72 @@ function CreateExamPageContent() {
       console.log("✏️ Quiz oluşturuluyor (handleCreateQuiz):", formData);
 
       const { quizType, courseId, preferences: formPreferences, selectedTopics: formSelectedTopics, document, documentId: formDocumentId } = formData;
-      console.log('[CreateExamPage handleCreateQuiz] formPreferences.topicIds:', JSON.stringify(formPreferences?.topicIds));
-      console.log('[CreateExamPage handleCreateQuiz] formSelectedTopics:', JSON.stringify(formSelectedTopics));
+      console.log('[CreateExamPage handleCreateQuiz] formPreferences.topicIds:', JSON.stringify(formPreferences?.topicIds || []));
+      console.log('[CreateExamPage handleCreateQuiz] formSelectedTopics:', JSON.stringify(formSelectedTopics || []));
       console.log('[CreateExamPage handleCreateQuiz] document present:', !!document, 'formDocumentId present:', formDocumentId);
+
+      // Belge kontrolü: Dosya yoksa veya ID yoksa ve seçili konular da yoksa uyarı ver
+      const hasSelectedTopics = 
+        (formPreferences?.topicIds && formPreferences.topicIds.length > 0) || 
+        (formSelectedTopics && formSelectedTopics.length > 0);
+      
+      const isQuickQuiz = quizType === 'quick';
+      
+      if (isQuickQuiz && !document && !formDocumentId && !hasSelectedTopics) {
+        const errorMsg = "Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.";
+        console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
+        toast.error(errorMsg);
+        setProcessingQuiz(false);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Önce belge içeriğini oku, sonra validasyon kontrolü yap
+      let documentTextInternal: string | undefined;
+      if (document) {
+        try {
+          // Dosyanın çok küçük olup olmadığını kontrol et (placeholder dosya hariç)
+          if (document.size < 50 && document.name && document.name.includes("placeholder")) {
+            console.log('[CreateExamPage handleCreateQuiz] Placeholder dosya tespit edildi, belge metni kontrolü atlanıyor');
+          } else {
+            documentTextInternal = await document.text();
+            console.log('[CreateExamPage handleCreateQuiz] Document text extracted, length:', documentTextInternal?.length);
+            
+            // Belge içeriğinin tamamen boş olması durumu
+            if (!documentTextInternal || documentTextInternal.trim().length === 0) {
+              if (!hasSelectedTopics) {
+                const errorMsg = "Belge içeriği boş ve hiçbir konu seçilmemiş. Lütfen geçerli bir belge yükleyin veya en az bir konu seçin.";
+                console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
+                toast.error(errorMsg);
+                setProcessingQuiz(false);
+                setIsSubmitting(false);
+                return;
+              }
+              console.log('[CreateExamPage handleCreateQuiz] Uyarı: Belge içeriği boş, ancak konu seçildiği için devam ediliyor');
+            }
+            // Hızlı sınav için içerik kontrolü sadece gerçek içerik varsa yap
+            else if (documentTextInternal.trim().length < 100 && isQuickQuiz && !hasSelectedTopics) { 
+              const errorMsg = `Belge metni çok kısa (${documentTextInternal.trim().length} karakter). Hızlı sınav için ya en az 100 karakter uzunluğunda metin gerekli ya da konu seçmelisiniz.`;
+              console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
+              toast.error(errorMsg);
+              setProcessingQuiz(false);
+              setIsSubmitting(false);
+              return;
+            }
+          }
+        } catch (textError) {
+          console.error("[CreateExamPage handleCreateQuiz] Belge metni okunurken hata:", textError);
+          // Sadece placeholder olmayan gerçek dosyalar için hata göster
+          if (document.size > 50) { // Gerçek dosya
+            toast.error("Belge içeriği okunamadı. Lütfen geçerli bir dosya yükleyin.");
+            setProcessingQuiz(false);
+            setIsSubmitting(false);
+            return;
+          } else {
+            console.log("[CreateExamPage handleCreateQuiz] Placeholder dosya okuma hatası, konu seçimi ile devam ediliyor");
+          }
+        }
+      }
 
       const effectiveTopics = (formPreferences?.topicIds && formPreferences.topicIds.length > 0)
         ? formPreferences.topicIds
@@ -91,8 +168,25 @@ function CreateExamPageContent() {
         : [];
       console.log('[CreateExamPage handleCreateQuiz] effectiveTopics:', JSON.stringify(effectiveTopics));
 
-      if ((quizType === 'quick' || (quizType === 'personalized' && personalizedTypeLocal !== 'weakTopicFocused')) && (!effectiveTopics || effectiveTopics.length === 0)) {
-        const errorMsg = "En az bir konu seçmelisiniz (handleCreateQuiz validation). Hızlı veya konu odaklı kişiselleştirilmiş sınavlar için konu gereklidir.";
+      // Validasyon mantığını düzeltiyorum:
+      // 1. Personalized ve weakTopicFocused değilse konu gerekir
+      // 2. Hızlı sınav ve belge/belgeid yoksa konu gerekir
+      // 3. Hızlı sınav ve belge varsa konu isteğe bağlı olabilir
+      const isPersonalizedRequiringTopics = quizType === 'personalized' && personalizedTypeLocal !== 'weakTopicFocused';
+      const hasDocument = !!document || !!formDocumentId || !!documentTextInternal;
+      const isQuickWithoutDocument = quizType === 'quick' && !hasDocument;
+      
+      console.log('[CreateExamPage handleCreateQuiz] Validasyon durumu:', {
+        isPersonalizedRequiringTopics,
+        hasDocument,
+        isQuickWithoutDocument,
+        topicsEmpty: !effectiveTopics || effectiveTopics.length === 0
+      });
+      
+      if ((isPersonalizedRequiringTopics || isQuickWithoutDocument) && (!effectiveTopics || effectiveTopics.length === 0)) {
+        const errorMsg = isQuickWithoutDocument
+          ? "Hızlı sınav için ya belge yüklemeli ya da en az bir konu seçmelisiniz."
+          : "En az bir konu seçmelisiniz. Kişiselleştirilmiş sınavlar için konu seçimi zorunludur.";
         console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg, 'Effective topics:', JSON.stringify(effectiveTopics));
         toast.error(errorMsg);
         setProcessingQuiz(false);
@@ -100,28 +194,9 @@ function CreateExamPageContent() {
         return;
       }
 
-      let documentTextInternal: string | undefined;
-      if (document) {
-        try {
-          documentTextInternal = await document.text();
-          console.log('[CreateExamPage handleCreateQuiz] Document text extracted, length:', documentTextInternal?.length);
-          if (documentTextInternal && documentTextInternal.length < 100 && quizType === 'quick') { 
-            const errorMsg = `Belge metni çok kısa. Hızlı sınav için en az 100 karakter olmalıdır (handleCreateQuiz validation). Gerçek uzunluk: ${documentTextInternal.length}`;
-            console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
-            toast.error(errorMsg);
-            setProcessingQuiz(false);
-            setIsSubmitting(false);
-            return;
-          }
-        } catch (textError) {
-          console.error("[CreateExamPage handleCreateQuiz] Belge metni okunurken hata:", textError);
-          toast.error("Belge içeriği okunamadı.");
-          setProcessingQuiz(false);
-          setIsSubmitting(false);
-          return;
-        }
-      } else if (quizType === 'quick' && !formDocumentId && !(documentTextInternal && documentTextInternal.length >= 100) ) { 
-        const errorMsg = "Hızlı sınav için geçerli belge, belge ID veya yeterli uzunlukta belge metni gerekli fakat sağlanmadı (handleCreateQuiz validation).";
+      // Eğer seçilen konu yok ve belge içeriği de yoksa uyarı ver
+      if (!hasDocument && effectiveTopics.length === 0) { 
+        const errorMsg = "Hızlı sınav için geçerli belge, belge ID veya en az bir konu seçimi gerekli.";
         console.error('[CreateExamPage handleCreateQuiz] Validation failed:', errorMsg);
         toast.error(errorMsg);
         setProcessingQuiz(false);
@@ -150,8 +225,8 @@ function CreateExamPageContent() {
       if (resultQuizFromService && resultQuizFromService.id) {
         setCreationResultInternal({
           file: document || null, 
-          quizType: quizTypeLocal,
-          personalizedQuizType: personalizedTypeLocal,
+          quizType: quizType,
+          personalizedQuizType: quizType === 'personalized' ? (personalizedTypeLocal || formPreferences.personalizedQuizType) : undefined,
           preferences: formPreferences as CreateQuizFormDataTypeInternal['preferences'], 
           topicNameMap: formData.topicNames || {},  
           status: 'success', 
@@ -174,8 +249,8 @@ function CreateExamPageContent() {
 
       setCreationResultInternal({
         file: formData.document || null, 
-        quizType: quizTypeLocal,
-        personalizedQuizType: personalizedTypeLocal,
+        quizType: formData.quizType,
+        personalizedQuizType: formData.personalizedQuizType,
         preferences: formData.preferences as CreateQuizFormDataTypeInternal['preferences'],
         topicNameMap: formData.topicNames || {},
         status: 'error', 
@@ -185,37 +260,7 @@ function CreateExamPageContent() {
       setProcessingQuiz(false);
       setIsSubmitting(false);
     }
-  }, [isSubmitting, processingQuiz, personalizedTypeLocal, quizTypeLocal, router, courseIdLocal, setCreationResultInternal, setIsSubmitting, setProcessingQuiz]);
-
-  // handleExamCreationComplete fonksiyonunu useCallback ile sarmala ve useEffect'den önce tanımla
-  const handleExamCreationComplete = useCallback(async (result: ExamCreationResultInternal) => {
-    console.log('[CreateExamPage handleExamCreationComplete] Received result:', JSON.stringify(result));
-    setProcessingQuiz(true);
-    setIsSubmitting(true);
-
-    const topicIds = result.preferences.topicIds || [];
-    const subTopicIds = result.preferences.subTopicIds || [];
-    console.log('[CreateExamPage handleExamCreationComplete] Extracted topicIds:', JSON.stringify(topicIds));
-    console.log('[CreateExamPage handleExamCreationComplete] Extracted subTopicIds:', JSON.stringify(subTopicIds));
-
-    const formData: CreateQuizFormDataTypeInternal = {
-      quizType: result.quizType,
-      personalizedQuizType: result.personalizedQuizType,
-      document: result.file, 
-      documentId: result.documentId,
-      courseId: result.preferences.courseId || courseIdLocal,
-      preferences: {
-        ...result.preferences,
-        topicIds: topicIds, 
-        subTopicIds: subTopicIds,
-      },
-      selectedTopics: topicIds, 
-      topicNames: result.topicNameMap || {},
-    };
-
-    console.log('[CreateExamPage handleExamCreationComplete] Constructed formData for handleCreateQuiz:', JSON.stringify(formData));
-    await handleCreateQuiz(formData);
-  }, [courseIdLocal, handleCreateQuiz, setProcessingQuiz, setIsSubmitting]); // handleCreateQuiz'i bağımlılıklara ekle
+  }, [router, personalizedTypeLocal]);
 
   useEffect(() => {
     const typeParam = searchParams.get("type") as QuizType | null;
@@ -225,28 +270,44 @@ function CreateExamPageContent() {
       | "newTopicFocused"
       | "comprehensive" | null;
     const courseIdParam = searchParams.get("courseId");
-    const fileNameParam = searchParams.get("fileName");
+    const fileNameParam = searchParams.get("fileName"); 
     const documentIdParam = searchParams.get("documentId");
 
     if (typeParam) {
       setQuizTypeLocal(typeParam);
     }
     if (personalizedQuizTypeParam) {
-      setPersonalizedTypeLocal(personalizedQuizTypeParam || undefined); // null ise undefined
+      setPersonalizedTypeLocal(personalizedQuizTypeParam || undefined);
     }
     if (courseIdParam) {
       setCourseIdLocal(courseIdParam);
     }
 
-    if (startQuizParam === "true") {
+    if (startQuizParam === "true" && !hasAttemptedInitialProcessing.current) {
+      hasAttemptedInitialProcessing.current = true;
+      
       console.log('[CreateExamPage useEffect startQuiz] Start. quizType:', typeParam, 'personalizedType:', personalizedQuizTypeParam, 'courseId:', courseIdParam, 'documentId:', documentIdParam);
-      if (fileNameParam && !documentIdParam) {
+      
+      if (fileNameParam) {
         console.log('[CreateExamPage useEffect startQuiz] fileNameParam:', fileNameParam);
-        console.warn("[CreateExamPage useEffect startQuiz] fileNameParam mevcut ama documentId eksik.");
+        if (!documentIdParam) {
+          console.warn("[CreateExamPage useEffect startQuiz] fileNameParam mevcut ama documentId eksik.");
+        }
       }
 
-      const result: ExamCreationResultInternal = {
-        file: null, 
+      let placeholderFile: File | null = null;
+      if (fileNameParam) {
+        try {
+          const emptyBlob = new Blob([''], { type: 'application/octet-stream' });
+          placeholderFile = new File([emptyBlob], fileNameParam, { type: 'application/octet-stream' });
+          console.log('[CreateExamPage useEffect startQuiz] URL file adından placeholder File nesnesi oluşturuldu:', placeholderFile.name);
+        } catch (error) {
+          console.error('[CreateExamPage useEffect startQuiz] Placeholder file oluşturma hatası:', error);
+        }
+      }
+
+      const resultData: ExamCreationResultInternal = {
+        file: placeholderFile,
         quizType: typeParam || "quick",
         personalizedQuizType: personalizedQuizTypeParam || undefined,
         preferences: {
@@ -261,12 +322,136 @@ function CreateExamPageContent() {
         topicNameMap: {},
         documentId: documentIdParam || undefined,
       };
-      console.log('[CreateExamPage useEffect startQuiz] Constructed result for handleExamCreationComplete:', JSON.stringify(result));
-      handleExamCreationComplete(result);
+      console.log('[CreateExamPage useEffect startQuiz] Constructed resultData for processing:', JSON.stringify({
+        ...resultData,
+        file: resultData.file ? { name: resultData.file.name, size: resultData.file.size } : null
+      }));
+      
+      (async (result: ExamCreationResultInternal) => {
+        console.log('[CreateExamPage useEffect_inline_processing] Received result:', JSON.stringify(result));
+        console.log('[CreateExamPage useEffect_inline_processing] VERİ DETAY: result.file:', result.file);
+        console.log('[CreateExamPage useEffect_inline_processing] VERİ DETAY: result.preferences:', JSON.stringify(result.preferences));
+        setProcessingQuiz(true);
+        setIsSubmitting(true);
+
+        const topicIds = result.preferences.topicIds || [];
+        const subTopicIds = result.preferences.subTopicIds || [];
+        console.log('[CreateExamPage useEffect_inline_processing] Extracted topicIds:', JSON.stringify(topicIds));
+        console.log('[CreateExamPage useEffect_inline_processing] Extracted subTopicIds:', JSON.stringify(subTopicIds));
+
+        // Belge veya konu kontrolü: URL'den gelen istekte de doğrulama yapalım
+        const hasSelectedTopics = topicIds.length > 0;
+        const hasDocumentInfo = !!result.file || !!result.documentId;
+        const isQuickQuiz = result.quizType === 'quick';
+
+        if (isQuickQuiz && !hasDocumentInfo && !hasSelectedTopics) {
+          console.error('[CreateExamPage useEffect_inline_processing] HATA: Hızlı sınav için belge veya konu seçimi gerekli!');
+          toast.error("Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.");
+          setProcessingQuiz(false);
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Dosya adı URL'den geliyorsa ve documentId yoksa, bu durumu loglayalım
+        if (fileNameParam && !result.documentId) {
+          console.log('[CreateExamPage useEffect_inline_processing] UYARI: fileNameParam var ama result.documentId yok!');
+          console.log('[CreateExamPage useEffect_inline_processing] fileNameParam:', fileNameParam);
+          
+          // DocumentId yoksa ve dosya adı URL'den geldiyse, ama konu seçimi de yoksa uyarı ver
+          if (!hasSelectedTopics) {
+            console.error('[CreateExamPage useEffect_inline_processing] HATA: DocumentId yok, dosya adı var ama konu seçilmemiş');
+            toast.error("Belge ID bulunamadı ve hiçbir konu seçilmemiş. Lütfen en az bir konu seçin.");
+            setProcessingQuiz(false);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        // Veri referanslarını korumak için deep clone yapalım
+        const formData: CreateQuizFormDataTypeInternal = {
+          quizType: result.quizType,
+          personalizedQuizType: result.personalizedQuizType,
+          document: result.file,
+          documentId: result.documentId,
+          courseId: result.preferences.courseId || courseIdLocal,
+          preferences: {
+            ...JSON.parse(JSON.stringify(result.preferences)),
+            topicIds: topicIds.slice(),
+            subTopicIds: subTopicIds.slice(),
+          },
+          selectedTopics: topicIds.slice(),
+          topicNames: { ...result.topicNameMap },
+        };
+
+        console.log('[CreateExamPage useEffect_inline_processing] Constructed formData for handleCreateQuiz:', JSON.stringify(formData));
+        console.log('[CreateExamPage useEffect_inline_processing] KONTROL: formData.preferences.topicIds:', formData.preferences.topicIds);
+        console.log('[CreateExamPage useEffect_inline_processing] KONTROL: formData.selectedTopics:', formData.selectedTopics);
+        
+        await handleCreateQuiz(formData);
+      })(resultData);
     }
-  }, [searchParams, startQuizParam, handleExamCreationComplete]);
+  }, [searchParams, startQuizParam, handleCreateQuiz, courseIdLocal]);
 
   const currentQuizTypeForWizard = searchParams.get("type") as QuizType || quizTypeLocal;
+
+  const onWizardComplete = useCallback(async (result: ExamCreationResultInternal) => {
+    console.log('[CreateExamPage onWizardComplete] Received result:', JSON.stringify(result));
+    console.log('[CreateExamPage onWizardComplete] DETAY: preferences.topicIds:', result.preferences.topicIds);
+    console.log('[CreateExamPage onWizardComplete] DETAY: preferences.subTopicIds:', result.preferences.subTopicIds);
+    console.log('[CreateExamPage onWizardComplete] DETAY: topicNameMap anahtarları:', Object.keys(result.topicNameMap || {}));
+    setProcessingQuiz(true);
+    setIsSubmitting(true);
+
+    const topicIds = result.preferences.topicIds || [];
+    const subTopicIds = result.preferences.subTopicIds || [];
+
+    // Doğrulama kontrollerini ekle
+    const hasSelectedTopics = topicIds.length > 0;
+    const hasDocumentInfo = !!result.file || !!result.documentId;
+    const isQuickQuiz = result.quizType === 'quick';
+    
+    // Hızlı sınav ise ve belge veya konu yoksa uyarı ver
+    if (isQuickQuiz && !hasDocumentInfo && !hasSelectedTopics) {
+      console.error('[CreateExamPage onWizardComplete] HATA: Hızlı sınav için belge veya konu seçimi gerekli!');
+      toast.error("Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.");
+      setProcessingQuiz(false);
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Kişiselleştirilmiş sınav ise ve konu seçilmemişse uyarı ver (weakTopicFocused tipi dışında)
+    const isPersonalizedRequiringTopics = result.quizType === 'personalized' && 
+      result.personalizedQuizType !== 'weakTopicFocused';
+      
+    if (isPersonalizedRequiringTopics && !hasSelectedTopics) {
+      console.error('[CreateExamPage onWizardComplete] HATA: Kişiselleştirilmiş sınav için konu seçimi gerekli!');
+      toast.error("Kişiselleştirilmiş sınav için en az bir konu seçmelisiniz.");
+      setProcessingQuiz(false);
+      setIsSubmitting(false);
+      return; 
+    }
+
+    const formData: CreateQuizFormDataTypeInternal = {
+      quizType: result.quizType,
+      personalizedQuizType: result.personalizedQuizType,
+      document: result.file,
+      documentId: result.documentId,
+      courseId: result.preferences.courseId || courseIdLocal,
+      preferences: {
+        ...JSON.parse(JSON.stringify(result.preferences)),
+        topicIds: topicIds.slice(),
+        subTopicIds: subTopicIds.slice(),
+      },
+      selectedTopics: topicIds.slice(),
+      topicNames: { ...result.topicNameMap },
+    };
+    
+    console.log('[CreateExamPage onWizardComplete] Constructed formData for handleCreateQuiz:', JSON.stringify(formData));
+    console.log('[CreateExamPage onWizardComplete] KONTROL: formData.preferences.topicIds:', formData.preferences.topicIds);
+    console.log('[CreateExamPage onWizardComplete] KONTROL: formData.selectedTopics:', formData.selectedTopics);
+    
+    await handleCreateQuiz(formData);
+  }, [courseIdLocal, handleCreateQuiz, setProcessingQuiz, setIsSubmitting]);
 
   if (coursesLoading && quizTypeLocal === 'personalized' ) { 
     return <div className="flex justify-center items-center h-screen"><Spinner size="lg" /></div>;
@@ -279,7 +464,7 @@ function CreateExamPageContent() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
             <ExamCreationWizard
               quizType={currentQuizTypeForWizard} 
-              onComplete={handleExamCreationComplete}
+              onComplete={onWizardComplete}
             />
           </motion.div>
         )}
@@ -331,7 +516,7 @@ function CreateExamPageContent() {
                 </div>
               </div>
             )}
-          </div>
+            </div>
         )}
 
         {creationResultInternal && creationResultInternal.error && creationResultInternal.status === 'error' && (

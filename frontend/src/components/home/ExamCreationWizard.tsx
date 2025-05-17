@@ -580,43 +580,49 @@ export default function ExamCreationWizard({
 
           if (responseData && typeof responseData === 'object' && 'topics' in responseData && Array.isArray((responseData as TopicsResponseData).topics)) {
             console.log(`[ECW detectTopicsFromUploadedFile] 📋 Yeni API formatı tespit edildi (topics nesnesi)`);
-            processedTopics = (responseData as TopicsResponseData).topics!.map((topic: TopicResponse) => ({
+            processedTopics = (responseData as TopicsResponseData).topics!.map((topic: TopicResponse): DetectedSubTopic => ({
               id: topic.normalizedSubTopicName || topic.subTopicName || generateId('topic'),
               subTopicName: topic.subTopicName || 'Bilinmeyen Konu',
               normalizedSubTopicName: normalizeStr(topic.normalizedSubTopicName || topic.subTopicName),
-              isSelected: false 
+              isSelected: false,
+              status: undefined, 
+              isNew: undefined,
+              parentTopic: undefined,
             }));
             console.log(`[ECW detectTopicsFromUploadedFile] ✓ ${processedTopics.length} konu işlendi (yeni format)`);
           } else if (Array.isArray(responseData)) {
             console.log(`[ECW detectTopicsFromUploadedFile] 📋 Eski API formatı tespit edildi (dizi)`);
-            if (responseData.length > 0 && typeof responseData[0] === 'object' && responseData[0] !== null && 'id' in responseData[0]){
-              processedTopics = responseData.map((topic: any) => ({
-                id: topic.id || topic.normalizedSubTopicName || topic.subTopicName || generateId('detected'),
-                subTopicName: topic.subTopicName || topic.name || 'Bilinmeyen Konu',
-                normalizedSubTopicName: normalizeStr(topic.normalizedSubTopicName || topic.id || topic.subTopicName),
-                status: topic.status,
-                isNew: topic.isNew,
-                isSelected: false,
-                parentTopic: topic.parentTopic
-              } as DetectedSubTopic));
-            } else {
-              processedTopics = responseData.map((topic: any, index: number) => {
-                if (typeof topic === 'string') {
-                  return {
-                    id: normalizeStr(topic) || generateId(`str-${index}`),
-                    subTopicName: topic, 
-                    normalizedSubTopicName: normalizeStr(topic),
-                    isSelected: false
-                  } as DetectedSubTopic;
-                }
+            processedTopics = responseData.map((topic: unknown, index: number): DetectedSubTopic => {
+              if (typeof topic === 'string') {
                 return {
-                  id: normalizeStr(String(topic.id || topic.normalizedSubTopicName || topic.subTopicName)) || generateId(`obj-${index}`),
-                  subTopicName: String(topic.subTopicName || topic.name || `Bilinmeyen Konu ${index + 1}`),
-                  normalizedSubTopicName: normalizeStr(String(topic.normalizedSubTopicName || topic.id || topic.subTopicName)),
-                  isSelected: false
-                } as DetectedSubTopic;
-              });
-            }
+                  id: normalizeStr(topic) || generateId(`str-${index}`),
+                  subTopicName: topic, 
+                  normalizedSubTopicName: normalizeStr(topic),
+                  isSelected: false,
+                  status: undefined, isNew: undefined, parentTopic: undefined,
+                };
+              } else if (typeof topic === 'object' && topic !== null) {
+                  const t = topic as Partial<DetectedSubTopic & { name?: string }>;
+                  return {
+                    id: normalizeStr(String(t.id || t.normalizedSubTopicName || t.subTopicName)) || generateId(`obj-${index}`),
+                    subTopicName: String(t.subTopicName || t.name || `Bilinmeyen Konu ${index + 1}`),
+                    normalizedSubTopicName: normalizeStr(String(t.normalizedSubTopicName || t.id || t.subTopicName)),
+                    isSelected: false,
+                    status: t.status, 
+                    isNew: t.isNew, 
+                    parentTopic: t.parentTopic,
+                  };
+              }
+              // Fallback for unexpected topic structure
+              console.warn('[ECW detectTopicsFromUploadedFile] Unexpected topic structure in array:', topic);
+              return {
+                id: generateId(`fallback-${index}`),
+                subTopicName: 'Hatalı Konu Yapısı',
+                normalizedSubTopicName: 'hatali-konu-yapisi',
+                isSelected: false,
+                status: undefined, isNew: undefined, parentTopic: undefined,
+              };
+            });
             console.log(`[ECW detectTopicsFromUploadedFile] ✓ ${processedTopics.length} konu işlendi (eski format - dizi)`);
           } else {
             console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: Beklenmeyen API yanıt formatı:`, responseData);
@@ -628,17 +634,66 @@ export default function ExamCreationWizard({
           if (processedTopics.length > 0) {
             setDetectedTopics(processedTopics);
             setTopicDetectionStatus("success");
-            console.log('[ECW detectTopicsFromUploadedFile] ✅ Konu tespiti başarılı, adım 2\'ye geçiliyor.');
+            console.log(`[ECW detectTopicsFromUploadedFile] ✅ Konu tespiti başarılı, adım 2'ye geçiliyor.`);
             setCurrentStep(2); 
             ErrorService.showToast(`${processedTopics.length} konu tespit edildi.`, "success");
-          } else {
-             console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ UYARI: Tespit edilen konu yok!`);
+
+            // Eğer hızlı sınav ise ve konular tespit edildiyse, ilk konuyu otomatik seç
+            if (quizType === "quick" && processedTopics.length > 0) {
+              const firstTopicId = processedTopics[0].id;
+              const updatedTopics = processedTopics.map((topic, index) => index === 0 ? { ...topic, isSelected: true } : topic);
+              setDetectedTopics(updatedTopics); 
+              setSelectedTopicIds([firstTopicId]);
+              setSelectedSubTopicIds([firstTopicId]); 
+              if (firstTopicId) { 
+                setPreferences(prev => ({ ...prev, topicIds: [firstTopicId!], subTopicIds: [firstTopicId!] })); // Non-null assertion
+              }
+              console.log(`[ECW detectTopicsFromUploadedFile] Hızlı sınav için ilk konu (${firstTopicId}) otomatik seçildi ve detectedTopics güncellendi.`);
+            }
+
+          } else { 
+            console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ UYARI: Tespit edilen konu yok!`);
             ErrorService.showToast("Belgede konu tespit edilemedi. Varsayılan konular kullanılacak.", "info");
             const defaultTopics = generateDefaultTopicsFromFileName(file.name);
-            setDetectedTopics(defaultTopics);
-            setTopicDetectionStatus("success");
-            console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Konu tespit edilemedi, dosya adından varsayılan konular oluşturuldu, adım 2\'ye geçiliyor.');
-            setCurrentStep(2);
+            
+            if (quizType === "quick" && defaultTopics.length > 0) {
+              let firstDefaultTopicId: string | undefined = undefined;
+              const updatedDefaultTopics = defaultTopics.map(topic => {
+                if (!firstDefaultTopicId && topic.isSelected) {
+                  firstDefaultTopicId = topic.id;
+                  return topic; 
+                } 
+                return topic;
+              });
+
+              if (!firstDefaultTopicId && defaultTopics.length > 0) {
+                 firstDefaultTopicId = defaultTopics[0].id; // This should be a string
+                 if (firstDefaultTopicId) { // Ensure it's not undefined after assignment (though it shouldn't be)
+                    updatedDefaultTopics[0].isSelected = true;
+                 } else {
+                    console.error("[ECW detectTopicsFromUploadedFile] defaultTopics[0].id was unexpectedly undefined.")
+                 }
+              }
+              
+              setDetectedTopics(updatedDefaultTopics);
+              setTopicDetectionStatus("success");
+              console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Konu tespit edilemedi, dosya adından varsayılan konular oluşturuldu, adım 2\'ye geçiliyor.');
+              setCurrentStep(2);
+
+              if (firstDefaultTopicId) {
+                setSelectedTopicIds([firstDefaultTopicId]);
+                setSelectedSubTopicIds([firstDefaultTopicId]);
+                setPreferences(prev => ({ ...prev, topicIds: [firstDefaultTopicId!], subTopicIds: [firstDefaultTopicId!] })); 
+                console.log(`[ECW detectTopicsFromUploadedFile] Hızlı sınav için ilk varsayılan konu (${firstDefaultTopicId}) otomatik seçildi ve detectedTopics güncellendi.`);
+              } else {
+                console.log(`[ECW detectTopicsFromUploadedFile] Hızlı sınav için varsayılan konu bulunamadı veya seçilemedi.`);
+              }
+            } else {
+              setDetectedTopics(defaultTopics);
+              setTopicDetectionStatus("success");
+              console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Konu tespit edilemedi (hızlı sınav değil veya varsayılan konu yok), adım 2\'ye geçiliyor.');
+              setCurrentStep(2);
+            }
           }
         } catch (error: unknown) {
           console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: API isteği başarısız!`, error);
@@ -744,17 +799,11 @@ export default function ExamCreationWizard({
       console.log("[ECW handleFinalSubmit] 🔄 Kullanılacak effectiveTopicIds:", JSON.stringify(effectiveTopicIds));
       console.log("[ECW handleFinalSubmit] 🔄 Kullanılacak effectiveSubTopicIds:", JSON.stringify(effectiveSubTopicIds));
       
-      // Son tercihleri oluştur
+      // Son tercihleri oluştur - tüm sınav türleri için konuları daima ekleyelim, undefined kullanmayalım
       const finalPreferences: QuizPreferences = {
         ...preferences,
-        topicIds:
-          (quizType === "personalized" && personalizedQuizType !== "weakTopicFocused") 
-            ? effectiveTopicIds 
-            : (quizType === "quick" && effectiveTopicIds.length > 0 ? effectiveTopicIds : undefined),
-        subTopicIds:
-          (quizType === "personalized" && personalizedQuizType !== "weakTopicFocused") 
-            ? effectiveSubTopicIds 
-            : (quizType === "quick" && effectiveSubTopicIds.length > 0 ? effectiveSubTopicIds : undefined)
+        topicIds: effectiveTopicIds,  // Her zaman array olarak gönder, undefined olmamalı
+        subTopicIds: effectiveSubTopicIds // Her zaman array olarak gönder, undefined olmamalı
       };
       console.log('[ECW handleFinalSubmit] Final preferences for result:', JSON.stringify(finalPreferences));
 
@@ -766,15 +815,14 @@ export default function ExamCreationWizard({
       }
       console.log('[ECW handleFinalSubmit] topicNameMap created:', JSON.stringify(topicNameMap));
 
+      // File null olabilir, bu kontrolü ekleyelim
+      const file = selectedFile || null;
+      console.log('[ECW handleFinalSubmit] File to be sent:', file ? file.name : 'null');
+      
       const result = {
-        file:
-          quizType === "personalized" &&
-          personalizedQuizType === "weakTopicFocused"
-            ? null
-            : selectedFile, 
+        file: quizType === "personalized" && personalizedQuizType === "weakTopicFocused" ? null : file, 
         quizType,
-        personalizedQuizType:
-          quizType === "personalized" ? personalizedQuizType : undefined,
+        personalizedQuizType: quizType === "personalized" ? personalizedQuizType : undefined,
         preferences: finalPreferences,
         topicNameMap: topicNameMap
       };
@@ -800,6 +848,7 @@ export default function ExamCreationWizard({
 
       if (typeof onComplete === 'function') {
         console.log("[ECW handleFinalSubmit] 🔄 onComplete fonksiyonu çağrılıyor...");
+        console.log("[ECW handleFinalSubmit] KONTROL: topicIds boş mu?", !result.preferences.topicIds || result.preferences.topicIds.length === 0);
         onComplete(result);
       } else {
         console.error("[ECW handleFinalSubmit] ⚠️ onComplete fonksiyonu tanımlı değil");
