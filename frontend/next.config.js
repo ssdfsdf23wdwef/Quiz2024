@@ -18,7 +18,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     scrollRestoration: true,
-    optimisticClientCache: true,
+    optimisticClientCache: false, // Client cache hataları için kapatıldı
   },
   output: "standalone",
   // Gzip sıkıştırma performans için aktif edildi
@@ -42,6 +42,11 @@ const nextConfig = {
           }),
         );
       }
+
+      // Service worker hatasını engellemek için
+      config.externals = [...(config.externals || []), {
+        'encoding': 'encoding',
+      }];
 
       // Kullanılmayan runtime kodunu kaldır ve parçalama için optimize et
       config.optimization.splitChunks = {
@@ -100,6 +105,14 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
+        ],
+      },
+      {
+        // Service worker önbellek sorunlarını önlemek için
+        source: '/:path*',
+        headers: [
+          { key: 'Service-Worker-Allowed', value: '/' },
+          { key: 'Cache-Control', value: 'no-store, must-revalidate' },
         ],
       },
     ];

@@ -1,14 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  FiUpload,
-  FiFileText,
   FiTarget,
   FiZap,
   FiAward,
-  FiCheck,
   FiArrowLeft,
   FiArrowRight,
 } from "react-icons/fi";
@@ -574,6 +571,8 @@ export default function ExamCreationWizard({
           }
         );
         const documentId = uploadedDocument.id;
+        // BELGE ID'SINI STATE'E KAYDET
+        setUploadedDocumentId(documentId);
         console.log(`[ECW detectTopicsFromUploadedFile] 📄 Belge yükleme başarılı! Belge ID: ${documentId}`);
       } catch (uploadError) {
         console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: Dosya yükleme başarısız! ${uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata'}`);
