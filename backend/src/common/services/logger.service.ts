@@ -90,7 +90,7 @@ export class LoggerService {
     // Sadece belirli context'lerde loglama yapılmasını sağla
     const allowed = process.env.LOGGER_CONTEXTS
       ? process.env.LOGGER_CONTEXTS.split(',').map((s) => s.trim())
-      : ['AuthService']; // örnek class isimleri, ihtiyaca göre güncellenebilir
+      : ['*']; // Tüm servislere izin ver (* joker karakteri)
     this.allowedContexts = new Set(allowed);
 
     LoggerService.instance = this;
@@ -183,7 +183,12 @@ export class LoggerService {
     };
 
     // Sadece izin verilen context'lerde loglama yap
-    if (this.allowedContexts.size > 0 && !this.allowedContexts.has(context)) {
+    if (
+      this.allowedContexts.size > 0 &&
+      !this.allowedContexts.has('*') &&
+      !this.allowedContexts.has(context)
+    ) {
+      console.log(`[Logger] Context '${context}' loglanmıyor (izin yok)`);
       return;
     }
 
@@ -218,13 +223,27 @@ export class LoggerService {
     if (this.logToFile) {
       // Geliştirilmiş log formatı
       const formattedEntry = this.formatLogEntryForFile(logEntry);
-      // Log dosyasına asenkron olarak yaz
-      fs.appendFile(this.errorLogPath, formattedEntry, (err) => {
-        if (err) {
-          // Burada console.error kullanıyoruz çünkü log mekanizmasının kendisi çalışmıyor
-          console.error('Log dosyasına yazılırken hata oluştu:', err);
-        }
-      });
+      // Log dosyasını belirle
+      const logFilePath = this.getLogFileName(level);
+
+      // Geçerli bir dosya yolu varsa log dosyasına asenkron olarak yaz
+      if (logFilePath) {
+        fs.appendFile(logFilePath, formattedEntry, (err) => {
+          if (err) {
+            // Burada console.error kullanıyoruz çünkü log mekanizmasının kendisi çalışmıyor
+            console.error(
+              `Log dosyasına yazılırken hata oluştu (${logFilePath}):`,
+              err,
+            );
+          } else {
+            console.log(`[Logger] Log dosyasına yazıldı: ${logFilePath}`);
+          }
+        });
+      } else {
+        console.error('[Logger] Geçerli bir log dosya yolu belirlenemedi:', {
+          level,
+        });
+      }
     }
   }
 

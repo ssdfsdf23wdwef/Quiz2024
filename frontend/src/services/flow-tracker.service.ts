@@ -147,7 +147,7 @@ export class FlowTrackerService {
     ]);
     
     // Sadece belirli context'lerde loglama yapılmasını sağla
-    let allowedContexts: string[] = ['AuthService', 'NavigationService', 'AppComponent']; // Varsayılan değerler
+    let allowedContexts: string[] = ['*']; // Varsayılan olarak tüm context'lere izin ver
     
     if (typeof window !== 'undefined') {
       // Browser ortamındayız, localStorage kullanabiliriz
@@ -257,7 +257,9 @@ export class FlowTrackerService {
   ): void {
     if (!this.enabled || 
         !this.enabledCategories.has(category) ||
-        (this.allowedContexts.size > 0 && (!context || !this.allowedContexts.has(context)))) {
+        (this.allowedContexts.size > 0 && 
+          !this.allowedContexts.has('*') && 
+          (!context || !this.allowedContexts.has(context)))) {
       return;
     }
     
@@ -298,6 +300,95 @@ export class FlowTrackerService {
         { flowCategory: category, ...metadata }
       );
     }
+    
+    // LocalStorage'a flow kaydı
+    this.saveToLocalStorage(step);
+  }
+  
+  /**
+   * Flow log kaydını localStorage'a kaydeder
+   */
+  private saveToLocalStorage(step: FlowStep): void {
+    if (typeof window === 'undefined') {
+      return; // SSR sırasında localStorage yok, atla
+    }
+    
+    try {
+      const storageKey = 'frontend-flow-tracker.log';
+      const timestamp = new Date(step.timestamp).toISOString();
+      
+      // Log satırını oluştur
+      const logLine = `[${timestamp}] [${step.category}] [${step.context}] ${step.message}`;
+      
+      try {
+        // Mevcut logları al
+        let logs = '';
+        try {
+          logs = localStorage.getItem(storageKey) || '';
+        } catch {
+          // localStorage okuma hatası - temiz başla
+          logs = '';
+        }
+        
+        // Ekle
+        logs += logLine + '\n';
+        
+        // localStorage kapasitesi kontrolü - Max 50KB
+        const MAX_SIZE = 50 * 1024; // 50KB - daha güvenli
+        
+        // Yeni içerik eklenince boyut aşılacak mı kontrol et
+        if (logs.length > MAX_SIZE) {
+          // Aşılıyorsa önce daha agresif temizleme yap
+          // Son 10KB'ı koru, kalanını temizle
+          const PRESERVE_SIZE = 10 * 1024; // 10KB
+          if (logs.length > PRESERVE_SIZE) {
+            // Son satırlardan itibaren sadece PRESERVE_SIZE kadar tut
+            logs = logs.substring(logs.length - PRESERVE_SIZE);
+            // İlk satırın başlangıcını bul
+            const firstLineIndex = logs.indexOf('\n') + 1;
+            if (firstLineIndex > 0) {
+              logs = logs.substring(firstLineIndex);
+            }
+            // Kesme işlemi bilgisini ekle
+            logs = `\n[${timestamp}] [SYSTEM] Depolama alanı dolu, eski loglar temizlendi.\n` + logs;
+          } else {
+            // Küçük loglar için tamamen temizle
+            logs = '';
+          }
+        }
+        
+        // Kaydet
+        try {
+          localStorage.setItem(storageKey, logs);
+        } catch {
+          // localStorage yazma hatası - temiz başla
+          try {
+            localStorage.removeItem(storageKey);
+            localStorage.setItem(storageKey, `[${timestamp}] [SYSTEM] Log alanı temizlendi.\n${logLine}\n`);
+          } catch {
+            // Ciddi hata - sessizce devam et
+          }
+        }
+      } catch {
+        // Genel hata durumu - sessizce devam et
+      }
+    } catch (e) {
+      // Genel hata durumu - sadece konsola yönlendir
+      console.error('[FlowTracker] Log kaydetme hatası:', e);
+    }
+  }
+  
+  /**
+   * Kayıtlı tüm akış loglarını bir dizi halinde verir
+   */
+  public getAllFlowLogs(): string {
+    try {
+      const storageKey = 'frontend-flow-tracker.log';
+      return localStorage.getItem(storageKey) || '';
+    } catch (error) {
+      console.error('[FlowTracker] Log alma hatası:', error);
+      return '';
+    }
   }
   
   /**
@@ -312,7 +403,10 @@ export class FlowTrackerService {
   ): void {
     if (!this.enabled || 
         !this.enabledCategories.has(category) ||
-        (this.allowedContexts.size > 0 && (!context || !this.allowedContexts.has(context)))) {
+        (this.allowedContexts.size > 0 && 
+         !this.allowedContexts.has('*') && 
+         (!context || !this.allowedContexts.has(context)))) {
+      console.log(`[FlowTracker] İzin verilmeyen timing context: ${context || 'undefined'}, category: ${category}`);
       return;
     }
     
@@ -716,6 +810,22 @@ export class FlowTrackerService {
     this.stepCount = 0;
     this.sequenceCount = 0;
     this.timingMarks.clear();
+  }
+  
+  /**
+   * LocalStorage'daki tüm log içeriğini temizler
+   */
+  public clearAllLogs(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    try {
+      localStorage.removeItem('frontend-flow-tracker.log');
+      console.log('[FlowTracker] Tüm flow logları temizlendi');
+    } catch (error) {
+      console.error('[FlowTracker] Log temizleme hatası:', error);
+    }
   }
   
   /**

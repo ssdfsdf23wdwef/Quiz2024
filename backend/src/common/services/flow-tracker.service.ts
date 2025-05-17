@@ -43,7 +43,7 @@ export class FlowTrackerService {
     // Sadece belirli context'lerde loglama yapılmasını sağla
     const allowed = process.env.FLOW_TRACKER_CONTEXTS
       ? process.env.FLOW_TRACKER_CONTEXTS.split(',').map((s) => s.trim())
-      : ['AuthService']; // örnek class isimleri, ihtiyaca göre güncellenebilir
+      : ['*']; // Tüm context'lere izin ver (* joker karakteri)
     this.allowedContexts = new Set(allowed);
 
     // Log dosyasını ayarla
@@ -98,8 +98,12 @@ export class FlowTrackerService {
       !this.isEnabled ||
       !this.enabledCategories.has(category) ||
       (this.allowedContexts.size > 0 &&
+        !this.allowedContexts.has('*') &&
         (!context || !this.allowedContexts.has(context)))
     ) {
+      console.log(
+        `[FlowTracker] İzin verilmeyen context: ${context || 'undefined'}`,
+      );
       return;
     }
 

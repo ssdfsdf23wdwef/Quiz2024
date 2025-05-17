@@ -70,8 +70,7 @@ export function extractFileName(filePath: string): string {
  */
 export function setupLogger(options?: Parameters<typeof LoggerService.getInstance>[0]): LoggerService {
   loggerInstance = LoggerService.getInstance({
-    ...options,
-    enableFileLogging: true // Tüm hata loglarını dosyaya yazma özelliğini etkinleştir
+    ...options
   });
   return loggerInstance;
 }
@@ -113,10 +112,7 @@ export function setupLogging(options?: {
  */
 export function getLogger(): LoggerService {
   if (!loggerInstance) {
-    loggerInstance = LoggerService.getInstance({
-      enableFileLogging: true, // Dosya loglamayı varsayılan olarak etkinleştir
-      logFilePath: 'frontend-logs.log'
-    });
+    loggerInstance = LoggerService.getInstance();
   }
   return loggerInstance;
 }
@@ -144,7 +140,11 @@ export function logError(error: Error | string, context: string, metadata?: Reco
     return;
   }
   
-  loggerInstance.logError(error, context, metadata);
+  if (typeof error === 'string') {
+    loggerInstance.error(error, context, undefined, undefined, metadata);
+  } else {
+    loggerInstance.error(error.message, context, error, error.stack, metadata);
+  }
 }
 
 /**
@@ -167,7 +167,7 @@ export function logInfo(
     return;
   }
   
-  loggerInstance.info(message, context, filePath, lineNumber, metadata);
+  loggerInstance.info(message, context, undefined, undefined, metadata);
 }
 
 /**
@@ -190,7 +190,7 @@ export function logWarn(
     return;
   }
   
-  loggerInstance.warn(message, context, filePath, lineNumber, metadata);
+  loggerInstance.warn(message, context, undefined, undefined, metadata);
 }
 
 /**
@@ -213,11 +213,11 @@ export function logDebug(
     return;
   }
   
-  loggerInstance.debug(message, context, filePath, lineNumber, metadata);
+  loggerInstance.debug(message, context, undefined, undefined, metadata);
 }
 
 /**
- * Akış adımı izler
+ * Akış kaydı yapar
  * @param message Akış mesajı
  * @param context İşlem yapılan bağlam
  * @param category Akış kategorisi
@@ -234,12 +234,11 @@ export function trackFlow(
     return;
   }
   
-  const trackerCategory = mapToTrackerCategory(category);
-  flowTrackerInstance.trackStep(trackerCategory, message, context, metadata);
+  flowTrackerInstance.trackStep(mapToTrackerCategory(category), message, context, metadata);
 }
 
 /**
- * Log dosyasının içeriğini getirir
+ * Log dosyası içeriğini alır
  * @returns Log dosyası içeriği
  */
 export function getLogFileContent(): string {
@@ -247,7 +246,7 @@ export function getLogFileContent(): string {
     return '';
   }
   
-  return loggerInstance.getLogFileContent();
+  return loggerInstance.getAllErrorLogs();
 }
 
 /**
@@ -258,46 +257,41 @@ export function clearLogFile(): void {
     return;
   }
   
-  loggerInstance.clearLogFile();
+  loggerInstance.clearAllLogs();
 }
 
 /**
- * Log dosyasını indir
- * @param fileName İndirilen dosya adı
+ * Log dosyasını indirir
  */
-export function downloadLogFile(fileName: string = 'app-logs.log'): void {
-  if (!loggerInstance) {
-    return;
-  }
-  
-  const logContent = getLogFileContent();
-  if (!logContent || typeof window === 'undefined') {
-    return;
-  }
-  
+export function downloadLogFile(): void {
   try {
-    const blob = new Blob([logContent], { type: 'text/plain' });
+    const logs = getLogFileContent();
+    if (!logs) {
+      console.warn('İndirilebilecek log bulunamadı.');
+      return;
+    }
+    
+    const blob = new Blob([logs], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    a.style.display = 'none';
     a.href = url;
-    a.download = fileName;
+    a.download = `frontend-log-${new Date().toISOString().replace(/:/g, '-')}.log`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
     
-    logInfo('Log dosyası indirildi', 'logger.utils.downloadLogFile', __filename);
+    // Kaynakları temizle
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   } catch (error) {
-    logError(error instanceof Error ? error : String(error), 'logger.utils.downloadLogFile');
+    console.error('Log dosyası indirme hatası:', error);
   }
 }
 
-// React bileşenleri için yardımcı işlevler
-
 /**
- * Bileşen yaşam döngüsü izleme
+ * Bileşen yaşam döngüsü olayını izler
  * @param componentName Bileşen adı
- * @param lifecycle Yaşam döngüsü aşaması
+ * @param lifecycle Yaşam döngüsü olayı
  * @param props Bileşen props'ları
  */
 export function trackComponent(
@@ -306,7 +300,7 @@ export function trackComponent(
   props?: Record<string, unknown>
 ): void {
   if (!flowTrackerInstance) {
-    console.log(`[COMPONENT] ${componentName} - ${lifecycle}`);
+    console.log(`[COMPONENT] [${componentName}] ${lifecycle}`);
     return;
   }
   
@@ -314,7 +308,7 @@ export function trackComponent(
 }
 
 /**
- * Durum değişikliği izleme
+ * Durum değişikliğini izler
  * @param stateName Durum adı
  * @param context İşlem yapılan bağlam
  * @param oldValue Eski değer
@@ -327,7 +321,7 @@ export function trackStateChange(
   newValue: unknown
 ): void {
   if (!flowTrackerInstance) {
-    console.log(`[STATE] ${context} - ${stateName} durumu değişti`);
+    console.log(`[STATE] [${context}] ${stateName} değişti`);
     return;
   }
   
@@ -335,9 +329,9 @@ export function trackStateChange(
 }
 
 /**
- * API çağrısı izleme
- * @param endpoint API endpoint
- * @param method HTTP metodu
+ * API çağrısını izler
+ * @param endpoint Endpoint URL'i
+ * @param method HTTP metodu (GET, POST, vs.)
  * @param context İşlem yapılan bağlam
  * @param metadata Ek bilgiler
  */
@@ -348,7 +342,7 @@ export function trackApiCall(
   metadata?: Record<string, unknown>
 ): void {
   if (!flowTrackerInstance) {
-    console.log(`[API] ${context} - ${method} ${endpoint}`);
+    console.log(`[API] [${context}] ${method} ${endpoint}`);
     return;
   }
   
@@ -369,11 +363,11 @@ export function markStart(name: string): void {
 }
 
 /**
- * Performans ölçümünü bitirir ve süreyi döndürür
+ * Performans ölçümünü bitirir ve süreyi kaydeder
  * @param name Ölçüm adı
- * @param category Kategori
+ * @param category Akış kategorisi
  * @param context İşlem yapılan bağlam
- * @returns Geçen süre (ms)
+ * @returns Ölçüm süresi (ms)
  */
 export function markEnd(
   name: string,
@@ -385,17 +379,16 @@ export function markEnd(
     return 0;
   }
   
-  const trackerCategory = mapToTrackerCategory(category);
-  return flowTrackerInstance.markEnd(name, trackerCategory, context);
+  return flowTrackerInstance.markEnd(name, mapToTrackerCategory(category), context);
 }
 
 /**
- * Async fonksiyonun çalışma süresini ölçer
- * @param name Ölçüm adı
- * @param category Kategori
+ * Asenkron işlemi izler
+ * @param name İşlem adı
+ * @param category Akış kategorisi
  * @param context İşlem yapılan bağlam
- * @param fn Ölçülecek async fonksiyon
- * @returns Fonksiyonun dönüş değeri
+ * @param fn Asenkron işlev
+ * @returns İşlem sonucu
  */
 export async function measureAsync<T>(
   name: string,
@@ -407,23 +400,29 @@ export async function measureAsync<T>(
     console.time(name);
     try {
       const result = await fn();
-      return result;
-    } finally {
       console.timeEnd(name);
+      return result;
+    } catch (error) {
+      console.timeEnd(name);
+      throw error;
     }
   }
   
-  const trackerCategory = mapToTrackerCategory(category);
-  return flowTrackerInstance.measureAsync(name, trackerCategory, context, fn);
+  return flowTrackerInstance.measureAsync(
+    name,
+    mapToTrackerCategory(category),
+    context,
+    fn
+  );
 }
 
 /**
- * Senkron fonksiyonun çalışma süresini ölçer
- * @param name Ölçüm adı
- * @param category Kategori
+ * Senkron işlemi izler
+ * @param name İşlem adı
+ * @param category Akış kategorisi
  * @param context İşlem yapılan bağlam
- * @param fn Ölçülecek fonksiyon
- * @returns Fonksiyonun dönüş değeri
+ * @param fn Senkron işlev
+ * @returns İşlem sonucu
  */
 export function measure<T>(
   name: string,
@@ -435,61 +434,84 @@ export function measure<T>(
     console.time(name);
     try {
       const result = fn();
-      return result;
-    } finally {
       console.timeEnd(name);
+      return result;
+    } catch (error) {
+      console.timeEnd(name);
+      throw error;
     }
   }
   
-  const trackerCategory = mapToTrackerCategory(category);
-  return flowTrackerInstance.measure(name, trackerCategory, context, fn);
+  return flowTrackerInstance.measure(
+    name,
+    mapToTrackerCategory(category),
+    context,
+    fn
+  );
 }
 
 /**
- * Flow akış izleyici sınıfı
+ * Akış izleme sınıfı
  */
 export class FlowTracker {
+  private readonly id: string;
+  private readonly category: FlowCategory;
+  private readonly name: string;
+  
   constructor(
-    private readonly id: string,
-    private readonly category: TrackerFlowCategory,
-    private readonly name: string
-  ) {}
-
+    id: string,
+    category: FlowCategory,
+    name: string
+  ) {
+    this.id = id;
+    this.category = category;
+    this.name = name;
+  }
+  
   /**
-   * Akış adımı kaydeder
-   * @param step Adım açıklaması
+   * Akış adımı ekler
+   * @param step Adım adı
    * @param metadata Ek bilgiler
-   * @returns FlowTracker instance (zincir için)
+   * @returns FlowTracker instance
    */
   trackStep(step: string, metadata?: Record<string, unknown>): FlowTracker {
-    trackFlow(
-      step,
-      `Flow:${this.name}`,
-      this.category,
-      {
-        flowId: this.id,
-        flowName: this.name,
-        ...metadata
-      }
-    );
+    if (flowTrackerInstance) {
+      flowTrackerInstance.trackStep(
+        mapToTrackerCategory(this.category),
+        step,
+        `Flow:${this.name}`,
+        {
+          flowId: this.id,
+          flowName: this.name,
+          ...metadata
+        }
+      );
+    } else {
+      console.log(`[FLOW] [${this.category}] [Flow:${this.name}] ${step}`);
+    }
+    
     return this;
   }
-
+  
   /**
    * Akışı sonlandırır
-   * @param summary Özet mesaj
+   * @param summary Özet bilgi
    */
   end(summary?: string): void {
-    trackFlow(
-      summary || `Flow tamamlandı: ${this.name}`,
-      `Flow:${this.name}`,
-      this.category,
-      {
-        flowId: this.id,
-        flowName: this.name,
-        status: 'completed'
-      }
-    );
+    if (flowTrackerInstance) {
+      flowTrackerInstance.trackStep(
+        mapToTrackerCategory(this.category),
+        summary || `Flow tamamlandı: ${this.name}`,
+        `Flow:${this.name}`,
+        {
+          flowId: this.id,
+          flowName: this.name,
+          status: 'completed'
+        }
+      );
+    } else {
+      console.log(`[FLOW] [${this.category}] [Flow:${this.name}] ${summary || `Flow tamamlandı: ${this.name}`}`);
+    }
   }
 }
 
@@ -500,176 +522,185 @@ export class FlowTracker {
  * @returns FlowTracker instance
  */
 export function startFlow(category: FlowCategory, name: string): FlowTracker {
-  if (!flowTrackerInstance) {
-    console.warn("FlowTrackerService başlatılmamış, dummy FlowTracker kullanılıyor.");
-    return new FlowTracker("dummy-id", mapToTrackerCategory(category), name);
+  if (flowTrackerInstance) {
+    const flowTracker = flowTrackerInstance.startFlow(mapToTrackerCategory(category), name);
+    // Flow ID'yi FlowTracker nesnesinden alın
+    const flowId = typeof flowTracker === 'string' ? flowTracker : 
+                  (flowTracker as any)?.id || `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return new FlowTracker(flowId, category, name);
+  } else {
+    const flowId = `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[FLOW] [${category}] [Flow:${name}] Flow başlatıldı: ${name}`);
+    return new FlowTracker(flowId, category, name);
   }
-  return flowTrackerInstance.startFlow(mapToTrackerCategory(category), name);
-} 
+}
 
 /**
- * Gelişmiş hata izleme ve konsolda gösterme
- */
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-/**
- * Hata yığınını (stack trace) işler ve önemli parçaları vurgular
- * @param errorStack Hata yığını metni
- * @returns Formatlanmış hata yığını
+ * Hata stack'ini formatlar
+ * @param errorStack Hata stack'i
+ * @returns Formatlanmış stack dizisi
  */
 export function formatErrorStack(errorStack: string): string[] {
-  if (!errorStack) return ['Hata yığını (stack trace) bulunamadı'];
+  if (!errorStack) return [];
   
-  // Stack trace'i satırlara ayır
-  const stackLines = errorStack.split('\n');
+  const lines = errorStack.split('\n').filter(line => line.trim() !== '');
   
-  // Stack trace satırlarını işle
-  return stackLines.map((line, index) => {
-    // İlk satır hata mesajıdır
-    if (index === 0) {
-      return `%c${line}%c`; // Kırmızı renk
+  // İlk satırı (hata mesajı) ayır
+  const result: string[] = [];
+  if (lines.length > 0) {
+    result.push(lines[0]);
+  }
+  
+  // Stack satırlarını formatla
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('at ')) {
+      result.push(line);
     }
-    
-    // Uygulama kodunu içeren satırları vurgula
-    if (line.includes('/src/') || line.includes('/app/') || line.includes('/components/')) {
-      // Uygulama kodu - sarı renkli ve kalın
-      return `%c${line.trim()}%c`;
-    }
-    
-    // Diğer satırlar
-    return `%c${line.trim()}%c`;
-  });
+  }
+  
+  return result;
 }
 
 /**
- * Konsolda renkli hata gösterimi
- * @param error Yakalanan hata
- * @param info Ek bağlam bilgisi
+ * Hata loglarını güzelleştirilmiş şekilde yazdırır
+ * @param error Hata nesnesi
+ * @param info Hata bilgileri
  */
-export function prettyErrorLog(error: Error, info?: Record<string, any>): void {
-  if (!error) return;
+export function prettyErrorLog(error: Error, info?: Record<string, unknown>): void {
+  console.group('%cHata Yakalandı', 'color: red; font-weight: bold;');
+  console.error('Hata:', error.message);
   
-  const errorName = error.name || 'Error';
-  const errorMessage = error.message || 'Bilinmeyen hata';
-  const errorStack = error.stack || '';
-  
-  // Hata başlığı ve mesajı
-  console.group(`%c🚨 ${errorName}: ${errorMessage}`, 'color: #e74c3c; font-weight: bold; font-size: 1.2em;');
-  
-  // Zaman damgası
-  console.log(`%c⏱️ Zaman: ${new Date().toISOString()}`, 'color: #7f8c8d');
-  
-  // URL ve bileşen bilgisi
-  console.log(`%c🔗 URL: ${window.location.href}`, 'color: #3498db');
-  
-  // Bağlam bilgisi varsa göster
-  if (info && Object.keys(info).length > 0) {
-    console.log('%c📋 Bağlam:', 'color: #f39c12; font-weight: bold;');
-    console.table(info);
+  if (error.stack) {
+    console.groupCollapsed('Stack Trace');
+    formatErrorStack(error.stack).forEach(line => {
+      if (line.includes('node_modules')) {
+        console.log('%c' + line, 'color: gray');
+      } else {
+        console.log('%c' + line, 'color: crimson');
+      }
+    });
+    console.groupEnd();
   }
   
-  // Hata yığınını formatla ve göster
-  console.log('%c📚 Hata Yığını:', 'color: #9b59b6; font-weight: bold;');
-  
-  const formattedStackLines = formatErrorStack(errorStack);
-  
-  // Renkli gösterim için stil dizilerini oluştur
-  const styles = formattedStackLines.flatMap(() => [
-    'color: #e74c3c; font-weight: bold;', // Hata satırı stili
-    'color: #7f8c8d; font-weight: normal;' // Normal satır stili
-  ]);
-  
-  // Renkli log
-  console.log(formattedStackLines.join('\n'), ...styles);
+  if (info) {
+    console.groupCollapsed('Ek Bilgiler');
+    console.table(info);
+    console.groupEnd();
+  }
   
   console.groupEnd();
+  
+  // Logger servisine de kaydet
+  if (loggerInstance) {
+    const context = info?.componentName ? String(info.componentName) : 
+                   info?.context ? String(info.context) : 'ErrorHandler';
+                   
+    loggerInstance.error(error.message, context, error);
+  }
 }
 
 /**
- * Global hata yakalama mekanizması
+ * Global hata yakalama kurulumu
  */
 export function setupGlobalErrorHandling(): void {
-  if (typeof window !== 'undefined') {
-    const originalConsoleError = console.error;
-    const originalWindowOnerror = window.onerror;
-    const originalUnhandledRejection = window.onunhandledrejection;
-    
-    // console.error override
-    console.error = (...args) => {
-      originalConsoleError.apply(console, args);
-      
-      // İlk argüman bir Error nesnesi mi kontrol et
-      if (args[0] instanceof Error) {
-        prettyErrorLog(args[0], { source: 'console.error', args: args.slice(1) });
-      }
-    };
-    
-    // window.onerror override
-    window.onerror = (message, source, lineno, colno, error) => {
-      if (originalWindowOnerror) {
-        originalWindowOnerror.apply(window, [message, source, lineno, colno, error]);
-      }
-      
-      if (error) {
-        prettyErrorLog(error, { 
-          source: 'window.onerror', 
-          location: `${source}:${lineno}:${colno}`, 
-          message 
-        });
-      }
-      
-      return false; // Hata işlemesinin varsayılan davranışa devam etmesine izin ver
-    };
-    
-    // Unhandled promise rejection override
-    window.onunhandledrejection = (event) => {
-      if (originalUnhandledRejection) {
-        originalUnhandledRejection.apply(window, [event]);
-      }
-      
-      const error = event.reason instanceof Error 
-        ? event.reason 
-        : new Error(String(event.reason || 'Unhandled Promise Rejection'));
-      
-      prettyErrorLog(error, { source: 'unhandledrejection', reason: event.reason });
-    };
-    
-    console.log('%c🛡️ Global hata izleme aktif edildi', 'color: #2ecc71; font-weight: bold');
+  if (typeof window === 'undefined') {
+    return; // SSR'da çalışmaz
   }
-}
-
-// Geliştirme ortamında otomatik olarak kur
-if (isDevelopment && typeof window !== 'undefined') {
-  setupGlobalErrorHandling();
+  
+  // Yakalanmamış Promise hataları
+  window.addEventListener('unhandledrejection', (event) => {
+    const error = event.reason;
+    
+    // Eğer ağ hatası ise, muhtemelen fetch hatası
+    const isNetworkError = error?.name === 'TypeError' && 
+                         (error?.message?.includes('fetch') || 
+                          error?.message?.includes('network') ||
+                          error?.message?.includes('Network'));
+    
+    if (isNetworkError) {
+      // Ağ hatası olarak logla
+      logError('Fetch hatası: ' + error.message, 'ErrorService.network', {
+        type: 'network',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // Genel hata olarak logla
+      const errorMessage = error?.message || 'Bilinmeyen Promise hatası';
+      logError(errorMessage, 'ErrorService.captureError.promise', {
+        type: 'promise',
+        stack: error?.stack,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    console.warn('Yakalanmamış Promise Hatası:', error);
+  });
+  
+  // Yakalanmamış hataları yakala
+  window.addEventListener('error', (event) => {
+    // Kaynak (script, css) yükleme hatalarını filtrele
+    if (event.target && (event.target as HTMLElement).tagName) {
+      const tagName = (event.target as HTMLElement).tagName.toLowerCase();
+      if (tagName === 'link' || tagName === 'script' || tagName === 'img') {
+        logError(`${tagName} kaynağı yüklenemedi: ${(event.target as HTMLElement).getAttribute('src') || (event.target as HTMLElement).getAttribute('href')}`, 
+          'ErrorService.resource', {
+            type: 'resource',
+            tagName,
+            timestamp: new Date().toISOString()
+          });
+        return;
+      }
+    }
+    
+    // Genel hata olarak logla
+    if (event.error) {
+      const errorMessage = event.error?.message || event.message || 'Bilinmeyen hata';
+      logError(errorMessage, 'ErrorService.captureError.runtime', {
+        type: 'runtime',
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        stack: event.error?.stack,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+  
+  console.info('[ErrorHandler] Global hata yakalama aktif.');
 }
 
 /**
- * Hata bilgisini günlüğe kaydetme ve gösterme
- * @param error Yakalanan hata
- * @param componentName Hatanın oluştuğu bileşen
- * @param extraData Ekstra veri
+ * Komponent hatalarını loglar
+ * @param error Hata
+ * @param componentName Bileşen adı
+ * @param extraData Ek veri
  */
-export function prettyLogError(error: unknown, componentName: string, extraData?: Record<string, any>): void {
-  const err = error instanceof Error ? error : new Error(String(error));
+export function prettyLogError(error: unknown, componentName: string, extraData?: Record<string, unknown>): void {
+  // Hatayı tanımla
+  let errorObj: Error;
+  let errorMessage: string;
   
-  const logInfo = {
-    component: componentName,
-    timestamp: new Date().toISOString(),
-    url: typeof window !== 'undefined' ? window.location.href : '',
-    ...extraData
-  };
-  
-  // Geliştirilmiş hata gösterimi 
-  prettyErrorLog(err, logInfo);
-  
-  // Üretim ortamında hata izleme servisine gönder
-  if (!isDevelopment) {
-    // Burada bir hata izleme servisine gönderme kodu eklenebilir (Sentry, LogRocket, vb.)
-    try {
-      // TODO: Hata izleme servisi entegrasyonu eklenebilir
-      // sendToErrorTrackingService(err, logInfo);
-    } catch (trackingError) {
-      console.error('Hata izleme servisi hatası:', trackingError);
-    }
+  if (error instanceof Error) {
+    errorObj = error;
+    errorMessage = error.message;
+  } else if (typeof error === 'string') {
+    errorMessage = error;
+    errorObj = new Error(error);
+  } else {
+    errorMessage = 'Bilinmeyen hata: ' + String(error);
+    errorObj = new Error(errorMessage);
   }
+  
+  // Logla
+  logError(errorObj, `${componentName}.error`, {
+    ...extraData,
+    componentName
+  });
+  
+  // Konsola yazdır
+  prettyErrorLog(errorObj, {
+    componentName,
+    ...extraData
+  });
 } 

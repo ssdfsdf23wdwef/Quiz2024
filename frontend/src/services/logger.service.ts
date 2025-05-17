@@ -1,595 +1,342 @@
 /**
  * @file logger.service.ts
- * @description Frontend için merkezi loglama sistemi
+ * @description Frontend loglama servisi
  */
 
-type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace';
-
-interface LoggerOptions {
-  appName?: string;
-  enabled?: boolean;
-  minLevel?: LogLevel;
-  enableConsole?: boolean;
-  enableRemote?: boolean;
-  remoteUrl?: string;
-  enableStackTrace?: boolean;
-  // Dosya loglama seçenekleri
-  enableFileLogging?: boolean;
-  logFilePath?: string;
-  maxLogSize?: number;
-  rotateOnRestart?: boolean;
+/**
+ * Log seviyesi
+ */
+export enum LogLevel {
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
 }
 
-type LogMetadata = Record<string, unknown>;
+/**
+ * Loglayıcı konfigürasyonu
+ */
+interface LoggerConfig {
+  level: LogLevel;
+  enabled: boolean;
+  consoleOutput: boolean;
+}
 
+/**
+ * Bir log girdisi
+ */
 interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
   context?: string;
-  filePath?: string;
-  lineNumber?: number;
-  metadata?: LogMetadata;
-  stackTrace?: string;
+  stack?: string;
+  metadata?: Record<string, unknown>;
 }
 
 /**
- * LoggerService - Frontend loglama servisi
- * Farklı log seviyelerinde loglama yapabilir
- * Development ortamında detaylı bilgi, production ortamında sadece önemli loglar
+ * Frontend Loglama Servisi
+ * Uygulamada farklı seviyelerde logları kapsar
  */
 export class LoggerService {
   private static instance: LoggerService;
-  private enabled: boolean;
-  private minLevel: LogLevel;
-  private appName: string;
-  private enableConsole: boolean;
-  private enableRemote: boolean;
-  private remoteUrl?: string;
-  private enableStackTrace: boolean;
-  // Dosya loglama değişkenleri
-  private enableFileLogging: boolean;
-  private logFilePath: string;
-  private errorLogFilePath: string;
-  private maxLogSize: number;
-  private rotateOnRestart: boolean;
+  private config: LoggerConfig;
   
-  private logLevelValues: Record<LogLevel, number> = {
-    error: 0,
-    warn: 1,
-    info: 2,
-    debug: 3,
-    trace: 4,
-  };
-  private logHistory: LogEntry[] = [];
-  private maxHistorySize = 1000;
-  
-  private constructor(options: LoggerOptions = {}) {
-    this.enabled = options.enabled ?? true;
-    this.minLevel = options.minLevel ?? (process.env.NODE_ENV === 'production' ? 'warn' : 'debug');
-    this.appName = options.appName ?? 'StudySmart';
-    this.enableConsole = options.enableConsole ?? true;
-    this.enableRemote = options.enableRemote ?? false;
-    this.remoteUrl = options.remoteUrl;
-    this.enableStackTrace = options.enableStackTrace ?? process.env.NODE_ENV !== 'production';
-    
-    // Dosya loglama değişkenlerini başlat - varsayılan olarak aktif
-    this.enableFileLogging = options.enableFileLogging ?? true;
-    this.logFilePath = options.logFilePath ?? 'frontend-flow-tracker.log';
-    this.errorLogFilePath = 'frontend-error.log';
-    this.maxLogSize = options.maxLogSize ?? 5 * 1024 * 1024; // 5 MB varsayılan
-    this.rotateOnRestart = options.rotateOnRestart ?? true; // Varsayılan olarak true
-    
-    // Dosya loglaması etkinse ve uygulama yeniden başlatıldıysa log dosyasını temizle
-    if (this.enableFileLogging && this.rotateOnRestart && typeof window !== 'undefined') {
-      this.rotateLogFile();
-    }
-    
-    // Window hatası yakalama
-    if (typeof window !== 'undefined') {
-      window.addEventListener('error', (event) => {
-        this.error(
-          `Yakalanmamış hata: ${event.message}`,
-          'Global',
-          undefined,
-          undefined,
-          { 
-            fileName: event.filename,
-            lineNo: event.lineno,
-            colNo: event.colno,
-            errorType: event.error?.name || 'Unknown'
-          }
-        );
-      });
-      
-      window.addEventListener('unhandledrejection', (event) => {
-        this.error(
-          `İşlenmeyen Promise hatası: ${event.reason?.message || event.reason || 'Bilinmeyen hata'}`,
-          'Global',
-          undefined,
-          undefined,
-          { reason: event.reason }
-        );
-      });
-
-      console.log('📝 LoggerService başlatıldı - Tüm hatalar şu dosyaya kaydedilecek:', this.logFilePath);
-    }
+  private constructor(config: Partial<LoggerConfig> = {}) {
+    this.config = {
+      level: config.level ?? LogLevel.INFO,
+      enabled: config.enabled ?? process.env.NODE_ENV !== 'production',
+      consoleOutput: config.consoleOutput ?? true,
+    };
   }
   
   /**
    * Singleton instance oluşturma
    */
-  public static getInstance(options?: LoggerOptions): LoggerService {
+  public static getInstance(config?: Partial<LoggerConfig>): LoggerService {
     if (!LoggerService.instance) {
-      LoggerService.instance = new LoggerService(options);
-    } else if (options) {
-      // Varolan instance yapılandırmasını güncelle
-      LoggerService.instance.configure(options);
+      LoggerService.instance = new LoggerService(config);
     }
     return LoggerService.instance;
   }
   
   /**
-   * Log dosyasını temizler veya yenisini oluşturur
+   * Konfigürasyonu günceller
    */
-  private rotateLogFile(): void {
-    try {
-      // Log dosyası rotasyonu için localStorage'da işaretçi kullan
-      const lastCleanupKey = `log_cleanup_${this.logFilePath}`;
-      localStorage.removeItem(lastCleanupKey); // Her başlangıçta temizle
-      localStorage.setItem(this.logFilePath, ''); // Dosyayı temizle
-      
-      const now = new Date().toISOString();
-      localStorage.setItem(lastCleanupKey, now); // Temizleme zamanını kaydet
-      
-      this.debug(
-        `Log dosyası temizlendi: ${this.logFilePath}`, 
-        'LoggerService.rotateLogFile',
-        'logger.service.ts',
-        114
-      );
-      
-      console.log(`🧹 Log dosyası temizlendi: ${this.logFilePath}`);
-    } catch (error) {
-      console.error('Log dosyası temizlenirken hata oluştu:', error);
-    }
+  public configure(config: Partial<LoggerConfig>): void {
+    this.config = { ...this.config, ...config };
   }
   
   /**
-   * İki tarih arasındaki gün farkını hesaplar
-   */
-  private daysBetween(date1: Date, date2: Date): number {
-    const ONE_DAY = 1000 * 60 * 60 * 24;
-    const difference = Math.abs(date1.getTime() - date2.getTime());
-    return Math.floor(difference / ONE_DAY);
-  }
-  
-  /**
-   * Log seviyesinin şu anki minimum seviyeye göre etkin olup olmadığını kontrol eder
-   */
-  private isLevelEnabled(level: LogLevel): boolean {
-    return this.enabled && this.logLevelValues[level] <= this.logLevelValues[this.minLevel];
-  }
-  
-  /**
-   * Bir log girdisi oluşturur
-   */
-  private createLogEntry(
-    level: LogLevel,
-    message: string,
-    context?: string,
-    filePath?: string,
-    lineNumber?: number,
-    metadata?: LogMetadata
-  ): LogEntry {
-    const timestamp = new Date().toISOString();
-    let stackTrace: string | undefined;
-    
-    if (this.enableStackTrace && (level === 'error' || level === 'warn')) {
-      const stack = new Error().stack;
-      stackTrace = stack ? stack.split('\n').slice(3).join('\n') : undefined;
-    }
-    
-    const entry: LogEntry = {
-      timestamp,
-      level,
-      message,
-      context,
-      filePath,
-      lineNumber,
-      metadata,
-      stackTrace
-    };
-    
-    return entry;
-  }
-  
-  /**
-   * Logu işler ve uygun çıktı kanallarına yönlendirir
-   */
-  private processLog(entry: LogEntry): void {
-    // Log kaydı tutma
-    this.logHistory.push(entry);
-    
-    // Maximum log sayısını aşınca en eskisini sil
-    if (this.logHistory.length > this.maxHistorySize) {
-      this.logHistory.shift();
-    }
-    
-    // Konsol log
-    if (this.enableConsole) {
-      // Sadece error ve warn dışında konsola yazdır
-      // Burada hata ve uyarıları susturuyoruz, konsola akış bilgileri için sadece info ve debug
-      if (entry.level !== 'error' && entry.level !== 'warn') {
-        this.logToConsole(entry);
-      }
-    }
-    
-    // Hata loglarını dosyaya yaz
-    if (this.enableFileLogging && (entry.level === 'error' || entry.level === 'warn')) {
-      this.logToFile(entry);
-    }
-    
-    // Uzak sunucuya log
-    if (this.enableRemote) {
-      this.sendToRemote(entry);
-    }
-  }
-  
-  /**
-   * Konsola log yazdırma
-   */
-  private logToConsole(entry: LogEntry): void {
-    const { timestamp, level, message, context, metadata } = entry;
-    const prefix = `[${timestamp.split('T')[1].slice(0, -1)}] [${level.toUpperCase()}]${context ? ` [${context}]` : ''}`;
-    
-    const args = [prefix, message];
-    if (metadata && Object.keys(metadata).length > 0) {
-      args.push(metadata as unknown as string);
-    }
-    
-    switch (level) {
-      // Hata ve uyarıları burada konsola yazdırmıyoruz
-      case 'error':
-        console.error(...args);
-        break;
-      case 'warn':
-        console.warn(...args);
-        break;
-      case 'info':
-        console.info(...args);
-        break;
-      case 'debug':
-        console.debug(...args);
-        break;
-      case 'trace':
-        console.trace(...args);
-        break;
-    }
-  }
-  
-  /**
-   * Dosyaya log yazma
-   */
-  private logToFile(entry: LogEntry): void {
-    if (typeof window === 'undefined') {
-      // SSR ortamında çalışıyoruz, dosya yazma işlemi yapılamaz
-      return;
-    }
-    
-    try {
-      // Formatlanmış log metni oluştur
-      const logText = this.formatLogEntry(entry);
-      
-      // Error ve warn loglarını ayrı dosyaya yönlendir
-      const filePath = (entry.level === 'error' || entry.level === 'warn') 
-        ? this.errorLogFilePath 
-        : this.logFilePath;
-      
-      // Doğrudan backend'e API çağrısı yaparak log kaydedelim
-      if (typeof fetch !== 'undefined') {
-        // Log API endpoint'i - projenize göre ayarlayın
-        const logEndpoint = '/api/logs/frontend';
-        
-        fetch(logEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            entry,
-            formattedLog: logText,
-            isError: (entry.level === 'error' || entry.level === 'warn')
-          }),
-          // İsteğin ana işi engellememesi için
-          keepalive: true
-        }).catch(error => {
-          // Hata durumunda sessizce devam et (ana iş akışını etkilememesi için)
-          console.error('Frontend log API hatası:', error);
-        });
-      }
-      
-      // Ayrıca localStorage'a da yedekleme amaçlı kaydedelim
-      // Mevcut log dosyasını oku
-      let existingLogs = localStorage.getItem(filePath) || '';
-      
-      // Boyut kontrolü yap
-      if (existingLogs.length + logText.length > this.maxLogSize) {
-        // Dosya boyutu sınırı aşıldı, eski logların bir kısmını (yarısını) sil
-        existingLogs = existingLogs.substring(Math.floor(existingLogs.length / 2));
-        
-        // Dosyanın kesildiğini belirt
-        const truncationMessage = `\n[${new Date().toISOString()}] [SYSTEM] Log dosyası boyutu sınırına ulaşıldı, eski loglar silindi.\n`;
-        existingLogs = truncationMessage + existingLogs;
-      }
-      
-      // Yeni logu ekle
-      existingLogs += logText + '\n';
-      
-      // Log dosyasını güncelle
-      localStorage.setItem(filePath, existingLogs);
-    } catch (error) {
-      // Log yazma hatası, sessizce yoksay
-      console.error('Log dosyasına yazma hatası:', error);
-    }
-  }
-  
-  /**
-   * Log girişini formatlı metne dönüştürür
-   */
-  private formatLogEntry(entry: LogEntry): string {
-    const { timestamp, level, message, context, filePath, lineNumber, metadata, stackTrace } = entry;
-    
-    // Temel log formatı
-    let formattedLog = `[${timestamp}] [${level.toUpperCase()}]`;
-    
-    // Context bilgisi ekle
-    if (context) {
-      formattedLog += ` [${context}]`;
-    }
-    
-    // Dosya ve satır bilgisi
-    if (filePath) {
-      formattedLog += ` [${filePath}${lineNumber ? `:${lineNumber}` : ''}]`;
-    }
-    
-    // Log mesajı
-    formattedLog += ` ${message}`;
-    
-    // Metadata bilgisi
-    if (metadata && Object.keys(metadata).length > 0) {
-      formattedLog += `\nMetadata: ${JSON.stringify(metadata, null, 2)}`;
-    }
-    
-    // Stack trace
-    if (stackTrace) {
-      formattedLog += `\nStack Trace:\n${stackTrace}`;
-    }
-    
-    return formattedLog;
-  }
-  
-  /**
-   * Uzak sunucuya log gönderme
-   */
-  private async sendToRemote(entry: LogEntry): Promise<void> {
-    if (!this.remoteUrl) return;
-    
-    try {
-      const response = await fetch(this.remoteUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...entry,
-          appName: this.appName,
-          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-          timestamp: entry.timestamp,
-        }),
-        // AbortSignal ile zaman aşımı belirle
-        signal: AbortSignal.timeout(5000),
-      });
-      
-      if (!response.ok) {
-        console.error(`Uzak log sunucusuna gönderim başarısız: ${response.status} ${response.statusText}`);
-      }
-    } catch (error) {
-      // İstek hatası, sessizce yoksay
-      console.error('Log gönderme hatası:', error);
-    }
-  }
-  
-  /**
-   * Hata log seviyesinde loglama
-   */
-  public error(
-    message: string,
-    context?: string,
-    filePath?: string,
-    lineNumber?: number,
-    metadata?: LogMetadata
-  ): void {
-    if (!this.isLevelEnabled('error')) return;
-    
-    const entry = this.createLogEntry('error', message, context, filePath, lineNumber, metadata);
-    this.processLog(entry);
-  }
-  
-  /**
-   * Uyarı log seviyesinde loglama
-   */
-  public warn(
-    message: string,
-    context?: string,
-    filePath?: string,
-    lineNumber?: number,
-    metadata?: LogMetadata
-  ): void {
-    if (!this.isLevelEnabled('warn')) return;
-    
-    const entry = this.createLogEntry('warn', message, context, filePath, lineNumber, metadata);
-    this.processLog(entry);
-  }
-  
-  /**
-   * Bilgi log seviyesinde loglama
-   */
-  public info(
-    message: string,
-    context?: string,
-    filePath?: string,
-    lineNumber?: number,
-    metadata?: LogMetadata
-  ): void {
-    if (!this.isLevelEnabled('info')) return;
-    
-    const entry = this.createLogEntry('info', message, context, filePath, lineNumber, metadata);
-    this.processLog(entry);
-  }
-  
-  /**
-   * Debug log seviyesinde loglama
+   * Debug seviyesinde log
    */
   public debug(
     message: string,
     context?: string,
-    filePath?: string,
-    lineNumber?: number,
-    metadata?: LogMetadata
+    error?: Error,
+    stack?: string,
+    metadata?: Record<string, unknown>
   ): void {
-    if (!this.isLevelEnabled('debug')) return;
-    
-    const entry = this.createLogEntry('debug', message, context, filePath, lineNumber, metadata);
-    this.processLog(entry);
+    this.log(LogLevel.DEBUG, message, context, error, stack, metadata);
   }
   
   /**
-   * Trace log seviyesinde loglama
+   * Info seviyesinde log
    */
-  public trace(
+  public info(
     message: string,
     context?: string,
-    filePath?: string,
-    lineNumber?: number,
-    metadata?: LogMetadata
+    error?: Error,
+    stack?: string,
+    metadata?: Record<string, unknown>
   ): void {
-    if (!this.isLevelEnabled('trace')) return;
-    
-    const entry = this.createLogEntry('trace', message, context, filePath, lineNumber, metadata);
-    this.processLog(entry);
+    this.log(LogLevel.INFO, message, context, error, stack, metadata);
   }
   
   /**
-   * Error nesnesinden log oluşturma
+   * Warn seviyesinde log
    */
-  public logError(
-    error: Error | string,
+  public warn(
+    message: string,
     context?: string,
-    metadata?: LogMetadata
+    error?: Error,
+    stack?: string,
+    metadata?: Record<string, unknown>
   ): void {
-    if (!this.isLevelEnabled('error')) return;
+    this.log(LogLevel.WARN, message, context, error, stack, metadata);
+  }
+  
+  /**
+   * Error seviyesinde log
+   */
+  public error(
+    message: string,
+    context?: string,
+    error?: Error,
+    stack?: string,
+    metadata?: Record<string, unknown>
+  ): void {
+    this.log(LogLevel.ERROR, message, context, error, stack, metadata);
+  }
+  
+  /**
+   * Log oluşturur
+   */
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: string,
+    error?: Error,
+    stack?: string,
+    metadata?: Record<string, unknown>
+  ): void {
+    if (!this.config.enabled) {
+      return;
+    }
     
-    const errorObj = error instanceof Error ? error : new Error(error);
+    // Log seviyesi kontrolü
+    if (!this.shouldLog(level)) {
+      return;
+    }
     
-    const errorMetadata: LogMetadata = {
-      ...(metadata || {}),
-      name: errorObj.name,
-      stack: errorObj.stack,
+    const timestamp = new Date().toISOString();
+    const logEntry: LogEntry = {
+      timestamp,
+      level,
+      message,
+      context,
+      stack: stack || error?.stack,
+      metadata
     };
     
-    const entry = this.createLogEntry(
-      'error',
-      errorObj.message,
-      context,
-      undefined,
-      undefined,
-      errorMetadata
-    );
+    // Loglamayı gerçekleştir
+    this.processLog(logEntry);
+  }
+  
+  /**
+   * Log kaydını işler
+   */
+  private processLog(entry: LogEntry): void {
+    // Konsola yazdır
+    if (this.config.consoleOutput) {
+      this.writeToConsole(entry);
+    }
     
-    this.processLog(entry);
+    // LocalStorage'a kaydet
+    this.saveToLocalStorage(entry);
   }
   
   /**
-   * Log geçmişini döndürür
+   * Log kaydını konsola yazdırır
    */
-  public getLogHistory(): LogEntry[] {
-    return [...this.logHistory];
+  private writeToConsole(entry: LogEntry): void {
+    const consoleMethod = this.getConsoleMethod(entry.level);
+    const timestamp = entry.timestamp.split('T')[1].slice(0, -1);
+    const context = entry.context ? `[${entry.context}]` : '';
+    
+    // Mesaj ve bağlamı yazdır
+    consoleMethod(`${timestamp} ${entry.level.toUpperCase()} ${context} ${entry.message}`);
+    
+    // Ek bilgileri yazdır
+    if (entry.metadata && Object.keys(entry.metadata).length > 0) {
+      consoleMethod('Metadata:', entry.metadata);
+    }
+    
+    // Stack trace varsa hata durumunda yazdır
+    if (entry.stack && entry.level === LogLevel.ERROR) {
+      console.error('Stack:', entry.stack);
+    }
   }
   
   /**
-   * Logger yapılandırmasını günceller
+   * Log kaydını localStorage'a kaydeder
    */
-  public configure(options: Partial<LoggerOptions>): void {
-    if (options.enabled !== undefined) this.enabled = options.enabled;
-    if (options.minLevel !== undefined) this.minLevel = options.minLevel;
-    if (options.appName !== undefined) this.appName = options.appName;
-    if (options.enableConsole !== undefined) this.enableConsole = options.enableConsole;
-    if (options.enableRemote !== undefined) this.enableRemote = options.enableRemote;
-    if (options.remoteUrl !== undefined) this.remoteUrl = options.remoteUrl;
-    if (options.enableStackTrace !== undefined) this.enableStackTrace = options.enableStackTrace;
-    if (options.enableFileLogging !== undefined) this.enableFileLogging = options.enableFileLogging;
-    if (options.logFilePath !== undefined) this.logFilePath = options.logFilePath;
-    if (options.maxLogSize !== undefined) this.maxLogSize = options.maxLogSize;
-    if (options.rotateOnRestart !== undefined) this.rotateOnRestart = options.rotateOnRestart;
-  }
-  
-  /**
-   * Log geçmişini temizler
-   */
-  public clearHistory(): void {
-    this.logHistory = [];
-  }
-  
-  /**
-   * Log dosyasının içeriğini getirir
-   */
-  public getLogFileContent(): string {
-    if (!this.enableFileLogging || typeof localStorage === 'undefined') return '';
-    return localStorage.getItem(this.logFilePath) || '';
-  }
-  
-  /**
-   * Log dosyasını temizler
-   */
-  public clearLogFile(): void {
-    if (!this.enableFileLogging || typeof localStorage === 'undefined') return;
-    localStorage.setItem(this.logFilePath, '');
-  }
-
-  /**
-   * Log dosyasını indirmek için içeriğini döndürür
-   * @returns İndirilecek log dosyası içeriği
-   */
-  public downloadLogFile(filename?: string): void {
+  private saveToLocalStorage(entry: LogEntry): void {
+    if (typeof window === 'undefined') {
+      return; // SSR sırasında localStorage yok, atla
+    }
+    
     try {
-      const content = this.getLogFileContent();
-      if (!content) {
-        console.warn('İndirilecek log içeriği bulunamadı');
-        return;
+      // Hata logları için ayrı bir dosya kullan
+      const isError = entry.level === LogLevel.ERROR;
+      const storageKey = isError ? 'frontend-error.log' : 'frontend-flow-tracker.log';
+      
+      // Log satırını oluştur
+      const logLine = `[${entry.timestamp}] [${entry.level.toUpperCase()}] ${entry.context ? `[${entry.context}] ` : ''}${entry.message}`;
+      
+      // Mevcut logları al
+      let logs = '';
+      try {
+        logs = localStorage.getItem(storageKey) || '';
+      } catch {
+        // localStorage okuma hatası - temiz başla
+        logs = '';
       }
       
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
+      // Ekle
+      logs += logLine + '\n';
       
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename || `${this.appName.toLowerCase()}-logs-${new Date().toISOString().slice(0, 10)}.log`;
-      document.body.appendChild(a);
-      a.click();
+      // localStorage kapasitesi kontrolü - Max 100KB
+      const MAX_SIZE = 100 * 1024;
       
-      // Temizlik
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
+      if (logs.length > MAX_SIZE) {
+        // Sadece son 10KB'ı sakla
+        logs = logs.substring(logs.length - 10 * 1024);
+        const firstLineIndex = logs.indexOf('\n') + 1;
+        if (firstLineIndex > 0) {
+          logs = logs.substring(firstLineIndex);
+        }
+      }
       
-      this.info(
-        `Log dosyası indirildi: ${a.download}`,
-        'LoggerService.downloadLogFile'
-      );
+      // Kaydet
+      try {
+        localStorage.setItem(storageKey, logs);
+      } catch {
+        // localStorage yazma hatası - eski logları temizle ve sadece bu logu kaydet
+        try {
+          localStorage.removeItem(storageKey);
+          localStorage.setItem(storageKey, logLine + '\n');
+        } catch {
+          // Ciddi hata - sessizce devam et
+        }
+      }
+    } catch {
+      // Genel hata durumu - sessizce devam et
+    }
+  }
+  
+  /**
+   * Konsolda kullanılacak metodu belirler
+   */
+  private getConsoleMethod(level: LogLevel): (message?: unknown, ...optionalParams: unknown[]) => void {
+    switch (level) {
+      case LogLevel.DEBUG:
+        return console.debug;
+      case LogLevel.INFO:
+        return console.info;
+      case LogLevel.WARN:
+        return console.warn;
+      case LogLevel.ERROR:
+        return console.error;
+      default:
+        return console.log;
+    }
+  }
+  
+  /**
+   * Belirtilen log seviyesinin loglanıp loglanmayacağını belirler
+   */
+  private shouldLog(level: LogLevel): boolean {
+    const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
+    const configLevelIndex = levels.indexOf(this.config.level);
+    const logLevelIndex = levels.indexOf(level);
+    
+    return logLevelIndex >= configLevelIndex;
+  }
+  
+  /**
+   * Kayıtlı tüm hata loglarını bir dizi halinde verir
+   */
+  public getAllErrorLogs(): string {
+    try {
+      const storageKey = 'frontend-error.log';
+      return localStorage.getItem(storageKey) || '';
     } catch (error) {
-      console.error('Log dosyası indirilirken hata oluştu:', error);
+      console.error('Log alma hatası:', error);
+      return '';
+    }
+  }
+  
+  /**
+   * Log geçmişini bir dizi olarak döndürür
+   * Geriye dönük uyumluluk için eklenmiştir
+   */
+  public getLogHistory(): LogEntry[] {
+    try {
+      // İki log dosyasından log girişlerini al
+      const errorLogs = localStorage.getItem('frontend-error.log') || '';
+      const flowLogs = localStorage.getItem('frontend-flow-tracker.log') || '';
+      
+      // Tüm logları birleştir
+      const allLogs = errorLogs + flowLogs;
+      
+      // Satırlara ayır ve LogEntry formatına dönüştür
+      return allLogs
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => {
+          const timestampMatch = line.match(/\[(.*?)\]/);
+          const levelMatch = line.match(/\[(DEBUG|INFO|WARN|ERROR)\]/);
+          const contextMatch = line.match(/\[(DEBUG|INFO|WARN|ERROR)\] \[(.*?)\]/);
+          const message = line.replace(/\[.*?\] \[.*?\]( \[.*?\])?/, '').trim();
+          
+          return {
+            timestamp: timestampMatch ? timestampMatch[1] : new Date().toISOString(),
+            level: levelMatch ? levelMatch[1].toLowerCase() as LogLevel : LogLevel.INFO,
+            message: message,
+            context: contextMatch ? contextMatch[2] : undefined
+          };
+        });
+    } catch (error) {
+      console.error('Log history alma hatası:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * LocalStorage'daki tüm log içeriğini temizler
+   */
+  public clearAllLogs(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    try {
+      localStorage.removeItem('frontend-error.log');
+      localStorage.removeItem('frontend-flow-tracker.log');
+      console.log('Tüm loglar temizlendi');
+    } catch (error) {
+      console.error('Log temizleme hatası:', error);
     }
   }
 } 
