@@ -14,7 +14,7 @@ import {
   FiDownload,
   FiEye,
 } from "react-icons/fi";
-import { useQuizzes } from "../../hooks/useQuizQuery";
+import { useQuizzes } from "@/hooks/api/useQuizzes";
 import type { Quiz } from "../../types/quiz";
 import { Spinner } from "@nextui-org/react";
 
@@ -35,8 +35,10 @@ const QUIZ_TYPE_INFO = {
 };
 
 // Yardımcı fonksiyonlar
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("tr-TR", {
+const formatDate = (dateValue: string | Date) => {
+  // Date'i string'e dönüştürme
+  const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+  return date.toLocaleDateString("tr-TR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -135,7 +137,8 @@ export default function ExamsPage() {
       return;
     }
 
-    let result = quizzes;
+    // Array.from kullanarak array olduğundan emin oluyoruz
+    let result = Array.isArray(quizzes) ? quizzes : [];
 
     // Arama filtresi
     if (searchTerm) {

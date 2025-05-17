@@ -44,6 +44,7 @@ export class QuizValidationService {
 
       // First, try to detect JSON code blocks
       if (text.includes('```')) {
+        // JSON code block detection improvement - support both ```json and ```
         const codeBlockRegex = /```(?:json)?([^`]+)```/gm;
         jsonMatch = codeBlockRegex.exec(text);
         if (jsonMatch && jsonMatch[1]) {
@@ -57,6 +58,11 @@ export class QuizValidationService {
 
       try {
         const parsed = JSON.parse(jsonText) as T;
+        // Başarılı parse işlemini logla
+        this.logger.debug(
+          `[${traceId}] AI yanıtı başarıyla parse edildi.`,
+          'QuizValidationService.parseAIResponseToJSON',
+        );
         return parsed;
       } catch (firstError) {
         // First JSON parse failed, try common fixes
@@ -83,36 +89,49 @@ export class QuizValidationService {
           }
         }
 
-        // Try to extract a JSON object if there's non-JSON text before/after
+        // Geliştirilmiş JSON çıkarma stratejisi
         try {
-          const jsonExtractRegex = /{[\s\S]*}/;
-          const extracted = jsonText.match(jsonExtractRegex);
-          if (extracted) {
-            const parsed = JSON.parse(extracted[0]) as T;
-            this.logger.info(
-              `[${traceId}] JSON çıkarımı başarılı`,
-              'QuizValidationService.parseAIResponseToJSON',
-            );
-            return parsed;
+          // Daha gelişmiş bir regex ile JSON nesnesini çıkarıyoruz
+          const jsonExtractRegex = /{[\s\S]*?(?=\n\n|$)/g;
+          const extractedMatches = [...jsonText.matchAll(jsonExtractRegex)];
+
+          // Bulduğumuz tüm potansiyel JSON nesnelerini deniyoruz
+          for (const match of extractedMatches) {
+            try {
+              const potentialJson = match[0];
+              // JSON nesnesinin kapanış süslü parantezi eksik olabilir
+              const balancedJson = this.balanceJsonBrackets(potentialJson);
+              const parsed = JSON.parse(balancedJson) as T;
+              this.logger.info(
+                `[${traceId}] Gelişmiş JSON çıkarımı başarılı`,
+                'QuizValidationService.parseAIResponseToJSON',
+              );
+              return parsed;
+            } catch (ex) {
+              // Bu nesne parse edilemedi, bir sonrakini dene
+              continue;
+            }
           }
         } catch (extractError) {
           this.logger.warn(
-            `[${traceId}] JSON çıkarma denemesi başarısız`,
+            `[${traceId}] Gelişmiş JSON çıkarma denemesi başarısız: ${extractError.message}`,
             'QuizValidationService.parseAIResponseToJSON',
           );
         }
 
-        // Last resort: Try to manually parse the content
+        // Son çare: Metni temizleyip yeniden dene
         try {
-          // Manuel parsing için ek bir fonksiyon çağırmak yerine
-          // direkt fallback içeriğini kullanalım
+          // Metni temizle - satır sonları, fazla boşluklar ve yorumları kaldır
+          const cleanedText = this.cleanJsonText(jsonText);
+          const parsed = JSON.parse(cleanedText) as T;
           this.logger.info(
-            `[${traceId}] Manuel parsing denenecek`,
+            `[${traceId}] Temizlenmiş JSON parse edildi`,
             'QuizValidationService.parseAIResponseToJSON',
           );
-        } catch (manualError) {
+          return parsed;
+        } catch (cleanError) {
           this.logger.warn(
-            `[${traceId}] Manuel parse denemesi başarısız`,
+            `[${traceId}] Temizlenmiş JSON parse edilemedi: ${cleanError.message}`,
             'QuizValidationService.parseAIResponseToJSON',
           );
         }
@@ -270,41 +289,52 @@ export class QuizValidationService {
   }
 
   /**
-   * JSON içerikli metni temizler
+   * JSON metnini temizler - yorum satırlarını ve fazla boşlukları kaldırır
    */
   private cleanJsonText(text: string): string {
-    let result = text.trim();
+    // Yorum satırlarını kaldır (// ... ve /* ... */)
+    let cleaned = text.replace(/\/\/.*$/gm, '');
+    cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//gm, '');
 
-    // LLM'in eklediği ekstra açıklamaları kaldır
-    result = result.replace(/[\r\n]+Bu JSON çıktısı.*$/, '');
-    result = result.replace(/^.*?(\{[\s\S]*\}).*$/, '$1');
+    // Fazla boşlukları kaldır
+    cleaned = cleaned.replace(/\s+/g, ' ');
 
-    return result;
+    // Tek tırnak kullanımını çift tırnağa çevir
+    cleaned = cleaned.replace(/(\w+):'([^']*)'/g, '$1:"$2"');
+
+    return cleaned;
   }
 
   /**
-   * JSON parantezlerini dengeler
+   * JSON metninde açık ve kapalı parantezleri dengelemeye çalışır
    */
   private balanceJsonBrackets(text: string): string {
-    let result = text;
+    const stack: Array<'{' | '['> = [];
+    let balanced = text;
 
-    // Açık ve kapalı parantezleri say
-    const openBraces = (result.match(/\{/g) || []).length;
-    const closeBraces = (result.match(/\}/g) || []).length;
-    const openBrackets = (result.match(/\[/g) || []).length;
-    const closeBrackets = (result.match(/\]/g) || []).length;
-
-    // Süslü parantezleri dengele
-    if (openBraces > closeBraces) {
-      result += '}'.repeat(openBraces - closeBraces);
+    // Tüm açılış parantezlerini say
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char === '{' || char === '[') {
+        stack.push(char);
+      } else if (char === '}' && stack[stack.length - 1] === '{') {
+        stack.pop();
+      } else if (char === ']' && stack[stack.length - 1] === '[') {
+        stack.pop();
+      }
     }
 
-    // Köşeli parantezleri dengele
-    if (openBrackets > closeBrackets) {
-      result += ']'.repeat(openBrackets - closeBrackets);
+    // Kapanmamış parantezleri kapat
+    while (stack.length > 0) {
+      const lastOpenBracket = stack.pop();
+      if (lastOpenBracket === '{') {
+        balanced += '}';
+      } else if (lastOpenBracket === '[') {
+        balanced += ']';
+      }
     }
 
-    return result;
+    return balanced;
   }
 
   /**

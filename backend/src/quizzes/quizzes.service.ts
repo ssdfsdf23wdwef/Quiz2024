@@ -1283,16 +1283,8 @@ export class QuizzesService {
   }
 
   /**
-   * Hızlı sınav oluştur
-   * @param userId Kullanıcı ID'si
-   * @param documentId Belge ID'si (opsiyonel)
-   * @param documentText Belge metni
-   * @param subTopics Sınav için seçilen alt konular
-   * @param questionCount Soru sayısı
-   * @param difficulty Zorluk seviyesi
-   * @returns Oluşturulan sınav
+   * Hızlı sınav oluşturur
    */
-  @LogMethod({ trackParams: true })
   async createQuickQuiz(
     userId: string,
     documentText: string,
@@ -1301,80 +1293,216 @@ export class QuizzesService {
     difficulty: string = 'medium',
     documentId?: string,
   ): Promise<Quiz> {
-    const startTime = Date.now();
-    const traceId = `quick-quiz-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
-
     try {
+      this.flowTracker.trackStep('Hızlı sınav oluşturuluyor', 'QuizzesService');
+
+      // Belge metni kontrol
+      if (!documentText || documentText.length < 100) {
+        this.logger.warn(
+          'Belge metni çok kısa veya boş',
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1301,
+          { textLength: documentText?.length, userId },
+        );
+        throw new BadRequestException(
+          'Belge metni çok kısa veya boş. Lütfen geçerli bir belge yükleyin.',
+        );
+      }
+
+      // Alt konuları kontrol et
+      if (!subTopics || !Array.isArray(subTopics) || subTopics.length === 0) {
+        this.logger.warn(
+          'Geçersiz alt konular',
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1312,
+          { subTopics, userId },
+        );
+        throw new BadRequestException(
+          'En az bir alt konu seçmelisiniz. Lütfen belge yükleyip konuları tespit edin.',
+        );
+      }
+
+      // Soru sayısını kontrol et
+      if (questionCount < 1 || questionCount > 50) {
+        questionCount = 10; // Varsayılana ayarla
+      }
+
+      // Zorluk seviyesini kontrol et
+      const allowedDifficulties = ['easy', 'medium', 'hard', 'mixed'];
+      if (!allowedDifficulties.includes(difficulty)) {
+        difficulty = 'medium'; // Varsayılana ayarla
+      }
+
       this.logger.info(
-        `[${traceId}] Hızlı sınav oluşturma başlatılıyor: ${questionCount} soru, ${difficulty} zorluk, ${subTopics.length} alt konu`,
+        `Hızlı sınav oluşturma AI isteği hazırlanıyor. ${subTopics.length} konu, ${questionCount} soru`,
         'QuizzesService.createQuickQuiz',
         __filename,
-        undefined,
-        { userId, documentId, subTopics },
+        1330,
+        { userId, subTopicsCount: subTopics.length, questionCount, difficulty },
       );
 
+      // Yeni quiz oluştur
+      const quizId = this.firebaseService.firestore
+        .collection('quizzes')
+        .doc().id;
+      const traceId = `quiz_${quizId}_${Date.now()}`;
+
+      // Tracing ve akış izleme için metadata
+      const metadata = {
+        quizId,
+        userId,
+        subTopicsCount: subTopics.length,
+        traceId,
+      };
+
       this.flowTracker.trackStep(
-        'Hızlı sınav oluşturma süreci başlatıldı',
+        `AI'dan ${questionCount} soru oluşturulması isteniyor`,
         'QuizzesService',
       );
 
-      // 1. AI servisiyle sınav soruları oluştur
-      const questions = await this.aiService.generateQuickQuiz(
-        documentText,
-        subTopics,
-        questionCount,
-        difficulty,
-      );
+      // AI'den soruları oluştur
+      let questions: QuizQuestion[] = [];
+      try {
+        this.logger.debug(
+          'AI soru oluşturma isteği gönderiliyor',
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1351,
+          { userId, quizId, traceId },
+        );
 
-      this.logger.debug(
-        `[${traceId}] Hızlı sınav soruları oluşturuldu: ${questions.length} soru`,
-        'QuizzesService.createQuickQuiz',
-        __filename,
-        undefined,
-        { questionsCount: questions.length },
-      );
+        // AI'den soruları oluştur - retry mekanizması ekle
+        const maxRetries = 2;
+        let retryCount = 0;
+        let success = false;
 
-      // 2. Oluşturulan soruları veritabanına kaydet
-      const createParams: CreateQuizParams = {
+        while (retryCount <= maxRetries && !success) {
+          try {
+            questions = await this.aiService.generateQuickQuiz(
+              documentText,
+              subTopics,
+              questionCount,
+              difficulty,
+            );
+
+            // Soruları kontrol et
+            if (questions && Array.isArray(questions) && questions.length > 0) {
+              this.logger.info(
+                `AI ${questions.length} soru üretti`,
+                'QuizzesService.createQuickQuiz',
+                __filename,
+                1370,
+                { quizId, generatedQuestions: questions.length },
+              );
+              success = true;
+            } else {
+              throw new Error('AI geçerli sorular üretmedi');
+            }
+          } catch (aiError) {
+            retryCount++;
+            this.logger.warn(
+              `AI soru oluşturma denemesi ${retryCount} başarısız: ${aiError instanceof Error ? aiError.message : 'Bilinmeyen hata'}`,
+              'QuizzesService.createQuickQuiz',
+              __filename,
+              1380,
+              { retryCount, quizId, error: aiError },
+            );
+
+            if (retryCount > maxRetries) {
+              throw aiError;
+            }
+
+            // Kısa bir beklemeyle tekrar dene
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+
+        this.logger.info(
+          `${questions.length} soru başarıyla üretildi`,
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1395,
+          { quizId, questionCount: questions.length },
+        );
+      } catch (aiError) {
+        this.logger.error(
+          `AI soru üretme hatası (userId: ${userId}, quizId: ${quizId}): ${aiError instanceof Error ? aiError.message : 'Bilinmeyen hata'}`,
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1400,
+        );
+        throw new BadRequestException(
+          'Sınav soruları oluşturulurken hata oluştu. Lütfen daha sonra tekrar deneyin.',
+        );
+      }
+
+      // Yeni quiz nesnesi oluştur
+      const timestamp = new Date();
+      const quiz = {
+        id: quizId,
         userId,
         quizType: 'quick',
-        sourceDocument: documentId
-          ? {
-              documentId,
-              text: documentText.substring(0, 500) + '...', // Özet olarak sadece ilk 500 karakter
-            }
-          : undefined,
-        subTopics: subTopics.map((topic) => ({ subTopicName: topic })),
+        personalizedQuizType: null,
+        questions,
+        timestamp,
+        selectedSubTopics: subTopics,
+        courseId: undefined,
+        completed: false,
+        score: 0,
+        correctCount: 0,
+        totalQuestions: questions.length,
+        elapsedTime: 0,
+        userAnswers: {},
         preferences: {
           questionCount,
           difficulty,
-          timeLimit: null, // Firestore için null olarak ayarla
-          prioritizeWeakAndMediumTopics: true, // Varsayılan değer
+          timeLimit: null,
+          prioritizeWeakAndMediumTopics: false,
         },
-      };
+        sourceDocument: documentId
+          ? {
+              documentId,
+              fileName: `Döküman #${documentId}`,
+              uploadDate: timestamp,
+            }
+          : null,
+      } as Quiz;
 
-      const savedQuiz = await this.createQuiz(createParams);
+      // Firestore'a kaydet
+      try {
+        await this.firebaseService.firestore
+          .collection(FIRESTORE_COLLECTIONS.QUIZZES)
+          .doc(quizId)
+          .set(quiz);
 
-      // 3. Soruları quiz ile ilişkilendir
-      await this.updateQuizWithQuestions(savedQuiz.id, questions);
+        this.logger.info(
+          `Hızlı sınav oluşturuldu: ID=${quizId}`,
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1442,
+          { quizId, userId, questionCount: questions.length },
+        );
 
-      const duration = Date.now() - startTime;
-      this.logger.info(
-        `[${traceId}] Hızlı sınav başarıyla oluşturuldu: ${questions.length} soru (${duration}ms)`,
-        'QuizzesService.createQuickQuiz',
-        __filename,
-        undefined,
-        { quizId: savedQuiz.id, questionsCount: questions.length, duration },
-      );
-
-      return this.findOne(savedQuiz.id, userId);
+        return quiz;
+      } catch (firestoreError) {
+        this.logger.error(
+          `Veritabanı kayıt hatası (quizId: ${quizId}, userId: ${userId}): ${firestoreError instanceof Error ? firestoreError.message : 'Bilinmeyen hata'}`,
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1450,
+        );
+        throw new BadRequestException(
+          'Sınav veritabanına kaydedilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
+        );
+      }
     } catch (error) {
       this.logger.error(
-        `[${traceId}] Hızlı sınav oluşturulurken hata: ${error.message}`,
+        `Hızlı sınav oluşturma genel hatası (userId: ${userId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
         'QuizzesService.createQuickQuiz',
         __filename,
-        undefined,
-        error,
+        1460,
       );
       throw error;
     }
