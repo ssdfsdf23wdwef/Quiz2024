@@ -344,13 +344,10 @@ class QuizApiService {
       }
       
       // Backend'e istek yapılmadan önce son kontroller:
-      let requestLogger;
-      
       // 'quizType' in options olup olmadığını kontrol et (tip koruma)
+      let quizEndpoint = `${this.basePath}`;
       if ('quizType' in options) {
-        requestLogger = options.quizType === 'quick' ? 'generateQuickQuiz' : 'generatePersonalizedQuiz';
-      } else {
-        requestLogger = 'generateQuiz-unknown-type';
+        quizEndpoint = options.quizType === 'quick' ? `${this.basePath}/quick` : `${this.basePath}/personalized`;
       }
       
       console.log(`[QuizApiService] Sınav oluşturma isteği gönderiliyor...`, {
@@ -361,11 +358,39 @@ class QuizApiService {
         personalizedType: 'quizType' in options && 'personalizedQuizType' in options ? options.personalizedQuizType : undefined
       });
       
+      // Backend'in beklediği formata dönüştür
+      let payload: Record<string, unknown> = {};
+      if ('quizType' in options) {
+        // Frontend'den gelen QuizGenerationOptions formatını backend'in beklediği formata dönüştür
+        const quizOptions = options as QuizGenerationOptions;
+        
+        // selectedSubTopics SubTopicItem[] dizisini string[] dizisine dönüştür
+        const subTopics: string[] = quizOptions.selectedSubTopics?.map(topic => topic.normalizedSubTopic) || [];
+        
+        payload = {
+          documentText: quizOptions.documentText || '',
+          subTopics: subTopics, // string[] olarak dönüştürülmüş
+          questionCount: quizOptions.preferences?.questionCount || 10,
+          difficulty: quizOptions.preferences?.difficulty || 'mixed',
+        };
+        
+        // DocumentId varsa ekle
+        if (quizOptions.documentId) {
+          payload.documentId = quizOptions.documentId;
+        }
+        
+        // TimeLimit varsa ekle
+        if (quizOptions.preferences?.timeLimit !== undefined) {
+          payload.timeLimit = quizOptions.preferences.timeLimit;
+        }
+      } else {
+        // ApiQuizGenerationOptionsDto zaten doğru formatta, doğrudan kullan
+        payload = options as unknown as Record<string, unknown>;
+      }
+      
       const response = await apiService.post<ApiQuiz>(
-        options.quizType === 'quick'
-          ? `${this.basePath}/quick`
-          : `${this.basePath}/personalized`,
-        options,
+        quizEndpoint,
+        payload, // Dönüştürülmüş payload'ı gönder
         {
           headers: {
             'Content-Type': 'application/json',
@@ -376,8 +401,8 @@ class QuizApiService {
       // Yanıtı işle
       console.log(`[QuizApiService] Sınav oluşturma yanıtı alındı:`, {
         status: response.status,
-        hasQuizId: !!response.data?.id,
-        questionCount: response.data?.questions?.length
+        hasQuizId: !!(response.data as ApiQuiz)?.id,
+        questionCount: (response.data as ApiQuiz)?.questions?.length
       });
       
       if (!response.data) {
@@ -385,17 +410,18 @@ class QuizApiService {
         throw new Error('Sınav oluşturulamadı: Geçersiz yanıt');
       }
 
-      if (!response.data.id) {
-        console.error('[QuizApiService] Oluşturulan sınav ID değeri bulunamadı', response.data);
+      const quizData = response.data as ApiQuiz;
+      if (!quizData.id) {
+        console.error('[QuizApiService] Oluşturulan sınav ID değeri bulunamadı', quizData);
         throw new Error('Sınav oluşturuldu ancak ID değeri bulunamadı');
       }
       
-      const quiz = response.data;
-      flowTracker.markEnd('generateQuiz');
+      const quiz = quizData;
+      flowTracker.markEnd('generateQuiz', FlowCategory.API, 'QuizApiService');
       
       return quiz;
     } catch (error) {
-      flowTracker.markEnd('generateQuiz');
+      flowTracker.markEnd('generateQuiz', FlowCategory.API, 'QuizApiService');
       console.error('Sınav oluşturma hatası:', error);
       
       if (error instanceof AxiosError && error.response?.data) {
