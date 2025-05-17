@@ -32,6 +32,7 @@ interface FlowTrackerOptions {
   captureTimings?: boolean;
   consoleOutput?: boolean;
   logger?: LoggerService;
+  allowedContexts?: string[]; // İzin verilen context'ler listesi
 }
 
 /**
@@ -123,6 +124,7 @@ export class FlowTrackerService {
   private traceApiCalls: boolean;
   private captureTimings: boolean;
   private consoleOutput: boolean;
+  private allowedContexts: Set<string>;
   private steps: FlowStep[] = [];
   private sequences: Map<string, FlowSequence> = new Map();
   private activeSequences: Set<string> = new Set();
@@ -143,6 +145,24 @@ export class FlowTrackerService {
       FlowCategory.Error,
       FlowCategory.Custom
     ]);
+    
+    // Sadece belirli context'lerde loglama yapılmasını sağla
+    let allowedContexts: string[] = ['AuthService', 'NavigationService', 'AppComponent']; // Varsayılan değerler
+    
+    if (typeof window !== 'undefined') {
+      // Browser ortamındayız, localStorage kullanabiliriz
+      const storedContexts = localStorage.getItem('flow_tracker_allowed_contexts');
+      if (storedContexts) {
+        try {
+          allowedContexts = JSON.parse(storedContexts);
+        } catch (e) {
+          console.error('Flow tracker allowed contexts parse hatası:', e);
+        }
+      }
+    }
+    
+    this.allowedContexts = new Set(allowedContexts);
+    
     this.traceRenders = options.traceRenders ?? false;
     this.traceStateChanges = options.traceStateChanges ?? true;
     this.traceApiCalls = options.traceApiCalls ?? true;
@@ -235,7 +255,9 @@ export class FlowTrackerService {
     context: string,
     metadata?: Record<string, unknown>
   ): void {
-    if (!this.enabled || !this.enabledCategories.has(category)) {
+    if (!this.enabled || 
+        !this.enabledCategories.has(category) ||
+        (this.allowedContexts.size > 0 && (!context || !this.allowedContexts.has(context)))) {
       return;
     }
     
@@ -288,7 +310,9 @@ export class FlowTrackerService {
     timing: number,
     metadata?: Record<string, unknown>
   ): void {
-    if (!this.enabled || !this.enabledCategories.has(category)) {
+    if (!this.enabled || 
+        !this.enabledCategories.has(category) ||
+        (this.allowedContexts.size > 0 && (!context || !this.allowedContexts.has(context)))) {
       return;
     }
     
@@ -642,6 +666,19 @@ export class FlowTrackerService {
     
     if (options.categories) {
       this.enabledCategories = new Set(options.categories);
+    }
+    
+    if (options.allowedContexts) {
+      this.allowedContexts = new Set(options.allowedContexts);
+      
+      // Browser ortamında localStorage'a kaydet
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('flow_tracker_allowed_contexts', JSON.stringify(Array.from(this.allowedContexts)));
+        } catch (e) {
+          console.error('Flow tracker allowed contexts kaydetme hatası:', e);
+        }
+      }
     }
     
     if (options.traceRenders !== undefined) this.traceRenders = options.traceRenders;

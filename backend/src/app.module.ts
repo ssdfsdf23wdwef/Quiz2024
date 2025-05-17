@@ -18,6 +18,7 @@ import { SharedModule } from './shared/shared.module';
 import { AiModule } from './ai/ai.module';
 import { LoggerService } from './common/services/logger.service';
 import { FlowTrackerService } from './common/services/flow-tracker.service';
+import { LogsController } from './controllers/logs.controller';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { FlowTrackerService } from './common/services/flow-tracker.service';
     SharedModule,
     AiModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, LogsController],
   providers: [
     AppService,
     {

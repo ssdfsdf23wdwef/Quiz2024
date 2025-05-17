@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import chalk from 'chalk';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Akış kategorileri
@@ -28,6 +30,8 @@ export class FlowTrackerService {
   private static instance: FlowTrackerService;
   private readonly isEnabled: boolean;
   private readonly enabledCategories: Set<FlowCategory>;
+  private readonly allowedContexts: Set<string>;
+  private readonly flowLogPath: string;
 
   constructor() {
     // Geliştirme ortamında akış izlemeyi etkinleştir
@@ -35,6 +39,19 @@ export class FlowTrackerService {
 
     // Tüm kategorileri varsayılan olarak etkinleştir
     this.enabledCategories = new Set(Object.values(FlowCategory));
+
+    // Sadece belirli context'lerde loglama yapılmasını sağla
+    const allowed = process.env.FLOW_TRACKER_CONTEXTS
+      ? process.env.FLOW_TRACKER_CONTEXTS.split(',').map((s) => s.trim())
+      : ['AuthService']; // örnek class isimleri, ihtiyaca göre güncellenebilir
+    this.allowedContexts = new Set(allowed);
+
+    // Log dosyasını ayarla
+    const logDir = path.join(process.cwd(), '..', 'logs');
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+    this.flowLogPath = path.join(logDir, 'backend-flow-tracker.log');
 
     FlowTrackerService.instance = this;
   }
@@ -77,7 +94,12 @@ export class FlowTrackerService {
     message: string,
     context: string,
   ): void {
-    if (!this.isEnabled || !this.enabledCategories.has(category)) {
+    if (
+      !this.isEnabled ||
+      !this.enabledCategories.has(category) ||
+      (this.allowedContexts.size > 0 &&
+        (!context || !this.allowedContexts.has(context)))
+    ) {
       return;
     }
 
@@ -102,11 +124,37 @@ export class FlowTrackerService {
         categoryColor = chalk.blue;
     }
 
-    console.log(
-      `[${timestamp.split('T')[1].slice(0, -1)}] ${categoryColor(`[${category}]`)} ${chalk.yellow(
-        `[${context}]`,
-      )} ${message}`,
-    );
+    const logMessage = `[${timestamp.split('T')[1].slice(0, -1)}] ${categoryColor(`[${category}]`)} ${chalk.yellow(
+      `[${context}]`,
+    )} ${message}`;
+
+    console.log(logMessage);
+
+    // Dosyaya log kaydı
+    this.logToFile(timestamp, category, context, message);
+  }
+
+  /**
+   * Akış bilgisini log dosyasına yazar
+   */
+  private logToFile(
+    timestamp: string,
+    category: FlowCategory,
+    context: string,
+    message: string,
+  ): void {
+    try {
+      const date = new Date(timestamp);
+      const formattedTime = `${date.toLocaleDateString('tr-TR')} ${date.toLocaleTimeString('tr-TR', { hour12: false })}`;
+
+      let logText = `[${formattedTime}] [${category}] [${context}] ${message}`;
+      logText +=
+        '\n------------------------------------------------------------\n';
+
+      fs.appendFileSync(this.flowLogPath, logText, { encoding: 'utf8' });
+    } catch (error) {
+      console.error('Flow log dosyasına yazılırken hata oluştu:', error);
+    }
   }
 
   /**

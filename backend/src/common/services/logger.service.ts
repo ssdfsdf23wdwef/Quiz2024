@@ -53,6 +53,7 @@ export class LoggerService {
   private readonly logToConsole: boolean;
   private readonly logToFile: boolean;
   private readonly minLevel: LogLevel;
+  private readonly allowedContexts: Set<string>;
   private readonly performanceMarks: Record<
     string,
     {
@@ -73,19 +74,24 @@ export class LoggerService {
       (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG);
 
     // Log dizini oluşturma
-    this.logDir = options?.logDir ?? path.join(process.cwd(), 'logs');
+    this.logDir = options?.logDir ?? path.join(process.cwd(), '..', 'logs');
 
     if (!fs.existsSync(this.logDir)) {
       fs.mkdirSync(this.logDir, { recursive: true });
     }
 
-    this.errorLogPath =
-      options?.errorLogPath ?? path.join(this.logDir, 'error.log');
+    this.errorLogPath = path.join(this.logDir, 'backend-error.log');
 
     // Uygulama başlatıldığında log dosyasını temizle
     if (this.logToFile && (options?.clearLogsOnStartup ?? true)) {
       this.clearLogFile();
     }
+
+    // Sadece belirli context'lerde loglama yapılmasını sağla
+    const allowed = process.env.LOGGER_CONTEXTS
+      ? process.env.LOGGER_CONTEXTS.split(',').map((s) => s.trim())
+      : ['AuthService']; // örnek class isimleri, ihtiyaca göre güncellenebilir
+    this.allowedContexts = new Set(allowed);
 
     LoggerService.instance = this;
   }
@@ -176,6 +182,11 @@ export class LoggerService {
       [LogLevel.DEBUG]: 0,
     };
 
+    // Sadece izin verilen context'lerde loglama yap
+    if (this.allowedContexts.size > 0 && !this.allowedContexts.has(context)) {
+      return;
+    }
+
     if (!this.enabled || levelValues[level] < levelValues[this.minLevel]) {
       return;
     }
@@ -263,8 +274,31 @@ export class LoggerService {
    * Log girdisini dosya için formatlar
    */
   private formatLogEntryForFile(entry: LogEntry): string {
-    // JSON formatında log kayıtları
-    return JSON.stringify(entry) + '\n';
+    // Okunabilir, güzel formatta log kaydı
+    const {
+      timestamp,
+      level,
+      message,
+      context,
+      filePath,
+      lineNumber,
+      stack,
+      additionalInfo,
+    } = entry;
+    const date = new Date(timestamp);
+    const formattedTime = `${date.toLocaleDateString('tr-TR')} ${date.toLocaleTimeString('tr-TR', { hour12: false })}`;
+    const fileInfo = filePath
+      ? ` (${filePath}${lineNumber ? `:${lineNumber}` : ''})`
+      : '';
+    let log = `[${formattedTime}] [${level.toUpperCase()}] [${context}]${fileInfo} ${message}`;
+    if (stack) {
+      log += `\nStack Trace:\n${stack}`;
+    }
+    if (additionalInfo && Object.keys(additionalInfo).length > 0) {
+      log += `\nEk Bilgi: ${JSON.stringify(additionalInfo)}`;
+    }
+    log += `\n------------------------------------------------------------\n`;
+    return log;
   }
 
   /**
@@ -767,8 +801,54 @@ export class LoggerService {
    * @returns Log dosyası adı
    */
   private getLogFileName(level: LogLevel): string | null {
-    // Tüm loglar için ortak dosya kullanıyoruz
-    return this.errorLogPath;
+    // error ve warn seviyeleri error.log'a, diğerleri backend.log'a
+    if (level === LogLevel.ERROR || level === LogLevel.WARN) {
+      return path.join(this.logDir, 'backend-error.log');
+    }
+    // backend.log dosya yolu (flow-tracker kayıtları için)
+    const backendLogPath = path.join(this.logDir, 'backend-flow-tracker.log');
+    return backendLogPath;
+  }
+
+  /**
+   * Frontend logları için dosya yolunu döndürür
+   */
+  public getFrontendLogPath(): string {
+    return path.join(this.logDir, 'frontend-flow-tracker.log');
+  }
+
+  /**
+   * Frontend log dosyasını temizler
+   */
+  public clearFrontendLogFile(): void {
+    if (this.logToFile) {
+      try {
+        const frontendLogPath = this.getFrontendLogPath();
+        fs.writeFileSync(frontendLogPath, '', { encoding: 'utf8' });
+        if (this.logToConsole) {
+          console.log(`🧹 Frontend log dosyası temizlendi: ${frontendLogPath}`);
+        }
+      } catch (err) {
+        console.error('Frontend log dosyası temizlenirken hata oluştu:', err);
+      }
+    }
+  }
+
+  /**
+   * Frontend logunu dosyaya yazar
+   * @param logEntry Frontend'den gelen log girdisi
+   */
+  public logFrontendEntry(formattedLog: string): void {
+    if (!this.logToFile) return;
+
+    try {
+      const frontendLogPath = this.getFrontendLogPath();
+      fs.appendFileSync(frontendLogPath, formattedLog + '\n', {
+        encoding: 'utf8',
+      });
+    } catch (err) {
+      console.error('Frontend log yazılırken hata oluştu:', err);
+    }
   }
 
   /**

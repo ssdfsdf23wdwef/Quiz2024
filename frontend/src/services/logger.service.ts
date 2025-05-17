@@ -50,6 +50,7 @@ export class LoggerService {
   // Dosya loglama değişkenleri
   private enableFileLogging: boolean;
   private logFilePath: string;
+  private errorLogFilePath: string;
   private maxLogSize: number;
   private rotateOnRestart: boolean;
   
@@ -74,7 +75,8 @@ export class LoggerService {
     
     // Dosya loglama değişkenlerini başlat - varsayılan olarak aktif
     this.enableFileLogging = options.enableFileLogging ?? true;
-    this.logFilePath = options.logFilePath ?? 'frontend-errors.log';
+    this.logFilePath = options.logFilePath ?? 'frontend-flow-tracker.log';
+    this.errorLogFilePath = 'frontend-error.log';
     this.maxLogSize = options.maxLogSize ?? 5 * 1024 * 1024; // 5 MB varsayılan
     this.rotateOnRestart = options.rotateOnRestart ?? true; // Varsayılan olarak true
     
@@ -279,8 +281,37 @@ export class LoggerService {
       // Formatlanmış log metni oluştur
       const logText = this.formatLogEntry(entry);
       
+      // Error ve warn loglarını ayrı dosyaya yönlendir
+      const filePath = (entry.level === 'error' || entry.level === 'warn') 
+        ? this.errorLogFilePath 
+        : this.logFilePath;
+      
+      // Doğrudan backend'e API çağrısı yaparak log kaydedelim
+      if (typeof fetch !== 'undefined') {
+        // Log API endpoint'i - projenize göre ayarlayın
+        const logEndpoint = '/api/logs/frontend';
+        
+        fetch(logEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            entry,
+            formattedLog: logText,
+            isError: (entry.level === 'error' || entry.level === 'warn')
+          }),
+          // İsteğin ana işi engellememesi için
+          keepalive: true
+        }).catch(error => {
+          // Hata durumunda sessizce devam et (ana iş akışını etkilememesi için)
+          console.error('Frontend log API hatası:', error);
+        });
+      }
+      
+      // Ayrıca localStorage'a da yedekleme amaçlı kaydedelim
       // Mevcut log dosyasını oku
-      let existingLogs = localStorage.getItem(this.logFilePath) || '';
+      let existingLogs = localStorage.getItem(filePath) || '';
       
       // Boyut kontrolü yap
       if (existingLogs.length + logText.length > this.maxLogSize) {
@@ -296,10 +327,7 @@ export class LoggerService {
       existingLogs += logText + '\n';
       
       // Log dosyasını güncelle
-      localStorage.setItem(this.logFilePath, existingLogs);
-      
-      // Alternatif depolama: IndexedDB veya diğer bir mekanizma kullanılabilir
-      // Daha büyük log dosyaları için IndexedDB tercih edilebilir
+      localStorage.setItem(filePath, existingLogs);
     } catch (error) {
       // Log yazma hatası, sessizce yoksay
       console.error('Log dosyasına yazma hatası:', error);

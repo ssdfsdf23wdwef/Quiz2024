@@ -49,11 +49,17 @@ export interface ErrorInfo {
 export class ErrorService {
   private errors: ErrorInfo[] = [];
   private readonly MAX_ERROR_COUNT = 100;
+  private readonly allowedContexts: Set<string>;
 
   constructor(
     private readonly logger: LoggerService,
     private readonly flowTracker: FlowTrackerService,
   ) {
+    // Sadece belirli context'lerde loglama/izleme yapılmasını sağla
+    const allowed = process.env.ERROR_CONTEXTS
+      ? process.env.ERROR_CONTEXTS.split(',').map((s) => s.trim())
+      : ['AuthService'];
+    this.allowedContexts = new Set(allowed);
     this.logger.debug(
       'ErrorService başlatıldı',
       'ErrorService.constructor',
@@ -70,6 +76,12 @@ export class ErrorService {
    */
   @LogMethod()
   formatError(error: Error, context: string): string {
+    if (
+      this.allowedContexts.size > 0 &&
+      (!context || !this.allowedContexts.has(context))
+    ) {
+      return '';
+    }
     this.flowTracker.trackCategory(
       FlowCategory.Error,
       'Hata mesajı formatlanıyor',
@@ -114,6 +126,20 @@ export class ErrorService {
     context?: string,
     additionalInfo?: Record<string, any>,
   ): ErrorInfo {
+    if (
+      this.allowedContexts.size > 0 &&
+      (!context || !this.allowedContexts.has(context))
+    ) {
+      return {
+        message: typeof error === 'string' ? error : error.message,
+        source,
+        severity,
+        timestamp: Date.now(),
+        context,
+        stack: typeof error === 'string' ? undefined : error.stack,
+        additionalInfo,
+      };
+    }
     this.flowTracker.trackCategory(
       FlowCategory.Error,
       `${source.toUpperCase()} hatası yakalandı: ${typeof error === 'string' ? error : error.message}`,
@@ -159,6 +185,12 @@ export class ErrorService {
     context: string,
     additionalInfo?: Record<string, any>,
   ): void {
+    if (
+      this.allowedContexts.size > 0 &&
+      (!context || !this.allowedContexts.has(context))
+    ) {
+      return;
+    }
     this.flowTracker.trackCategory(
       FlowCategory.Error,
       'Hata işleniyor',
