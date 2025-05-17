@@ -1,14 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  FiClock,
+  FiUpload,
+  FiFileText,
   FiTarget,
-  FiArrowRight,
-  FiArrowLeft,
   FiZap,
   FiAward,
+  FiCheck,
+  FiArrowLeft,
+  FiArrowRight,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { DocumentUploader } from "../document";
@@ -79,7 +81,7 @@ export default function ExamCreationWizard({
   // Sınav oluşturma durumu için yeni state
   const [quizCreationLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Belge metni ve belge ID'si
   const [documentTextContent, setDocumentTextContent] = useState<string>("");
@@ -799,39 +801,13 @@ export default function ExamCreationWizard({
     
     try {
       setIsSubmitting(true);
-      setError(null);
+      setErrorMessage(null);
       
-      // Tüm adımların doğruluğunu kontrol et
-      if (!selectedFile && !documentTextContent) {
-        const errorMsg = 'Lütfen bir belge yükleyin veya metin girin';
-        setError(errorMsg);
-        toast.error(errorMsg);
-        setIsSubmitting(false);
-        return;
-      }
-      
+      // Seçilen konular kontrolü
       if (!selectedTopics || selectedTopics.length === 0) {
         const errorMsg = 'Lütfen en az bir konu seçin';
-        setError(errorMsg);
+        setErrorMessage(errorMsg);
         toast.error(errorMsg);
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Minimum bir konu seçili olmalı
-      if (selectedTopics.length === 0) {
-        const errorMsg = 'Lütfen en az bir konu seçin';
-        setError(errorMsg);
-        toast.error(errorMsg);
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Metin içeriği varsa onun da geçerli olduğundan emin ol
-      if (documentTextContent && documentTextContent.trim().length < 100) {
-        const errorMsg = 'Belge metni çok kısa. Lütfen daha uzun bir metin girin veya geçerli bir belge yükleyin.';
-        setError(errorMsg);
-        toast.error('Belge metni çok kısa veya boş');
         setIsSubmitting(false);
         return;
       }
@@ -839,15 +815,41 @@ export default function ExamCreationWizard({
       // Onay mesajını göster
       toast.loading('Sınav oluşturuluyor...');
       
+      // Belge metni kontrolü
+      let quizDocumentText = documentTextContent;
+      
+      // Belge metni yoksa ve belge ID'si varsa, belge metnini almaya çalış
+      if (!quizDocumentText && uploadedDocumentId) {
+        console.log('[handleFinalSubmit] Belge metni yok, belge ID var. Metni almaya çalışılıyor.');
+        try {
+          const docTextResponse = await documentService.getDocumentText(uploadedDocumentId);
+          quizDocumentText = docTextResponse.text;
+          console.log('[handleFinalSubmit] Belge metni başarıyla alındı.');
+        } catch (docError) {
+          console.error('[handleFinalSubmit] Belge metni alınamadı:', docError);
+          // Belge metni alınamazsa da devam edebiliriz, backend documentId'yi kullanabilir
+        }
+      }
+      
+      // Belge metni veya belge ID'si kontrolü
+      if (!quizDocumentText && !uploadedDocumentId) {
+        const errorMsg = 'Belge metni veya belge ID\'si gereklidir';
+        setErrorMessage(errorMsg);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
+        toast.dismiss();
+        return;
+      }
+      
       // Quiz oluşturma için gerekli parametreleri hazırla
       const quizOptions: QuizGenerationOptions = {
         quizType: "quick" as QuizType,
-        documentText: documentTextContent || '',
-        documentId: uploadedDocumentId,
+        documentText: quizDocumentText || '',
+        documentId: uploadedDocumentId || '',
         selectedSubTopics: selectedTopics,
         preferences: {
           questionCount: preferences.questionCount,
-          difficulty: (preferences.difficulty === 'mixed' ? 'mixed' : 'medium') as DifficultyLevel,
+          difficulty: preferences.difficulty as DifficultyLevel,
           timeLimit: preferences.timeLimit
         }
       };
@@ -855,7 +857,9 @@ export default function ExamCreationWizard({
       console.log('[handleFinalSubmit] Quiz oluşturuluyor:', quizOptions);
       
       const quiz = await quizService.generateQuiz(quizOptions);
-      console.log('[handleFinalSubmit] Quiz başarıyla oluşturuldu, ID:', quiz ? (typeof quiz === 'object' && quiz !== null ? quiz.id || 'ID bulunamadı' : 'Geçersiz quiz objesi') : 'Quiz oluşturulamadı');
+      // Tip güvenli erişim için tip dönüşümü
+      const quizData = quiz as { id?: string };
+      console.log('[handleFinalSubmit] Quiz başarıyla oluşturuldu, ID:', quizData?.id || 'ID bulunamadı');
       
       toast.dismiss();
       toast.success('Sınav başarıyla oluşturuldu!');
@@ -874,26 +878,180 @@ export default function ExamCreationWizard({
       toast.dismiss();
       
       // Hata mesajını göster
-      let errorMessage = 'Sınav oluşturulurken bir hata oluştu';
+      let errMsg = 'Sınav oluşturulurken bir hata oluştu';
       
       if (error instanceof Error) {
-        errorMessage = error.message;
-        console.error('[ExamCreationWizard] Sınav oluşturma hatası:', error);
-        
-        // Spesifik hata mesajlarını kontrol et ve daha açıklayıcı mesaj göster
-        if (error.message.includes('Belge metni çok kısa')) {
-          errorMessage = 'Belge metni çok kısa. Lütfen daha uzun bir metin girin veya geçerli bir belge yükleyin.';
-        } else if (error.message.includes('Belge ID bulunamadı ve hiçbir konu seçilmemiş')) {
-          errorMessage = 'Belge yüklenemedi veya hiçbir konu seçilmedi. Lütfen dosya yükleyin ve en az bir konu seçin.';
-        }
+        errMsg = error.message;
       }
       
-      // UI'da ve logda hatayı göster
-      setError(errorMessage);
-      toast.error(errorMessage);
+      // Hata bilgisini ekrana yazdırma ve state'e yazma
+      setErrorMessage(errMsg);
+      toast.error(errMsg);
+      console.error('[ExamCreationWizard] Sınav oluşturma hatası:', error);
+      
+      setIsSubmitting(false);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Adım 3 (ya da son adım): Tercihler
+  const renderPreferencesStep = () => {
+    return (
+      <div className="flex flex-col space-y-8">
+        <div className="flex flex-col space-y-4">
+          <h2 className="text-xl font-bold">Sınav Tercihleri</h2>
+          
+          {/* Seçilen konu ve dosya bilgileri */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+            <h3 className="font-semibold mb-2">Sınav İçeriği</h3>
+            
+            <div className="flex flex-wrap gap-2 mb-2">
+              <div className="flex items-center text-sm">
+                <span className="font-medium mr-1">Belge:</span>
+                <span className="text-gray-600 dark:text-gray-300">
+                  {selectedFile ? selectedFile.name : (documentTextContent ? 'Metin içeriği' : 'Belge yok')}
+                </span>
+              </div>
+              
+              <div className="flex items-center text-sm">
+                <span className="font-medium mr-1">Seçili Konu Sayısı:</span>
+                <span className="text-gray-600 dark:text-gray-300">
+                  {selectedTopicsList.length} konu
+                </span>
+              </div>
+            </div>
+            
+            {/* Hata mesajı */}
+            {errorMessage && (
+              <div className="bg-red-50 text-red-700 p-2 rounded mt-2 text-sm">
+                {errorMessage}
+              </div>
+            )}
+          </div>
+
+          {/* Soru sayısı seçimi ve diğer tercihler */}
+          <div className="space-y-6">
+            <div>
+              <label
+                htmlFor="questionCount"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Soru Sayısı
+              </label>
+              <div className="flex items-center">
+                <input
+                  type="range"
+                  id="questionCount"
+                  min="5"
+                  max={quizType === "quick" ? 20 : 30} // Kişiselleştirilmiş için limit artırılabilir
+                  step="1"
+                  value={preferences.questionCount}
+                  onChange={(e) =>
+                    handlePreferenceChange(
+                      "questionCount",
+                      parseInt(e.target.value),
+                    )
+                  }
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-500"
+                />
+                <span className="w-12 text-center text-sm font-medium text-gray-700 dark:text-gray-300 ml-4 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+                  {preferences.questionCount}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {quizType === "quick" ? "5-20 arası." : "5-30 arası."} Daha
+                fazla soru, daha detaylı analiz sağlar.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="difficulty"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Zorluk Seviyesi
+              </label>
+              <select
+                id="difficulty"
+                value={preferences.difficulty}
+                onChange={(e) =>
+                  handlePreferenceChange(
+                    "difficulty",
+                    e.target.value as
+                      | "beginner"
+                      | "intermediate"
+                      | "advanced"
+                      | "mixed",
+                  )
+                }
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              >
+                <option value="beginner">Kolay</option>
+                <option value="intermediate">Orta</option>
+                <option value="advanced">Zor</option>
+                <option value="mixed">Karışık (Önerilen)</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Sınavdaki soruların zorluk seviyesini belirler.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Zaman Sınırı
+              </label>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="useTimeLimit"
+                    checked={useTimeLimit}
+                    onChange={(e) =>
+                      handleUseTimeLimitChange(e.target.checked)
+                    }
+                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 focus:ring-indigo-500"
+                  />
+                  <label
+                    htmlFor="useTimeLimit"
+                    className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                  >
+                    Zaman sınırı uygula
+                  </label>
+                </div>
+                {useTimeLimit && (
+                  <motion.div
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center overflow-hidden"
+                  >
+                    <input
+                      type="number"
+                      id="timeLimitInput"
+                      min="1"
+                      max="180" // Makul bir üst limit
+                      value={preferences.timeLimit || ""}
+                      onChange={(e) =>
+                        handleTimeLimitInputChange(e.target.value)
+                      }
+                      className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm"
+                      placeholder="örn: 30"
+                    />
+                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                      dakika
+                    </span>
+                  </motion.div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Sınav için bir süre belirleyebilirsiniz.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Render
@@ -1172,173 +1330,7 @@ export default function ExamCreationWizard({
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                {quizType === "personalized" ? "3. Sınav Tercihleri" : "3. Sınav Tercihleri"}
-              </h3>
-
-              {/* Seçilen Sınav Türü Bilgisi */}
-              <div className="mb-6 p-4 rounded-md bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
-                <div className="flex items-center">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 text-white ${quizType === "quick" ? "bg-blue-500" : "bg-purple-500"}`}
-                  >
-                    {quizType === "quick" ? (
-                      <FiClock size={14} />
-                    ) : (
-                      <FiTarget size={14} />
-                    )}
-                  </div>
-                  <span className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">
-                    {quizType === "quick"
-                      ? "Hızlı Sınav"
-                      : personalizedQuizType === "weakTopicFocused"
-                        ? "Kişiselleştirilmiş: Zayıf/Orta Odaklı"
-                        : personalizedQuizType === "learningObjectiveFocused"
-                          ? "Kişiselleştirilmiş: Öğrenme Hedefi Odaklı"
-                          : personalizedQuizType === "newTopicFocused"
-                            ? "Kişiselleştirilmiş: Yeni Konu Odaklı"
-                            : "Kişiselleştirilmiş: Kapsamlı"}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-700 dark:text-gray-400 mt-1.5 ml-9">
-                  {quizType === "quick" &&
-                    "Tek bir belge içeriğini yapay zeka ile hızlıca analiz eder ve değerlendirir. Anında sonuç ve detaylı geri bildirim alırsınız."}
-                  {quizType === "personalized" &&
-                    personalizedQuizType === "weakTopicFocused" &&
-                    "Yapay zeka, geçmiş performansınızı analiz ederek zayıf olduğunuz konulara odaklanır. Eksiklerinizi tamamlamanıza yardımcı olacak kişiselleştirilmiş sorular sunar."}
-                  {quizType === "personalized" &&
-                    personalizedQuizType === "learningObjectiveFocused" &&
-                    "Belirlediğiniz öğrenme hedeflerine ulaşma durumunuzu yapay zeka yardımıyla ölçer. Hedeflerinize ilerleyişinizi görselleştirir ve kişiselleştirilmiş öneriler sunar."}
-                  {quizType === "personalized" &&
-                    personalizedQuizType === "newTopicFocused" &&
-                    "Yüklenen belgeden yapay zeka ile tespit edilen yeni konuları test eder ve bilgi seviyenizi ölçer. Yeni öğrenme alanlarını keşfetmenizi sağlar."}
-                  {quizType === "personalized" &&
-                    personalizedQuizType === "comprehensive" &&
-                    "Yapay zeka, yeni içerik ile mevcut öğrenme hedeflerinizi birleştirerek kapsamlı bir sınav oluşturur. Tüm bilgi alanlarınızı dengeli şekilde değerlendirir."}
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                {/* Soru Sayısı */}
-                <div>
-                  <label
-                    htmlFor="questionCount"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Soru Sayısı
-                  </label>
-                  <div className="flex items-center">
-                    <input
-                      type="range"
-                      id="questionCount"
-                      min="5"
-                      max={quizType === "quick" ? 20 : 30} // Kişiselleştirilmiş için limit artırılabilir
-                      step="1"
-                      value={preferences.questionCount}
-                      onChange={(e) =>
-                        handlePreferenceChange(
-                          "questionCount",
-                          parseInt(e.target.value),
-                        )
-                      }
-                      className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-500"
-                    />
-                    <span className="w-12 text-center text-sm font-medium text-gray-700 dark:text-gray-300 ml-4 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
-                      {preferences.questionCount}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {quizType === "quick" ? "5-20 arası." : "5-30 arası."} Daha
-                    fazla soru, daha detaylı analiz sağlar.
-                  </p>
-                </div>
-
-                {/* Zorluk Seviyesi */}
-                <div>
-                  <label
-                    htmlFor="difficulty"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Zorluk Seviyesi
-                  </label>
-                  <select
-                    id="difficulty"
-                    value={preferences.difficulty}
-                    onChange={(e) =>
-                      handlePreferenceChange(
-                        "difficulty",
-                        e.target.value as
-                          | "beginner"
-                          | "intermediate"
-                          | "advanced"
-                          | "mixed",
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                  >
-                    <option value="beginner">Kolay</option>
-                    <option value="intermediate">Orta</option>
-                    <option value="advanced">Zor</option>
-                    <option value="mixed">Karışık (Önerilen)</option>
-                  </select>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Sınavdaki soruların zorluk seviyesini belirler.
-                  </p>
-                </div>
-
-                {/* Zaman Sınırı */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Zaman Sınırı
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="useTimeLimit"
-                        checked={useTimeLimit}
-                        onChange={(e) =>
-                          handleUseTimeLimitChange(e.target.checked)
-                        }
-                        className="h-4 w-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 focus:ring-indigo-500"
-                      />
-                      <label
-                        htmlFor="useTimeLimit"
-                        className="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                      >
-                        Zaman sınırı uygula
-                      </label>
-                    </div>
-                    {useTimeLimit && (
-                      <motion.div
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: "auto" }}
-                        transition={{ duration: 0.3 }}
-                        className="flex items-center overflow-hidden"
-                      >
-                        <input
-                          type="number"
-                          id="timeLimitInput"
-                          min="1"
-                          max="180" // Makul bir üst limit
-                          value={preferences.timeLimit || ""}
-                          onChange={(e) =>
-                            handleTimeLimitInputChange(e.target.value)
-                          }
-                          className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm"
-                          placeholder="örn: 30"
-                        />
-                        <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                          dakika
-                        </span>
-                      </motion.div>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Sınav için bir süre belirleyebilirsiniz.
-                  </p>
-                </div>
-              </div>
+              {renderPreferencesStep()}
             </motion.div>
           )}
         </AnimatePresence>
