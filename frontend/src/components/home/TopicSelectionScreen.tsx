@@ -91,7 +91,6 @@ interface TopicSelectionScreenProps {
   onTopicsSelected: (selectedTopicIds: string[], courseId: string) => void;
   onCourseChange?: (courseId: string) => void;
   onCancel?: () => void;
-  hideButtons?: boolean; // Butonları gizlemek için özellik
 }
 
 export default function TopicSelectionScreen({
@@ -106,7 +105,6 @@ export default function TopicSelectionScreen({
   onTopicsSelected,
   onCourseChange,
   onCancel,
-  hideButtons = false,
 }: TopicSelectionScreenProps) {
   // Mevcut konuları tut
   const [filteredTopics, setFilteredTopics] = useState<TopicData[]>(detectedTopics);
@@ -115,7 +113,7 @@ export default function TopicSelectionScreen({
 
   // Seçili kurs kontrolü
   const [currentCourseId, setCurrentCourseId] = useState(
-    selectedCourseId || "",
+    selectedCourseId || ""
   );
 
   // Kurs değişikliğini bildir
@@ -221,21 +219,8 @@ export default function TopicSelectionScreen({
     [selectedFilter],
   );
 
-  // Seçilen konuları gönder
-  const handleSubmit = useCallback(() => {
-    if (!currentCourseId) {
-      alert("Lütfen bir ders seçin");
-      return;
-    }
-
-    const selectedTopicIds = filteredTopics
-      .filter((t) => t.isSelected)
-      .map((t) => t.id);
-    onTopicsSelected(selectedTopicIds, currentCourseId);
-  }, [filteredTopics, currentCourseId, onTopicsSelected]);
-
   // Durum bilgisi için stil
-  const getStatusInfo = useCallback((status?: LearningTargetStatus) => {
+  const getStatusInfo = useCallback((status?: LearningTargetStatus | LearningTargetStatusLiteral | string) => {
     if (!status) {
       return {
         color: "text-indigo-600 dark:text-indigo-400",
@@ -246,7 +231,18 @@ export default function TopicSelectionScreen({
       };
     }
 
-    return getStatusStyle(status);
+    // LearningTargetStatus türünden LearningTargetStatusLiteral türüne dönüştür
+    const validStatusValues: LearningTargetStatusLiteral[] = ["pending", "medium", "failed", "mastered"];
+    
+    // String değerine dönüştür
+    const statusStr = typeof status === 'string' ? status : String(status);
+    
+    // Desteklenen değerlerle eşleştir
+    const statusLiteral = validStatusValues.includes(statusStr as LearningTargetStatusLiteral) 
+      ? statusStr as LearningTargetStatusLiteral 
+      : "pending";
+    
+    return getStatusStyle(statusLiteral);
   }, []);
 
   // Çeşitli konu sayıları
@@ -274,30 +270,39 @@ export default function TopicSelectionScreen({
     [filteredTopics, selectedFilter],
   );
 
-  const allSelected = useMemo(
-    () => displayTopics.length > 0 && displayTopics.every((t) => t.isSelected),
-    [displayTopics],
-  );
+  // Konuları ana konulara göre grupla
+  const groupedTopics = useMemo(() => {
+    const groups: Record<string, TopicData[]> = {};
+    
+    displayTopics.forEach((topic) => {
+      const parentTopic = topic.parentTopic || 'Diğer Konular';
+      if (!groups[parentTopic]) {
+        groups[parentTopic] = [];
+      }
+      groups[parentTopic].push(topic);
+    });
+    
+    return groups;
+  }, [displayTopics]);
 
-  // Sınav türü başlığı
-  const getQuizTypeTitle = useCallback(() => {
-    if (quizType === "quick") {
-      return "Hızlı Sınav - Konu Seçimi";
+  // Konuları seçip devam etme fonksiyonu
+  const handleContinue = () => {
+    if (!currentCourseId) {
+      alert("Lütfen bir ders seçin");
+      return;
     }
 
-    switch (personalizedQuizType) {
-      case "weakTopicFocused":
-        return "Zayıf/Orta Konulara Odaklı Sınav";
-      case "learningObjectiveFocused":
-        return "Öğrenme Hedefi Odaklı Sınav";
-      case "newTopicFocused":
-        return "Yeni Konulara Odaklı Sınav";
-      case "comprehensive":
-        return "Kapsamlı Sınav";
-      default:
-        return "Kişiselleştirilmiş Sınav";
+    const selectedTopicIds = filteredTopics
+      .filter((t) => t.isSelected)
+      .map((t) => t.id);
+      
+    if (selectedTopicIds.length === 0) {
+      alert("Lütfen en az bir konu seçin");
+      return;
     }
-  }, [quizType, personalizedQuizType]);
+    
+    onTopicsSelected(selectedTopicIds, currentCourseId);
+  };
 
   if (isLoading) {
     return (
@@ -414,7 +419,7 @@ export default function TopicSelectionScreen({
             ? "Geliştirmeniz gereken alanları içeren özel bir sınav oluşturulacak."
             : personalizedQuizType === "learningObjectiveFocused"
             ? "Öğrenme hedeflerinize göre özel bir sınav oluşturulacak."
-            : personalizedQuizType === "newTopicFocused"
+              : personalizedQuizType === "newTopicFocused"
             ? "Henüz çalışmadığınız yeni konulara odaklanan bir sınav oluşturulacak."
             : "Çalışma durumunuza uygun kapsamlı bir sınav oluşturulacak."}
         </p>
@@ -440,128 +445,90 @@ export default function TopicSelectionScreen({
         </div>
       )}
 
-      {isLoading ? (
-        <div className="flex items-center justify-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
-          <span className="ml-2 text-gray-600 dark:text-gray-400">
-            Konular yükleniyor...
-          </span>
-        </div>
-      ) : error ? (
-        <div className="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-4 rounded-md">
-          <div className="flex items-center">
-            <FiAlertCircle className="mr-2" />
-            <span>{error}</span>
-          </div>
-        </div>
-      ) : filteredTopics.length === 0 ? (
-        <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 p-4 rounded-md">
-          <div className="flex items-center">
-            <FiAlertCircle className="mr-2" />
-            <span>
-              Herhangi bir konu bulunamadı. Lütfen farklı bir ders seçin veya
-              sistem yöneticinize başvurun.
-            </span>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
+      {/* Konu Listesi Başlığı ve Filtreler */}
+      <div className="mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleFilterChange("all")}
+              className={`px-3 py-1 text-sm rounded-full ${
+                selectedFilter === "all"
+                  ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+              }`}
+            >
+              Tümü ({topicCounts.all})
+            </button>
+            {topicCounts.new > 0 && (
               <button
-                onClick={() => handleFilterChange("all")}
+                onClick={() => handleFilterChange("new")}
                 className={`px-3 py-1 text-sm rounded-full ${
-                  selectedFilter === "all"
-                    ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+                  selectedFilter === "new"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                     : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
                 }`}
               >
-                Tümü ({topicCounts.all})
+                Yeni ({topicCounts.new})
               </button>
-              {topicCounts.new > 0 && (
-                <button
-                  onClick={() => handleFilterChange("new")}
-                  className={`px-3 py-1 text-sm rounded-full ${
-                    selectedFilter === "new"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                      : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                  }`}
-                >
-                  Yeni ({topicCounts.new})
-                </button>
-              )}
-              {topicCounts.existing > 0 && (
-                <button
-                  onClick={() => handleFilterChange("existing")}
-                  className={`px-3 py-1 text-sm rounded-full ${
-                    selectedFilter === "existing"
-                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                      : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                  }`}
-                >
-                  Mevcut ({topicCounts.existing})
-                </button>
-              )}
-            </div>
-            <div className="flex space-x-2">
+            )}
+            {topicCounts.existing > 0 && (
               <button
-                onClick={() => handleToggleAll(true)}
-                className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-full"
-              >
-                Tümünü Seç
-              </button>
-              <button
-                onClick={() => handleToggleAll(false)}
-                className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 rounded-full"
-              >
-                Tümünü Kaldır
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-            {filteredTopics.map((topic) => (
-              <TopicCard 
-                key={topic.id} 
-                topic={topic} 
-                onToggle={handleToggleTopic} 
-                statusInfo={getStatusInfo(topic.status as LearningTargetStatusLiteral | undefined)}
-              />
-            ))}
-          </div>
-
-          {!hideButtons && (
-            <div className="flex justify-between items-center mt-8">
-              <button
-                onClick={onCancel}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-              >
-                İptal
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={topicCounts.selected === 0}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  topicCounts.selected === 0
-                    ? "bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={() => handleFilterChange("existing")}
+                className={`px-3 py-1 text-sm rounded-full ${
+                  selectedFilter === "existing"
+                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
                 }`}
               >
-                {topicCounts.selected > 0
-                  ? `${topicCounts.selected} Konu ile Devam Et`
-                  : "En Az Bir Konu Seçin"}
+                Mevcut ({topicCounts.existing})
               </button>
-            </div>
-          )}
-          
-          {/* Seçim Bilgisi (her durumda gösterilir) */}
-          <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-            {topicCounts.selected > 0 
-              ? `${topicCounts.selected} konu seçildi` 
-              : "Henüz konu seçilmedi"}
+            )}
           </div>
-        </>
-      )}
+          <button
+            onClick={() => handleToggleAll(true)}
+            className="px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-sm hover:shadow flex items-center justify-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Tümünü Seç
+          </button>
+        </div>
+      </div>
+
+      {/* Ana konulara göre gruplandırılmış liste */}
+      <div className="space-y-6 mb-6">
+        {Object.entries(groupedTopics).map(([parentTopic, topics]) => (
+          <div key={parentTopic} className="border rounded-lg p-3 dark:border-gray-700 hover:shadow-md transition-shadow">
+            <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 border-b pb-2 dark:border-gray-700 flex items-center">
+              <span className="inline-block w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
+              {parentTopic}
+              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({topics.length})</span>
+            </h3>
+            <div className="space-y-2">
+              {topics.map((topic) => (
+                <TopicCard 
+                  key={topic.id} 
+                  topic={topic} 
+                  onToggle={handleToggleTopic} 
+                  statusInfo={getStatusInfo(topic.status)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tek bir merkezi "Devam Et" butonu */}
+      <div className="flex justify-center mt-8">
+        <button 
+          onClick={handleContinue}
+          className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-md hover:shadow-lg flex items-center justify-center"
+          disabled={topicCounts.selected === 0}
+        >
+          <span>{topicCounts.selected > 0 ? `${topicCounts.selected} Konu ile Devam Et` : "Konu Seçin"}</span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -612,16 +579,25 @@ function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
 
   return (
     <div
-      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+      className={`p-2 border rounded-lg cursor-pointer transition-colors ${
         topic.isSelected
           ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30"
           : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"
       }`}
       onClick={() => onToggle(topic.id)}
     >
-      <div className="flex items-start">
+      <div className="flex items-center">
+        <div
+          className={`rounded-full min-w-5 w-5 h-5 mr-3 flex items-center justify-center ${
+            topic.isSelected
+              ? "bg-indigo-500 text-white"
+              : "bg-gray-200 dark:bg-gray-700"
+          }`}
+        >
+          {topic.isSelected && <FiCheck className="w-3 h-3" />}
+        </div>
         <div className="flex-1">
-          <h3 className="font-medium text-gray-800 dark:text-gray-200">
+          <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200">
             {displayTopicName()}
           </h3>
           {topic.parentTopic && (
@@ -630,30 +606,19 @@ function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
             </p>
           )}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center ml-2">
           <div
-            className={`rounded-full w-5 h-5 flex items-center justify-center ${
-              topic.isSelected
-                ? "bg-indigo-500 text-white"
-                : "bg-gray-200 dark:bg-gray-700"
-            }`}
+            className={`text-xs rounded-full px-2 py-0.5 flex items-center whitespace-nowrap ${statusInfo.bgColor} ${statusInfo.color}`}
           >
-            {topic.isSelected && <FiCheck className="w-3 h-3" />}
+            <StatusIcon className="w-3 h-3 mr-1" />
+            {statusInfo.label}
           </div>
+          {topic.isNew && (
+            <div className="ml-1 text-xs rounded-full px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 whitespace-nowrap">
+              Yeni
+            </div>
+          )}
         </div>
-      </div>
-      <div className="mt-2 flex items-center">
-        <div
-          className={`text-xs rounded-full px-2 py-0.5 flex items-center ${statusInfo.bgColor} ${statusInfo.color}`}
-        >
-          <StatusIcon className="w-3 h-3 mr-1" />
-          {statusInfo.label}
-        </div>
-        {topic.isNew && (
-          <div className="ml-2 text-xs rounded-full px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200">
-            Yeni
-          </div>
-        )}
       </div>
     </div>
   );

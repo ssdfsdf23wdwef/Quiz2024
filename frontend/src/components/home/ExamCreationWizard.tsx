@@ -24,7 +24,6 @@ import { Course, DetectedSubTopic, QuizPreferences } from "@/types";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
-  hideDuplicateButtons?: boolean; // Çakışan butonları gizlemek için
   onComplete?: (result: {
     file: File | null;
     quizType: "quick" | "personalized";
@@ -51,7 +50,6 @@ interface TopicsResponseData {
 
 export default function ExamCreationWizard({
   quizType, // Dışarıdan gelen sınav türü
-  hideDuplicateButtons,
   onComplete,
 }: ExamCreationWizardProps) {
 
@@ -71,7 +69,7 @@ export default function ExamCreationWizard({
   >("idle");
 
   // Sınav oluşturma durumu için yeni state
-  const [quizCreationLoading, setQuizCreationLoading] = useState(false);
+  const [quizCreationLoading] = useState(false);
 
   // Kişiselleştirilmiş sınav alt türü - sadece personalized modda kullanılıyor
   const [personalizedQuizType, setPersonalizedQuizType] = useState<
@@ -179,19 +177,32 @@ export default function ExamCreationWizard({
   };
 
   // Konuları tespit et
-  const handleTopicsDetected = (selectedTopics: string[]) => {
+  const handleTopicsDetected = (selectedTopics: string[], courseId: string) => {
     // Tespit edilen konular seçildiğinde
     console.log(`📋 KONULAR SEÇİLDİ: ${selectedTopics.length} adet konu seçildi`);
     console.log(`🔍 Seçilen konular: ${selectedTopics.join(', ')}`);
     
     if (selectedTopics.length > 0) {
+      // Kurs ID'sini güncelle
+      if (courseId && courseId !== selectedCourseId) {
+        setSelectedCourseId(courseId);
+        console.log(`✅ Seçilen kurs güncellendi: ${courseId}`);
+      }
+
+      // Seçilen konuları güncelle
       setSelectedTopicIds(selectedTopics);
       console.log(`✅ Seçilen konular state'e kaydedildi: ${selectedTopics.length} adet`);
+      
+      // Alt konulara otomatik ekle - basitleştirilmiş örnek
+      // Burada detaylı alt konu yönetimi varsa ona göre değiştirin
+      setSelectedSubTopicIds(selectedTopics);
+      console.log(`✅ Seçilen alt konular state'e kaydedildi: ${selectedTopics.length} adet`);
 
       // Tercihleri güncelle
       setPreferences((prev: QuizPreferences) => ({
         ...prev,
         topicIds: selectedTopics,
+        subTopicIds: selectedTopics, // Alt konular konularla aynı (basitleştirilmiş versiyon)
       }));
       console.log(`✅ Quiz tercihleri güncellendi. Konu ID'leri: ${selectedTopics.length} adet`);
     } else {
@@ -323,10 +334,7 @@ export default function ExamCreationWizard({
       setTopicDetectionStatus("loading");
 
       // Konu tespiti fonksiyonunu çağır
-      detectTopicsFromUploadedFile(selectedFile);
-      
-      // Durumu göster ve bu aşamada ilerlemeyi engelle
-      ErrorService.showToast("Belge analiz ediliyor, lütfen bekleyin...", "info");
+      detectTopicsFromUploadedFile(selectedFile)
       return;
     }
 
@@ -747,7 +755,7 @@ export default function ExamCreationWizard({
     }
   };
 
-  // ExamCreationWizard içindeki onComplete çağrısı kısmını güçlendirelim
+  // handleFinalSubmit fonksiyonunu güçlendirelim
   const handleFinalSubmit = async () => {
     try {
       console.log("🏁 Tüm adımlar tamamlandı (3/3). Sınav oluşturma için gerekli veriler hazırlanıyor...");
@@ -760,32 +768,52 @@ export default function ExamCreationWizard({
         personalizedQuizType: personalizedQuizType
       });
       
-      // Konuların boş olmamasını sağla
-      const topicsToUse = selectedTopicIds.length > 0 ? selectedTopicIds : 
-        (detectedTopics?.length > 0 ? detectedTopics.filter(t => t.isSelected).map(t => t.id) : []);
-        
-      // Alt konuların boş olmamasını sağla
-      const subTopicsToUse = selectedSubTopicIds.length > 0 ? selectedSubTopicIds : 
-        (detectedTopics?.length > 0 ? detectedTopics.filter(t => t.isSelected).map(t => t.id) : []);
+      // Son kontrol: Eğer konular yoksa, detectedTopics'den isSelected olanları al
+      // Seçilen konular
+      const effectiveTopicIds = (() => {
+        if (selectedTopicIds.length > 0) {
+          return selectedTopicIds;
+        } else if (detectedTopics && detectedTopics.length > 0) {
+          const selectedFromDetected = detectedTopics.filter(t => t.isSelected).map(t => t.id);
+          if (selectedFromDetected.length > 0) {
+            console.log(`⚠️ selectedTopicIds boş, ancak detectedTopics'den ${selectedFromDetected.length} seçili konu bulundu. Bunlar kullanılacak.`);
+            return selectedFromDetected;
+          }
+        }
+        return [];
+      })();
       
-      console.log("🔄 Kullanılacak konular:", topicsToUse);
-      console.log("🔄 Kullanılacak alt konular:", subTopicsToUse);
+      // Seçilen alt konular
+      const effectiveSubTopicIds = (() => {
+        if (selectedSubTopicIds.length > 0) {
+          return selectedSubTopicIds;
+        } else if (detectedTopics && detectedTopics.length > 0) {
+          const selectedFromDetected = detectedTopics.filter(t => t.isSelected).map(t => t.id);
+          if (selectedFromDetected.length > 0) {
+            return selectedFromDetected;
+          }
+        }
+        return [];
+      })();
       
-        // Son tercihleri oluştur
-        const finalPreferences: QuizPreferences = {
-          ...preferences,
+      console.log("🔄 Kullanılacak konular:", effectiveTopicIds);
+      console.log("🔄 Kullanılacak alt konular:", effectiveSubTopicIds);
+      
+      // Son tercihleri oluştur
+      const finalPreferences: QuizPreferences = {
+        ...preferences,
         // Her sınav türü için konu ve alt konuları ekle
         // Zayıf konu odaklı sınavlar hariç tüm sınav türleri için konuları dahil et
-          topicIds:
+        topicIds:
           (quizType === "personalized" && personalizedQuizType !== "weakTopicFocused") 
-            ? topicsToUse 
-            : (quizType === "quick" && topicsToUse.length > 0 ? topicsToUse : undefined),
+            ? effectiveTopicIds 
+            : (quizType === "quick" && effectiveTopicIds.length > 0 ? effectiveTopicIds : undefined),
         
         // Alt konuları da aynı şekilde dahil et
-          subTopicIds:
+        subTopicIds:
           (quizType === "personalized" && personalizedQuizType !== "weakTopicFocused") 
-            ? subTopicsToUse 
-            : (quizType === "quick" && subTopicsToUse.length > 0 ? subTopicsToUse : undefined)
+            ? effectiveSubTopicIds 
+            : (quizType === "quick" && effectiveSubTopicIds.length > 0 ? effectiveSubTopicIds : undefined)
       };
 
       // Konu isimleri için bir map oluştur (sonraki UI gösterimi için)
@@ -797,15 +825,15 @@ export default function ExamCreationWizard({
       }
 
       const result = {
-          file:
-            quizType === "personalized" &&
-            personalizedQuizType === "weakTopicFocused"
-              ? null
-              : selectedFile, // Zayıf odaklıda dosya yok
-          quizType,
-          personalizedQuizType:
-            quizType === "personalized" ? personalizedQuizType : undefined,
-          preferences: finalPreferences,
+        file:
+          quizType === "personalized" &&
+          personalizedQuizType === "weakTopicFocused"
+            ? null
+            : selectedFile, // Zayıf odaklıda dosya yok
+        quizType,
+        personalizedQuizType:
+          quizType === "personalized" ? personalizedQuizType : undefined,
+        preferences: finalPreferences,
         topicNameMap: topicNameMap // Konu isimlerini de ekleyelim
       };
 
@@ -1051,9 +1079,7 @@ export default function ExamCreationWizard({
 
               {/* Konu Seçimi - Hem hızlı sınav hem de kişiselleştirilmiş sınav için */}
               <div className={quizType === "personalized" ? "mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" : ""}>
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                  {quizType === "personalized" ? "Konu Seçimi" : "2. Konu Seçimi"}
-                </h4>
+             
 
                 {personalizedQuizType === "weakTopicFocused" ? (
                   <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-md text-yellow-800 dark:text-yellow-200">
@@ -1067,9 +1093,7 @@ export default function ExamCreationWizard({
                   </div>
                 ) : (
                   <>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      Yüklediğiniz belgeden yapay zeka tarafından tespit edilen konular aşağıdadır. Sınava dahil etmek istediklerinizi seçin.
-                    </p>
+                   
                     {/* AI Konu Tespiti ve Seçim Ekranı */}
                     <TopicSelectionScreen
                       detectedTopics={detectedTopics}
@@ -1079,11 +1103,13 @@ export default function ExamCreationWizard({
                       quizType={quizType}
                       personalizedQuizType={personalizedQuizType}
                       isLoading={topicDetectionStatus === "loading"}
-                      error={null}
-                      onTopicsSelected={handleTopicsDetected}
+                      error={undefined}
+                      onTopicsSelected={(selectedTopics, courseId) => {
+                        // topicId ve courseId parametrelerini birleştir
+                        handleTopicsDetected(selectedTopics, courseId);
+                      }}
                       onCourseChange={handleCourseChangeForTopicSelection}
                       onCancel={handleTopicDetectionCancel}
-                      hideButtons={hideDuplicateButtons}
                     />
                   </>
                 )}

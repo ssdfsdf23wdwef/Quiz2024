@@ -31,7 +31,33 @@ export class NormalizationService {
    * @param name Alt konu adı
    * @param convertTurkishChars Türkçe karakterleri Latin karşılıklarına çevirmek için (opsiyonel)
    */
-  normalizeSubTopicName(name: string, convertTurkishChars = false): string {
+  normalizeSubTopicName(name: unknown, convertTurkishChars = false): string {
+    // Tip kontrolü ekle
+    if (typeof name !== 'string') {
+      this.logger.warn(
+        `Geçersiz alt konu adı türü: ${typeof name}. String bekleniyor.`,
+        'NormalizationService.normalizeSubTopicName',
+        __filename,
+      );
+      
+      // String olmayan değeri güvenli şekilde stringe dönüştür
+      if (name === null || name === undefined) {
+        return 'bilinmeyen_konu';
+      }
+      
+      try {
+        return String(name)
+          .toLowerCase()
+          .trim()
+          .replace(/[\s-]+/g, '_')
+          .replace(/[.,;:!?()"']/g, '')
+          .replace(/[^a-z0-9_öçşığü]/g, '')
+          .replace(/_+/g, '_');
+      } catch (error) {
+        return 'bilinmeyen_konu';
+      }
+    }
+
     if (!name) return '';
 
     let normalized = name
