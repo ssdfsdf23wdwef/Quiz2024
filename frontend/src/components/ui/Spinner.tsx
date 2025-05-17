@@ -7,7 +7,7 @@ export default function Spinner({
   color = "indigo",
 }: {
   size?: "sm" | "md" | "lg";
-  color?: "indigo" | "green" | "amber" | "red";
+  color?: "indigo" | "green" | "amber" | "red" | "blue";
 }) {
   const sizeMap = {
     sm: "w-5 h-5",
@@ -20,6 +20,7 @@ export default function Spinner({
     green: "border-green-600",
     amber: "border-amber-600",
     red: "border-red-600",
+    blue: "border-blue-600",
   };
 
   return (

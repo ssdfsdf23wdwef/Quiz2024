@@ -15,6 +15,9 @@ import {
 } from "@/types/quiz";
 import { ErrorService } from "@/services/error.service";
 import ExamCreationWizard from "@/components/home/ExamCreationWizard";
+import { toast } from "react-hot-toast";
+import { ApiError } from "@/services/error.service";
+import { DifficultyLevel, QuizType } from "@/types";
 
 // Form verileri için tip tanımı
 interface CreateQuizFormData {
@@ -119,19 +122,32 @@ export default function CreateExamPage() {
 
   // Quiz oluşturma işlemi
   const handleCreateQuiz = async (formData: CreateQuizFormData) => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    setProcessingQuiz(true);
+    
     try {
-      if (isSubmitting) return;
-      
-      setIsSubmitting(true);
-      setProcessingQuiz(true);
-      
       console.log("✏️ Quiz oluşturuluyor:", formData);
       
-      const { quizType, courseId, preferences, selectedTopics } = formData;
-      console.log("🔑 Seçilen konular:", selectedTopics);
-      console.log("🔑 Tercihler içindeki konular:", preferences.topicIds);
-      console.log("🔑 Tercihler içindeki alt konular:", preferences.subTopicIds);
-
+      const { quizType, courseId, preferences, selectedTopics, document } = formData;
+      
+      // Belge metni uzunluğunu kontrol et
+      if (document && document.text && document.text.length < 200) {
+        toast.error("Belge metni çok kısa. En az 200 karakter olmalıdır.");
+        setProcessingQuiz(false);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Diğer gerekli kontroller
+      if (!selectedTopics || selectedTopics.length === 0) {
+        toast.error("En az bir konu seçmelisiniz");
+        setProcessingQuiz(false);
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Konu bilgilerini kontrol et
       const hasTopics = Array.isArray(selectedTopics) && selectedTopics.length > 0;
       // Optional chaining kullanarak daha güvenli bir şekilde subTopicIds kontrol edelim
@@ -139,9 +155,9 @@ export default function CreateExamPage() {
       const hasSubTopics = Array.isArray(subTopicIds) && subTopicIds.length > 0;
       
       // Quiz oluşturma seçeneklerini hazırla
-    const quizOptions: QuizGenerationOptions = {
-      quizType,
-      courseId: courseId || undefined,
+      const quizOptions = {
+        quizType: quizType as QuizType,
+        courseId: courseId || undefined,
         personalizedQuizType: formData.personalizedQuizType || null,
         
         // Konu ve alt konu bilgilerini hazırla
@@ -160,10 +176,10 @@ export default function CreateExamPage() {
               : undefined
           ),
           
-        sourceDocument: formData.document 
+        sourceDocument: document 
           ? {
-              fileName: formData.document.name,
-              storagePath: formData.document.name // Gerçek storage path burada bilinmiyor
+              fileName: document.fileName || 'Belge',
+              ...(document.storagePath ? { storagePath: document.storagePath } : {})
             } 
           : null,
         preferences: {
@@ -185,52 +201,72 @@ export default function CreateExamPage() {
         selectedSubTopicsForAPI: quizOptions.selectedSubTopics || []
       });
       
+      // API çağrısını yapmadan önce sağlama yapalım
+      if (quizType === 'quick' && document && !document.text) {
+        // Hızlı sınavlar için belge metni gereklidir
+        console.error("❌ Hızlı sınav için belge metni gerekli");
+        throw new Error("Hızlı sınav için belge metni gerekli. Lütfen bir belge yükleyin veya metin girin.");
+      }
+      
+      if (quizType === 'personalized' && !courseId) {
+        // Kişiselleştirilmiş sınavlar için kurs ID'si gereklidir
+        console.error("❌ Kişiselleştirilmiş sınav için kurs seçilmeli");
+        throw new Error("Kişiselleştirilmiş sınav için bir kurs seçmelisiniz.");
+      }
+      
       try {
-        console.log("🚀 quizService.generateQuiz çağrılıyor...");
-        console.log("📮 API endpointi: /quizzes");
-        
         // Sınavı oluştur
         const result = await quizService.generateQuiz(quizOptions);
         
         console.log("✅ API isteği başarılı. Quiz oluşturuldu:", result);
-        console.log("🆔 Quiz ID:", result?.id);
         
-        // Sınav sayfasına yönlendir
-        if (result && result.id) {
-          console.log("🧭 Yönlendirme: /exams/" + result.id);
-          router.push(`/exams/${result.id}`);
-        } else {
-          console.error("❌ API yanıt verdi ama ID eksik:", result);
-          setError("Sınav oluşturuldu ancak ID alınamadı. Lütfen derslerinizi kontrol edin.");
-          setProcessingQuiz(false);
-          setIsSubmitting(false);
-        }
+        // Başarılı sonuç döndür
+        setCreationResult({
+          status: 'success',
+          quizId: result.id,
+          quiz: result
+        });
+        
       } catch (apiError) {
-        console.error("❌ Quiz API çağrısı hatası:", apiError);
+        console.error("❌ API hatası:", apiError);
         
-        // Hata mesajını daha detaylı alalım
-        let errorMessage = "API isteği sırasında bir hata oluştu.";
+        let errorMessage = "Sınav oluşturulurken bir hata oluştu.";
         
-        if (apiError instanceof Error) {
-          errorMessage = `Hata: ${apiError.message}`;
-          console.error("❌ Hata detayları:", apiError.message);
-          console.error("❌ Hata tipi:", apiError.name);
-          console.error("❌ Hata yığını:", apiError.stack);
+        if (apiError instanceof ApiError) {
+          errorMessage = apiError.message;
+        } else if (apiError instanceof Error) {
+          errorMessage = apiError.message;
         }
         
         // Kullanıcıya uygun mesaj göster
-        setError(`${errorMessage} Lütfen tekrar deneyin.`);
-        setProcessingQuiz(false);
-        setIsSubmitting(false);
+        toast.error(errorMessage);
+        console.error("Hata detayları:", apiError);
         
-        // 3 saniye sonra kullanıcıyı yönlendir
-        setTimeout(() => {
-          router.push("/");
-        }, 3000);
+        // Hata durumunda sonuç döndür
+        setCreationResult({
+          status: 'error',
+          errorMessage
+        });
       }
+      
     } catch (error) {
-      console.error("❌ Quiz oluşturma genel hatası:", error);
-      setError("Sınav oluşturulurken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.");
+      console.error("❌ Genel hata:", error);
+      
+      // Genel hata mesajı
+      let errorMessage = "Sınav oluşturulurken bir hata oluştu.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      
+      // Hata durumunda sonuç döndür
+      setCreationResult({
+        status: 'error',
+        errorMessage
+      });
+    } finally {
       setProcessingQuiz(false);
       setIsSubmitting(false);
     }
@@ -349,9 +385,8 @@ export default function CreateExamPage() {
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <ExamCreationWizard 
-              quizType={quizType} 
+              quizType={quizType as QuizType} 
               onComplete={handleExamCreationComplete}
-              hideDuplicateButtons={true}
             />
 
             {error && (
@@ -359,7 +394,7 @@ export default function CreateExamPage() {
                 {error}
               </div>
             )}
-            </div>
+          </div>
         )}
       </div>
     </PageTransition>

@@ -719,7 +719,40 @@ export class ErrorService {
     code?: string,
     options?: ApiErrorOptions,
   ): ApiError {
-    return new ApiError(message, {
+    // API hata mesajlarını daha kullanıcı dostu hale getir
+    let friendlyMessage = message;
+    
+    // Belirli hata mesajlarını daha anlaşılır hale getir
+    if (message.includes("Belge metni çok kısa veya boş")) {
+      friendlyMessage = "Belge metni çok kısa. Lütfen daha uzun bir metin girin veya geçerli bir belge yükleyin.";
+    }
+    
+    // Opsiyonel olarak API yanıtlarından gelen hata mesajlarını kullan
+    if (options?.original?.error && 
+        typeof options.original.error === 'object' &&
+        'response' in options.original.error && 
+        options.original.error.response) {
+      
+      const response = options.original.error.response as Record<string, unknown>;
+      
+      // API yanıtı içinde bir hata mesajı varsa
+      if (response.data && typeof response.data === 'object' && 'message' in (response.data as object)) {
+        const errorData = response.data as Record<string, unknown>;
+        
+        // API'den gelen hata mesajını kullan
+        if (typeof errorData.message === 'string') {
+          // Sistemsel hata mesajlarını kontrol et ve kullanıcı dostu hale getir
+          if (errorData.message.includes("Belge metni çok kısa veya boş")) {
+            friendlyMessage = "Belge metni çok kısa. Lütfen daha uzun bir metin girin veya geçerli bir belge yükleyin.";
+          } else {
+            // Diğer API hata mesajlarını doğrudan kullan
+            friendlyMessage = errorData.message;
+          }
+        }
+      }
+    }
+    
+    return new ApiError(friendlyMessage, {
       ...options,
       code,
     });

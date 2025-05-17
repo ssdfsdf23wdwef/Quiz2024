@@ -307,6 +307,19 @@ class QuizApiService {
     flowTracker.markStart('generateQuiz');
     
     try {
+      // Frontend tarafında belge metni uzunluğunu kontrol et
+      if ('quizType' in options && options.quizType === 'quick') {
+        // Belge metninin uzunluğunu kontrol et
+        const quizGenOptions = options as unknown as Record<string, unknown>;
+        
+        // Belge metni kontrolü
+        if (quizGenOptions.documentText && 
+            typeof quizGenOptions.documentText === 'string' && 
+            quizGenOptions.documentText.length < 200) {
+          throw new Error('Belge metni çok kısa. En az 200 karakter olmalıdır.');
+        }
+      }
+      
       // Eğer halihazırda dönüştürülmüş bir options nesnesi gelmediyse adapter'ı kullan
       const apiOptions = 'quizType' in options && 'preferences' in options 
         ? adapterService.fromQuizGenerationOptions(options as QuizGenerationOptions)
