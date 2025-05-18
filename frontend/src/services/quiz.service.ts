@@ -1,12 +1,20 @@
 import {
   ApiAnalysisResult,
   ApiFailedQuestion,
-  ApiQuiz
+  ApiQuiz,
 } from "./adapter.service";
 import apiService from "./api.service";
-import {  ErrorService } from "./error.service";
+import { ErrorService } from "./error.service";
 import adapterService from "./adapter.service";
-import * as quiz from "../types/quiz";
+import type {
+  Quiz, 
+  Question, 
+  QuizGenerationOptions, 
+  QuizSubmissionPayload, 
+  DifficultyLevel, 
+  QuestionType, 
+  QuestionStatus 
+} from "../types/quiz";
 import { getLogger, getFlowTracker } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory, FlowTrackerService } from "./flow-tracker.service";
@@ -44,7 +52,12 @@ class QuizApiService {
   }
 
   private isApiResponse(response: unknown): response is BaseApiResponse {
-    return this.isObject(response) && typeof (response as BaseApiResponse).status === 'number' && 'data' in response;
+    if (!this.isObject(response)) return false;
+    
+    const obj = response as Record<string, unknown>;
+    return 'status' in obj && 
+           'data' in obj && 
+           typeof obj.status === 'number';
   }
 
   private getResponseData(response: unknown): unknown {
@@ -60,7 +73,7 @@ class QuizApiService {
     return typeof q.id === 'string' && Array.isArray(q.questions);
   }
 
-  private safeCastToQuestion(rawData: unknown, index: number): quiz.Question {
+  private safeCastToQuestion(rawData: unknown, index: number): Question {
     if (!this.isObject(rawData)) {
       logger.warn(`Question data at index ${index} is not an object, creating fallback.`, 'QuizApiService.safeCastToQuestion');
       return this.createFallbackQuestion(index);
@@ -76,14 +89,14 @@ class QuizApiService {
       explanation: String(data.explanation || ''),
       subTopic: String(data.subTopic || data.topic || 'Genel'),
       normalizedSubTopic: String(data.normalizedSubTopic || 'genel'),
-      difficulty: (typeof data.difficulty === 'string' ? data.difficulty : 'medium') as quiz.DifficultyLevel,
-      questionType: (typeof data.questionType === 'string' ? data.questionType : 'multiple_choice') as quiz.QuestionType,
-      status: (typeof data.status === 'string' ? data.status : 'active') as quiz.QuestionStatus,
+      difficulty: (typeof data.difficulty === 'string' ? data.difficulty : 'medium') as DifficultyLevel,
+      questionType: (typeof data.questionType === 'string' ? data.questionType : 'multiple_choice') as QuestionType,
+      status: (typeof data.status === 'string' ? data.status : 'active') as QuestionStatus,
       metadata: this.isObject(data.metadata) ? data.metadata : {},
-    } as quiz.Question;
+    } as Question;
   }
 
-  private createFallbackQuestion(index: number): quiz.Question {
+  private createFallbackQuestion(index: number): Question {
     return {
       id: `fallback_q_${index}_${Date.now()}`,
       questionText: `Varsayılan Soru ${index + 1}`,
@@ -96,10 +109,10 @@ class QuizApiService {
       questionType: 'multiple_choice',
       status: 'active',
       metadata: { isFallback: true },
-    } as quiz.Question;
+    } as Question;
   }
 
-  private createFallbackQuiz(idPrefix: string = 'fallback', options?: quiz.QuizGenerationOptions): quiz.Quiz {
+  private createFallbackQuiz(idPrefix: string = 'fallback', options?: QuizGenerationOptions): Quiz {
     const fallbackId = `${idPrefix}_${Date.now()}`;
     const questionCount = options?.preferences?.questionCount || 5;
     return {
@@ -125,10 +138,10 @@ class QuizApiService {
       tags: [],
       version: 1,
       metadata: { isFallback: true, reason: 'Error processing API response or missing data' },
-    } as unknown as quiz.Quiz;
+    } as unknown as Quiz;
   }
 
-  private parseQuizFromUnknown(responseData: unknown, options?: quiz.QuizGenerationOptions): quiz.Quiz {
+  private parseQuizFromUnknown(responseData: unknown, options?: QuizGenerationOptions): Quiz {
     let apiQuiz: ApiQuiz | null = null;
 
     if (typeof responseData === 'string') {
@@ -141,8 +154,10 @@ class QuizApiService {
         } else if (this.isObject(parsedJson) && this.isValidApiQuiz(parsedJson.data)) {
           apiQuiz = parsedJson.data as ApiQuiz;
         }
-      } catch (e) {
-        logger.warn('API response string could not be parsed as JSON or valid Quiz structure.', 'QuizApiService.parseQuizFromUnknown', { responseData });
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.warn('API response string could not be parsed as JSON or valid Quiz structure.', 
+          'QuizApiService.parseQuizFromUnknown', undefined, undefined, { responseData, error: errorMessage });
         // TODO: Add text-based question extraction if necessary
       }
     } else if (this.isValidApiQuiz(responseData)) {
@@ -161,7 +176,8 @@ class QuizApiService {
       return adapterService.toQuiz(apiQuiz); // Adapter'ı kullan
     }
 
-    logger.warn('Could not parse a valid ApiQuiz from response, creating fallback quiz.', 'QuizApiService.parseQuizFromUnknown', { responseData });
+    logger.warn('Could not parse a valid ApiQuiz from response, creating fallback quiz.', 
+      'QuizApiService.parseQuizFromUnknown', undefined, undefined, { responseData });
     return this.createFallbackQuiz('parsed_fallback', options);
   }
 
@@ -171,7 +187,7 @@ class QuizApiService {
    * @returns Quiz dizisi
    */
   @LogMethod('QuizApiService', FlowCategory.API)
-  async getQuizzes(courseId?: string) {
+  async getQuizzes(courseId?: string): Promise<Quiz[]> {
     const flowStepId = 'getQuizzes';
     flowTracker.markStart(flowStepId);
     
@@ -191,7 +207,14 @@ class QuizApiService {
       const err = error instanceof Error ? error : new Error(String(error));
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getQuizzes', err);
       logger.error("Sınav listesi alınamadı", 'QuizApiService.getQuizzes', err, undefined, { courseId });
-      const apiError = ErrorService.createApiError("Sınav listesi yüklenirken bir hata oluştu.", err, { courseId, context: 'getQuizzes' });
+      const apiError = ErrorService.createApiError("Sınav listesi yüklenirken bir hata oluştu.", 
+        err.message || String(err), { 
+          original: { 
+            error: err,
+            context: 'getQuizzes',
+            courseId // Özel alanları original içine taşı
+          } 
+        });
       ErrorService.handleError(apiError, "Sınav Listesi Alma");
       throw apiError;
     }
@@ -203,7 +226,7 @@ class QuizApiService {
    * @returns Quiz detayları
    */
   @LogMethod('QuizApiService', FlowCategory.API)
-  async getQuizById(id: string) {
+  async getQuizById(id: string): Promise<Quiz | null> {
     const flowStepId = `getQuizById_${id}`;
     flowTracker.markStart(flowStepId);
     
@@ -222,7 +245,14 @@ class QuizApiService {
       const err = error instanceof Error ? error : new Error(String(error));
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getQuizById', err);
       logger.error(`Sınav detayı alınamadı: ID=${id}`, 'QuizApiService.getQuizById', err, undefined, { id });
-      const apiError = ErrorService.createApiError("Sınav detayları yüklenirken bir hata oluştu.", err, { quizId: id, context: 'getQuizById' });
+      const apiError = ErrorService.createApiError("Sınav detayları yüklenirken bir hata oluştu.", 
+        err.message || String(err), {
+          original: {
+            error: err,
+            context: 'getQuizById',
+            quizId: id
+          }
+        });
       ErrorService.handleError(apiError, "Sınav Detayı Alma");
       throw apiError;
     }
@@ -256,7 +286,14 @@ class QuizApiService {
       const err = error instanceof Error ? error : new Error(String(error));
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getQuizAnalysis', err);
       logger.error(`Sınav analizi alınamadı: ID=${quizId}`, 'QuizApiService.getQuizAnalysis', err, undefined, { quizId });
-      const apiError = ErrorService.createApiError("Sınav analizi yüklenirken bir hata oluştu.", err, { quizId, context: 'getQuizAnalysis' });
+      const apiError = ErrorService.createApiError("Sınav analizi yüklenirken bir hata oluştu.", 
+        err.message || String(err), {
+          original: {
+            error: err,
+            context: 'getQuizAnalysis',
+            quizId
+          }
+        });
       ErrorService.handleError(apiError, "Sınav Analizi Alma");
       throw apiError;
     }
@@ -285,7 +322,14 @@ class QuizApiService {
       const err = error instanceof Error ? error : new Error(String(error));
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getFailedQuestions', err);
       logger.error('Yanlış cevaplanan sorular alınamadı', 'QuizApiService.getFailedQuestions', err, undefined, { courseId });
-      const apiError = ErrorService.createApiError("Yanlış cevaplanan sorular yüklenirken bir hata oluştu.", err, { courseId, context: 'getFailedQuestions' });
+      const apiError = ErrorService.createApiError("Yanlış cevaplanan sorular yüklenirken bir hata oluştu.", 
+        err.message || String(err), {
+          original: {
+            error: err,
+            context: 'getFailedQuestions',
+            courseId
+          }
+        });
       ErrorService.handleError(apiError, "Yanlış Cevapları Alma");
       throw apiError;
     }
@@ -295,7 +339,7 @@ class QuizApiService {
    * Verilen seçeneklere göre yeni bir sınav oluşturur
    */
   @LogMethod('QuizApiService', FlowCategory.API)
-  async generateQuiz(options: quiz.QuizGenerationOptions) {
+  async generateQuiz(options: QuizGenerationOptions): Promise<Quiz> {
     const flowStepId = 'generateQuiz';
     flowTracker.markStart(flowStepId);
     
@@ -305,7 +349,7 @@ class QuizApiService {
     }
 
     try {
-      const apiOptionsPayload = adapterService.fromQuizGenerationOptions(options);
+      const apiOptionsPayload = adapterService.fromQuizGenerationOptions(options) as unknown as Record<string, unknown>;
       logger.debug('Sınav oluşturma isteği gönderiliyor...', 'QuizApiService.generateQuiz', undefined, undefined, { endpoint, type: options.quizType, preferences: options.preferences });
       
       const response = await apiService.post<unknown>(endpoint, apiOptionsPayload, {
@@ -332,7 +376,14 @@ class QuizApiService {
       const err = error instanceof Error ? error : new Error(String(error));
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', err);
       logger.error('Sınav oluşturulurken genel hata', 'QuizApiService.generateQuiz', err, undefined, { options });
-      const apiError = ErrorService.createApiError("Sınav oluşturulurken bir hata oluştu.", err, { options, context: 'generateQuiz' });
+      const apiError = ErrorService.createApiError("Sınav oluşturulurken bir hata oluştu.", 
+        err.message || String(err), {
+          original: {
+            error: err,
+            context: 'generateQuiz',
+            options
+          }
+        });
       ErrorService.handleError(apiError, "Sınav Oluşturma");
       // Hata durumunda bile bir fallback quiz döndür, böylece UI tamamen kırılmaz.
       // Ancak, bu durumda bir hata mesajı da gösterilmeli.
@@ -344,12 +395,12 @@ class QuizApiService {
    * Sınav cevaplarını gönderir ve sonuçları alır
    */
   @LogMethod('QuizApiService', FlowCategory.API)
-  async submitQuiz(payload: quiz.QuizSubmissionPayload) {
+  async submitQuiz(payload: QuizSubmissionPayload): Promise<ApiAnalysisResult> {
     const flowStepId = `submitQuiz_${payload.quizId}`;
     flowTracker.markStart(flowStepId);
     
     try {
-      const apiPayload = adapterService.fromQuizSubmissionPayload(payload);
+      const apiPayload = adapterService.fromQuizSubmissionPayload(payload) as unknown as Record<string, unknown>;
       const endpoint = `${this.basePath}/${payload.quizId}/submit`;
       logger.debug(`Sınav yanıtları gönderiliyor: ID=${payload.quizId}`, 'QuizApiService.submitQuiz', undefined, undefined, { quizId: payload.quizId, answerCount: payload.userAnswers.length });
       
@@ -370,7 +421,14 @@ class QuizApiService {
       const err = error instanceof Error ? error : new Error(String(error));
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.submitQuiz', err);
       logger.error(`Sınav yanıtları gönderilemedi: ID=${payload.quizId}`, 'QuizApiService.submitQuiz', err, undefined, { quizId: payload.quizId });
-      const apiError = ErrorService.createApiError("Sınav yanıtları gönderilirken bir hata oluştu.", err, { payload, context: 'submitQuiz' });
+      const apiError = ErrorService.createApiError("Sınav yanıtları gönderilirken bir hata oluştu.", 
+        err.message || String(err), {
+          original: {
+            error: err,
+            context: 'submitQuiz',
+            payload
+          }
+        });
       ErrorService.handleError(apiError, "Sınav Yanıtı Gönderme");
       throw apiError;
     }
@@ -394,7 +452,14 @@ class QuizApiService {
       const err = error instanceof Error ? error : new Error(String(error));
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.deleteQuiz', err);
       logger.error(`Sınav silinemedi: ID=${id}`, 'QuizApiService.deleteQuiz', err, undefined, { id });
-      const apiError = ErrorService.createApiError("Sınav silinirken bir hata oluştu.", err, { quizId: id, context: 'deleteQuiz' });
+      const apiError = ErrorService.createApiError("Sınav silinirken bir hata oluştu.", 
+        err.message || String(err), {
+          original: {
+            error: err,
+            context: 'deleteQuiz',
+            quizId: id
+          }
+        });
       ErrorService.handleError(apiError, "Sınav Silme");
       throw apiError;
     }

@@ -10,7 +10,9 @@ export type PersonalizedQuizType =
   | "comprehensive";
 export type DifficultyLevel = "easy" | "medium" | "hard" | "mixed";
 
-// Alt konular için kompleks tip tanımı
+export type QuestionType = "multiple_choice" | "true_false" | "short_answer";
+export type QuestionStatus = "active" | "inactive" | "draft";
+
 export interface SubTopicItem {
   subTopic: string;
   normalizedSubTopic: string;
@@ -19,6 +21,7 @@ export interface SubTopicItem {
 
 export interface Quiz {
   id: string;
+  title: string;
   userId: string;
   quizType: QuizType;
   personalizedQuizType?: PersonalizedQuizType | null;
@@ -70,6 +73,8 @@ export interface Question {
   subTopic: string;
   normalizedSubTopic: string;
   difficulty: DifficultyLevel;
+  questionType: QuestionType;
+  status: QuestionStatus;
 }
 
 /**
@@ -128,6 +133,9 @@ export interface FailedQuestion {
  */
 export interface QuizGenerationOptions {
   quizType: QuizType;
+  title?: string;
+  description?: string;
+  userId?: string;
   courseId?: string;
   personalizedQuizType?: PersonalizedQuizType | null;
   documentText?: string;
