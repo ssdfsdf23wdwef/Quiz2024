@@ -94,13 +94,13 @@ export const checkApiAvailability = async (
       }
     }
   }
-
+  
   // Mevcut API_URL ile birkaç kez kontrol et
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       // İlk deneme hariç bekle (ilk denemeyi hemen yap)  
       if (attempt > 0) {
-        await new Promise(resolve => setTimeout(resolve, currentDelay));
+      await new Promise(resolve => setTimeout(resolve, currentDelay));
       }
       
       const startTime = performance.now();
@@ -175,13 +175,13 @@ export const checkApiAvailability = async (
       const testUrl = `${baseUrl}:${port}/api`;
       try {
         flowTracker.trackStep(FlowCategory.API, `Port ${port} deneniyor`, 'checkApiAvailability');
-        
-        const response = await axios.get(`${testUrl}/health`, { 
+            
+            const response = await axios.get(`${testUrl}/health`, { 
           timeout: 1500, // Daha kısa zaman aşımı süresi
-          validateStatus: () => true
-        });
-        
-        if (response.status >= 200 && response.status < 300) {
+              validateStatus: () => true
+            });
+            
+            if (response.status >= 200 && response.status < 300) {
           return { port, testUrl, success: true };
         }
         return { port, testUrl, success: false };
@@ -195,23 +195,23 @@ export const checkApiAvailability = async (
     const successfulPort = results.find(result => result.success);
     
     if (successfulPort) {
-      logger.info(
+              logger.info(
         `Çalışan API URL'i bulundu: ${successfulPort.testUrl}`,
-        'checkApiAvailability',
-        __filename,
-        83
-      );
-      
+                'checkApiAvailability',
+                __filename,
+                83
+              );
+              
       flowTracker.trackStep(FlowCategory.API, `Port ${successfulPort.port} başarılı`, 'checkApiAvailability');
 
-      // Çalışan URL'i güncelle ve kaydet
+              // Çalışan URL'i güncelle ve kaydet
       API_URL = successfulPort.testUrl;
-      if (typeof window !== "undefined") {
+              if (typeof window !== "undefined") {
         localStorage.setItem("api_base_url", successfulPort.testUrl);
         localStorage.setItem("last_success_api_port", successfulPort.port.toString());
-      }
+              }
 
-      // apiClient'ın baseURL'ini güncelle
+              // apiClient'ın baseURL'ini güncelle
       axiosInstance.defaults.baseURL = successfulPort.testUrl;
 
       return successfulPort.testUrl;
@@ -225,7 +225,7 @@ export const checkApiAvailability = async (
     
     return API_URL; // En azından orijinal URL'i döndür
   }
-
+  
   return API_URL;
 };
 

@@ -874,7 +874,7 @@ export default function ExamCreationWizard({
           toast.error("Sınav oluşturmak için belge metni, belge ID veya seçilmiş konular gereklidir");
           console.error("[ExamCreationWizard] Geçerli bir belge metin içeriği, ID'si veya konu seçimi yok");
         return;
-        }
+      }
       } else {
         toast.loading("Sınav oluşturuluyor...");
       }

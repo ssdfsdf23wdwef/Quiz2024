@@ -618,9 +618,15 @@ export class FlowTrackerService {
   /**
    * Performans ölçümünü bitirir ve süreyi kaydeder
    */
-  public markEnd(name: string, category: FlowCategory, context: string, p0: Error): number {
+  public markEnd(name: string, category: FlowCategory, context: string, p0?: Error): number {
     if (!this.captureTimings || !this.timingMarks.has(name)) {
       return 0;
+    }
+    
+    // p0 parametresini basit bir şekilde kullan
+    if (p0) {
+      // Hata varsa loglama amaçlı debug bilgisi
+      console.debug(`Flow step ended with error: ${name}`, p0.message);
     }
     
     const startTime = this.timingMarks.get(name)!;
