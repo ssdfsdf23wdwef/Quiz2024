@@ -1297,17 +1297,29 @@ export class QuizzesService {
       this.flowTracker.trackStep('Hızlı sınav oluşturuluyor', 'QuizzesService');
 
       // Belge metni kontrol
-      if (!documentText || documentText.length < 100) {
+      if (!documentText || documentText.length === 0) {
         this.logger.warn(
-          'Belge metni çok kısa veya boş',
+          'Belge metni boş',
           'QuizzesService.createQuickQuiz',
           __filename,
           1301,
           { textLength: documentText?.length, userId },
         );
         throw new BadRequestException(
-          'Belge metni çok kısa veya boş. Lütfen geçerli bir belge yükleyin.',
+          'Belge metni boş. Lütfen geçerli bir belge yükleyin veya metin girin.',
         );
+      }
+
+      // Belge metni çok kısa olduğunda sadece uyarı ver ama işlemi engelleme
+      if (documentText.length < 100) {
+        this.logger.warn(
+          'Belge metni çok kısa, minimum önerilen 100 karakter',
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          1302,
+          { textLength: documentText.length, userId },
+        );
+        // Uyarı logla ama işlemi devam ettir
       }
 
       // Alt konuları kontrol et

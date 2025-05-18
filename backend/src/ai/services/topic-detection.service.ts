@@ -108,6 +108,7 @@ Sadece JSON döndür, başka açıklama yapma.
           'TopicDetectionService.detectTopics',
           __filename,
         );
+        // Çok kısa metinler için hata fırlatmak yerine sadece uyarı logla ve devam et
       }
 
       // Önbellek kontrolü - eğer cacheKey verilmişse

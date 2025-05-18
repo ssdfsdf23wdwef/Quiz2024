@@ -862,19 +862,19 @@ export default function ExamCreationWizard({
         }
       }
       
-      // Minimum belge metni veya belge ID kontrolü
-      if (!uploadedDocumentId && (!documentTextContent || documentTextContent.trim().length < 100)) {
-        // Yeterli içerik olmadan devam etme, ama seçilmiş konular varsa onlarla devam edebiliriz
+      // Minimum belge metni veya belge ID kontrolü - Konular tespit edildiyse metni içeriği kontrolünü atlayabiliriz
+      if (!uploadedDocumentId && (!documentTextContent || documentTextContent.trim().length === 0)) {
+        // Hiç metin içeriği yoksa kontrol et
         if (selectedTopics && selectedTopics.length > 0) {
           console.log("[ExamCreationWizard] Belge metni yok ama seçilmiş konular var, devam ediliyor");
           // Sadece bir bilgilendirme toast'ı göster
           toast.loading("Seçilen konularla sınav oluşturuluyor...");
         } else {
-        setIsSubmitting(false);
+          setIsSubmitting(false);
           toast.error("Sınav oluşturmak için belge metni, belge ID veya seçilmiş konular gereklidir");
           console.error("[ExamCreationWizard] Geçerli bir belge metin içeriği, ID'si veya konu seçimi yok");
-        return;
-      }
+          return;
+        }
       } else {
         toast.loading("Sınav oluşturuluyor...");
       }

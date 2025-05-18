@@ -349,6 +349,15 @@ class QuizApiService {
     }
 
     try {
+      // Belge metni uzunluğunu kontrol et
+      if (options.documentText && options.documentText.length > 0 && options.documentText.length < 50) {
+        logger.warn(`Belge metni çok kısa (${options.documentText.length} karakter). Bu az veriyle konular doğru tespit edilemeyebilir.`, 'QuizApiService.generateQuiz', undefined, undefined, { 
+          textLength: options.documentText.length,
+          documentId: options.documentId
+        });
+        // Uyarı ver ama devam et
+      }
+      
       const apiOptionsPayload = adapterService.fromQuizGenerationOptions(options) as unknown as Record<string, unknown>;
       logger.debug('Sınav oluşturma isteği gönderiliyor...', 'QuizApiService.generateQuiz', undefined, undefined, { endpoint, type: options.quizType, preferences: options.preferences });
       

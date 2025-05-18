@@ -841,6 +841,12 @@ export class ErrorService {
         logger.error(String(error), "ErrorService.showToast", { title, description, context: sourceContext });
       }
       
+      // Belge metni hatalarına özel mesajlar
+      if (typeof error === 'string' && error.includes('Belge metni çok kısa')) {
+        logger.info("Belge metni hatası tespit edildi, kullanıcıya daha açıklayıcı mesaj gösteriliyor", "ErrorService.showToast");
+        description = "Belge metni çok kısa. Daha uzun bir belge kullanın veya farklı bir konu seçin.";
+      }
+      
       // Toast göster
       if (type === "error") {
         toast.error(description, {
