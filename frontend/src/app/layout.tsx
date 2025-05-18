@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 import ClientLayout from "@/components/layout/ClientLayout";
+import ClientLogSetup from "@/components/layout/ClientLogSetup";
 
 const fontSans = FontSans({ subsets: ["latin"] });
 
@@ -48,11 +49,13 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={cn("min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased", fontSans.className)}>
-        <Providers>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </Providers>
+        <ClientLogSetup>
+          <Providers>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </Providers>
+        </ClientLogSetup>
       </body>
     </html>
   );

@@ -51,8 +51,8 @@ export class LoggerService {
     this.config = {
       level: config.level ?? LogLevel.INFO,
       enabled: config.enabled ?? process.env.NODE_ENV !== 'production',
-      consoleOutput: config.consoleOutput ?? false,
-      sendLogsToApi: config.sendLogsToApi ?? true,
+      consoleOutput: config.consoleOutput ?? false, // Konsol çıktısını varsayılan olarak aktif yapıyorum
+      sendLogsToApi: config.sendLogsToApi ?? false, // Backend'e log göndermeyi varsayılan olarak kapatıyorum
       maxLogSizeKB: config.maxLogSizeKB ?? 100,
       maxLogAgeDays: config.maxLogAgeDays ?? 7,
     };
@@ -375,47 +375,33 @@ export class LoggerService {
     if (!this.config.sendLogsToApi || this.apiQueue.length === 0) {
       return;
     }
-
-    const logsToSend = [...this.apiQueue];
-    this.apiQueue = []; // Kuyruğu temizle
-
+    
     try {
-      const response = await fetch('/api/logs/frontend', {
+      const logsToSend = [...this.apiQueue];
+      this.apiQueue = []; // Kuyruğu temizle
+
+      // Logları API endpoint'e gönder
+      const response = await fetch('/api/logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logsToSend),
       });
 
       if (!response.ok) {
-        const responseBody = await response.text();
-        this.warn( // console.warn yerine this.warn
-          `LoggerService: API'ye loglar gönderilemedi. Status: ${response.status}`,
-          'LoggerService.sendQueuedLogsToBackend',
-          undefined, // error
-          undefined, // stack
-          { responseStatus: response.status, responseBody, originalLogsCount: logsToSend.length }
-        );
-        // Hata durumunda logları geri yükle (opsiyonel, kuyrukta birikmeyi önlemek için dikkatli olun)
-        // this.apiQueue.unshift(...logsToSend); 
+        const responseText = await response.text();
+        console.warn(`[LoggerService] Loglar dosyaya kaydedilemedi. Status: ${response.status}`, responseText);
+        
+        // Log kaydı başarısız olduğunda, yedekleme olarak konsola yazdır
+        logsToSend.forEach(log => {
+          console.log(`[${log.timestamp}] [${log.level.toUpperCase()}] ${log.context ? `[${log.context}]` : ''} ${log.message}`);
+        });
       } else {
-        // Başarılı gönderim logu DEBUG seviyesinde olabilir, gereksizse kaldırılabilir
         if (this.shouldLog(LogLevel.DEBUG)) {
-             this.debug(
-              `LoggerService: ${logsToSend.length} log başarıyla API'ye gönderildi.`,
-              'LoggerService.sendQueuedLogsToBackend'
-            );
+          console.debug(`[LoggerService] ${logsToSend.length} log başarıyla dosyaya kaydedildi.`);
         }
       }
     } catch (error) {
-      this.error( // console.error yerine this.error
-        'LoggerService: Loglar API\'ye gönderilirken ağ hatası.',
-        'LoggerService.sendQueuedLogsToBackend',
-        error instanceof Error ? error : new Error(String(error)),
-        undefined, // stack
-        { originalLogsCount: logsToSend.length }
-      );
-      // Hata durumunda logları geri yükle (opsiyonel)
-      // this.apiQueue.unshift(...logsToSend);
+      console.error('[LoggerService] Loglar dosyaya kaydedilirken hata oluştu:', error);
     }
   }
 } 

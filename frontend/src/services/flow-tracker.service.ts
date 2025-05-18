@@ -134,7 +134,7 @@ export class FlowTrackerService {
   
   private constructor(options: FlowTrackerOptions = {}) {
     this.logger = options.logger || getLogger();
-    this.consoleOutput = options.consoleOutput ?? false;
+    this.consoleOutput = options.consoleOutput ?? false; // Konsol çıktısını varsayılan olarak aktif yapıyorum
     this.enabled = options.enabled ?? process.env.NODE_ENV !== 'production';
     this.enabledCategories = new Set(options.categories || [
       FlowCategory.Navigation,
@@ -166,7 +166,7 @@ export class FlowTrackerService {
     this.traceStateChanges = options.traceStateChanges ?? true;
     this.traceApiCalls = options.traceApiCalls ?? true;
     this.captureTimings = options.captureTimings ?? true;
-    this.configSendLogsToApi = options.sendLogsToApi ?? true;
+    this.configSendLogsToApi = options.sendLogsToApi ?? false; // API'ye log göndermeyi varsayılan olarak kapatıyorum
     
     if (this.traceRenders && typeof window !== 'undefined' && 'PerformanceObserver' in window) {
       this.setupPerformanceObserver();
@@ -284,9 +284,10 @@ export class FlowTrackerService {
       }
     });
     
-    // Konsola log
-    if (this.consoleOutput) {
-      this.consoleLogStepWithColor(step);
+    // Konsola log - sadece development modunda göster
+    if (this.consoleOutput && process.env.NODE_ENV === 'development') {
+      // Yorum satırına dönüştürerek konsol çıktısını devre dışı bırak
+      // this.consoleLogStepWithColor(step);
     }
     
     // Logger servisine gönder
@@ -436,9 +437,10 @@ export class FlowTrackerService {
       }
     });
     
-    // Konsola log
-    if (this.consoleOutput) {
-      this.consoleLogTiming(step);
+    // Konsola log - sadece development modunda göster
+    if (this.consoleOutput && process.env.NODE_ENV === 'development') {
+      // Yorum satırına dönüştürerek konsol çıktısını devre dışı bırak
+      // this.consoleLogTiming(step);
     }
     
     // Logger servisine gönder
@@ -547,8 +549,9 @@ export class FlowTrackerService {
     this.sequences.set(sequenceId, sequence);
     this.activeSequences.add(sequenceId);
     
-    if (this.consoleOutput) {
-      console.group(`🔄 Flow Sequence: ${name}`);
+    if (this.consoleOutput && process.env.NODE_ENV === 'development') {
+      // Konsol çıktısını devre dışı bırak
+      // console.group(`🔄 Flow Sequence: ${name}`);
     }
     
     if (this.logger) {
@@ -581,9 +584,10 @@ export class FlowTrackerService {
     
     this.activeSequences.delete(sequenceId);
     
-    if (this.consoleOutput) {
-      console.log(`✅ Flow Sequence completed: ${sequence.name} (${sequence.totalDuration}ms)`);
-      console.groupEnd();
+    if (this.consoleOutput && process.env.NODE_ENV === 'development') {
+      // Konsol çıktısını devre dışı bırak
+      // console.log(`✅ Flow Sequence completed: ${sequence.name} (${sequence.totalDuration}ms)`);
+      // console.groupEnd();
     }
     
     if (this.logger) {
@@ -875,66 +879,39 @@ export class FlowTrackerService {
     if (!this.configSendLogsToApi || this.apiQueue.length === 0) {
       return;
     }
-
-    const logsToSend = [...this.apiQueue];
-    this.apiQueue = []; // Kuyruğu temizle
-
+    
     try {
-      const response = await fetch('/api/logs/frontend-flow', {
+      const logsToSend = [...this.apiQueue];
+      this.apiQueue = []; // Kuyruğu temizle
+
+      // Logları API endpoint'e gönder
+      const response = await fetch('/api/logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logsToSend),
+        body: JSON.stringify(logsToSend.map(step => ({
+          timestamp: new Date(step.timestamp).toISOString(),
+          level: step.category === FlowCategory.Error ? 'error' : 'info',
+          message: step.message,
+          context: step.context,
+          metadata: step.metadata
+        }))),
       });
 
       if (!response.ok) {
-        const responseBody = await response.text();
-        if (this.logger) {
-          this.logger.warn(
-            `FlowTrackerService: API'ye flow logları gönderilemedi. Status: ${response.status}`,
-            'FlowTrackerService.sendQueuedLogsToBackend',
-            undefined, // error
-            undefined, // stack
-            { responseStatus: response.status, responseBody, originalLogsCount: logsToSend.length }
-          );
-        } else {
-          // Logger yoksa, konsola yaz (idealde bu durum olmamalı)
-          console.warn(
-            `[FlowTrackerService] API'ye flow logları gönderilemedi (logger yok). Status: ${response.status}`,
-            { responseBody, originalLogsCount: logsToSend.length }
-          );
-        }
-        // Hata durumunda logları geri yükle (opsiyonel)
-        // this.apiQueue.unshift(...logsToSend); 
+        const responseText = await response.text();
+        console.warn(`[FlowTrackerService] Flow logları dosyaya kaydedilemedi. Status: ${response.status}`, responseText);
       } else {
         if (this.logger && this.logger.shouldLog(LogLevel.DEBUG)) {
-           this.logger.debug(
-            `FlowTrackerService: ${logsToSend.length} flow log başarıyla API'ye gönderildi.`,
+          this.logger.debug(
+            `FlowTrackerService: ${logsToSend.length} flow log başarıyla dosyaya kaydedildi.`,
             'FlowTrackerService.sendQueuedLogsToBackend'
           );
-        } else if (!this.logger && process.env.NODE_ENV === 'development') {
-            // Logger yok ama geliştirme modunda, konsola debug yaz
-            console.debug(`[FlowTrackerService] ${logsToSend.length} flow log başarıyla API'ye gönderildi (logger yok).`);
+        } else {
+          console.debug(`[FlowTrackerService] ${logsToSend.length} flow log başarıyla dosyaya kaydedildi.`);
         }
       }
     } catch (error) {
-      if (this.logger) {
-        this.logger.error(
-          'FlowTrackerService: Flow logları API\'ye gönderilirken ağ hatası.',
-          'FlowTrackerService.sendQueuedLogsToBackend',
-          error instanceof Error ? error : new Error(String(error)),
-          undefined, // stack
-          { originalLogsCount: logsToSend.length }
-        );
-      } else {
-        // Logger yoksa, konsola yaz
-        console.error(
-            '[FlowTrackerService] Flow logları API\'ye gönderilirken ağ hatası (logger yok).',
-            error,
-            { originalLogsCount: logsToSend.length }
-        );
-      }
-      // Hata durumunda logları geri yükle (opsiyonel)
-      // this.apiQueue.unshift(...logsToSend);
+      console.error('[FlowTrackerService] Flow loglar dosyaya kaydedilirken hata oluştu:', error);
     }
   }
 } 

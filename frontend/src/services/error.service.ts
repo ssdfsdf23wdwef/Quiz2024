@@ -829,7 +829,17 @@ export class ErrorService {
       }
       
       // Mesajları console'a logla
-      logger.error({ ...error }, "ErrorService.showToast", { title, description, context: sourceContext });
+      // Objeyse string'e çevirerek logla
+      if (typeof error === 'object' && error !== null) {
+        try {
+          const errorStr = JSON.stringify(error);
+          logger.error(errorStr, "ErrorService.showToast", { title, description, context: sourceContext });
+        } catch (_ignored) {
+          logger.error(String(error), "ErrorService.showToast", { title, description, context: sourceContext });
+        }
+      } else {
+        logger.error(String(error), "ErrorService.showToast", { title, description, context: sourceContext });
+      }
       
       // Toast göster
       if (type === "error") {

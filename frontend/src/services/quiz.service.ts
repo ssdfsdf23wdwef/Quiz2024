@@ -180,7 +180,7 @@ class QuizApiService {
       'QuizApiService.parseQuizFromUnknown', undefined, undefined, { responseData });
     return this.createFallbackQuiz('parsed_fallback', options);
   }
-
+  
   /**
    * Tüm sınavları getirir
    * @param courseId İsteğe bağlı ders ID'si
@@ -229,7 +229,7 @@ class QuizApiService {
   async getQuizById(id: string): Promise<Quiz | null> {
     const flowStepId = `getQuizById_${id}`;
     flowTracker.markStart(flowStepId);
-    
+      
     try {
       logger.debug(`Sınav detayı alınıyor: ID=${id}`, 'QuizApiService.getQuizById', undefined, undefined, { id });
       const response = await apiService.get<ApiQuiz>(`${this.basePath}/${id}`);
@@ -361,7 +361,7 @@ class QuizApiService {
         logger.error('API yanıtı beklenen formatta değil (status/data eksik).', 'QuizApiService.generateQuiz', undefined, undefined, { response });
         throw new Error('Sınav oluşturma API yanıtı geçersiz formatta.');
       }
-
+      
       if (response.status !== 200 && response.status !== 201) {
         logger.error(`Sınav oluşturma API isteği başarısız oldu. Status: ${response.status}`, 'QuizApiService.generateQuiz', undefined, undefined, { status: response.status, responseData: response.data });
         throw new Error(`Sınav oluşturma başarısız: ${response.status}`);
@@ -378,7 +378,7 @@ class QuizApiService {
       logger.error('Sınav oluşturulurken genel hata', 'QuizApiService.generateQuiz', err, undefined, { options });
       const apiError = ErrorService.createApiError("Sınav oluşturulurken bir hata oluştu.", 
         err.message || String(err), {
-          original: {
+            original: { 
             error: err,
             context: 'generateQuiz',
             options
@@ -407,7 +407,7 @@ class QuizApiService {
       const response = await apiService.post<ApiAnalysisResult>(endpoint, apiPayload);
       
       const analysisResult = this.getResponseData(response) as ApiAnalysisResult;
-
+      
       // Analiz sonucunun temel alanlarını kontrol et
       if (!this.isObject(analysisResult) || typeof (analysisResult as ApiAnalysisResult).scorePercent !== 'number') {
         logger.error('Alınan sınav analiz sonucu beklenen formatta değil.', 'QuizApiService.submitQuiz', undefined, undefined, { analysisResult });

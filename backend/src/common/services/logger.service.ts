@@ -66,8 +66,7 @@ export class LoggerService {
   constructor(options?: LoggerOptions) {
     // Seçenekleri başlat
     this.enabled = options?.enabled ?? true;
-    this.logToConsole =
-      options?.logToConsole ?? process.env.NODE_ENV !== 'production';
+    this.logToConsole = options?.logToConsole ?? false; // Konsola loglama varsayılan olarak kapalı
     this.logToFile = options?.logToFile ?? true; // Dosya loglaması varsayılan olarak aktif
     this.minLevel =
       options?.minLevel ??
@@ -113,11 +112,11 @@ export class LoggerService {
     if (this.logToFile) {
       try {
         fs.writeFileSync(this.errorLogPath, '', { encoding: 'utf8' });
-        if (this.logToConsole) {
-          console.log(`🧹 Log dosyası temizlendi: ${this.errorLogPath}`);
-        }
+        // if (this.logToConsole) {
+        //   console.log(`🧹 Log dosyası temizlendi: ${this.errorLogPath}`);
+        // }
       } catch (err) {
-        console.error('Log dosyası temizlenirken hata oluştu:', err);
+        // console.error('Log dosyası temizlenirken hata oluştu:', err);
       }
     }
   }
@@ -133,7 +132,7 @@ export class LoggerService {
     try {
       return fs.readFileSync(this.errorLogPath, { encoding: 'utf8' });
     } catch (err) {
-      console.error('Log dosyası okunurken hata oluştu:', err);
+      // console.error('Log dosyası okunurken hata oluştu:', err);
       return '';
     }
   }
@@ -150,7 +149,7 @@ export class LoggerService {
     try {
       return fs.readFileSync(this.errorLogPath);
     } catch (err) {
-      console.error('Log dosyası okunurken hata oluştu:', err);
+      // console.error('Log dosyası okunurken hata oluştu:', err);
       return Buffer.from('');
     }
   }
@@ -188,7 +187,7 @@ export class LoggerService {
       !this.allowedContexts.has('*') &&
       !this.allowedContexts.has(context)
     ) {
-      console.log(`[Logger] Context '${context}' loglanmıyor (izin yok)`);
+      // console.log(`[Logger] Context '${context}' loglanmıyor (izin yok)`);
       return;
     }
 
@@ -231,18 +230,20 @@ export class LoggerService {
         fs.appendFile(logFilePath, formattedEntry, (err) => {
           if (err) {
             // Burada console.error kullanıyoruz çünkü log mekanizmasının kendisi çalışmıyor
-            console.error(
-              `Log dosyasına yazılırken hata oluştu (${logFilePath}):`,
-              err,
-            );
-          } else {
-            console.log(`[Logger] Log dosyasına yazıldı: ${logFilePath}`);
+            // Konsolda görünmemesi için yorum haline getirdim
+            // console.error(
+            //   `Log dosyasına yazılırken hata oluştu (${logFilePath}):`,
+            //   err,
+            // );
           }
+          // else {
+          //   console.log(`[Logger] Log dosyasına yazıldı: ${logFilePath}`);
+          // }
         });
       } else {
-        console.error('[Logger] Geçerli bir log dosya yolu belirlenemedi:', {
-          level,
-        });
+        // console.error('[Logger] Geçerli bir log dosya yolu belirlenemedi:', {
+        //   level,
+        // });
       }
     }
   }
@@ -251,41 +252,24 @@ export class LoggerService {
    * Log girdisini konsola formatlanmış şekilde yazar
    */
   private logToConsoleFormatted(entry: LogEntry): void {
-    const { timestamp, level, message, context, filePath, lineNumber } = entry;
-    const time = timestamp.split('T')[1].slice(0, -1);
-    let logFn = console.log;
+    // Konsola loglama devre dışı - bu metod artık loglama yapmıyor
+    // Backend logları dosyalara kaydedilir, gerekirse arayüz ile görüntülenebilir
 
-    // Renk ve log fonksiyonu seçimi
-    switch (level) {
-      case LogLevel.ERROR:
-        logFn = console.error;
-        break;
-      case LogLevel.WARN:
-        logFn = console.warn;
-        break;
-      case LogLevel.INFO:
-        logFn = console.info;
-        break;
-      case LogLevel.DEBUG:
-        logFn = console.debug;
-        break;
-    }
+    // Loglama tamamen kapatılmasın, çok önemli hatalar için açalım
+    if (
+      entry.level === LogLevel.ERROR &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      const { timestamp, level, message, context, filePath, lineNumber } =
+        entry;
+      const time = timestamp.split('T')[1].slice(0, -1);
+      const locationInfo = filePath
+        ? ` (${filePath}${lineNumber ? `:${lineNumber}` : ''})`
+        : '';
 
-    const locationInfo = filePath
-      ? ` (${filePath}${lineNumber ? `:${lineNumber}` : ''})`
-      : '';
-    logFn(
-      `[${time}] [${level.toUpperCase()}] [${context}]${locationInfo} ${message}`,
-    );
-
-    // Eğer ek bilgiler varsa onları da yazdır
-    if (entry.additionalInfo && Object.keys(entry.additionalInfo).length > 0) {
-      logFn('Additional Info:', entry.additionalInfo);
-    }
-
-    // Eğer stack bilgisi varsa onu da yazdır
-    if (entry.stack) {
-      logFn('Stack Trace:', entry.stack);
+      console.error(
+        `[${time}] [${level.toUpperCase()}] [${context}]${locationInfo} ${message}`,
+      );
     }
   }
 
@@ -880,11 +864,17 @@ export class LoggerService {
       // Dosyaya asenkron olarak ekle
       fs.appendFile(fileName, content + '\n', { encoding: 'utf8' }, (err) => {
         if (err) {
-          console.error(`Log dosyasına yazılırken hata: ${err.message}`);
+          // Konsola yazdırma kaldırıldı
+          // console.error(`Log dosyasına yazılırken hata: ${err.message}`);
         }
+        // Konsola yazdırma kaldırıldı
+        // else {
+        //   console.log(`[Logger] Log dosyasına yazıldı: ${fileName}`);
+        // }
       });
     } catch (error) {
-      console.error(`Log dosyasına yazma hatası: ${(error as Error).message}`);
+      // Konsola yazdırma kaldırıldı
+      // console.error(`Log dosyasına yazma hatası: ${(error as Error).message}`);
     }
   }
 }

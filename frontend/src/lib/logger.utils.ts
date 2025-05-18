@@ -704,4 +704,89 @@ export function prettyLogError(error: unknown, componentName: string, extraData?
     componentName,
     ...extraData
   });
+}
+
+/**
+ * Log dosyalarını sunucudan getir
+ * @param type Log tipi: 'error', 'flow', 'all'
+ * @returns Log dosyalarının içeriği
+ */
+export async function getServerLogs(type: 'error' | 'flow' | 'all' = 'all'): Promise<Record<string, string>> {
+  try {
+    const response = await fetch(`/api/logs?type=${type}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Log dosyaları alınamadı: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Log dosyaları alınırken hata:', error);
+    return { error: 'Log dosyaları alınamadı.', flow: '' };
+  }
+}
+
+/**
+ * Log dosyalarını sunucudan sil
+ * @param type Log tipi: 'error', 'flow', 'all'
+ * @returns İşlem başarılı mı?
+ */
+export async function clearServerLogs(type: 'error' | 'flow' | 'all' = 'all'): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/logs?type=${type}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Log dosyaları temizlenemedi: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.success === true;
+  } catch (error) {
+    console.error('Log dosyaları temizlenirken hata:', error);
+    return false;
+  }
+}
+
+/**
+ * Log dosyalarını indir
+ * @param type Log tipi
+ */
+export async function downloadServerLogs(type: 'error' | 'flow' | 'all' = 'all'): Promise<void> {
+  try {
+    const logs = await getServerLogs(type);
+    
+    // Log içeriklerini birleştir
+    let content = '';
+    
+    if (type === 'error' || type === 'all') {
+      content += '=== ERROR LOGS ===\n\n';
+      content += logs.error || 'No error logs available';
+      content += '\n\n';
+    }
+    
+    if (type === 'flow' || type === 'all') {
+      content += '=== FLOW LOGS ===\n\n';
+      content += logs.flow || 'No flow logs available';
+    }
+    
+    // Dosyayı indirme
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `frontend-logs-${new Date().toISOString().slice(0, 10)}.log`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Log dosyaları indirilirken hata:', error);
+    alert('Log dosyaları indirilemedi.');
+  }
 } 
