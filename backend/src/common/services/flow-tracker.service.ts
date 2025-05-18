@@ -46,11 +46,12 @@ export class FlowTrackerService {
       : ['*']; // Tüm context'lere izin ver (* joker karakteri)
     this.allowedContexts = new Set(allowed);
 
-    // Log dosyasını ayarla
-    const logDir = path.join(process.cwd(), '..', 'logs');
+    // Log dizinini oluştur
+    const logDir = path.join(process.cwd(), 'logs');
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
+
     this.flowLogPath = path.join(logDir, 'backend-flow-tracker.log');
 
     FlowTrackerService.instance = this;

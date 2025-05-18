@@ -1,6 +1,11 @@
 'use client';
 
-import React, { useEffect } from "react";
+import React, { ReactNode, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Navbar from './Navbar';
+import Footer from './Footer';
+import { getLogger, trackFlow } from '@/lib/logger.utils';
+import { FlowCategory } from '@/constants/logging.constants';
 import { NextUIProvider } from '@nextui-org/react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { Toaster } from 'react-hot-toast';
@@ -8,15 +13,40 @@ import { setupGlobalErrorHandling } from '@/lib/logger.utils';
 import MainLayout from "@/components/layout/MainLayout";
 import ClientAnalytics from "@/components/analytics/ClientAnalytics";
 
-export default function ClientLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Loglayıcıyı al (providers.tsx'te başlatıldı)
+const logger = getLogger();
+
+interface ClientLayoutProps {
+  children: ReactNode;
+}
+
+export default function ClientLayout({ children }: ClientLayoutProps) {
+  const pathname = usePathname();
+
+  // Sayfa değişimlerini izle
   useEffect(() => {
-    setupGlobalErrorHandling();
-    console.log('%c📊 Uygulama başlatıldı ve hata izleme aktif edildi', 'color:#4CAF50; font-size:12px; font-weight:bold');
-  }, []);
+    // Sayfa değişimini logla
+    logger.info(`Sayfa değişti: ${pathname}`, 'Navigation');
+    
+    // Sayfa değişim akışını başlat
+    trackFlow(`Sayfaya gezinti: ${pathname}`, 'Navigation', FlowCategory.Navigation, {
+      previousPath: window.history.state?.previousPath || '',
+      currentPath: pathname
+    });
+    
+    // Sayfa değişimini history state'e kaydet (bir sonraki değişim için)
+    const previousPath = window.history.state?.previousPath;
+    const newState = { ...window.history.state, previousPath: pathname };
+    window.history.replaceState(newState, '', pathname);
+    
+    // Analytics için veri gönder
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_path: pathname,
+        previousPath
+      });
+    }
+  }, [pathname]);
 
   return (
     <NextUIProvider>

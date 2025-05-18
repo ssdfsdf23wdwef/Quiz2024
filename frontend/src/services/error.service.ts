@@ -98,11 +98,9 @@ export class ErrorService {
       this.reportingEndpoint = process.env.NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT;
     }
     
-    logger.debug(
+    getLogger().debug(
       'Hata servisi başlatıldı',
       'ErrorService.constructor',
-      __filename,
-      46,
       { 
         environment: process.env.NODE_ENV,
         reportingEnabled: !!this.reportingEndpoint 
@@ -112,7 +110,7 @@ export class ErrorService {
     // Global hata yakalayıcıları kurulumu
     this.setupGlobalErrorHandlers();
     
-    console.log('⚠️ Hata servisi başlatıldı - Tüm hatalar log dosyasına kaydedilecek');
+    getLogger().info('ErrorService başlatıldı.', 'ErrorService.constructor');
   }
   
   /**

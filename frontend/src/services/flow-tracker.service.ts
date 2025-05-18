@@ -3,7 +3,8 @@
  * @description Frontend uygulama durum akışını ve yaşam döngüsünü izleyen servis
  */
 
-import { LoggerService } from './logger.service';
+import { getLogger } from '@/lib/logger.utils';
+import { LoggerService, LogLevel } from './logger.service';
 
 /**
  * İzlenebilecek akış kategorileri
@@ -33,6 +34,7 @@ interface FlowTrackerOptions {
   consoleOutput?: boolean;
   logger?: LoggerService;
   allowedContexts?: string[]; // İzin verilen context'ler listesi
+  sendLogsToApi?: boolean; // API'ye log gönderme seçeneği
 }
 
 /**
@@ -110,12 +112,6 @@ export class FlowTracker {
  * Uygulama içindeki akışları, bileşen yaşam döngülerini ve performans metriklerini izler
  */
 export class FlowTrackerService {
-  startFlow(category: FlowCategory, name: string): FlowTracker {
-    const flowId = `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    this.trackStep(category, `Flow başlatıldı: ${name}`, 'FlowTracker');
-    return new FlowTracker(this, flowId, category, name);
-  }
-
   private static instance: FlowTrackerService;
   private enabled: boolean;
   private enabledCategories: Set<FlowCategory>;
@@ -124,16 +120,21 @@ export class FlowTrackerService {
   private traceApiCalls: boolean;
   private captureTimings: boolean;
   private consoleOutput: boolean;
+  private logger?: LoggerService;
   private allowedContexts: Set<string>;
   private steps: FlowStep[] = [];
   private sequences: Map<string, FlowSequence> = new Map();
   private activeSequences: Set<string> = new Set();
-  private logger?: LoggerService;
   private stepCount = 0;
   private sequenceCount = 0;
   private timingMarks: Map<string, number> = new Map();
+  private apiQueue: FlowStep[] = [];
+  private apiDebounceTimer: number | NodeJS.Timeout | null = null;
+  private configSendLogsToApi: boolean;
   
   private constructor(options: FlowTrackerOptions = {}) {
+    this.logger = options.logger || getLogger();
+    this.consoleOutput = options.consoleOutput ?? false;
     this.enabled = options.enabled ?? process.env.NODE_ENV !== 'production';
     this.enabledCategories = new Set(options.categories || [
       FlowCategory.Navigation,
@@ -146,41 +147,39 @@ export class FlowTrackerService {
       FlowCategory.Custom
     ]);
     
-    // Sadece belirli context'lerde loglama yapılmasını sağla
-    let allowedContexts: string[] = ['*']; // Varsayılan olarak tüm context'lere izin ver
-    
+    let allowedContextsArray: string[] = ['*'];
     if (typeof window !== 'undefined') {
-      // Browser ortamındayız, localStorage kullanabiliriz
       const storedContexts = localStorage.getItem('flow_tracker_allowed_contexts');
       if (storedContexts) {
         try {
-          allowedContexts = JSON.parse(storedContexts);
+          allowedContextsArray = JSON.parse(storedContexts);
         } catch (e) {
-          console.error('Flow tracker allowed contexts parse hatası:', e);
+          if (this.logger) {
+            this.logger.error('Flow tracker allowed contexts parse hatası:', 'FlowTrackerService.constructor', e instanceof Error ? e : new Error(String(e)));
+          }
         }
       }
     }
-    
-    this.allowedContexts = new Set(allowedContexts);
+    this.allowedContexts = new Set(allowedContextsArray);
     
     this.traceRenders = options.traceRenders ?? false;
     this.traceStateChanges = options.traceStateChanges ?? true;
     this.traceApiCalls = options.traceApiCalls ?? true;
     this.captureTimings = options.captureTimings ?? true;
-    this.consoleOutput = options.consoleOutput ?? true;
-    this.logger = options.logger;
+    this.configSendLogsToApi = options.sendLogsToApi ?? true;
     
-    // Render izleme aktifse performans API'sini de etkinleştir
     if (this.traceRenders && typeof window !== 'undefined' && 'PerformanceObserver' in window) {
       this.setupPerformanceObserver();
     }
-    
-    // Sayfa gezinimlerini otomatik izle
     if (typeof window !== 'undefined') {
       this.setupNavigationTracking();
     }
 
-    console.log('🔍 Akış izleyici başlatıldı - Tüm program akışı terminalda görüntülenecek');
+    if (this.logger) {
+        this.logger.info('FlowTrackerService başlatıldı.', 'FlowTrackerService.constructor');
+    } else {
+        console.info('[FlowTrackerService] FlowTrackerService logger olmadan başlatıldı (Bu bir sorun olabilir).');
+    }
   }
   
   /**
@@ -303,6 +302,10 @@ export class FlowTrackerService {
     
     // LocalStorage'a flow kaydı
     this.saveToLocalStorage(step);
+
+    if (this.configSendLogsToApi) {
+      this.scheduleSendToBackend(step);
+    }
   }
   
   /**
@@ -780,6 +783,7 @@ export class FlowTrackerService {
     if (options.traceApiCalls !== undefined) this.traceApiCalls = options.traceApiCalls;
     if (options.captureTimings !== undefined) this.captureTimings = options.captureTimings;
     if (options.consoleOutput !== undefined) this.consoleOutput = options.consoleOutput;
+    if (options.sendLogsToApi !== undefined) this.configSendLogsToApi = options.sendLogsToApi;
     
     if (options.logger) {
       this.logger = options.logger;
@@ -833,24 +837,98 @@ export class FlowTrackerService {
    */
   private safeStringify(obj: unknown): string {
     try {
-      return JSON.stringify(obj, (key, value) => {
-        if (typeof value === 'function') {
-          return '[Function]';
+      return JSON.stringify(obj, (key, value) =>
+        typeof value === 'bigint'
+          ? value.toString()
+          : value // return everything else unchanged
+      );
+    } catch (e) {
+      return `[Unserializable object: ${e instanceof Error ? e.message : String(e)}]`;
         }
-        if (value instanceof Element) {
-          return `[Element: ${value.tagName}]`;
+  }
+
+  private scheduleSendToBackend(entry: FlowStep): void {
+    this.apiQueue.push(entry);
+    if (this.apiDebounceTimer) {
+      clearTimeout(this.apiDebounceTimer);
+    }
+    // window.setTimeout kullanmak yerine NodeJS.Timeout tipini kullanmak için typeof window kontrolü
+    if (typeof window !== 'undefined') {
+        this.apiDebounceTimer = window.setTimeout(() => {
+            this.sendQueuedLogsToBackend();
+        }, 3000); // 3 saniye debounce
+    } else {
+        // Node.js ortamı için (test vb.), setTimeout doğrudan kullanılabilir
+        this.apiDebounceTimer = setTimeout(() => {
+            this.sendQueuedLogsToBackend();
+        }, 3000); // "as any" kaldırıldı
+    }
+  }
+
+  private async sendQueuedLogsToBackend(): Promise<void> {
+    if (!this.configSendLogsToApi || this.apiQueue.length === 0) {
+      return;
+    }
+
+    const logsToSend = [...this.apiQueue];
+    this.apiQueue = []; // Kuyruğu temizle
+
+    try {
+      const response = await fetch('/api/logs/frontend-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logsToSend),
+      });
+
+      if (!response.ok) {
+        const responseBody = await response.text();
+        if (this.logger) {
+          this.logger.warn(
+            `FlowTrackerService: API'ye flow logları gönderilemedi. Status: ${response.status}`,
+            'FlowTrackerService.sendQueuedLogsToBackend',
+            undefined, // error
+            undefined, // stack
+            { responseStatus: response.status, responseBody, originalLogsCount: logsToSend.length }
+          );
+        } else {
+          // Logger yoksa, konsola yaz (idealde bu durum olmamalı)
+          console.warn(
+            `[FlowTrackerService] API'ye flow logları gönderilemedi (logger yok). Status: ${response.status}`,
+            { responseBody, originalLogsCount: logsToSend.length }
+          );
         }
-        if (value instanceof Error) {
-          return {
-            name: value.name,
-            message: value.message,
-            stack: value.stack
-          };
+        // Hata durumunda logları geri yükle (opsiyonel)
+        // this.apiQueue.unshift(...logsToSend); 
+      } else {
+        if (this.logger && this.logger.shouldLog(LogLevel.DEBUG)) {
+           this.logger.debug(
+            `FlowTrackerService: ${logsToSend.length} flow log başarıyla API'ye gönderildi.`,
+            'FlowTrackerService.sendQueuedLogsToBackend'
+          );
+        } else if (!this.logger && process.env.NODE_ENV === 'development') {
+            // Logger yok ama geliştirme modunda, konsola debug yaz
+            console.debug(`[FlowTrackerService] ${logsToSend.length} flow log başarıyla API'ye gönderildi (logger yok).`);
         }
-        return value;
-      }, 2);
+      }
     } catch (error) {
-      return `[Stringify hatası: ${(error as Error).message}]`;
+      if (this.logger) {
+        this.logger.error(
+          'FlowTrackerService: Flow logları API\'ye gönderilirken ağ hatası.',
+          'FlowTrackerService.sendQueuedLogsToBackend',
+          error instanceof Error ? error : new Error(String(error)),
+          undefined, // stack
+          { originalLogsCount: logsToSend.length }
+        );
+      } else {
+        // Logger yoksa, konsola yaz
+        console.error(
+            '[FlowTrackerService] Flow logları API\'ye gönderilirken ağ hatası (logger yok).',
+            error,
+            { originalLogsCount: logsToSend.length }
+        );
+      }
+      // Hata durumunda logları geri yükle (opsiyonel)
+      // this.apiQueue.unshift(...logsToSend);
     }
   }
 } 

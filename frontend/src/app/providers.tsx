@@ -9,10 +9,27 @@ import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/lib/i18n/i18n";
 import dynamic from "next/dynamic";
-import { getLogger } from "@/lib/logger.utils";
+import { setupLogging, setupGlobalErrorHandling, startFlow } from "@/lib/logger.utils";
+import { FlowCategory } from "@/constants/logging.constants";
+import { LogLevel } from "@/services/logger.service";
 
-// Loglama için
-const logger = getLogger();
+// Loglama ve akış izleme servislerini başlat
+const { logger } = setupLogging({
+  loggerOptions: {
+    level: LogLevel.INFO,
+    enabled: true,
+    consoleOutput: false,
+    sendLogsToApi: true,
+  },
+  flowTrackerOptions: {
+    enabled: true,
+    traceApiCalls: true,
+    traceStateChanges: true,
+    captureTimings: true,
+    consoleOutput: false,
+    sendLogsToApi: true,
+  }
+});
 
 // Dynamic imports for better performance
 const AnalyticsComponent = dynamic(
@@ -50,13 +67,20 @@ export function Providers({ children }: ProvidersProps) {
       i18n.init();
     }
     
+    // Uygulama başladı flowunu izle
+    const appFlow = startFlow(FlowCategory.Navigation, 'AppStartup');
+    appFlow.trackStep('Uygulama başlangıç bileşenleri yüklendi');
+    
+    // Global hata yakalama
+    setupGlobalErrorHandling();
+    
     // Yakalanamayan hataları dinle
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       logger.error(
         `Yakalanmayan Promise reddi: ${event.reason}`,
         'Providers',
-        'providers.tsx',
-        70,
+        event.reason instanceof Error ? event.reason : undefined,
+        event.reason instanceof Error ? event.reason.stack : undefined,
         { 
           reason: event.reason?.toString(), 
           stack: event.reason?.stack 
@@ -68,11 +92,10 @@ export function Providers({ children }: ProvidersProps) {
       logger.error(
         `Yakalanmayan global hata: ${event.message}`,
         'Providers',
-        'providers.tsx',
-        80,
+        event.error,
+        event.error?.stack,
         { 
           errorName: event.error?.name,
-          stack: event.error?.stack,
           filename: event.filename,
           lineno: event.lineno,
           colno: event.colno
@@ -84,6 +107,26 @@ export function Providers({ children }: ProvidersProps) {
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
     window.addEventListener('error', handleGlobalError);
     
+    // Sayfanın önbelleğe alınması, görüntülenmesi ve yüklenme olaylarını izle
+    const pageLoadFlow = startFlow(FlowCategory.Navigation, 'PageLoad');
+    
+    // Sayfa yükleme adımlarını kaydet
+    if (document.readyState === 'loading') {
+      pageLoadFlow.trackStep('Sayfa yükleniyor');
+      document.addEventListener('DOMContentLoaded', () => {
+        pageLoadFlow.trackStep('DOM yüklendi');
+      });
+    } else {
+      pageLoadFlow.trackStep('DOM zaten yüklü');
+    }
+    
+    window.addEventListener('load', () => {
+      pageLoadFlow.trackStep('Sayfa tamamen yüklendi');
+      pageLoadFlow.end('Sayfa yükleme tamamlandı');
+      appFlow.trackStep('Uygulama tamamen yüklendi');
+      appFlow.end();
+    });
+    
     // Cleanup
     return () => {
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
@@ -92,8 +135,7 @@ export function Providers({ children }: ProvidersProps) {
   }, []);
 
   return (
-    <ErrorBoundary 
-      >
+    <ErrorBoundary>
       <AuthProvider>
         <I18nextProvider i18n={i18n}>
           <QueryClientProvider client={queryClient}>

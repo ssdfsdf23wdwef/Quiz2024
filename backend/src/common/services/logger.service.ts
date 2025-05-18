@@ -74,7 +74,7 @@ export class LoggerService {
       (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG);
 
     // Log dizini oluşturma
-    this.logDir = options?.logDir ?? path.join(process.cwd(), '..', 'logs');
+    this.logDir = options?.logDir ?? path.join(process.cwd(), 'logs');
 
     if (!fs.existsSync(this.logDir)) {
       fs.mkdirSync(this.logDir, { recursive: true });

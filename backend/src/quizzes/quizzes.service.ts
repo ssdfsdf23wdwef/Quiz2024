@@ -1413,9 +1413,6 @@ export class QuizzesService {
             if (retryCount > maxRetries) {
               throw aiError;
             }
-
-            // Kısa bir beklemeyle tekrar dene
-            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         }
 
@@ -1448,7 +1445,7 @@ export class QuizzesService {
         questions,
         timestamp,
         selectedSubTopics: subTopics,
-        courseId: undefined,
+        courseId: '', // Undefined yerine boş string kullan
         completed: false,
         score: 0,
         correctCount: 0,

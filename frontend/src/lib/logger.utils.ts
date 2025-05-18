@@ -268,9 +268,9 @@ export function downloadLogFile(): void {
     const logs = getLogFileContent();
     if (!logs) {
       console.warn('İndirilebilecek log bulunamadı.');
-      return;
-    }
-    
+    return;
+  }
+  
     const blob = new Blob([logs], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -478,21 +478,21 @@ export class FlowTracker {
     if (flowTrackerInstance) {
       flowTrackerInstance.trackStep(
         mapToTrackerCategory(this.category),
-        step,
-        `Flow:${this.name}`,
-        {
-          flowId: this.id,
-          flowName: this.name,
-          ...metadata
-        }
-      );
+      step,
+      `Flow:${this.name}`,
+      {
+        flowId: this.id,
+        flowName: this.name,
+        ...metadata
+      }
+    );
     } else {
       console.log(`[FLOW] [${this.category}] [Flow:${this.name}] ${step}`);
     }
     
     return this;
   }
-  
+
   /**
    * Akışı sonlandırır
    * @param summary Özet bilgi
@@ -501,14 +501,14 @@ export class FlowTracker {
     if (flowTrackerInstance) {
       flowTrackerInstance.trackStep(
         mapToTrackerCategory(this.category),
-        summary || `Flow tamamlandı: ${this.name}`,
-        `Flow:${this.name}`,
-        {
-          flowId: this.id,
-          flowName: this.name,
-          status: 'completed'
-        }
-      );
+      summary || `Flow tamamlandı: ${this.name}`,
+      `Flow:${this.name}`,
+      {
+        flowId: this.id,
+        flowName: this.name,
+        status: 'completed'
+      }
+    );
     } else {
       console.log(`[FLOW] [${this.category}] [Flow:${this.name}] ${summary || `Flow tamamlandı: ${this.name}`}`);
     }
@@ -523,14 +523,11 @@ export class FlowTracker {
  */
 export function startFlow(category: FlowCategory, name: string): FlowTracker {
   if (flowTrackerInstance) {
-    const flowTracker = flowTrackerInstance.startFlow(mapToTrackerCategory(category), name);
-    // Flow ID'yi FlowTracker nesnesinden alın
-    const flowId = typeof flowTracker === 'string' ? flowTracker : 
-                  (flowTracker as any)?.id || `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const flowId = flowTrackerInstance.startSequence(name);
     return new FlowTracker(flowId, category, name);
   } else {
-    const flowId = `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log(`[FLOW] [${category}] [Flow:${name}] Flow başlatıldı: ${name}`);
+    const flowId = `flow_dummy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.warn(`[FlowTracker Utils] FlowTrackerService başlatılmamış. Akış başlatılıyor: ${name} (dummy ID: ${flowId})`);
     return new FlowTracker(flowId, category, name);
   }
 }
@@ -634,7 +631,11 @@ export function setupGlobalErrorHandling(): void {
       });
     }
     
-    console.warn('Yakalanmamış Promise Hatası:', error);
+    if (loggerInstance) {
+      loggerInstance.warn('Yakalanmamış Promise Hatası', 'GlobalErrorHandler', error instanceof Error ? error : undefined, undefined, { reason: error?.toString() });
+    } else {
+      console.warn('[GlobalErrorHandler] LoggerInstance yok. Yakalanmamış Promise Hatası:', error);
+    }
   });
   
   // Yakalanmamış hataları yakala

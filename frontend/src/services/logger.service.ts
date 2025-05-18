@@ -20,6 +20,9 @@ interface LoggerConfig {
   level: LogLevel;
   enabled: boolean;
   consoleOutput: boolean;
+  sendLogsToApi?: boolean;
+  maxLogSizeKB?: number;
+  maxLogAgeDays?: number;
 }
 
 /**
@@ -41,13 +44,21 @@ interface LogEntry {
 export class LoggerService {
   private static instance: LoggerService;
   private config: LoggerConfig;
+  private apiQueue: LogEntry[] = [];
+  private apiDebounceTimer: number | null = null;
   
   private constructor(config: Partial<LoggerConfig> = {}) {
     this.config = {
       level: config.level ?? LogLevel.INFO,
       enabled: config.enabled ?? process.env.NODE_ENV !== 'production',
-      consoleOutput: config.consoleOutput ?? true,
+      consoleOutput: config.consoleOutput ?? false,
+      sendLogsToApi: config.sendLogsToApi ?? true,
+      maxLogSizeKB: config.maxLogSizeKB ?? 100,
+      maxLogAgeDays: config.maxLogAgeDays ?? 7,
     };
+    if (this.config.enabled && this.config.level === LogLevel.DEBUG) {
+        console.debug("[LoggerService] LoggerService başlatıldı. Config:", JSON.stringify(this.config));
+    }
   }
   
   /**
@@ -157,13 +168,13 @@ export class LoggerService {
    * Log kaydını işler
    */
   private processLog(entry: LogEntry): void {
-    // Konsola yazdır
     if (this.config.consoleOutput) {
       this.writeToConsole(entry);
     }
-    
-    // LocalStorage'a kaydet
     this.saveToLocalStorage(entry);
+    if (this.config.sendLogsToApi) {
+      this.scheduleSendToBackend(entry);
+    }
   }
   
   /**
@@ -193,60 +204,69 @@ export class LoggerService {
    */
   private saveToLocalStorage(entry: LogEntry): void {
     if (typeof window === 'undefined') {
-      return; // SSR sırasında localStorage yok, atla
+      return;
     }
-    
     try {
-      // Hata logları için ayrı bir dosya kullan
-      const isError = entry.level === LogLevel.ERROR;
-      const storageKey = isError ? 'frontend-error.log' : 'frontend-flow-tracker.log';
-      
-      // Log satırını oluştur
+      // frontend-flow-tracker.log anahtarı FlowTrackerService tarafından da kullanılıyor olabilir.
+      // LoggerService'in tüm logları (info, warn, debug) bu dosyaya yazması, flow loglarıyla karışabilir.
+      // Sadece ERROR seviyesindeki loglar için frontend-error.log, diğerleri için genel bir frontend.log kullanılabilir.
+      // Şimdilik mevcut mantıkla devam edelim: hatalar ayrı, diğerleri (info, warn, debug) frontend-flow-tracker.log'a gidiyor gibi.
+      // Bu mantık LoggerService için karışık. LoggerService sadece kendi loglarını yönetmeli.
+      // saveToLocalStorage şimdilik sadece ERROR loglarını frontend-error.log'a, diğerlerini (INFO, WARN, DEBUG) frontend-general.log gibi bir dosyaya yazsın.
+      // YA DA, FlowTrackerService logları kendi dosyasına, LoggerService logları kendi dosyasına yazsın.
+      // LoggerService.saveToLocalStorage, entry.level'e göre farklı storageKey kullanabilir.
+      // frontend-error.log -> sadece LoggerService.error() çağrıları için.
+      // frontend-debug.log -> sadece LoggerService.debug() çağrıları için.
+      // frontend-info.log -> sadece LoggerService.info() çağrıları için.
+      // frontend-warn.log -> sadece LoggerService.warn() çağrıları için.
+
+      // Basitleştirilmiş yaklaşım: Tüm logları tek bir yerde topla (hata logları hariç)
+      const storageKey = entry.level === LogLevel.ERROR ? 'frontend-error.log' : 'frontend-general.log';
+
       const logLine = `[${entry.timestamp}] [${entry.level.toUpperCase()}] ${entry.context ? `[${entry.context}] ` : ''}${entry.message}`;
       
-      // Mevcut logları al
       let logs = '';
       try {
         logs = localStorage.getItem(storageKey) || '';
-      } catch {
-        // localStorage okuma hatası - temiz başla
+      } catch (e) {
+        // this.warn değil, çünkü this.warn da saveToLocalStorage çağırabilir.
+        console.warn(`[LoggerService] LocalStorage (${storageKey}) okuma hatası, loglar sıfırlanıyor:`, e);
         logs = '';
       }
       
-      // Ekle
       logs += logLine + '\n';
       
-      // localStorage kapasitesi kontrolü - Max 100KB
-      const MAX_SIZE = 100 * 1024;
-      
+      const MAX_SIZE = (this.config.maxLogSizeKB ?? 100) * 1024;
       if (logs.length > MAX_SIZE) {
-        // Sadece son 10KB'ı sakla
-        logs = logs.substring(logs.length - 10 * 1024);
+        const tenPercentKB = Math.max(10, Math.floor((this.config.maxLogSizeKB ?? 100) / 10)); // En az 10KB veya %10'u
+        const cutPoint = logs.length - (tenPercentKB * 1024);
+        logs = logs.substring(cutPoint > 0 ? cutPoint : 0);
         const firstLineIndex = logs.indexOf('\n') + 1;
-        if (firstLineIndex > 0) {
+        if (firstLineIndex > 0 && firstLineIndex < logs.length) {
           logs = logs.substring(firstLineIndex);
         }
+        // this.info değil, basit console.info
+        console.info(`[LoggerService] LocalStorage (${storageKey}) kapasitesi aşıldı, eski loglar kırpıldı.`);
       }
       
-      // Kaydet
       try {
         localStorage.setItem(storageKey, logs);
-      } catch {
-        // localStorage yazma hatası - eski logları temizle ve sadece bu logu kaydet
+      } catch (e) {
+        console.warn(`[LoggerService] LocalStorage (${storageKey}) yazma hatası. Loglar temizlenip sadece mevcut log kaydedilecek:`, e);
         try {
           localStorage.removeItem(storageKey);
           localStorage.setItem(storageKey, logLine + '\n');
-        } catch {
-          // Ciddi hata - sessizce devam et
+        } catch (finalError) {
+          console.error(`[LoggerService] LocalStorage (${storageKey}) yazma sırasında kritik hata:`, finalError);
         }
       }
-    } catch {
-      // Genel hata durumu - sessizce devam et
+    } catch (e) {
+      console.error('[LoggerService] saveToLocalStorage genel hata:', e);
     }
   }
   
   /**
-   * Konsolda kullanılacak metodu belirler
+   * Log seviyesine göre konsol metodunu döndürür
    */
   private getConsoleMethod(level: LogLevel): (message?: unknown, ...optionalParams: unknown[]) => void {
     switch (level) {
@@ -264,14 +284,12 @@ export class LoggerService {
   }
   
   /**
-   * Belirtilen log seviyesinin loglanıp loglanmayacağını belirler
+   * Mevcut log seviyesine göre loglama yapılıp yapılmayacağını kontrol eder
    */
-  private shouldLog(level: LogLevel): boolean {
+  public shouldLog(level: LogLevel): boolean {
+    if (!this.config.enabled) return false;
     const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
-    const configLevelIndex = levels.indexOf(this.config.level);
-    const logLevelIndex = levels.indexOf(level);
-    
-    return logLevelIndex >= configLevelIndex;
+    return levels.indexOf(level) >= levels.indexOf(this.config.level);
   }
   
   /**
@@ -337,6 +355,67 @@ export class LoggerService {
       console.log('Tüm loglar temizlendi');
     } catch (error) {
       console.error('Log temizleme hatası:', error);
+    }
+  }
+
+  private scheduleSendToBackend(entry: LogEntry): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    this.apiQueue.push(entry);
+    if (this.apiDebounceTimer) {
+      clearTimeout(this.apiDebounceTimer);
+    }
+    this.apiDebounceTimer = window.setTimeout(() => { 
+      this.sendQueuedLogsToBackend();
+    }, 3000);
+  }
+
+  private async sendQueuedLogsToBackend(): Promise<void> {
+    if (!this.config.sendLogsToApi || this.apiQueue.length === 0) {
+      return;
+    }
+
+    const logsToSend = [...this.apiQueue];
+    this.apiQueue = []; // Kuyruğu temizle
+
+    try {
+      const response = await fetch('/api/logs/frontend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logsToSend),
+      });
+
+      if (!response.ok) {
+        const responseBody = await response.text();
+        this.warn( // console.warn yerine this.warn
+          `LoggerService: API'ye loglar gönderilemedi. Status: ${response.status}`,
+          'LoggerService.sendQueuedLogsToBackend',
+          undefined, // error
+          undefined, // stack
+          { responseStatus: response.status, responseBody, originalLogsCount: logsToSend.length }
+        );
+        // Hata durumunda logları geri yükle (opsiyonel, kuyrukta birikmeyi önlemek için dikkatli olun)
+        // this.apiQueue.unshift(...logsToSend); 
+      } else {
+        // Başarılı gönderim logu DEBUG seviyesinde olabilir, gereksizse kaldırılabilir
+        if (this.shouldLog(LogLevel.DEBUG)) {
+             this.debug(
+              `LoggerService: ${logsToSend.length} log başarıyla API'ye gönderildi.`,
+              'LoggerService.sendQueuedLogsToBackend'
+            );
+        }
+      }
+    } catch (error) {
+      this.error( // console.error yerine this.error
+        'LoggerService: Loglar API\'ye gönderilirken ağ hatası.',
+        'LoggerService.sendQueuedLogsToBackend',
+        error instanceof Error ? error : new Error(String(error)),
+        undefined, // stack
+        { originalLogsCount: logsToSend.length }
+      );
+      // Hata durumunda logları geri yükle (opsiyonel)
+      // this.apiQueue.unshift(...logsToSend);
     }
   }
 } 

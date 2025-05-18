@@ -1,79 +1,49 @@
 "use client";
 
 import { useEffect } from "react";
-import { setupLogging, getLogger, getFlowTracker, mapToTrackerCategory } from "@/lib/logger.utils";
+import { getLogger, getFlowTracker, mapToTrackerCategory } from "@/lib/logger.utils";
 import { usePathname, useSearchParams } from "next/navigation";
 import { FlowCategory } from "@/constants/logging.constants";
 
 /**
- * Loglama servislerini başlatan bileşen
- * - Konsol çıktısını yapılandırır
- * - Dosya loglamasını yapılandırır
- * - Sayfa gezinimlerini izler
+ * Loglama servislerini başlatan bileşen DEĞİL, sadece ek loglamalar yapar.
+ * Ana başlatma providers.tsx içinde yapılır.
  */
 export default function LoggingInitializer() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
   useEffect(() => {
-    // Loglama servislerini başlat ve yapılandır
-    const { logger, flowTracker } = setupLogging({
-      // Logger yapılandırması
-      loggerOptions: {
-        appName: "quiz-frontend",
-        enabled: true,
-        minLevel: process.env.NODE_ENV === "production" ? "warn" : "debug",
-        enableConsole: true,
-        enableFileLogging: true, // Dosya loglamasını aktifleştir
-        logFilePath: "frontend-errors.log", // Hata log dosyası
-        enableRemote: false,
-        enableStackTrace: true,
-      },
-      // FlowTracker yapılandırması
-      flowTrackerOptions: {
-        enabled: true,
-        consoleOutput: true,
-        traceRenders: true,
-        traceStateChanges: true,
-        traceApiCalls: true,
-        captureTimings: true,
-      },
-    });
+    // Loglama servisleri providers.tsx içinde zaten başlatılmış olmalı
+    const logger = getLogger();
+    const flowTracker = getFlowTracker();
     
     logger.info(
-      "Loglama servisleri başlatıldı", 
+      "LoggingInitializer aktif ve sayfa gezinmelerini izliyor", 
       "LoggingInitializer", 
-      "LoggingInitializer.tsx",
-      42
+      // "LoggingInitializer.tsx", // Dosya yolu gereksiz olabilir, logger zaten ekleyebilir
+      // 0 // Satır no gereksiz
     );
     
     flowTracker.trackStep(
       mapToTrackerCategory(FlowCategory.Custom),
-      "Loglama servisleri başlatıldı",
+      "LoggingInitializer aktif",
       "LoggingInitializer"
     );
     
-    // Temizleme fonksiyonu
-    return () => {
-      logger.info(
-        "Loglama servisleri kapatılıyor", 
-        "LoggingInitializer", 
-        "LoggingInitializer.tsx",
-        56
-      );
-    };
-  }, []);
+  }, []); // Sadece bir kere çalışsın
   
   // Sayfa gezinimlerini izle
   useEffect(() => {
     const logger = getLogger();
     const flowTracker = getFlowTracker();
+    const fullPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
     
     logger.info(
-      `Sayfa gezinildi: ${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`,
-      "LoggingInitializer.RouteChange",
-      "LoggingInitializer.tsx",
-      69
+      `Sayfa gezinildi: ${fullPath}`,
+      "LoggingInitializer.RouteChange"
+      // "LoggingInitializer.tsx",
+      // 0
     );
     
     flowTracker.trackStep(

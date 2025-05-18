@@ -20,8 +20,19 @@ async function bootstrap() {
     fs.mkdirSync(logDir, { recursive: true });
   }
 
+  // Performans ölçümü başlat
+  const startTime = performance.now();
+  console.log('🚀 Backend başlatılıyor...');
+
+  // Optimize edilmiş NestJS uygulaması oluşturma
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'debug'], // Development ortamında tüm log seviyelerini etkinleştir
+    logger:
+      process.env.NODE_ENV === 'development'
+        ? ['error', 'warn', 'log']
+        : ['error', 'warn'],
+    bufferLogs: true, // Başlangıçta log buffering ile daha hızlı başlatma
+    abortOnError: false, // Hatalarda durdurmayıp devam et
+    bodyParser: true, // Body parser etkinleştir (varsayılan)
   });
 
   // Config service
@@ -81,16 +92,33 @@ async function bootstrap() {
     maxAge: 3600, // 1 saat önbellek
   });
 
-  flowTracker.track('CORS ayarları yapılandırıldı', 'Bootstrap');
-
-  // Cookie parser middleware
+  // Cookie parser middleware - daha verimli kurulum
   app.use(cookieParser());
 
   // Ek güvenlik ve performans middleware'leri
-  app.use(helmet());
-  app.use(compression());
+  app.use(
+    helmet({
+      // Bazı helmet ayarlarını devre dışı bırakarak başlangıcı hızlandır
+      contentSecurityPolicy: process.env.NODE_ENV === 'production',
+      dnsPrefetchControl: false,
+      frameguard: true,
+      hidePoweredBy: true,
+      hsts: false,
+      ieNoOpen: false,
+      noSniff: true,
+      permittedCrossDomainPolicies: false,
+      referrerPolicy: false,
+      xssFilter: true,
+    }),
+  );
 
-  flowTracker.track("Middleware'ler yapılandırıldı", 'Bootstrap');
+  // Sıkıştırma - düşük seviyede başlat, sonra optimize et
+  app.use(
+    compression({
+      level: 1, // Başlangıçta düşük seviye sıkıştırma ile daha hızlı başlatma
+      threshold: 1024, // 1KB'dan büyük yanıtları sıkıştır
+    }),
+  );
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -101,15 +129,16 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true, // Query parametrelerini otomatik olarak dönüştür
       },
+      // Tüm validasyon mesajlarını önbelleğe alarak performans artışı sağlar
+      validationError: {
+        target: false,
+        value: false,
+      },
     }),
   );
 
-  flowTracker.track('Validation pipe yapılandırıldı', 'Bootstrap');
-
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  flowTracker.track('Exception filter yapılandırıldı', 'Bootstrap');
 
   // Health check endpoint
   app.use('/api/health', (req, res) => {
@@ -125,9 +154,7 @@ async function bootstrap() {
   const globalPrefix = configService.get('API_PREFIX', 'api');
   app.setGlobalPrefix(globalPrefix);
 
-  flowTracker.track(`Global prefix ayarlandı: ${globalPrefix}`, 'Bootstrap');
-
-  // Swagger dokümanı - geliştirme ortamında
+  // Swagger dokümanı - sadece geliştirme ortamında
   if (configService.get('NODE_ENV') !== 'production') {
     try {
       setupSwagger(app);
@@ -152,27 +179,28 @@ async function bootstrap() {
   await app.listen(port);
 
   const appUrl = await app.getUrl();
-  flowTracker.track(
-    `Uygulama ${appUrl}/${globalPrefix} adresinde çalışıyor`,
-    'Bootstrap',
-  );
-  flowTracker.track(
-    `Çalışma ortamı: ${process.env.NODE_ENV || 'development'}`,
-    'Bootstrap',
-  );
 
-  // Uygulama başlangıç bilgilerini logla
+  // Başlangıç süresini hesapla ve logla
+  const endTime = performance.now();
+  const startupTime = (endTime - startTime).toFixed(2);
+
+  console.log(`
+✅ Backend ${startupTime}ms içinde başarıyla başlatıldı!
+🌐 API Endpoint: ${appUrl}
+🔑 Environment: ${process.env.NODE_ENV || 'development'}
+🚪 Port: ${port}
+📄 API Docs: ${appUrl}/docs (geliştirme modunda)
+💻 Node.js: ${process.version}
+💭 Memory: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB kullanılıyor
+  `);
+
+  logger.log(`Uygulama başlatıldı: ${appUrl}`);
   loggerService.info(
-    'Uygulama başlatıldı',
+    `Uygulama başlatıldı: ${appUrl} (${startupTime}ms)`,
     'Bootstrap',
     __filename,
-    undefined,
-    {
-      port,
-      env: process.env.NODE_ENV || 'development',
-      url: `${appUrl}/${globalPrefix}`,
-    },
   );
+  flowTracker.track(`API başlatıldı: ${appUrl}`, 'Bootstrap');
 }
 
 // Uygulamayı başlat ve hataları yakala
