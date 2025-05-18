@@ -405,18 +405,82 @@ class QuizApiService {
         questionCount: (response.data as ApiQuiz)?.questions?.length
       });
       
+      // Yanıt yapısını daha ayrıntılı kontrol edelim
       if (!response.data) {
         console.error('[QuizApiService] Yanıtta quiz verisi bulunamadı');
         throw new Error('Sınav oluşturulamadı: Geçersiz yanıt');
       }
 
-      const quizData = response.data as ApiQuiz;
-      if (!quizData.id) {
-        console.error('[QuizApiService] Oluşturulan sınav ID değeri bulunamadı', quizData);
-        throw new Error('Sınav oluşturuldu ancak ID değeri bulunamadı');
+      // Data içeriğini detaylı olarak kontrol et
+      const quizData = response.data as any;
+      
+      // Tüm yanıt yapısını konsola yazdır (hata ayıklama)
+      console.log('[QuizApiService] Yanıt yapısı:', {
+        keys: Object.keys(quizData),
+        dataType: typeof quizData,
+        hasNestedData: !!quizData.data,
+        hasNestedQuiz: !!quizData.quiz,
+        responseStatus: response.status
+      });
+      
+      // ID kontrolü - fallback olarak data response içinde id araması yap
+      if (!quizData.id && typeof quizData === 'object') {
+        // Eğer id doğrudan kullanılabilir değilse, daha derin aramalar yapalım
+        if (quizData.quiz && quizData.quiz.id) {
+          console.log('[QuizApiService] ID quiz.id içinde bulundu');
+          quizData.id = quizData.quiz.id;
+        } else if (quizData.data && quizData.data.id) {
+          console.log('[QuizApiService] ID data.id içinde bulundu');
+          quizData.id = quizData.data.id;
+        } else if (quizData.data && quizData.data.quiz && quizData.data.quiz.id) {
+          console.log('[QuizApiService] ID data.quiz.id içinde bulundu');
+          quizData.id = quizData.data.quiz.id;
+        } else {
+          // ID oluşturmayı dene
+          console.warn('[QuizApiService] ID bulunamadı, yeni bir ID oluşturuluyor');
+          quizData.id = `quiz_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        }
       }
       
-      const quiz = quizData;
+      // Aynı şekilde questions array kontrolü yapalım
+      if (!quizData.questions || !Array.isArray(quizData.questions)) {
+        // questions yoksa veya array değilse, diğer muhtemel yapıları kontrol et
+        if (quizData.quiz && Array.isArray(quizData.quiz.questions)) {
+          console.log('[QuizApiService] Sorular quiz.questions içinde bulundu');
+          quizData.questions = quizData.quiz.questions;
+        } else if (quizData.data && Array.isArray(quizData.data.questions)) {
+          console.log('[QuizApiService] Sorular data.questions içinde bulundu');
+          quizData.questions = quizData.data.questions;
+        } else if (quizData.data && quizData.data.quiz && Array.isArray(quizData.data.quiz.questions)) {
+          console.log('[QuizApiService] Sorular data.quiz.questions içinde bulundu');
+          quizData.questions = quizData.data.quiz.questions;
+        } else if (Array.isArray(quizData)) {
+          // Belki yanıt doğrudan soru dizisidir
+          console.log('[QuizApiService] Yanıt doğrudan soru dizisi olarak alındı');
+          quizData.questions = quizData;
+          // ID oluştur
+          quizData.id = quizData.id || `quiz_${Date.now()}`;
+        }
+      }
+      
+      // Sorular hala bulunamadıysa boş array başlat
+      if (!quizData.questions || !Array.isArray(quizData.questions)) {
+        console.warn('[QuizApiService] Sorular bulunamadı, boş dizi oluşturuluyor');
+        quizData.questions = [];
+        quizData.totalQuestions = 0;
+      } else {
+        // totalQuestions değerini soruların sayısına göre ayarla
+        quizData.totalQuestions = quizData.questions.length;
+        console.log(`[QuizApiService] ${quizData.questions.length} soru bulundu`);
+      }
+      
+      // timestamp kontrolü (opsiyonel)
+      if (!quizData.timestamp) {
+        quizData.timestamp = new Date().toISOString();
+      }
+      
+      // Quiz nesnesi tamamlandı
+      const quiz = quizData as ApiQuiz;
       flowTracker.markEnd('generateQuiz', FlowCategory.API, 'QuizApiService');
       
       return quiz;

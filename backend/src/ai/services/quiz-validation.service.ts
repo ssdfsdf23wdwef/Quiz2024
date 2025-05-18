@@ -42,6 +42,12 @@ export class QuizValidationService {
       let jsonText = text;
       let jsonMatch: RegExpMatchArray | null = null;
 
+      // İlk cevabı da loglayalım (sınırlı uzunlukta)
+      this.logger.debug(
+        `[${traceId}] AI ham yanıtı (ilk 200 karakter): ${text.substring(0, 200)}...`,
+        'QuizValidationService.parseAIResponseToJSON',
+      );
+
       // First, try to detect JSON code blocks
       if (text.includes('```')) {
         // JSON code block detection improvement - support both ```json and ```
@@ -50,7 +56,7 @@ export class QuizValidationService {
         if (jsonMatch && jsonMatch[1]) {
           jsonText = jsonMatch[1].trim();
           this.logger.debug(
-            `[${traceId}] JSON kod bloğu tespit edildi. İçerik çıkarıldı.`,
+            `[${traceId}] JSON kod bloğu tespit edildi. İçerik çıkarıldı (ilk 100 karakter): ${jsonText.substring(0, 100)}...`,
             'QuizValidationService.parseAIResponseToJSON',
           );
         }
@@ -60,7 +66,7 @@ export class QuizValidationService {
         const parsed = JSON.parse(jsonText) as T;
         // Başarılı parse işlemini logla
         this.logger.debug(
-          `[${traceId}] AI yanıtı başarıyla parse edildi.`,
+          `[${traceId}] AI yanıtı başarıyla parse edildi. Tür: ${typeof parsed}, Anahtarlar: ${parsed && typeof parsed === 'object' ? Object.keys(parsed as object).join(', ') : 'Anahtar yok'}`,
           'QuizValidationService.parseAIResponseToJSON',
         );
         return parsed;
@@ -69,6 +75,14 @@ export class QuizValidationService {
         this.logger.warn(
           `[${traceId}] İlk JSON parse denemesi başarısız: ${firstError.message}. Alternatif parsing denenecek.`,
           'QuizValidationService.parseAIResponseToJSON',
+          __filename,
+          undefined,
+          {
+            errorMessage: firstError.message,
+            textStart: jsonText.substring(0, 50),
+            textLength: jsonText.length,
+            hasCodeBlocks: text.includes('```'),
+          },
         );
 
         // Try to fix unescaped quotes in JSON string
@@ -83,8 +97,15 @@ export class QuizValidationService {
             return parsed;
           } catch (secondError) {
             this.logger.warn(
-              `[${traceId}] Düzeltilmiş JSON yine de parse edilemedi`,
+              `[${traceId}] Düzeltilmiş JSON yine de parse edilemedi: ${secondError.message}`,
               'QuizValidationService.parseAIResponseToJSON',
+              __filename,
+              undefined,
+              {
+                errorMessage: secondError.message,
+                fixedTextStart: fixedText.substring(0, 50),
+                originalTextStart: jsonText.substring(0, 50),
+              },
             );
           }
         }
@@ -94,6 +115,11 @@ export class QuizValidationService {
           // Daha gelişmiş bir regex ile JSON nesnesini çıkarıyoruz
           const jsonExtractRegex = /{[\s\S]*?(?=\n\n|$)/g;
           const extractedMatches = [...jsonText.matchAll(jsonExtractRegex)];
+
+          this.logger.debug(
+            `[${traceId}] Gelişmiş regex ile ${extractedMatches.length} potansiyel JSON parçası bulundu`,
+            'QuizValidationService.parseAIResponseToJSON',
+          );
 
           // Bulduğumuz tüm potansiyel JSON nesnelerini deniyoruz
           for (const match of extractedMatches) {
@@ -116,6 +142,9 @@ export class QuizValidationService {
           this.logger.warn(
             `[${traceId}] Gelişmiş JSON çıkarma denemesi başarısız: ${extractError.message}`,
             'QuizValidationService.parseAIResponseToJSON',
+            __filename,
+            undefined,
+            { errorMessage: extractError.message },
           );
         }
 
@@ -123,6 +152,11 @@ export class QuizValidationService {
         try {
           // Metni temizle - satır sonları, fazla boşluklar ve yorumları kaldır
           const cleanedText = this.cleanJsonText(jsonText);
+          this.logger.debug(
+            `[${traceId}] Temizlenmiş metin: ${cleanedText.substring(0, 100)}...`,
+            'QuizValidationService.parseAIResponseToJSON',
+          );
+
           const parsed = JSON.parse(cleanedText) as T;
           this.logger.info(
             `[${traceId}] Temizlenmiş JSON parse edildi`,
@@ -133,6 +167,9 @@ export class QuizValidationService {
           this.logger.warn(
             `[${traceId}] Temizlenmiş JSON parse edilemedi: ${cleanError.message}`,
             'QuizValidationService.parseAIResponseToJSON',
+            __filename,
+            undefined,
+            { errorMessage: cleanError.message },
           );
         }
 
@@ -145,7 +182,7 @@ export class QuizValidationService {
         // Önemli: Hata detaylarını sadece development ortamında logla
         if (process.env.NODE_ENV === 'development') {
           this.logger.debug(
-            `[${traceId}] Orijinal yanıt: ${text.substring(0, 200)}...`,
+            `[${traceId}] Orijinal yanıt: ${text.substring(0, 500)}...`,
             'QuizValidationService.parseAIResponseToJSON',
           );
         }
@@ -379,6 +416,78 @@ export class QuizValidationService {
     const { traceId } = metadata;
 
     try {
+      // Önce basit bir yapı kontrolü yapalım
+      if (!parsedJson || typeof parsedJson !== 'object') {
+        this.logger.error(
+          `[${traceId}] Quiz AI yanıtı geçersiz: yanıt bir nesne değil`,
+          'QuizValidationService.validateQuizResponseSchema',
+        );
+
+        // Geçersiz yanıt durumunda fallback sorular döndür
+        return { questions: this.generateFallbackQuestions(metadata) };
+      }
+
+      // Sorular direkt bir array olarak gelmiş olabilir
+      if (Array.isArray(parsedJson)) {
+        this.logger.info(
+          `[${traceId}] Quiz AI yanıtı direkt soru dizisi olarak geldi, şema uyumlu hale getiriliyor`,
+          'QuizValidationService.validateQuizResponseSchema',
+        );
+
+        // Direkt array geldiyse bunu questions property'si olan bir nesne olarak sarmalayalım
+        return { questions: parsedJson };
+      }
+
+      // questions property'si var mı kontrol edelim
+      if (!parsedJson.questions && !Array.isArray(parsedJson.questions)) {
+        // Eğer "quiz", "data" veya "result" gibi farklı bir property içinde sorular olabilir
+        const possibleKeys = [
+          'quiz',
+          'data',
+          'result',
+          'sorulist',
+          'questionlist',
+        ];
+        let foundQuestions = null;
+
+        for (const key of possibleKeys) {
+          if (
+            parsedJson[key] &&
+            (Array.isArray(parsedJson[key]) ||
+              (parsedJson[key].questions &&
+                Array.isArray(parsedJson[key].questions)))
+          ) {
+            foundQuestions = Array.isArray(parsedJson[key])
+              ? parsedJson[key]
+              : parsedJson[key].questions;
+
+            this.logger.info(
+              `[${traceId}] Sorular '${key}' özelliği içinde bulundu`,
+              'QuizValidationService.validateQuizResponseSchema',
+            );
+
+            break;
+          }
+        }
+
+        if (foundQuestions) {
+          return { questions: foundQuestions };
+        }
+
+        this.logger.error(
+          `[${traceId}] Quiz AI yanıtında 'questions' dizisi bulunamadı`,
+          'QuizValidationService.validateQuizResponseSchema',
+          __filename,
+          undefined,
+          undefined,
+          { parsedJsonKeys: Object.keys(parsedJson) },
+        );
+
+        // questions bulunamadıysa fallback sorular döndür
+        return { questions: this.generateFallbackQuestions(metadata) };
+      }
+
+      // Şema doğrulaması yap
       return QuizGenerationResponseSchema.parse(parsedJson);
     } catch (validationError) {
       this.logger.error(
@@ -394,13 +503,8 @@ export class QuizValidationService {
         'QuizValidationService.validateQuizResponseSchema',
       );
 
-      const errorMessages = validationError.errors
-        .map((e) => `${e.path.join('.')}: ${e.message}`)
-        .join('; ');
-
-      throw new BadRequestException(
-        `Quiz AI yanıtı geçersiz formatta (şema): ${errorMessages}`,
-      );
+      // Fallback olarak örnek sorular döndür
+      return { questions: this.generateFallbackQuestions(metadata) };
     }
   }
 

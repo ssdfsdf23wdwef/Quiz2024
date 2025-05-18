@@ -19,11 +19,12 @@ import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
 import axios from "axios";
-import { Course, DetectedSubTopic, QuizPreferences, QuizGenerationOptions, QuizType } from "@/types";
+import { Course, DetectedSubTopic, QuizPreferences, QuizGenerationOptions } from "@/types";
 import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
-import { SubTopicItem, DifficultyLevel } from "@/types/quiz";
+import { SubTopicItem } from "@/types/quiz";
 import { LearningTarget } from "@/types/learningTarget";
+import { useRouter } from "next/navigation";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -55,6 +56,7 @@ export default function ExamCreationWizard({
   quizType, // Dışarıdan gelen sınav türü
   onComplete,
 }: ExamCreationWizardProps) {
+  const router = useRouter();
 
   // Adım yönetimi
   const [currentStep, setCurrentStep] = useState(1);
@@ -796,100 +798,147 @@ export default function ExamCreationWizard({
 
   // Final gönderim işleyicisi
   const handleFinalSubmit = async () => {
-    if (isSubmitting) return;
+    console.log("[ExamCreationWizard] Final submit çağrılıyor...");
+    
+    if (isSubmitting) {
+      console.log("[ExamCreationWizard] İşlem zaten devam ediyor, tekrar submit engellendi");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setErrorMessage(null);
     
     try {
-      setIsSubmitting(true);
-      setErrorMessage(null);
+      console.log("[ExamCreationWizard] Sınav oluşturma başlıyor...");
       
-      // Seçilen konular kontrolü
-      if (!selectedTopics || selectedTopics.length === 0) {
-        const errorMsg = 'Lütfen en az bir konu seçin';
-        setErrorMessage(errorMsg);
-        toast.error(errorMsg);
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Onay mesajını göster
-      toast.loading('Sınav oluşturuluyor...');
-      
-      // Belge metni kontrolü
-      let quizDocumentText = documentTextContent;
-      
-      // Belge metni yoksa ve belge ID'si varsa, belge metnini almaya çalış
-      if (!quizDocumentText && uploadedDocumentId) {
-        console.log('[handleFinalSubmit] Belge metni yok, belge ID var. Metni almaya çalışılıyor.');
+      // Dokümandan metin yüklenmediği halde yüklenmiş kabul edilmesini önle
+      if (uploadedDocumentId && !documentTextContent) {
+        // Belge ID varsa ama metin yüklenmemiş, tekrar yüklemeyi dene
+        console.log(`[ExamCreationWizard] Belge ID var (${uploadedDocumentId}) ama metin yok, yüklemeyi tekrar deniyorum...`);
         try {
           const docTextResponse = await documentService.getDocumentText(uploadedDocumentId);
-          quizDocumentText = docTextResponse.text;
-          console.log('[handleFinalSubmit] Belge metni başarıyla alındı.');
+          
+          if (!docTextResponse || !docTextResponse.text || docTextResponse.text.trim() === '') {
+            throw new Error("Belge metni alınamadı veya boş");
+          }
+          
+          // setDocumentTextContent'i tipine uygun olarak çağıralım
+          setDocumentTextContent(docTextResponse.text);
+          console.log(`[ExamCreationWizard] Belge metni yüklendi: ${docTextResponse.text.length} karakter`);
+          
+          // Yüklenen belge içeriğiyle bir sonraki adımı gerçekleştirmek için bekleyelim
+          await new Promise(resolve => setTimeout(resolve, 100));
         } catch (docError) {
-          console.error('[handleFinalSubmit] Belge metni alınamadı:', docError);
-          // Belge metni alınamazsa da devam edebiliriz, backend documentId'yi kullanabilir
+          console.error("[ExamCreationWizard] Belge metni yüklenirken hata:", docError);
+          toast.error("Belge metni yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.");
+          setErrorMessage("Belge metni yüklenemedi. Lütfen tekrar deneyin.");
+          setIsSubmitting(false);
+          return;
         }
       }
       
-      // Belge metni veya belge ID'si kontrolü
-      if (!quizDocumentText && !uploadedDocumentId) {
-        const errorMsg = 'Belge metni veya belge ID\'si gereklidir';
-        setErrorMessage(errorMsg);
-        toast.error(errorMsg);
+      // Tekrar belge metninin varlığını kontrol edelim
+      if (!documentTextContent || documentTextContent.trim() === '') {
+        console.error("[ExamCreationWizard] Belge metni hala yüklenemedi veya boş");
+        toast.error("Belge metni zorunludur. Lütfen sayfayı yenileyip tekrar deneyin.");
+        setErrorMessage("Belge metni zorunludur");
         setIsSubmitting(false);
-        toast.dismiss();
         return;
       }
       
-      // Quiz oluşturma için gerekli parametreleri hazırla
-      const quizOptions: QuizGenerationOptions = {
-        quizType: "quick" as QuizType,
-        documentText: quizDocumentText || '',
-        documentId: uploadedDocumentId || '',
+      // Verilen seçeneklere göre sınav oluştur
+      const options: QuizGenerationOptions = {
+        quizType,
+        documentText: documentTextContent,
+        documentId: uploadedDocumentId,
         selectedSubTopics: selectedTopics,
         preferences: {
           questionCount: preferences.questionCount,
-          difficulty: preferences.difficulty as DifficultyLevel,
-          timeLimit: preferences.timeLimit
-        }
+          difficulty: preferences.difficulty === 'beginner' ? 'easy' : 
+                      preferences.difficulty === 'intermediate' ? 'medium' : 
+                      preferences.difficulty === 'advanced' ? 'hard' : 'mixed',
+        },
       };
       
-      console.log('[handleFinalSubmit] Quiz oluşturuluyor:', quizOptions);
+      console.log("[ExamCreationWizard] Quiz oluşturma seçenekleri:", {
+        quizType,
+        hasDocumentText: !!documentTextContent,
+        documentTextLength: documentTextContent.length,
+        documentId: uploadedDocumentId,
+        subTopicsCount: selectedTopics?.length || 0,
+        questionCount: preferences.questionCount,
+        difficulty: options.preferences.difficulty // Dönüştürülmüş difficulty değerini log'la
+      });
       
-      const quiz = await quizService.generateQuiz(quizOptions);
-      // Tip güvenli erişim için tip dönüşümü
-      const quizData = quiz as { id?: string };
-      console.log('[handleFinalSubmit] Quiz başarıyla oluşturuldu, ID:', quizData?.id || 'ID bulunamadı');
+      // Quiz oluşturma API çağrısı
+      const quiz = await quizService.generateQuiz(options);
+      console.log("[ExamCreationWizard] Quiz başarıyla oluşturuldu:", quiz.id);
       
-      toast.dismiss();
-      toast.success('Sınav başarıyla oluşturuldu!');
+      // Quiz oluşturulduktan sonra sonuç sayfasına yönlendir
+      if (quiz && quiz.id) {
+        // Başarılı sınav oluşturma bildirimi
+        toast.success('Sınav başarıyla oluşturuldu!');
+        
+        // Tamamlandı callback'ini çağır (eğer varsa)
+        if (onComplete) {
+          onComplete({
+            file: selectedFile,
+            quizType: quizType,
+            personalizedQuizType: personalizedQuizType,
+            preferences: preferences,
+            topicNameMap: {} // Boş bir map gönderiyoruz, gerçek implementasyonda doldurulmalı
+          });
+        }
+        
+        // Quiz sonuç sayfasına yönlendir
+        router.push(`/exams/${quiz.id}/results`);
+      } else {
+        console.error("[ExamCreationWizard] Quiz ID bulunamadı:", quiz);
+        setErrorMessage("Sınav oluşturuldu ancak ID değeri bulunamadı. Lütfen tekrar deneyin.");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("[ExamCreationWizard] Sınav oluşturma hatası:", error);
       
-      if (onComplete) {
-        onComplete({
-          file: selectedFile,
-          quizType: quizType,
-          personalizedQuizType: personalizedQuizType,
-          preferences: preferences,
-          topicNameMap: {} // Boş bir map gönderiyoruz, gerçek implementasyonda doldurulmalı
-        });
+      // Hata detaylarını loglama
+      if (error instanceof Error) {
+        console.error(`[ExamCreationWizard] Hata tipi: ${error.name}, Mesaj: ${error.message}`);
+        console.error(`[ExamCreationWizard] Stack: ${error.stack?.split('\n')[0]}`);
+        
+        // API hatası ise daha fazla bilgi
+        if ('status' in error) {
+          console.error(`[ExamCreationWizard] API status: ${(error as {status: number}).status}`);
+        }
+        
+        // Response içeren bir hata ise (Axios)
+        if ('response' in error && error.response && typeof error.response === 'object') {
+          const response = error.response as {status?: number, data?: unknown};
+          console.error(`[ExamCreationWizard] API yanıt status: ${response.status}`);
+          console.error(`[ExamCreationWizard] API yanıt data:`, response.data);
+        }
       }
       
-    } catch (error) {
-      toast.dismiss();
-      
-      // Hata mesajını göster
-      let errMsg = 'Sınav oluşturulurken bir hata oluştu';
+      // Kullanıcıya gösterilecek hata mesajı
+      let errorMessage = "Sınav oluşturulurken bir hata oluştu";
       
       if (error instanceof Error) {
-        errMsg = error.message;
+        // Belirli hata tiplerini daha anlaşılır mesajlarla göster
+        if (error.message.includes("Belge metni") || 
+            error.message.toLowerCase().includes("document text")) {
+          errorMessage = "Belge metni zorunludur veya çok kısa. Lütfen daha uzun bir belge yükleyin.";
+        } else if (error.message.includes("konu seçimi")) {
+          errorMessage = "Lütfen en az bir konu seçin.";
+        } else if (error.message.includes("Network Error")) {
+          errorMessage = "Ağ hatası. Lütfen internet bağlantınızı kontrol edin.";
+        } else {
+          // Diğer hatalar için direkt mesajı kullan
+          errorMessage = error.message;
+        }
       }
       
-      // Hata bilgisini ekrana yazdırma ve state'e yazma
-      setErrorMessage(errMsg);
-      toast.error(errMsg);
-      console.error('[ExamCreationWizard] Sınav oluşturma hatası:', error);
-      
-      setIsSubmitting(false);
-    } finally {
+      // Hata mesajını göster
+      toast.error(errorMessage);
+      setErrorMessage(errorMessage);
       setIsSubmitting(false);
     }
   };

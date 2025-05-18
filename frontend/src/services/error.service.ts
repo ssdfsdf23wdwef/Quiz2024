@@ -759,23 +759,101 @@ export class ErrorService {
   /**
    * Toast mesajı gösterir
    */
-  static showToast(message: string, type: ToastType = "info"): void {
+  static showToast(error: Error | string, type: ToastType = "info", context?: string): void {
+    // Hata mesajını belirle
+    let message: string;
+    let details: string | undefined;
+    
+    // Hata tipine göre işlem
+    if (error instanceof Error) {
+      // Hata objesinden bilgileri çıkart
+      message = error.message;
+      details = error.stack?.split('\n')[0];
+      
+      // Detaylı loglama
+      console.error(`[${context || error.name}] ${message}`, error);
+      
+      // API hatası özel işleme
+      if (error instanceof ApiError) {
+        // API status koduna göre daha spesifik mesajlar
+        if (error.status === 404) {
+          message = `İstenen kaynak bulunamadı: ${message}`;
+        } else if (error.status === 401) {
+          message = "Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.";
+        } else if (error.status === 403) {
+          message = "Bu işlemi yapmaya yetkiniz yok.";
+        } else if (error.status === 400) {
+          message = `Hatalı istek: ${message}`;
+        } else if (error.status >= 500) {
+          message = "Sunucu hatası. Lütfen daha sonra tekrar deneyin.";
+        }
+        
+        // API yanıtından daha fazla bilgi al
+        if (error.original && typeof error.original === 'object') {
+          const apiError = error.original as any;
+          if (apiError.response?.data?.message) {
+            message = apiError.response.data.message;
+          }
+          if (apiError.response?.data?.error) {
+            details = apiError.response.data.error;
+          }
+        }
+      }
+    } else {
+      // String hatası
+      message = error;
+      console.log(`[${context || "INFO"}] ${message}`);
+    }
+    
+    // Hata ayıklama için durum
+    if (process.env.NODE_ENV === 'development' && details) {
+      message = `${message}\n${details}`;
+    }
+    
+    // Toast tipine göre gösterme
     switch (type) {
       case "success":
         toast.success(message);
         break;
       case "error":
-        toast.error(message);
+        toast.error(message, {
+          duration: 5000, // Hata mesajları için daha uzun süre
+          style: {
+            borderRadius: '10px',
+            maxWidth: '500px',
+            padding: '12px 16px'
+          }
+        });
+        
+        // Hata analytics için log tutma
+        logger.error(
+          new Error(message),
+          'ErrorService.showToast',
+          __filename,
+          undefined,
+          { context, type: "toast", details }
+        );
         break;
       case "warning":
         toast(message, {
           icon: "⚠️",
+          duration: 4000,
           style: {
             background: "#FEF3C7",
             color: "#92400E",
             border: "1px solid #F59E0B",
+            borderRadius: '10px'
           },
         });
+        
+        // Warning analytics için log tutma
+        logger.warn(
+          new Error(message),
+          'ErrorService.showToast',
+          __filename,
+          undefined,
+          { context, type: "toast", details }
+        );
         break;
       case "info":
       default:
@@ -787,8 +865,8 @@ export class ErrorService {
   /**
    * Instance metod olarak toast mesaj göster
    */
-  showToast(message: string, type: ToastType = "info"): void {
-    ErrorService.showToast(message, type);
+  showToast(message: Error | string, type: ToastType = "info", context?: string): void {
+    ErrorService.showToast(message, type, context);
   }
 
   /**
@@ -797,15 +875,19 @@ export class ErrorService {
   static handleError(error: unknown, context?: string): void {
     ErrorService.logError(error, context);
 
-    let message = "Bir hata oluştu. Lütfen tekrar deneyin.";
+    let errorObj: Error;
 
-    if (error instanceof ApiError) {
-      message = error.message;
-    } else if (error instanceof Error) {
-      message = error.message;
+    if (error instanceof Error) {
+      errorObj = error;
+    } else if (typeof error === 'string') {
+      errorObj = new Error(error);
+    } else {
+      errorObj = new Error("Bir hata oluştu. Lütfen tekrar deneyin.");
+      // Verinin türü ve detayları hakkında ek context loglama
+      console.log("[ERROR_DETAIL]", typeof error, error);
     }
 
-    ErrorService.showToast(message, "error");
+    ErrorService.showToast(errorObj, "error", context);
   }
 }
 
