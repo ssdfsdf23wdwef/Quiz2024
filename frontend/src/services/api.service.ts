@@ -66,7 +66,7 @@ export const checkApiAvailability = async (
   const maxDelay = 2000; // Maximum gecikme süresini sınırla 
   
   let currentDelay = initialRetryDelay;
-  let currentAPI = API_URL;
+  const currentAPI = API_URL;
   
   // Önce yerel port belleğini kontrol et (ön deneme için)
   if (typeof window !== "undefined") {
@@ -83,13 +83,13 @@ export const checkApiAvailability = async (
         });
         
         if (response.status >= 200 && response.status < 300) {
-          logger.info(`Önceki başarılı API port'u kullanıldı: ${lastSuccessPort}`, 
+          logger.info(new Error(`Önceki başarılı API port'u kullanıldı: ${lastSuccessPort}`), 
             'checkApiAvailability', __filename, 44);
           API_URL = lastSuccessAPI;
           axiosInstance.defaults.baseURL = lastSuccessAPI;
           return lastSuccessAPI;
         }
-      } catch (error) {
+      } catch (_error) {
         // Sessizce devam et, önceki port artık çalışmıyor
       }
     }
@@ -484,8 +484,41 @@ axiosInstance.interceptors.response.use(
               // Kuyruk temizle
               pendingRequests.length = 0;
 
-              // Kullanıcıyı logout yap ve login sayfasına yönlendir
+              // Arka planda otomatik yeniden oturum açma mantığı
               try {
+                console.log("🔄 Oturum yenileme işlemi başlatılıyor...");
+                // Firebase/auth doğru şekilde import ediliyor
+                const firebaseAuth = await import("firebase/auth");
+                const { getAuth } = firebaseAuth;
+                const auth = getAuth();
+
+                // Mevcut Firebase kullanıcısını kontrol et
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                  // Mevcut kullanıcıdan idToken alınmaya çalışılıyor
+                  try {
+                    // Mevcut ID token'ı al
+                    const idToken = await currentUser.getIdToken(true);
+                    console.log("✅ Firebase kimlik bilgileri ile otomatik giriş yapılıyor");
+                    
+                    // ID token ile oturum açma
+                    await authService.loginWithIdToken(idToken);
+                    console.log("✅ ID token ile oturum yenileme başarılı");
+                    
+                    // Mevcut isteği tekrar dene
+                    if (originalRequest.headers) {
+                      // Yeni token al
+                      const token = await currentUser.getIdToken(true);
+                      originalRequest.headers.Authorization = `Bearer ${token}`;
+                    }
+                    (originalRequest as { _retry?: boolean })._retry = true;
+                    return axiosInstance(originalRequest);
+                  } catch (idTokenError) {
+                    console.error("❌ ID token alınamadı:", idTokenError);
+                  }
+                }
+
+              // Kullanıcıyı logout yap ve login sayfasına yönlendir
                 await authService.signOut();
                 
                 // Zustand store'dan kullanıcıyı çıkış yap
@@ -494,14 +527,22 @@ axiosInstance.interceptors.response.use(
                 
                 // Login sayfasına yönlendir
                 if (typeof window !== 'undefined') {
-                  window.location.href = "/auth/login";
+                  console.log("🔐 Yeniden giriş sayfasına yönlendiriliyor");
+                  
+                  // Mevcut URL'i kaydet
+                  const currentPath = window.location.pathname + window.location.search;
+                  if (currentPath && !currentPath.includes('/auth/')) {
+                    sessionStorage.setItem('redirectAfterLogin', currentPath);
+                  }
+                  
+                  window.location.href = "/auth/login?session_expired=true";
                 }
               } catch (logoutError) {
                 console.error("❌ Çıkış işlemi başarısız:", logoutError);
-              }
               
               // Orijinal hatayı döndür
               return Promise.reject(error);
+              }
             }
           } finally {
             isRefreshingToken = false;

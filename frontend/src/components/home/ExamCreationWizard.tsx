@@ -310,7 +310,7 @@ export default function ExamCreationWizard({
       
       // Tercihleri güncelle
       setPreferences(prev => ({
-        ...prev,
+          ...prev,
         topicIds: selectedTopics,
         subTopicIds: subTopicIds
       }));
@@ -708,7 +708,27 @@ export default function ExamCreationWizard({
           console.log(`[ECW detectTopicsFromUploadedFile] 🔍 Yanıt formatı değerlendiriliyor:`, { isObject: typeof responseData === 'object', hasTopics: responseData && 'topics' in responseData, isArray: Array.isArray(responseData), type: typeof responseData });
           
           const generateId = (base: string = 'generated') => `${base}-${Math.random().toString(36).substring(2, 9)}`;
-          const normalizeStr = (str: string = '') => str.toLowerCase().replace(/\s+/g, '-');
+          
+          // Türkçe karakterleri koruyan daha iyi bir normalleştirme fonksiyonu
+          const normalizeStr = (str: string = '') => {
+            if (!str) return '';
+            
+            // Adım 1: Trim yapılır
+            const trimmed = str.trim();
+            
+            // Adım 2: Küçük harfe dönüştürülür
+            const lowercased = trimmed.toLowerCase();
+            
+            // Adım 3: Boşluklar çizgiye dönüştürülür
+            const replaced = lowercased.replace(/\s+/g, '-');
+            
+            // Adım 4: Diğer özel karakterler temizlenir ama Türkçe karakterler korunur
+            const normalized = replaced.replace(/[^a-z0-9çğıöşüñ\-]/g, '');
+            
+            console.log(`[ECW normalizeStr] Normalleştirme: "${str}" --> "${normalized}"`);
+            
+            return normalized;
+          };
 
           if (responseData && typeof responseData === 'object' && 'topics' in responseData && Array.isArray((responseData as TopicsResponseData).topics)) {
             console.log(`[ECW detectTopicsFromUploadedFile] 📋 Yeni API formatı tespit edildi (topics nesnesi)`);
@@ -803,8 +823,8 @@ export default function ExamCreationWizard({
             };
             
             const defaultTopics = [defaultTopic];
-            setDetectedTopics(defaultTopics);
-            setTopicDetectionStatus("success");
+              setDetectedTopics(defaultTopics);
+              setTopicDetectionStatus("success");
             
             setSelectedTopicIds([defaultTopicId]);
             setSelectedSubTopicIds([defaultTopicId]);
@@ -823,7 +843,7 @@ export default function ExamCreationWizard({
             }));
             
             console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Varsayılan konu oluşturuldu, adım 2\'ye geçiliyor.');
-            setCurrentStep(2);
+              setCurrentStep(2);
             console.log(`[ECW detectTopicsFromUploadedFile] Varsayılan konu ID: ${defaultTopicId}, isim: ${defaultTopicName}`);
           }
         } catch (error: unknown) {
@@ -895,6 +915,22 @@ export default function ExamCreationWizard({
       "Metin İçeriği Var Mı:",
       !!documentTextContent,
     );
+    
+    // Oturum kontrolü
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      console.error("[ECW handleFinalSubmit] Token bulunamadı! Oturum kontrolü gerekiyor.");
+      // Mevcut sayfayı kaydet
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname + window.location.search;
+        sessionStorage.setItem('redirectAfterLogin', currentPath);
+        toast.error("Oturum süreniz dolmuş. Giriş sayfasına yönlendiriliyorsunuz.");
+        setTimeout(() => {
+          window.location.href = "/auth/login?session_expired=true";
+        }, 1500);
+        return;
+      }
+    }
 
     if (quizType === "quick") {
       if (
@@ -980,25 +1016,25 @@ export default function ExamCreationWizard({
         console.log("[ECW handleFinalSubmit] preferences.subTopicIds güncellendi:", updatedPreferences.subTopicIds);
       }
       
-      // Sınav oluşturma seçenekleri
+    // Sınav oluşturma seçenekleri
       const quizOptions: QuizGenerationOptions = {
-        quizType: quizType,
-        courseId: selectedCourseId || undefined,
-        personalizedQuizType:
-          quizType === "personalized" ? personalizedQuizType : undefined,
+      quizType: quizType,
+      courseId: selectedCourseId || undefined,
+      personalizedQuizType:
+        quizType === "personalized" ? personalizedQuizType : undefined,
         selectedSubTopics: mappedSubTopics,
-        documentId: uploadedDocumentId || undefined,
-        preferences: {
-          questionCount: preferences.questionCount,
-          difficulty: preferences.difficulty as "easy" | "medium" | "hard" | "mixed",
-          timeLimit: preferences.timeLimit,
-          prioritizeWeakAndMediumTopics: true,
-        },
-      };
+      documentId: uploadedDocumentId || undefined,
+      preferences: {
+        questionCount: preferences.questionCount,
+        difficulty: preferences.difficulty as "easy" | "medium" | "hard" | "mixed",
+        timeLimit: preferences.timeLimit,
+        prioritizeWeakAndMediumTopics: true,
+      },
+    };
 
       console.log("[ECW handleFinalSubmit] quizService.generateQuiz çağrılıyor. Seçenekler:", JSON.stringify(quizOptions, null, 2));
-      
-      try {
+
+    try {
         // Sınav oluştur
         console.log("[ECW handleFinalSubmit] Sınav oluşturma öncesi son kontroller:");
         console.log("[ECW handleFinalSubmit] quizOptions:", JSON.stringify(quizOptions, null, 2));
@@ -1026,22 +1062,22 @@ export default function ExamCreationWizard({
           throw new Error("Quiz ID alınamadı");
         }
 
-        const wizardResultData = {
+      const wizardResultData = {
           file: selectedFile,
           quizType: quizType,
           personalizedQuizType,
           preferences: preferences,
           topicNameMap: selectedTopics.reduce((acc, item) => {
             acc[item.normalizedSubTopic] = item.subTopic;
-            return acc;
-          }, {} as Record<string, string>),
+          return acc;
+        }, {} as Record<string, string>),
           quiz: quiz,
           quizId: quiz?.id,
-          documentId: uploadedDocumentId || undefined,
+        documentId: uploadedDocumentId || undefined,
           status: quiz?.id ? 'success' as const : 'error' as const,
           error: quiz?.id ? undefined : new ApiError("Sınav oluşturulamadı veya ID alınamadı."),
-        };
-        
+      };
+
         console.log("[ECW handleFinalSubmit] Wizard sonuç verisi oluşturuldu:", 
           JSON.stringify({
             ...wizardResultData,
@@ -1051,17 +1087,17 @@ export default function ExamCreationWizard({
 
         // Başarı durumuna göre yönlendir
         if (quiz?.id) {
-          if (onComplete) {
+      if (onComplete) {
             console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu çağrılıyor, quizId: ${quiz.id}`);
-            onComplete(wizardResultData);
-          } else {
+        onComplete(wizardResultData);
+      } else {
             console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor: /exams/${quiz.id}?mode=attempt`);
             router.push(`/exams/${quiz.id}?mode=attempt`);
           }
         } else {
           console.error("[ECW handleFinalSubmit] Sınav ID alınamadı!");
           setErrorMessage("Sınav oluşturuldu ancak ID alınamadı.");
-        }
+      }
       } catch (error) {
         console.error("[ECW handleFinalSubmit] Sınav oluşturma hatası:", error);
         

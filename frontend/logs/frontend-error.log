@@ -1,8 +1,22 @@
-[2025-05-18T18:11:04.317Z] [info] [ClientLogSetup] Uygulama başlatıldı
+[2025-05-18T21:17:57.819Z] [info] [ClientLogSetup] Uygulama başlatıldı
 ------------------------------------------------------------
-[2025-05-18T18:11:04.314Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+[2025-05-18T21:17:57.817Z] [info] [LogSetup] Frontend log sistemi başlatıldı
 ------------------------------------------------------------
-[2025-05-18T18:33:02.859Z] [info] [ClientLogSetup] Uygulama başlatıldı
+[2025-05-18T21:26:05.171Z] [info] [ClientLogSetup] Uygulama başlatıldı
 ------------------------------------------------------------
-[2025-05-18T18:33:02.855Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+[2025-05-18T21:26:05.169Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-18T21:51:49.657Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-18T21:51:49.652Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-18T21:56:35.404Z] [error] [Window.onerror] Global hata: Uncaught TypeError: onFileUpload is not a function
+Details: {"source":"webpack-internal:///(app-pages-browser)/./src/components/document/DocumentUploader.tsx","line":58,"column":29,"stack":"TypeError: onFileUpload is not a function\n    at DocumentUploader.useCallback[uploadFile].interval (webpack-internal:///(app-pages-browser)/./src/components/document/DocumentUploader.tsx:58:29)"}
+------------------------------------------------------------
+[2025-05-18T21:56:35.402Z] [error] [Window.onerror] Yakalanmamış hata: Uncaught TypeError: onFileUpload is not a function
+Details: {"filename":"webpack-internal:///(app-pages-browser)/./src/components/document/DocumentUploader.tsx","lineno":58,"colno":29,"error":"TypeError: onFileUpload is not a function\n    at DocumentUploader.useCallback[uploadFile].interval (webpack-internal:///(app-pages-browser)/./src/components/document/DocumentUploader.tsx:58:29)"}
+------------------------------------------------------------
+[2025-05-18T21:58:08.188Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-18T21:58:08.182Z] [info] [LogSetup] Frontend log sistemi başlatıldı
 ------------------------------------------------------------

@@ -8,6 +8,7 @@ import { FaGoogle } from "react-icons/fa";
 import { ErrorService } from "@/services/error.service";
 import { FirebaseError } from "firebase/app";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginOptions, setShowLoginOptions] = useState(false);
+  const [redirectPath, setRedirectPath] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,6 +78,38 @@ const LoginPage = () => {
     checkAuthStatus();
   }, [isAuthenticated, user, forceLogin, checkSession]);
 
+  // Auth durumunu kontrol et
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
+
+  // URL'deki session_expired parametresini kontrol et
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const sessionExpired = searchParams.get('session_expired');
+    
+    if (sessionExpired === 'true') {
+      toast("Oturum süreniz dolduğu için güvenliğiniz için çıkış yapıldı. Lütfen tekrar giriş yapın.", {
+        icon: '⚠️',
+        duration: 5000,
+      });
+      
+      // Kullanıcı konfüzyonunu önlemek için parametreyi URL'den temizle
+      const url = new URL(window.location.href);
+      url.searchParams.delete('session_expired');
+      window.history.replaceState({}, document.title, url.toString());
+    }
+    
+    // Önceki sayfaya dönüş bilgisini kontrol et
+    const redirectAfterLogin = sessionStorage.getItem('redirectAfterLogin');
+    if (redirectAfterLogin) {
+      // Bilgiyi sakla ve hemen silme (başarılı girişten sonra kullanılacak)
+      setRedirectPath(redirectAfterLogin);
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -95,7 +129,14 @@ const LoginPage = () => {
       await login(email, password);
 
       // Başarılı giriş sonrası yönlendirme
+      if (redirectPath) {
+        // Kaydedilmiş yönlendirme varsa oraya git ve sessionStorage'dan temizle
+        router.push(redirectPath);
+        sessionStorage.removeItem('redirectAfterLogin');
+      } else {
+        // Yoksa normal returnUrl'e git
       router.push(returnUrl);
+      }
     } catch (err: unknown) {
       // Firebase veya API hatalarını daha detaylı işle
       let errorMessage: string;
@@ -166,7 +207,12 @@ const LoginPage = () => {
       // Eğer yeni kullanıcıysa onboarding sayfasına, değilse istenen sayfaya yönlendir
       if (isNewUser) {
         router.push("/onboarding");
+      } else if (redirectPath) {
+        // Kaydedilmiş yönlendirme varsa oraya git ve sessionStorage'dan temizle
+        router.push(redirectPath);
+        sessionStorage.removeItem('redirectAfterLogin');
       } else {
+        // Yoksa normal returnUrl'e git
         router.push(returnUrl);
       }
     } catch (err: unknown) {
@@ -187,7 +233,14 @@ const LoginPage = () => {
 
   const handleContinueWithCurrentAccount = () => {
     // Kullanıcıyı istenen sayfaya yönlendir
+    if (redirectPath) {
+      // Kaydedilmiş yönlendirme varsa oraya git ve sessionStorage'dan temizle 
+      router.push(redirectPath);
+      sessionStorage.removeItem('redirectAfterLogin');
+    } else {
+      // Yoksa normal returnUrl'e git
     router.push(returnUrl);
+    }
   };
 
   const handleUseAnotherAccount = async () => {

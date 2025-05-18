@@ -1,14 +1,33 @@
-şimdi sınav oluşturma aşmalarda şunlar yaptım
-1. belge verip backend metin çıkarma
-2. metin gemini verme ve alt konular çıkarmaya
-3. alt konular kullanıcya sunma ve kullanıcı seçme ve sınav tercihler gitme.
+sistemde iki tip sınav var.
+1. hızlı sınav 
+2. kişiselleştirmiş sınav
+
+hızlı sınavda şunlar yapılıyor.
+1. kullanıcı belge yüklüyor.
+2. backend metin çıkarma
+3. alt konular çıkarma
+4. alt konular kullanıcya sunuluyor.
+5. kullanıcı seçiyor.
+6. sınav oluşturuluyor.
+
+sınavda kullanıcı verdiği belgeden çıkaran metini analiz edip oluştur ama aynı zamanda o metinle birlikte seçilen konular da prompt eklenir ki, sadece o konularda getirsin.
+
+kişiselleştirmiş sınavda ise
+1. ders seçer veya olşturur.
+2. kullanıcı belge yüklüyor.
+3. backend metin çıkarma
+4. alt konular çıkarma
+5. alt konular kullanıcya sunuluyor. ve birer hedef olarak sistemde kayıt edilir
+6. kullanıcı seçiyor.
+7. sınav oluşturuluyor.
 
 
-kalan kısımlar. şöyle
-1. hızlı sınav için sınav yapma
-a. o alt konular ve belgeden çıkaran metin birlikte ai verme ve one o alt konularde soru isteme ve kullanıcı ya sunma. ve sonra kayıt etme veri tabanda.
+kişiselleştirmiş sınav için hızlı sınav için ama ek olarak kullanıcın eski verileri de kullanarak sınav oluşturuluyor.  
 
 
-2. kişiselleştirmiş sınav için. hızlı sınav için ama veri tabanda veri ekleme ve o verilerie göre ai verme ve sınav oluşturma. 
 
-kişiselleştirmiş sınavda hedefler de oluşturur.
+
+
+
+
+

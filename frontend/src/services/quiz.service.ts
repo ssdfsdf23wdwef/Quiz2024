@@ -98,7 +98,7 @@ class QuizApiService {
       return response; // Hata durumunda orijinal yanıtı döndür
     }
   }
-
+  
   private isObject(value: unknown): value is Record<string, unknown> {
     const result = typeof value === 'object' && value !== null && !Array.isArray(value);
     console.log(`[QuizApiService.isObject] Değer tipi: ${typeof value}, null mu: ${value === null}, dizi mi: ${Array.isArray(value)}, sonuç: ${result}`);
@@ -132,7 +132,7 @@ class QuizApiService {
         return false;
       }
       
-      const q = data as ApiQuiz;
+    const q = data as ApiQuiz;
       const hasId = typeof q.id === 'string';
       const hasQuestions = Array.isArray(q.questions);
       
@@ -465,7 +465,7 @@ class QuizApiService {
   async generateQuiz(options: QuizGenerationOptions): Promise<Quiz> {
     const flowStepId = `generateQuiz_${options.quizType}_${options.documentId || options.courseId || 'new'}`;
     flowTracker.markStart(flowStepId);
-    
+
     try {
       const endpoint = options.quizType === 'quick' ? API_ENDPOINTS.GENERATE_QUICK_QUIZ : API_ENDPOINTS.GENERATE_PERSONALIZED_QUIZ;
       
@@ -544,7 +544,7 @@ class QuizApiService {
       // Yanıt verisi güvenli bir şekilde çıkarılıyor
       let responseData;
       try {
-        responseData = this.getResponseData(response);
+      responseData = this.getResponseData(response); 
         console.log(`[QuizApiService.generateQuiz] İşlenen API yanıtı:`, responseData);
       } catch (error) {
         console.error(`[QuizApiService.generateQuiz] API yanıtı işlenirken hata:`, error);
@@ -561,7 +561,7 @@ class QuizApiService {
         flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Invalid API response'));
         return fallbackQuiz;
       }
-      
+
       // DÜZELTME: responseData içinde id kontrolü
       if (!responseData.id) {
         console.warn("[QuizApiService.generateQuiz] API yanıtı id içermiyor, muhtemelen farklı bir formatta. Yanıt:", responseData);
@@ -583,7 +583,7 @@ class QuizApiService {
         // Farklı bir yapıda olup olmadığını kontrol et
         let possibleQuiz = null;
         console.log("[QuizApiService.generateQuiz] Alternatif yapılar aranıyor...");
-        
+      
         if (this.isObject(responseData.quiz)) {
           console.log("[QuizApiService.generateQuiz] 'quiz' anahtarı bulundu:", responseData.quiz);
           possibleQuiz = responseData.quiz;
@@ -651,7 +651,7 @@ class QuizApiService {
       if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status;
         const responseData = error.response?.data;
-        
+      
         console.error(`[QuizApiService.generateQuiz] Axios hatası: Status=${statusCode}, Data=`, responseData);
         
         if (statusCode === 400 && responseData?.message) {

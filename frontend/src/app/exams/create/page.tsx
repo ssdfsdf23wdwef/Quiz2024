@@ -294,14 +294,23 @@ function CreateExamPageContent() {
       
       // Sınav sayfasına otomatik yönlendir
       console.log("[CreateExamPage] Sınav sayfasına yönlendiriliyor:", `/exams/${result.quizId}`);
-      router.push(`/exams/${result.quizId}`);
+      
+      // Biraz gecikme ekleyerek state'in doğru güncellenmesini sağla
+      setTimeout(() => {
+        // Doğrudan sınav URL'ine yönlendir
+        const examUrl = `/exams/${result.quizId}`;
+        console.log("[CreateExamPage] Son yönlendirme:", examUrl);
+        
+        // Router yerine doğrudan window.location kullan (daha güvenilir)
+        window.location.href = examUrl;
+      }, 500);
     } else if (result.status === 'error') {
       const errorMsg = result.error?.message || 'Sınav sihirbazı bir hatayla tamamlandı.';
       toast.error(errorMsg);
       ErrorService.handleError(result.error || new Error(errorMsg), "Sınav oluşturma sihirbazı tamamlama");
       setCreationResultInternal(result);
     }
-  }, [router]);
+  }, []);
 
   if (coursesLoading && quizTypeLocal === 'personalized' ) { 
     return <div className="flex justify-center items-center h-screen"><Spinner size="lg" /></div>;
