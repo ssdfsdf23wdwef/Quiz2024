@@ -757,108 +757,111 @@ export class ErrorService {
   }
 
   /**
-   * Toast mesajı gösterir
+   * Static metod: Hata mesajını toast ile gösterir
    */
   static showToast(error: Error | string, type: ToastType = "info", context?: string): void {
-    // Hata mesajını belirle
-    let message: string;
-    let details: string | undefined;
+    let message = typeof error === "string" ? error : error.message;
+    let title = "";
+    let description = "";
+    let sourceContext = context || (error instanceof Error ? error.constructor.name : "Bilinmeyen");
     
-    // Hata tipine göre işlem
-    if (error instanceof Error) {
-      // Hata objesinden bilgileri çıkart
-      message = error.message;
-      details = error.stack?.split('\n')[0];
-      
-      // Detaylı loglama
-      console.error(`[${context || error.name}] ${message}`, error);
-      
-      // API hatası özel işleme
-      if (error instanceof ApiError) {
-        // API status koduna göre daha spesifik mesajlar
-        if (error.status === 404) {
-          message = `İstenen kaynak bulunamadı: ${message}`;
-        } else if (error.status === 401) {
-          message = "Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.";
-        } else if (error.status === 403) {
-          message = "Bu işlemi yapmaya yetkiniz yok.";
-        } else if (error.status === 400) {
-          message = `Hatalı istek: ${message}`;
-        } else if (error.status >= 500) {
-          message = "Sunucu hatası. Lütfen daha sonra tekrar deneyin.";
-        }
-        
-        // API yanıtından daha fazla bilgi al
-        if (error.original && typeof error.original === 'object') {
-          const apiError = error.original as any;
-          if (apiError.response?.data?.message) {
-            message = apiError.response.data.message;
-          }
-          if (apiError.response?.data?.error) {
-            details = apiError.response.data.error;
-          }
-        }
+    try {
+      // Boş mesaj kontrolü
+      if (!message) {
+        message = "Bilinmeyen bir hata oluştu";
       }
-    } else {
-      // String hatası
-      message = error;
-      console.log(`[${context || "INFO"}] ${message}`);
-    }
-    
-    // Hata ayıklama için durum
-    if (process.env.NODE_ENV === 'development' && details) {
-      message = `${message}\n${details}`;
-    }
-    
-    // Toast tipine göre gösterme
-    switch (type) {
-      case "success":
-        toast.success(message);
-        break;
-      case "error":
-        toast.error(message, {
-          duration: 5000, // Hata mesajları için daha uzun süre
-          style: {
-            borderRadius: '10px',
-            maxWidth: '500px',
-            padding: '12px 16px'
-          }
+      
+      // Mesaj içeriğine göre daha anlaşılır mesajlar oluştur
+      if (message.includes("Network Error") || message.includes("network") || message.includes("ağ")) {
+        title = "Bağlantı Hatası";
+        description = "Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.";
+      } 
+      else if (message.includes("timeout") || message.includes("zaman aşımı")) {
+        title = "İstek Zaman Aşımı";
+        description = "Sunucudan yanıt alınamadı. Lütfen daha sonra tekrar deneyin.";
+      }
+      else if (message.includes("404") || message.toLowerCase().includes("not found")) {
+        title = "Kaynak Bulunamadı";
+        description = "İstenen kaynak bulunamadı. Lütfen tekrar deneyin.";
+      }
+      else if (message.toLowerCase().includes("unauthorized") || message.includes("401") || message.includes("yetki")) {
+        title = "Yetki Hatası";
+        description = "Bu işlemi yapmak için yeterli yetkiye sahip değilsiniz.";
+      }
+      else if (message.toLowerCase().includes("forbidden") || message.includes("403")) {
+        title = "Erişim Engellendi";
+        description = "Bu kaynağa erişim izniniz bulunmuyor.";
+      }
+      else if (message.includes("500") || message.toLowerCase().includes("server error") || message.includes("sunucu hatası")) {
+        title = "Sunucu Hatası";
+        description = "Sunucuda bir hata oluştu. Teknik ekibimiz bilgilendirildi.";
+      }
+      else if (message.includes("document text") || message.includes("belge metni") || message.toLowerCase().includes("document text required")) {
+        title = "Belge Metni Hatası";
+        description = "Belge metni yüklenemedi veya çok kısa. Lütfen geçerli bir belge yükleyin.";
+      }
+      else if (message.includes("Geçersiz yanıt") || message.toLowerCase().includes("invalid response")) {
+        title = "İşlem Başarısız";
+        description = "Sunucudan geçersiz bir yanıt alındı. Lütfen tekrar deneyin.";
+      }
+      else if (message.includes("authentication") || message.includes("kimlik")) {
+        title = "Kimlik Doğrulama Hatası";
+        description = "Oturum açma hatası. Lütfen bilgilerinizi kontrol edin.";
+      }
+      else if (message.includes("already exists") || message.includes("zaten mevcut")) {
+        title = "Kayıt Hatası";
+        description = "Bu kayıt zaten sistemde mevcut.";
+      }
+      else if (message.length > 100) {
+        // Çok uzun mesajlar için kısaltma
+        title = "Hata";
+        description = message.substring(0, 100) + "...";
+      }
+      else {
+        // Diğer hatalar için doğrudan mesajı göster
+        title = context ? `${context} Hatası` : "Hata";
+        description = message;
+      }
+      
+      // Kısa olması için context'i kısalt
+      if (sourceContext.length > 20) {
+        sourceContext = sourceContext.substring(0, 20) + "...";
+      }
+      
+      // Mesajları console'a logla
+      logger.error({ ...error }, "ErrorService.showToast", { title, description, context: sourceContext });
+      
+      // Toast göster
+      if (type === "error") {
+        toast.error(description, {
+          duration: 5000,
+          position: "top-center",
         });
-        
-        // Hata analytics için log tutma
-        logger.error(
-          new Error(message),
-          'ErrorService.showToast',
-          __filename,
-          undefined,
-          { context, type: "toast", details }
-        );
-        break;
-      case "warning":
-        toast(message, {
-          icon: "⚠️",
+      } else if (type === "success") {
+        toast.success(description, {
+          duration: 3000,
+          position: "top-center",
+        });
+      } else if (type === "warning") {
+        toast.error(description, {
           duration: 4000,
-          style: {
-            background: "#FEF3C7",
-            color: "#92400E",
-            border: "1px solid #F59E0B",
-            borderRadius: '10px'
-          },
+          position: "top-center",
+          style: { background: "#FBD38D", color: "#7B341E" },
         });
-        
-        // Warning analytics için log tutma
-        logger.warn(
-          new Error(message),
-          'ErrorService.showToast',
-          __filename,
-          undefined,
-          { context, type: "toast", details }
-        );
-        break;
-      case "info":
-      default:
-        toast(message);
-        break;
+      } else {
+        toast(description, {
+          duration: 3000,
+          position: "top-center",
+        });
+      }
+    } catch (toastError) {
+      // Toast gösterilirken hata olursa, güvenli bir fallback
+      console.error("Toast gösterilirken hata:", toastError);
+      try {
+        alert(`Hata: ${message}`);
+      } catch (alertError) {
+        console.error("Alert gösterilirken hata:", alertError);
+      }
     }
   }
 

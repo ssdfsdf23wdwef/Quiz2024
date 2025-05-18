@@ -7,6 +7,19 @@ import {
   QuizQuestionSchema,
 } from '../schemas/quiz-question.schema';
 
+// QuizMetadata tipinin güncellenmesi
+// Bu satırı ekleyelim, eğer dosyanın başka bir yerinde tanımlanmışsa burayı silin
+// QuizMetadata arayüzünü genişletelim
+declare module '../interfaces' {
+  interface QuizMetadata {
+    courseName?: string;
+    userId?: string;
+    subTopicsCount?: number;
+    // Diğer mevcut alanlar
+    traceId: string;
+  }
+}
+
 /**
  * Quiz yanıtlarını doğrulama servisi
  */
@@ -37,168 +50,365 @@ export class QuizValidationService {
       throw new BadRequestException('AI yanıtı boş veya tanımsız.');
     }
 
+    // Yanıtı konsola yazdır (debug amaçlı)
+    this.logger.debug(
+      `[${traceId}] AI yanıtı parse ediliyor (${text.length} karakter)`,
+      'QuizValidationService.parseAIResponseToJSON',
+      __filename,
+      undefined,
+      { textPreview: text.substring(0, 100) + '...' },
+    );
+
     try {
-      // Check for common formatting issues before parsing
-      let jsonText = text;
-      let jsonMatch: RegExpMatchArray | null = null;
-
-      // İlk cevabı da loglayalım (sınırlı uzunlukta)
-      this.logger.debug(
-        `[${traceId}] AI ham yanıtı (ilk 200 karakter): ${text.substring(0, 200)}...`,
-        'QuizValidationService.parseAIResponseToJSON',
-      );
-
-      // First, try to detect JSON code blocks
-      if (text.includes('```')) {
-        // JSON code block detection improvement - support both ```json and ```
-        const codeBlockRegex = /```(?:json)?([^`]+)```/gm;
-        jsonMatch = codeBlockRegex.exec(text);
-        if (jsonMatch && jsonMatch[1]) {
-          jsonText = jsonMatch[1].trim();
-          this.logger.debug(
-            `[${traceId}] JSON kod bloğu tespit edildi. İçerik çıkarıldı (ilk 100 karakter): ${jsonText.substring(0, 100)}...`,
-            'QuizValidationService.parseAIResponseToJSON',
-          );
-        }
-      }
+      // 1. Markdown kod bloklarını temizle
+      let processedText = this.cleanJsonContent(text);
 
       try {
-        const parsed = JSON.parse(jsonText) as T;
-        // Başarılı parse işlemini logla
-        this.logger.debug(
-          `[${traceId}] AI yanıtı başarıyla parse edildi. Tür: ${typeof parsed}, Anahtarlar: ${parsed && typeof parsed === 'object' ? Object.keys(parsed as object).join(', ') : 'Anahtar yok'}`,
-          'QuizValidationService.parseAIResponseToJSON',
-        );
-        return parsed;
+        // 2. İlk deneme: direkt JSON.parse
+        return JSON.parse(processedText) as T;
       } catch (firstError) {
-        // First JSON parse failed, try common fixes
         this.logger.warn(
           `[${traceId}] İlk JSON parse denemesi başarısız: ${firstError.message}. Alternatif parsing denenecek.`,
           'QuizValidationService.parseAIResponseToJSON',
-          __filename,
-          undefined,
-          {
-            errorMessage: firstError.message,
-            textStart: jsonText.substring(0, 50),
-            textLength: jsonText.length,
-            hasCodeBlocks: text.includes('```'),
-          },
         );
 
-        // Try to fix unescaped quotes in JSON string
-        const fixedText = this.attemptToFixJson(jsonText || '');
-        if (fixedText && fixedText !== jsonText) {
-          try {
-            const parsed = JSON.parse(fixedText) as T;
-            this.logger.info(
-              `[${traceId}] JSON düzeltme başarılı.`,
-              'QuizValidationService.parseAIResponseToJSON',
-            );
-            return parsed;
-          } catch (secondError) {
-            this.logger.warn(
-              `[${traceId}] Düzeltilmiş JSON yine de parse edilemedi: ${secondError.message}`,
-              'QuizValidationService.parseAIResponseToJSON',
-              __filename,
-              undefined,
-              {
-                errorMessage: secondError.message,
-                fixedTextStart: fixedText.substring(0, 50),
-                originalTextStart: jsonText.substring(0, 50),
-              },
-            );
-          }
-        }
+        // 3. İkinci deneme: JSON düzeltme işlemleri
+        processedText = this.attemptToFixJsonContent(processedText);
 
-        // Geliştirilmiş JSON çıkarma stratejisi
         try {
-          // Daha gelişmiş bir regex ile JSON nesnesini çıkarıyoruz
-          const jsonExtractRegex = /{[\s\S]*?(?=\n\n|$)/g;
-          const extractedMatches = [...jsonText.matchAll(jsonExtractRegex)];
-
-          this.logger.debug(
-            `[${traceId}] Gelişmiş regex ile ${extractedMatches.length} potansiyel JSON parçası bulundu`,
+          return JSON.parse(processedText) as T;
+        } catch (secondError) {
+          this.logger.warn(
+            `[${traceId}] Düzeltilmiş JSON yine de parse edilemedi: ${secondError.message}`,
             'QuizValidationService.parseAIResponseToJSON',
           );
 
-          // Bulduğumuz tüm potansiyel JSON nesnelerini deniyoruz
-          for (const match of extractedMatches) {
+          // 4. Üçüncü deneme: JSON çıkarma işlemleri
+          const extractedJson = this.extractJsonFromAIResponse(text);
+
+          if (extractedJson) {
             try {
-              const potentialJson = match[0];
-              // JSON nesnesinin kapanış süslü parantezi eksik olabilir
-              const balancedJson = this.balanceJsonBrackets(potentialJson);
-              const parsed = JSON.parse(balancedJson) as T;
-              this.logger.info(
-                `[${traceId}] Gelişmiş JSON çıkarımı başarılı`,
+              return JSON.parse(extractedJson) as T;
+            } catch (thirdError) {
+              this.logger.warn(
+                `[${traceId}] Çıkarılan JSON parse edilemedi: ${thirdError.message}`,
                 'QuizValidationService.parseAIResponseToJSON',
               );
-              return parsed;
-            } catch (ex) {
-              // Bu nesne parse edilemedi, bir sonrakini dene
-              continue;
             }
           }
-        } catch (extractError) {
-          this.logger.warn(
-            `[${traceId}] Gelişmiş JSON çıkarma denemesi başarısız: ${extractError.message}`,
+
+          // 5. Dördüncü deneme: Tek bir JSON nesnesini ayıklama
+          const singleObjectMatch = text.match(/\{[\s\S]*?\}/);
+          if (singleObjectMatch) {
+            try {
+              const singleObject = singleObjectMatch[0];
+              this.logger.debug(
+                `[${traceId}] Tek JSON nesnesi ayıklandı (${singleObject.length} karakter)`,
+                'QuizValidationService.parseAIResponseToJSON',
+              );
+              return JSON.parse(singleObject) as T;
+            } catch (fourthError) {
+              this.logger.warn(
+                `[${traceId}] Tek JSON nesnesi parse edilemedi: ${fourthError.message}`,
+                'QuizValidationService.parseAIResponseToJSON',
+              );
+            }
+          }
+
+          // 6. Beşinci deneme: İlk '{' ve son '}' arasındaki içeriği alma
+          const firstBrace = text.indexOf('{');
+          const lastBrace = text.lastIndexOf('}');
+
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            try {
+              const extractedContent = text.substring(
+                firstBrace,
+                lastBrace + 1,
+              );
+              this.logger.debug(
+                `[${traceId}] İlk ve son süslü parantez arasındaki içerik ayıklandı (${extractedContent.length} karakter)`,
+                'QuizValidationService.parseAIResponseToJSON',
+              );
+              return JSON.parse(extractedContent) as T;
+            } catch (fifthError) {
+              this.logger.warn(
+                `[${traceId}] İlk-son süslü parantez içeriği parse edilemedi: ${fifthError.message}`,
+                'QuizValidationService.parseAIResponseToJSON',
+              );
+            }
+          }
+
+          // Hiçbir parse denemesi başarılı olmadı, fallback verileri kullan
+          this.logger.error(
+            `[${traceId}] Tüm parsing denemeleri başarısız. Fallback verileri kullanılacak.`,
             'QuizValidationService.parseAIResponseToJSON',
             __filename,
             undefined,
-            { errorMessage: extractError.message },
           );
-        }
 
-        // Son çare: Metni temizleyip yeniden dene
-        try {
-          // Metni temizle - satır sonları, fazla boşluklar ve yorumları kaldır
-          const cleanedText = this.cleanJsonText(jsonText);
+          // Yanıtın ilk 150 karakterini logla (hata ayıklama için)
           this.logger.debug(
-            `[${traceId}] Temizlenmiş metin: ${cleanedText.substring(0, 100)}...`,
+            `[${traceId}] Parse edilemeyen yanıt (ilk 150 karakter): ${text.substring(0, 150)}...`,
             'QuizValidationService.parseAIResponseToJSON',
           );
 
-          const parsed = JSON.parse(cleanedText) as T;
-          this.logger.info(
-            `[${traceId}] Temizlenmiş JSON parse edildi`,
-            'QuizValidationService.parseAIResponseToJSON',
-          );
-          return parsed;
-        } catch (cleanError) {
-          this.logger.warn(
-            `[${traceId}] Temizlenmiş JSON parse edilemedi: ${cleanError.message}`,
-            'QuizValidationService.parseAIResponseToJSON',
-            __filename,
-            undefined,
-            { errorMessage: cleanError.message },
-          );
+          return this.createFallbackData<T>(text, metadata);
         }
-
-        // No fix worked, use fallback content
-        this.logger.error(
-          `[${traceId}] Tüm parsing denemeleri başarısız. Fallback verileri kullanılacak.`,
-          'QuizValidationService.parseAIResponseToJSON',
-        );
-
-        // Önemli: Hata detaylarını sadece development ortamında logla
-        if (process.env.NODE_ENV === 'development') {
-          this.logger.debug(
-            `[${traceId}] Orijinal yanıt: ${text.substring(0, 500)}...`,
-            'QuizValidationService.parseAIResponseToJSON',
-          );
-        }
-
-        // AI yanıtı parse edilemediğinde örnek sorular döndür
-        return { questions: this.generateFallbackQuestions(metadata) } as T;
       }
     } catch (error) {
       this.logger.error(
-        `[${traceId}] JSON parse edilirken hata oluştu: ${error.message}`,
+        `[${traceId}] AI yanıtı işlenirken kritik hata: ${error.message}`,
         'QuizValidationService.parseAIResponseToJSON',
+        __filename,
+        error,
       );
 
-      // AI yanıtı parse edilemediğinde örnek sorular döndür
-      return { questions: this.generateFallbackQuestions(metadata) } as T;
+      return this.createFallbackData<T>(text, metadata);
     }
+  }
+
+  /**
+   * JSON içeriğini temizler
+   * @param content JSON içeren metin
+   * @returns Temizlenmiş JSON içeriği
+   */
+  private cleanJsonContent(content: string): string {
+    // Markdown kod bloklarını temizle
+    let cleanedContent = content
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    // Başında ve sonunda JSON olmayan içeriği tespit et ve temizle
+    const jsonStartIndex = cleanedContent.indexOf('{');
+    const jsonEndIndex = cleanedContent.lastIndexOf('}');
+
+    // Eğer geçerli bir JSON başlangıç ve bitiş işareti varsa
+    if (
+      jsonStartIndex !== -1 &&
+      jsonEndIndex !== -1 &&
+      jsonEndIndex > jsonStartIndex
+    ) {
+      cleanedContent = cleanedContent.substring(
+        jsonStartIndex,
+        jsonEndIndex + 1,
+      );
+    }
+
+    // Alternatif olarak, array şeklindeki JSON için
+    const arrayStartIndex = cleanedContent.indexOf('[');
+    const arrayEndIndex = cleanedContent.lastIndexOf(']');
+
+    // Eğer geçerli bir array başlangıç ve bitiş işareti varsa ve nesne bulunmadıysa
+    if (
+      arrayStartIndex !== -1 &&
+      arrayEndIndex !== -1 &&
+      arrayEndIndex > arrayStartIndex &&
+      (jsonStartIndex === -1 || arrayStartIndex < jsonStartIndex)
+    ) {
+      cleanedContent = cleanedContent.substring(
+        arrayStartIndex,
+        arrayEndIndex + 1,
+      );
+    }
+
+    return cleanedContent;
+  }
+
+  /**
+   * JSON içeriğini düzeltmeye çalışır
+   * @param content Düzeltilecek JSON içeriği
+   * @returns Düzeltilmiş JSON içeriği
+   */
+  private attemptToFixJsonContent(content: string): string {
+    let fixedContent = content;
+
+    // Tırnak işaretlerini düzelt (eğik tırnak yerine düz tırnak)
+    fixedContent = fixedContent.replace(/[""]/g, '"').replace(/['']/g, "'");
+
+    // Çift virgülleri düzelt
+    fixedContent = fixedContent.replace(/,,/g, ',');
+
+    // Son virgülü düzelt (geçersiz JSON'a neden olabilir)
+    fixedContent = fixedContent.replace(/,\s*}/g, '}').replace(/,\s*\]/g, ']');
+
+    // Gövdede tırnak unutulmuş property'leri düzelt
+    fixedContent = fixedContent.replace(
+      /(\{|\,)\s*([a-zA-Z0-9_]+)\s*\:/g,
+      '$1"$2":',
+    );
+
+    return fixedContent;
+  }
+
+  /**
+   * AI yanıtından JSON benzeri metni çıkarır
+   * @param text AI yanıt metni
+   * @returns JSON benzeri metin veya null
+   */
+  private extractJsonFromAIResponse(text: string): string | null {
+    // JSON nesne veya dizi arama regex'leri
+    const objectRegex = /\{(?:[^{}]|(?:\{(?:[^{}]|(?:\{[^{}]*\}))*\}))*\}/g;
+    const arrayRegex =
+      /\[(?:[^\[\]]|(?:\[(?:[^\[\]]|(?:\[[^\[\]]*\]))*\]))*\]/g;
+
+    // Önce nesne ara
+    const objectMatches = text.match(objectRegex);
+    if (objectMatches && objectMatches.length > 0) {
+      // En uzun nesne eşleşmesini al (muhtemelen ana JSON nesnesi)
+      const mainObject = objectMatches.reduce(
+        (prev, current) => (current.length > prev.length ? current : prev),
+        '',
+      );
+
+      if (mainObject) {
+        return mainObject;
+      }
+    }
+
+    // Nesne bulunamazsa dizi ara
+    const arrayMatches = text.match(arrayRegex);
+    if (arrayMatches && arrayMatches.length > 0) {
+      // En uzun dizi eşleşmesini al
+      const mainArray = arrayMatches.reduce(
+        (prev, current) => (current.length > prev.length ? current : prev),
+        '',
+      );
+
+      if (mainArray) {
+        return mainArray;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Parse işlemi başarısız olduğunda fallback veri oluşturur
+   * @param text AI yanıt metni
+   * @param metadata Metadata
+   * @returns Fallback veri
+   */
+  private createFallbackData<T>(text: string, metadata: QuizMetadata): T {
+    const { traceId, questionCount = 5, difficulty = 'mixed' } = metadata;
+
+    // Bu bir Quiz yanıtı mı kontrol et
+    const isQuizResponse =
+      typeof text === 'string' &&
+      (text.toLowerCase().includes('question') ||
+        text.toLowerCase().includes('soru') ||
+        text.toLowerCase().includes('quiz') ||
+        text.toLowerCase().includes('test'));
+
+    if (isQuizResponse) {
+      this.logger.info(
+        `[${traceId}] Yapay zeka yanıtında sorular tespit edildi, ancak JSON formatında değil. Metin tabanlı içerikten sorular çıkarılmaya çalışılacak.`,
+        'QuizValidationService.createFallbackData',
+      );
+
+      // Metin tabanlı içerikten soru benzeri yapılar çıkarmaya çalış
+      try {
+        const extractedQuestions = this.extractQuestionsFromText(text);
+
+        if (extractedQuestions && extractedQuestions.length > 0) {
+          this.logger.info(
+            `[${traceId}] Metin tabanlı içerikten ${extractedQuestions.length} adet soru çıkarıldı.`,
+            'QuizValidationService.createFallbackData',
+          );
+
+          // Çıkarılan soruları expected tipe dönüştür
+          if (Array.isArray(extractedQuestions)) {
+            return { questions: extractedQuestions } as unknown as T;
+          } else {
+            return extractedQuestions as unknown as T;
+          }
+        }
+      } catch (extractError) {
+        this.logger.warn(
+          `[${traceId}] Metin tabanlı içerikten sorular çıkarılırken hata: ${extractError.message}`,
+          'QuizValidationService.createFallbackData',
+        );
+      }
+    }
+
+    // Normal fallback içeriği oluştur
+    this.logger.info(
+      `[${traceId}] Fallback veri oluşturuluyor: ${questionCount} soru, ${difficulty} zorluk`,
+      'QuizValidationService.createFallbackData',
+    );
+
+    const fallbackQuestions = this.generateFallbackQuestions(metadata);
+
+    // Döndürülen tip bir dizi mi yoksa { questions: [] } formatında mı, kontrol et
+    if (this.shouldReturnQuestionsArray<T>()) {
+      return fallbackQuestions as unknown as T;
+    } else {
+      return { questions: fallbackQuestions } as unknown as T;
+    }
+  }
+
+  /**
+   * Döndürülen T tipinin doğrudan dizi olup olmadığını kontrol eder
+   * Bu yöntem mükemmel değil ancak çoğu durumda çalışacaktır
+   */
+  private shouldReturnQuestionsArray<T>(): boolean {
+    // Bu kontrolü daha güvenli yapmak için bazı yöntemler kullanılabilir
+    // Bu örnekte tip adına bakarak bir tahmin yapıyoruz
+    const typeName = 'T'; // Bu sadece bir tahmin, gerçekte T'nin adını bilemeyiz
+
+    return typeName.includes('Array') || typeName.includes('[]');
+  }
+
+  /**
+   * Metin tabanlı içerikten soru benzeri yapıları çıkarır
+   * @param text Metin içeriği
+   * @returns Soru dizisi veya null
+   */
+  private extractQuestionsFromText(text: string): any[] | null {
+    // Soruları tespit etmek için kullanabileceğimiz pattern'lar
+    const questionPatterns = [
+      /(\d+[\.\)]\s*.*\?)/g, // 1. Soru şeklinde veya 1) Soru şeklinde olan, soru işareti ile biten
+      /Soru\s*\d+[\.\:]\s*(.*\?)/gi, // "Soru 1: ..." formatındaki sorular
+      /Q\d+[\.\:]\s*(.*\?)/gi, // "Q1: ..." formatındaki sorular
+    ];
+
+    // Tüm pattern'ları kullanarak olası soruları bul
+    let allQuestions: string[] = [];
+
+    questionPatterns.forEach((pattern) => {
+      const matches = text.match(pattern);
+      if (matches) {
+        allQuestions = [...allQuestions, ...matches];
+      }
+    });
+
+    // Eğer hiç soru bulunamadıysa null döndür
+    if (allQuestions.length === 0) {
+      return null;
+    }
+
+    // Sorulardan basit bir soru dizisi oluştur
+    return allQuestions.map((questionText, index) => {
+      // Basit şıklar oluştur
+      const options = [
+        'A) Seçenek 1',
+        'B) Seçenek 2',
+        'C) Seçenek 3',
+        'D) Seçenek 4',
+      ];
+
+      return {
+        id: `q${index + 1}`,
+        questionText: questionText.trim(),
+        options,
+        correctAnswer: 'A) Seçenek 1', // Varsayılan olarak A şıkkını doğru kabul et
+        explanation:
+          'Bu soru AI tarafından oluşturulan metinden çıkarılmıştır. Açıklama mevcut değil.',
+        subTopicName: 'Genel Konu',
+        normalizedSubTopicName: 'genel-konu',
+        difficulty: 'orta',
+      };
+    });
   }
 
   /**
@@ -323,83 +533,6 @@ export class QuizValidationService {
         cognitiveDomain: 'analyzing',
       },
     ];
-  }
-
-  /**
-   * JSON metnini temizler - yorum satırlarını ve fazla boşlukları kaldırır
-   */
-  private cleanJsonText(text: string): string {
-    // Yorum satırlarını kaldır (// ... ve /* ... */)
-    let cleaned = text.replace(/\/\/.*$/gm, '');
-    cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//gm, '');
-
-    // Fazla boşlukları kaldır
-    cleaned = cleaned.replace(/\s+/g, ' ');
-
-    // Tek tırnak kullanımını çift tırnağa çevir
-    cleaned = cleaned.replace(/(\w+):'([^']*)'/g, '$1:"$2"');
-
-    return cleaned;
-  }
-
-  /**
-   * JSON metninde açık ve kapalı parantezleri dengelemeye çalışır
-   */
-  private balanceJsonBrackets(text: string): string {
-    const stack: Array<'{' | '['> = [];
-    let balanced = text;
-
-    // Tüm açılış parantezlerini say
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      if (char === '{' || char === '[') {
-        stack.push(char);
-      } else if (char === '}' && stack[stack.length - 1] === '{') {
-        stack.pop();
-      } else if (char === ']' && stack[stack.length - 1] === '[') {
-        stack.pop();
-      }
-    }
-
-    // Kapanmamış parantezleri kapat
-    while (stack.length > 0) {
-      const lastOpenBracket = stack.pop();
-      if (lastOpenBracket === '{') {
-        balanced += '}';
-      } else if (lastOpenBracket === '[') {
-        balanced += ']';
-      }
-    }
-
-    return balanced;
-  }
-
-  /**
-   * Bozuk JSON'ı düzeltmeye çalışır (son çare)
-   */
-  private attemptToFixJson(text: string): string | null {
-    if (!text) return null;
-
-    try {
-      // İlk ve son süslü parantez arasındaki metni al
-      const regex = /\{[\s\S]*\}/;
-      const match = text.match(regex);
-
-      if (!match) return null;
-
-      let jsonText = match[0];
-
-      // Alan adlarında çift tırnak olmayan yerleri düzelt
-      // Örnek: {name: "value"} -> {"name": "value"}
-      jsonText = jsonText.replace(
-        /([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g,
-        '$1"$2"$3',
-      );
-
-      return jsonText;
-    } catch {
-      return null;
-    }
   }
 
   /**

@@ -618,7 +618,7 @@ export class FlowTrackerService {
   /**
    * Performans ölçümünü bitirir ve süreyi kaydeder
    */
-  public markEnd(name: string, category: FlowCategory, context: string): number {
+  public markEnd(name: string, category: FlowCategory, context: string, p0: Error): number {
     if (!this.captureTimings || !this.timingMarks.has(name)) {
       return 0;
     }
