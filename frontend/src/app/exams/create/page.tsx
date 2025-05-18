@@ -288,6 +288,13 @@ function CreateExamPageContent() {
 
     if (result.status === 'success' && result.quizId) {
       console.log("[CreateExamPage] Wizard sınavı başarıyla oluşturdu. ID:", result.quizId);
+      
+      // Sonuç değişkenine ata
+      setCreationResultInternal(result);
+      
+      // Sınav sayfasına otomatik yönlendir
+      console.log("[CreateExamPage] Sınav sayfasına yönlendiriliyor:", `/exams/${result.quizId}`);
+      router.push(`/exams/${result.quizId}`);
     } else if (result.status === 'error') {
       const errorMsg = result.error?.message || 'Sınav sihirbazı bir hatayla tamamlandı.';
       toast.error(errorMsg);

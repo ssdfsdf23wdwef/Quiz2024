@@ -67,30 +67,82 @@ class QuizApiService {
   private readonly basePath = API_ENDPOINTS.QUIZZES;
   private readonly failedQuestionsPath = API_ENDPOINTS.FAILED_QUESTIONS;
   
+  private getResponseData(response: unknown): unknown {
+    console.log("[QuizApiService.getResponseData] Yanıt yapısı inceleniyor:", response);
+    console.log("[QuizApiService.getResponseData] Yanıt tipi:", typeof response);
+    
+    try {
+      if (this.isApiResponse(response)) {
+        console.log("[QuizApiService.getResponseData] API yanıt formatında, data alanı dönülüyor");
+        console.log("[QuizApiService.getResponseData] Response.data içeriği:", response.data);
+        return response.data;
+      }
+      
+      // Yanıt yapısını detaylı inceleme
+      if (typeof response === 'object' && response !== null) {
+        const keys = Object.keys(response);
+        console.log("[QuizApiService.getResponseData] Yanıt nesne anahtarları:", keys.join(', '));
+        
+        // Axios yanıtı mı (direk axios response nesnesi olabilir)
+        if ('data' in response && 'status' in response && 'headers' in response) {
+          console.log("[QuizApiService.getResponseData] Yanıt bir Axios response nesnesi. Data alanı dönülüyor");
+          console.log("[QuizApiService.getResponseData] Response.data içeriği:", (response as any).data);
+          return (response as any).data;
+        }
+      }
+      
+      console.log("[QuizApiService.getResponseData] Yanıt özel bir yapıda değil, olduğu gibi dönülüyor");
+      return response;
+    } catch (error) {
+      console.error("[QuizApiService.getResponseData] Yanıt işlenirken hata:", error);
+      return response; // Hata durumunda orijinal yanıtı döndür
+    }
+  }
+
   private isObject(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === 'object' && !Array.isArray(value);
+    const result = typeof value === 'object' && value !== null && !Array.isArray(value);
+    console.log(`[QuizApiService.isObject] Değer tipi: ${typeof value}, null mu: ${value === null}, dizi mi: ${Array.isArray(value)}, sonuç: ${result}`);
+    return result;
   }
 
   private isApiResponse(response: unknown): response is BaseApiResponse {
-    if (!this.isObject(response)) return false;
-    
-    const obj = response as Record<string, unknown>;
-    return 'status' in obj && 
-           'data' in obj && 
-           typeof obj.status === 'number';
-  }
-
-  private getResponseData(response: unknown): unknown {
-    if (this.isApiResponse(response)) {
-      return response.data;
+    try {
+      const isObject = typeof response === 'object' && response !== null;
+      const hasStatusAndData = isObject && 'status' in response && 'data' in response;
+      
+      console.log(`[QuizApiService.isApiResponse] isObject: ${isObject}, hasStatusAndData: ${hasStatusAndData}`);
+      
+      if (hasStatusAndData) {
+        console.log(`[QuizApiService.isApiResponse] status tipi: ${typeof (response as any).status}, data tipi: ${typeof (response as any).data}`);
+      }
+      
+      return hasStatusAndData && typeof (response as any).status === 'number';
+    } catch (error) {
+      console.error(`[QuizApiService.isApiResponse] Hata:`, error);
+      return false;
     }
-    return response;
   }
 
   private isValidApiQuiz(data: unknown): data is ApiQuiz {
-    if (!this.isObject(data)) return false;
-    const q = data as ApiQuiz;
-    return typeof q.id === 'string' && Array.isArray(q.questions);
+    try {
+      console.log(`[QuizApiService.isValidApiQuiz] Data inceleniyor:`, data);
+      
+      if (!this.isObject(data)) {
+        console.log(`[QuizApiService.isValidApiQuiz] Object değil, false dönülüyor`);
+        return false;
+      }
+      
+      const q = data as ApiQuiz;
+      const hasId = typeof q.id === 'string';
+      const hasQuestions = Array.isArray(q.questions);
+      
+      console.log(`[QuizApiService.isValidApiQuiz] id var mı: ${hasId}, id: ${q.id}, questions dizisi mi: ${hasQuestions}, questions.length: ${hasQuestions ? q.questions.length : 'N/A'}`);
+      
+      return hasId && hasQuestions;
+    } catch (error) {
+      console.error(`[QuizApiService.isValidApiQuiz] Hata:`, error);
+      return false;
+    }
   }
 
   private safeCastToQuestion(rawData: unknown, index: number): Question {
@@ -117,7 +169,8 @@ class QuizApiService {
   }
 
   private createFallbackQuestion(index: number): Question {
-    return {
+    console.log(`[QuizApiService.createFallbackQuestion] Varsayılan soru oluşturuluyor. Index: ${index}`);
+    const question = {
       id: `fallback_q_${index}_${Date.now()}`,
       questionText: `Varsayılan Soru ${index + 1}`,
       options: ['Varsayılan Seçenek A', 'Varsayılan Seçenek B', 'Varsayılan Seçenek C', 'Varsayılan Seçenek D'],
@@ -130,12 +183,18 @@ class QuizApiService {
       status: 'active',
       metadata: { isFallback: true },
     } as Question;
+    console.log(`[QuizApiService.createFallbackQuestion] Varsayılan soru oluşturuldu: ${question.id}`);
+    return question;
   }
 
   private createFallbackQuiz(idPrefix: string = 'fallback', options?: QuizGenerationOptions): Quiz {
+    console.log(`[QuizApiService.createFallbackQuiz] Varsayılan sınav oluşturuluyor. Prefix: ${idPrefix}, options:`, options);
+    
     const fallbackId = `${idPrefix}_${Date.now()}`;
     const questionCount = options?.preferences?.questionCount || 5;
-    return {
+    console.log(`[QuizApiService.createFallbackQuiz] ID: ${fallbackId}, soru sayısı: ${questionCount}`);
+    
+    const quiz = {
       id: fallbackId,
       title: options?.title || 'Varsayılan Sınav',
       description: options?.description || 'Bu sınav, API yanıtı işlenirken bir sorun oluştuğu için varsayılan olarak oluşturulmuştur.',
@@ -157,8 +216,16 @@ class QuizApiService {
       category: undefined,
       tags: [],
       version: 1,
-      metadata: { isFallback: true, reason: 'Error processing API response or missing data' },
+      metadata: { 
+        isFallback: true, 
+        reason: 'Error processing API response or missing data',
+        timestamp: new Date().toISOString(),
+        idPrefix
+      },
     } as unknown as Quiz;
+    
+    console.log(`[QuizApiService.createFallbackQuiz] Varsayılan sınav oluşturuldu: ${quiz.id}, sorular:`, quiz.questions?.length || 0);
+    return quiz;
   }
 
   private parseQuizFromUnknown(responseData: unknown, options?: QuizGenerationOptions): Quiz {
@@ -359,17 +426,36 @@ class QuizApiService {
    * QuizResponseDto'yu Quiz tipine dönüştürür
    */
   private mapResponseToQuiz(response: QuizResponseDto): Quiz {
-    return {
-      id: response.id,
-      title: response.title,
-      description: response.description || '',
-      quizType: response.quizType as any, // Tip dönüşümü gerekebilir
-      questions: response.questions || [],
-      courseId: response.courseId,
-      documentId: response.documentId,
-      createdAt: new Date(response.createdAt),
-      updatedAt: new Date(response.updatedAt),
-    };
+    try {
+      console.log('[QuizApiService.mapResponseToQuiz] Dönüştürülecek yanıt:', response);
+      
+      // Input detaylarını kontrol et
+      console.log(`[QuizApiService.mapResponseToQuiz] id varlığı: ${!!response.id}, tipi: ${typeof response.id}`);
+      console.log(`[QuizApiService.mapResponseToQuiz] title varlığı: ${!!response.title}, tipi: ${typeof response.title}`);
+      console.log(`[QuizApiService.mapResponseToQuiz] quizType varlığı: ${!!response.quizType}, tipi: ${typeof response.quizType}`);
+      console.log(`[QuizApiService.mapResponseToQuiz] questions varlığı: ${!!response.questions}, dizi mi: ${Array.isArray(response.questions)}, uzunluk: ${Array.isArray(response.questions) ? response.questions.length : 'N/A'}`);
+      console.log(`[QuizApiService.mapResponseToQuiz] dates: createdAt=${response.createdAt}, updatedAt=${response.updatedAt}`);
+      
+      const result = {
+        id: response.id,
+        title: response.title,
+        description: response.description || '',
+        quizType: response.quizType as any, // Tip dönüşümü gerekebilir
+        questions: response.questions || [],
+        courseId: response.courseId,
+        documentId: response.documentId,
+        createdAt: new Date(response.createdAt),
+        updatedAt: new Date(response.updatedAt),
+      };
+      
+      console.log('[QuizApiService.mapResponseToQuiz] Dönüştürülen quiz nesnesi:', result);
+      console.log(`[QuizApiService.mapResponseToQuiz] Quiz oluşturma başarılı. ID: ${result.id}, soru sayısı: ${result.questions?.length || 0}`);
+      
+      return result;
+    } catch (error) {
+      console.error('[QuizApiService.mapResponseToQuiz] HATA: Quiz dönüştürme işlemi başarısız!', error);
+      throw new Error(`Quiz dönüştürme hatası: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
@@ -452,14 +538,25 @@ class QuizApiService {
       // API isteğini gönder
       const response = await apiService.post<QuizResponseDto>(endpoint, requestData);
       
+      // HATA AYIKLAMA: Ham API yanıtını logla
+      console.log(`[QuizApiService.generateQuiz] Ham API yanıtı:`, response);
+      
       // Yanıt verisi güvenli bir şekilde çıkarılıyor
-      const responseData = this.getResponseData(response);
+      let responseData;
+      try {
+        responseData = this.getResponseData(response);
+        console.log(`[QuizApiService.generateQuiz] İşlenen API yanıtı:`, responseData);
+      } catch (error) {
+        console.error(`[QuizApiService.generateQuiz] API yanıtı işlenirken hata:`, error);
+        responseData = response; // Hata durumunda ham yanıtı kullan
+      }
       
       console.log(`[QuizApiService.generateQuiz] API yanıtı başarılı:`, responseData);
       
       // DÜZELTME: Yanıt kontrolü ve fallback
       if (!responseData || !this.isObject(responseData)) {
         console.warn("[QuizApiService.generateQuiz] API yanıtı beklenen formatta değil, varsayılan sınav oluşturuluyor");
+        console.warn("[QuizApiService.generateQuiz] Problem olan yanıt:", responseData);
         const fallbackQuiz = this.createFallbackQuiz("api_fallback", options);
         flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Invalid API response'));
         return fallbackQuiz;
@@ -468,23 +565,33 @@ class QuizApiService {
       // DÜZELTME: responseData içinde id kontrolü
       if (!responseData.id) {
         console.warn("[QuizApiService.generateQuiz] API yanıtı id içermiyor, muhtemelen farklı bir formatta. Yanıt:", responseData);
+        console.log("[QuizApiService.generateQuiz] Yanıt anahtarları:", Object.keys(responseData).join(', '));
         
         // Eğer responseData.data yapısı varsa ondan al
         if (responseData.data && this.isObject(responseData.data) && responseData.data.id) {
-          console.log("[QuizApiService.generateQuiz] API yanıtı içinde data nesnesi bulundu");
-          const mappedQuiz = this.mapResponseToQuiz(responseData.data as QuizResponseDto);
-          flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with nested data'));
-          return mappedQuiz;
+          console.log("[QuizApiService.generateQuiz] API yanıtı içinde data nesnesi bulundu:", responseData.data);
+          try {
+            const mappedQuiz = this.mapResponseToQuiz(responseData.data as unknown as QuizResponseDto);
+            flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with nested data'));
+            return mappedQuiz;
+          } catch (dataMapError) {
+            console.error("[QuizApiService.generateQuiz] Data nesnesi dönüştürme hatası:", dataMapError);
+            // Alt kısımdaki diğer çözümleri dene
+          }
         }
         
         // Farklı bir yapıda olup olmadığını kontrol et
         let possibleQuiz = null;
+        console.log("[QuizApiService.generateQuiz] Alternatif yapılar aranıyor...");
         
         if (this.isObject(responseData.quiz)) {
+          console.log("[QuizApiService.generateQuiz] 'quiz' anahtarı bulundu:", responseData.quiz);
           possibleQuiz = responseData.quiz;
         } else if (this.isObject(responseData.result)) {
+          console.log("[QuizApiService.generateQuiz] 'result' anahtarı bulundu:", responseData.result);
           possibleQuiz = responseData.result;
         } else if (Array.isArray(responseData.questions)) {
+          console.log("[QuizApiService.generateQuiz] 'questions' dizisi bulundu, manuel sınav oluşturuluyor");
           // Eğer doğrudan quiz değil ama içerisinde sorular varsa manuel oluştur
           possibleQuiz = {
             id: `generated_${Date.now()}`,
@@ -494,13 +601,19 @@ class QuizApiService {
             updatedAt: new Date().toISOString(),
             quizType: options.quizType || 'quick'
           };
+          console.log("[QuizApiService.generateQuiz] Manuel oluşturulan quiz:", possibleQuiz);
         }
         
         if (possibleQuiz && possibleQuiz.id) {
-          console.log("[QuizApiService.generateQuiz] Alternatif formatta quiz bulundu");
-          const mappedQuiz = this.mapResponseToQuiz(possibleQuiz as QuizResponseDto);
-          flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with alternative format'));
-          return mappedQuiz;
+          console.log("[QuizApiService.generateQuiz] Alternatif formatta quiz bulundu:", possibleQuiz);
+          try {
+            const mappedQuiz = this.mapResponseToQuiz(possibleQuiz as unknown as QuizResponseDto);
+            flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with alternative format'));
+            return mappedQuiz;
+          } catch (altMapError) {
+            console.error("[QuizApiService.generateQuiz] Alternatif format dönüştürme hatası:", altMapError);
+            // Fallback'e devam et
+          }
         }
         
         // Eğer hiçbir şekilde uygun bir yapı bulunamazsa varsayılan oluştur
@@ -512,12 +625,20 @@ class QuizApiService {
       
       try {
         // Normal işleme deneyin
-        const mappedQuiz = this.mapResponseToQuiz(responseData as QuizResponseDto);
+        console.log("[QuizApiService.generateQuiz] Standart yanıt işleniyor. ID:", responseData.id);
+        const mappedQuiz = this.mapResponseToQuiz(responseData as unknown as QuizResponseDto);
+        console.log("[QuizApiService.generateQuiz] Quiz başarıyla oluşturuldu:", mappedQuiz.id);
         flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success'));
         return mappedQuiz;
       } catch (mapError) {
         // Eşleme hatası oluşursa loglayıp fallback dönün
         console.error("[QuizApiService.generateQuiz] Quiz dönüşümü sırasında hata:", mapError);
+        console.error("[QuizApiService.generateQuiz] Dönüşüm hatası detayları:", { 
+          errorType: mapError instanceof Error ? mapError.constructor.name : typeof mapError,
+          message: mapError instanceof Error ? mapError.message : String(mapError),
+          stack: mapError instanceof Error ? mapError.stack : undefined,
+          responseData
+        });
         const fallbackQuiz = this.createFallbackQuiz("mapping_fallback", options);
         flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error(`Mapping error: ${String(mapError)}`));
         return fallbackQuiz;

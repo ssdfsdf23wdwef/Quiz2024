@@ -1000,9 +1000,31 @@ export default function ExamCreationWizard({
       
       try {
         // Sınav oluştur
-        const quiz = await quizService.generateQuiz(quizOptions);
+        console.log("[ECW handleFinalSubmit] Sınav oluşturma öncesi son kontroller:");
+        console.log("[ECW handleFinalSubmit] quizOptions:", JSON.stringify(quizOptions, null, 2));
+        console.log("[ECW handleFinalSubmit] selectedSubTopics uzunluğu:", quizOptions.selectedSubTopics?.length);
+        console.log("[ECW handleFinalSubmit] documentId:", quizOptions.documentId);
+        console.log("[ECW handleFinalSubmit] preferences:", JSON.stringify(quizOptions.preferences, null, 2));
         
+        // API çağrısını izle
+        console.time("[ECW handleFinalSubmit] quizService.generateQuiz süresi");
+        const quiz = await quizService.generateQuiz(quizOptions);
+        console.timeEnd("[ECW handleFinalSubmit] quizService.generateQuiz süresi");
+        
+        // Detaylı sonuç kontrolü
         console.log("[ECW handleFinalSubmit] Sınav oluşturma sonucu:", quiz);
+        console.log("[ECW handleFinalSubmit] Quiz ID:", quiz?.id);
+        console.log("[ECW handleFinalSubmit] Quiz soru sayısı:", quiz?.questions?.length || 0);
+        
+        if (!quiz) {
+          console.error("[ECW handleFinalSubmit] KRİTİK HATA: quiz nesnesi boş veya undefined!");
+          throw new Error("Quiz oluşturulamadı - API yanıtı boş");
+        }
+        
+        if (!quiz.id) {
+          console.error("[ECW handleFinalSubmit] KRİTİK HATA: quiz.id yok veya boş!");
+          throw new Error("Quiz ID alınamadı");
+        }
 
         const wizardResultData = {
           file: selectedFile,
@@ -1019,13 +1041,21 @@ export default function ExamCreationWizard({
           status: quiz?.id ? 'success' as const : 'error' as const,
           error: quiz?.id ? undefined : new ApiError("Sınav oluşturulamadı veya ID alınamadı."),
         };
+        
+        console.log("[ECW handleFinalSubmit] Wizard sonuç verisi oluşturuldu:", 
+          JSON.stringify({
+            ...wizardResultData,
+            file: wizardResultData.file ? `File: ${wizardResultData.file.name}` : null 
+          }, null, 2)
+        );
 
         // Başarı durumuna göre yönlendir
         if (quiz?.id) {
           if (onComplete) {
+            console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu çağrılıyor, quizId: ${quiz.id}`);
             onComplete(wizardResultData);
           } else {
-            console.log("[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor");
+            console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor: /exams/${quiz.id}?mode=attempt`);
             router.push(`/exams/${quiz.id}?mode=attempt`);
           }
         } else {
@@ -1034,6 +1064,19 @@ export default function ExamCreationWizard({
         }
       } catch (error) {
         console.error("[ECW handleFinalSubmit] Sınav oluşturma hatası:", error);
+        
+        // Detaylı hata bilgisi
+        const errorDetails = {
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          apiError: error instanceof ApiError ? {
+            cause: error.cause,
+            name: error.name,
+            message: error.message
+          } : undefined
+        };
+        console.error("[ECW handleFinalSubmit] Hata detayları:", errorDetails);
         
         // Daha detaylı hata bilgisi
         if (error instanceof ApiError) {

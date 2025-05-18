@@ -617,6 +617,16 @@ class ApiService {
       this.flowTracker.trackApiCall(endpoint, 'POST', 'ApiService.post', { dataSize: JSON.stringify(data).length });
       this.flowTracker.markStart(`POST_${endpoint}`);
       
+      // DETAYLI HATA AYIKLAMA: API isteği gönderiliyor bilgisi
+      console.log(`[ApiService.post] İSTEK BAŞLATILDI: ${endpoint}`);
+      console.log(`[ApiService.post] İSTEK METODU: POST`);
+      console.log(`[ApiService.post] İSTEK URL: ${endpoint}`);
+      console.log(`[ApiService.post] İSTEK VERİSİ:`, JSON.stringify(data, null, 2));
+      
+      if (config) {
+        console.log(`[ApiService.post] ÖZEL KONFİGÜRASYON:`, config);
+      }
+      
       this.logger.debug(
         `POST isteği başlatıldı: ${endpoint}`,
         'ApiService.post',
@@ -625,7 +635,41 @@ class ApiService {
         { dataKeys: typeof data === 'object' ? Object.keys(data) : 'array' }
       );
       
+      // İstek zamanını ölç
+      const startTime = Date.now();
       const response = await this.client.post<T>(endpoint, data, config);
+      const requestDuration = Date.now() - startTime;
+      
+      // DETAYLI HATA AYIKLAMA: API yanıtı analizi
+      console.log(`[ApiService.post] YANIT ALINDI: ${endpoint} (${requestDuration}ms)`);
+      console.log(`[ApiService.post] DURUM KODU: ${response.status}`);
+      console.log(`[ApiService.post] YANIT HEADERS:`, response.headers);
+      
+      // Yanıt verisi içeriğini analiz et
+      console.log(`[ApiService.post] YANIT VERİSİ: `, response.data);
+      
+      if (typeof response.data === 'object' && response.data !== null) {
+        console.log(`[ApiService.post] YANIT VERİSİ TİPİ: Nesne`);
+        console.log(`[ApiService.post] YANIT VERİSİ ANAHTARLARI:`, Object.keys(response.data));
+        
+        // Önemli alanları kontrol et
+        if ('id' in response.data) {
+          console.log(`[ApiService.post] YANIT İÇERİĞİ - ID: ${(response.data as any).id}`);
+        }
+        
+        if ('status' in response.data) {
+          console.log(`[ApiService.post] YANIT İÇERİĞİ - STATUS: ${(response.data as any).status}`);
+        }
+        
+        if ('data' in response.data) {
+          console.log(`[ApiService.post] YANIT İÇERİĞİ - NESTED DATA:`, (response.data as any).data);
+        }
+      } else if (Array.isArray(response.data)) {
+        console.log(`[ApiService.post] YANIT VERİSİ TİPİ: Dizi`);
+        console.log(`[ApiService.post] YANIT VERİSİ UZUNLUĞU: ${response.data.length}`);
+      } else {
+        console.log(`[ApiService.post] YANIT VERİSİ TİPİ: ${typeof response.data}`);
+      }
       
       // İstek tamamlandı ölçümü
       this.flowTracker.markEnd(`POST_${endpoint}`, FlowCategory.API, 'ApiService.post');
@@ -639,6 +683,36 @@ class ApiService {
       
       return response.data;
     } catch (error) {
+      // DETAYLI HATA AYIKLAMA: Hata detayları
+      console.error(`[ApiService.post] HATA: ${endpoint}`);
+      
+      if (axios.isAxiosError(error)) {
+        console.error(`[ApiService.post] AXIOS HATASI: ${error.message}`);
+        console.error(`[ApiService.post] HATA KODU: ${error.code}`);
+        console.error(`[ApiService.post] HATA DURUMU: ${error.response?.status}`);
+        console.error(`[ApiService.post] HATA YANITI:`, error.response?.data);
+        
+        if (error.response?.data) {
+          if (typeof error.response.data === 'object') {
+            console.error(`[ApiService.post] HATA DETAYLARI:`, JSON.stringify(error.response.data, null, 2));
+            
+            // Backend hata mesajı
+            if ('message' in error.response.data) {
+              console.error(`[ApiService.post] BACKEND HATA MESAJI:`, (error.response.data as any).message);
+            }
+            
+            // Hata kodu
+            if ('statusCode' in error.response.data) {
+              console.error(`[ApiService.post] BACKEND HATA KODU:`, (error.response.data as any).statusCode);
+            }
+          } else {
+            console.error(`[ApiService.post] HATA YANITI (STRİNG):`, String(error.response.data));
+          }
+        }
+      } else {
+        console.error(`[ApiService.post] GENEL HATA:`, error);
+      }
+      
       this.handleError(error, `POST ${endpoint}`);
       throw error;
     }
