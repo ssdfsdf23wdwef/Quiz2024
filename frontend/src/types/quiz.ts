@@ -144,7 +144,7 @@ export interface QuizGenerationOptions {
     fileName: string;
     storagePath: string;
   } | null;
-  selectedSubTopics?: SubTopicItem[] | null;
+  selectedSubTopics?: string[] | SubTopicItem[] | null;
   preferences: {
     questionCount: number;
     difficulty: DifficultyLevel;

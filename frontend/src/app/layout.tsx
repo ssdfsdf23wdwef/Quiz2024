@@ -50,11 +50,11 @@ export default function RootLayout({
       </head>
       <body className={cn("min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased", fontSans.className)}>
         <ClientLogSetup>
-          <Providers>
-            <ClientLayout>
-              {children}
-            </ClientLayout>
-          </Providers>
+        <Providers>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </Providers>
         </ClientLogSetup>
       </body>
     </html>

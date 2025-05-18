@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import quizService from "@/services/quiz.service";
 import { FiClipboard } from "react-icons/fi";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
 import { Button } from "@nextui-org/react";
@@ -78,7 +78,7 @@ function CreateExamPageContent() {
   
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const [processingQuiz, setProcessingQuiz] = useState(false);
-  const [creationResultInternal, setCreationResultInternal] = useState<ExamCreationResultInternal | null>(null);
+  const [creationResultInternal, setCreationResultInternal] = useState<Parameters<NonNullable<React.ComponentProps<typeof ExamCreationWizard>["onComplete"]>>[0] | null>(null);
   const [courseIdLocal, setCourseIdLocal] = useState<string | undefined>(undefined);
 
   const coursesLoading = false; 
@@ -231,6 +231,29 @@ function CreateExamPageContent() {
         }
       }
 
+      // URL'den gelen topicIds ve subTopicIds parametrelerini al
+      const topicIdsParam = searchParams.get("topicIds");
+      const subTopicIdsParam = searchParams.get("subTopicIds");
+      
+      // Eğer topicIds veya subTopicIds parametreleri boşsa, en az bir default konu oluştur
+      const topicIds = topicIdsParam?.split(',') || [];
+      const subTopicIds = subTopicIdsParam?.split(',') || [];
+      
+      // Eğer hiç konu yoksa ve document ID varsa, default bir konu ID'si oluştur
+      const defaultTopicId = documentIdParam ? `default-topic-${documentIdParam.substring(0, 8)}` : 'default-topic-general';
+      const defaultSubTopicId = defaultTopicId;
+      
+      // Varsayılan konu adı
+      const defaultTopicName = fileNameParam 
+        ? decodeURIComponent(fileNameParam).replace(/\.[^/.]+$/, "") // Dosya uzantısını kaldır
+        : 'Genel Konu';
+      
+      // Konu topicNameMap'ini oluştur
+      const topicNameMap: Record<string, string> = {};
+      if (topicIds.length === 0 && documentIdParam) {
+        topicNameMap[defaultTopicId] = defaultTopicName;
+      }
+
       const resultData: ExamCreationResultInternal = {
         file: placeholderFile,
         quizType: typeParam || "quick",
@@ -239,178 +262,39 @@ function CreateExamPageContent() {
           questionCount: parseInt(searchParams.get("questionCount") || "10"),
           difficulty: (searchParams.get("difficulty") as GlobalQuizPreferences['difficulty']) || "mixed",
           timeLimit: searchParams.get("timeLimit") ? parseInt(searchParams.get("timeLimit")!) : undefined,
-          topicIds: searchParams.get("topicIds")?.split(',') || [],
-          subTopicIds: searchParams.get("subTopicIds")?.split(',') || [],
+          topicIds: topicIds.length > 0 ? topicIds : documentIdParam ? [defaultTopicId] : [],
+          subTopicIds: subTopicIds.length > 0 ? subTopicIds : documentIdParam ? [defaultSubTopicId] : [],
           courseId: courseIdParam || undefined,
           personalizedQuizType: personalizedQuizTypeParam || undefined,
         },
-        topicNameMap: {},
+        topicNameMap: Object.keys(topicNameMap).length > 0 ? topicNameMap : {},
         documentId: documentIdParam || undefined,
       };
       console.log('[CreateExamPage useEffect startQuiz] Constructed resultData for processing:', JSON.stringify({
         ...resultData,
-        file: resultData.file ? { name: resultData.file.name, size: resultData.file.size } : null
-      }));
+        file: resultData.file ? { name: resultData.file.name, size: resultData.file.size, type: resultData.file.type } : null
+      }, null, 2));
       
-      (async (result: ExamCreationResultInternal) => {
-        console.log('[CreateExamPage useEffect_inline_processing] Received result:', JSON.stringify(result));
-        console.log('[CreateExamPage useEffect_inline_processing] VERİ DETAY: result.file:', result.file);
-        console.log('[CreateExamPage useEffect_inline_processing] VERİ DETAY: result.preferences:', JSON.stringify(result.preferences));
-        setProcessingQuiz(true);
-        setIsSubmitting(true);
-
-        const topicIds = result.preferences.topicIds || [];
-        const subTopicIds = result.preferences.subTopicIds || [];
-        console.log('[CreateExamPage useEffect_inline_processing] Extracted topicIds:', JSON.stringify(topicIds));
-        console.log('[CreateExamPage useEffect_inline_processing] Extracted subTopicIds:', JSON.stringify(subTopicIds));
-
-        // Belge ve konu kontrolü
-        const hasSelectedTopics = topicIds.length > 0;
-        const hasDocumentInfo = !!result.file || !!result.documentId;
-        const isQuickQuiz = result.quizType === 'quick';
-
-        // Dosya adı URL'den geliyorsa ancak konu ve belge ID'si yoksa
-        if (fileNameParam && !result.documentId && !hasSelectedTopics) {
-          console.log('[CreateExamPage useEffect_inline_processing] fileNameParam var ama documentId ve topicIds yok');
-          
-          try {
-            // Önce varsayılan konu oluşturalım - en azından kullanıcı ilerleyebilsin
-            const defaultTopicId = `default-topic-${new Date().getTime()}`;
-            const defaultTopicName = fileNameParam.replace(/\.[^/.]+$/, ""); // Dosya uzantısını kaldırıp dosya adını konu olarak kullan
-            
-            // topicNameMap ve preferences güncelleme
-            const updatedTopicNameMap = { ...result.topicNameMap };
-            updatedTopicNameMap[defaultTopicId] = defaultTopicName;
-            
-            result.topicNameMap = updatedTopicNameMap;
-            result.preferences.topicIds = [defaultTopicId];
-            result.preferences.subTopicIds = [defaultTopicId];
-            
-            console.log('[CreateExamPage useEffect_inline_processing] Varsayılan konu oluşturuldu:', defaultTopicId, defaultTopicName);
-            toast.success(`Varsayılan konu oluşturuldu: "${defaultTopicName}"`);
-            
-            // Gerekli değişkenleri güncelle
-            const formData: CreateQuizFormDataTypeInternal = {
-              quizType: result.quizType,
-              personalizedQuizType: result.personalizedQuizType,
-              document: result.file,
-              documentId: result.documentId,
-              courseId: result.preferences.courseId || courseIdLocal,
-              preferences: JSON.parse(JSON.stringify(result.preferences)),
-              selectedTopics: result.preferences.topicIds.slice(), // Yeni güncellenmiş topicIds'yi kullan
-              topicNames: JSON.parse(JSON.stringify(result.topicNameMap)),
-            };
-            
-            console.log('[CreateExamPage useEffect_inline_processing] Varsayılan konu ile formData hazırlandı');
-            // Şimdi quiz oluşturmaya devam et
-            await handleCreateQuiz(formData);
-            return;
-          } catch (error) {
-            console.error('[CreateExamPage useEffect_inline_processing] Varsayılan konu oluşturma hatası:', error);
-            setProcessingQuiz(false);
-            setIsSubmitting(false);
-            toast.error("Belge bilgilerini işlerken bir hata oluştu. Lütfen yeniden deneyin.");
-            return;
-          }
-        }
-
-        // Hızlı sınav ve belge yoksa, konu seçimi zorunlu
-        if (isQuickQuiz && !hasDocumentInfo && !hasSelectedTopics) {
-          console.error('[CreateExamPage useEffect_inline_processing] HATA: Hızlı sınav için belge veya konu seçimi gerekli!');
-          toast.error("Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.");
-          setProcessingQuiz(false);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Veri referanslarını korumak için deep clone
-        const formData: CreateQuizFormDataTypeInternal = {
-          quizType: result.quizType,
-          personalizedQuizType: result.personalizedQuizType,
-          document: result.file,
-          documentId: result.documentId,
-          courseId: result.preferences.courseId || courseIdLocal,
-          preferences: JSON.parse(JSON.stringify(result.preferences)),
-          selectedTopics: topicIds.slice(), // Array kopyası
-          topicNames: JSON.parse(JSON.stringify(result.topicNameMap || {})),
-        };
-
-        console.log('[CreateExamPage useEffect_inline_processing] FormData hazırlandı:', JSON.stringify({
-          ...formData,
-          document: formData.document ? { name: formData.document.name, size: formData.document.size } : null
-        }));
-
-        try {
-          await handleCreateQuiz(formData);
-        } catch (error) {
-          console.error('[CreateExamPage useEffect_inline_processing] Quiz oluşturulurken hata:', error);
-          setProcessingQuiz(false);
-          setIsSubmitting(false);
-        }
-      })(resultData);
+      setCreationResultInternal(resultData as Parameters<NonNullable<React.ComponentProps<typeof ExamCreationWizard>["onComplete"]>>[0]);
     }
-  }, [searchParams, startQuizParam, handleCreateQuiz, courseIdLocal]);
+  }, [searchParams, startQuizParam, router]);
 
   const currentQuizTypeForWizard = searchParams.get("type") as QuizType || quizTypeLocal;
 
-  const onWizardComplete = useCallback(async (result: ExamCreationResultInternal) => {
-    console.log('[CreateExamPage onWizardComplete] Received result:', JSON.stringify(result));
-    console.log('[CreateExamPage onWizardComplete] DETAY: preferences.topicIds:', result.preferences.topicIds);
-    console.log('[CreateExamPage onWizardComplete] DETAY: preferences.subTopicIds:', result.preferences.subTopicIds);
-    console.log('[CreateExamPage onWizardComplete] DETAY: topicNameMap anahtarları:', Object.keys(result.topicNameMap || {}));
-    setProcessingQuiz(true);
-    setIsSubmitting(true);
+  const handleWizardComplete = useCallback((result: Parameters<NonNullable<React.ComponentProps<typeof ExamCreationWizard>["onComplete"]>>[0]) => {
+    console.log('[CreateExamPage] ExamCreationWizard onComplete. Result:', result);
+    setIsSubmitting(false);
+    setProcessingQuiz(false);
 
-    const topicIds = result.preferences.topicIds || [];
-    const subTopicIds = result.preferences.subTopicIds || [];
-
-    // Doğrulama kontrollerini ekle
-    const hasSelectedTopics = topicIds.length > 0;
-    const hasDocumentInfo = !!result.file || !!result.documentId;
-    const isQuickQuiz = result.quizType === 'quick';
-    
-    // Hızlı sınav ise ve belge veya konu yoksa uyarı ver
-    if (isQuickQuiz && !hasDocumentInfo && !hasSelectedTopics) {
-      console.error('[CreateExamPage onWizardComplete] HATA: Hızlı sınav için belge veya konu seçimi gerekli!');
-      toast.error("Hızlı sınav için ya belge yüklemelisiniz ya da en az bir konu seçmelisiniz.");
-      setProcessingQuiz(false);
-      setIsSubmitting(false);
-      return;
+    if (result.status === 'success' && result.quizId) {
+      console.log("[CreateExamPage] Wizard sınavı başarıyla oluşturdu. ID:", result.quizId);
+    } else if (result.status === 'error') {
+      const errorMsg = result.error?.message || 'Sınav sihirbazı bir hatayla tamamlandı.';
+      toast.error(errorMsg);
+      ErrorService.handleError(result.error || new Error(errorMsg), "Sınav oluşturma sihirbazı tamamlama");
+      setCreationResultInternal(result);
     }
-    
-    // Kişiselleştirilmiş sınav ise ve konu seçilmemişse uyarı ver (weakTopicFocused tipi dışında)
-    const isPersonalizedRequiringTopics = result.quizType === 'personalized' && 
-      result.personalizedQuizType !== 'weakTopicFocused';
-      
-    if (isPersonalizedRequiringTopics && !hasSelectedTopics) {
-      console.error('[CreateExamPage onWizardComplete] HATA: Kişiselleştirilmiş sınav için konu seçimi gerekli!');
-      toast.error("Kişiselleştirilmiş sınav için en az bir konu seçmelisiniz.");
-      setProcessingQuiz(false);
-      setIsSubmitting(false);
-        return;
-      }
-      
-    const formData: CreateQuizFormDataTypeInternal = {
-        quizType: result.quizType,
-        personalizedQuizType: result.personalizedQuizType,
-        document: result.file,
-      documentId: result.documentId,
-      courseId: result.preferences.courseId || courseIdLocal,
-      preferences: {
-        ...JSON.parse(JSON.stringify(result.preferences)),
-        topicIds: topicIds.slice(),
-        subTopicIds: subTopicIds.slice(),
-      },
-      selectedTopics: topicIds.slice(),
-      topicNames: { ...result.topicNameMap },
-    };
-    
-    console.log('[CreateExamPage onWizardComplete] Constructed formData for handleCreateQuiz:', JSON.stringify(formData));
-    console.log('[CreateExamPage onWizardComplete] KONTROL: formData.preferences.topicIds:', formData.preferences.topicIds);
-    console.log('[CreateExamPage onWizardComplete] KONTROL: formData.selectedTopics:', formData.selectedTopics);
-    
-    await handleCreateQuiz(formData);
-  }, [courseIdLocal, handleCreateQuiz, setProcessingQuiz, setIsSubmitting]);
+  }, [router]);
 
   if (coursesLoading && quizTypeLocal === 'personalized' ) { 
     return <div className="flex justify-center items-center h-screen"><Spinner size="lg" /></div>;
@@ -419,14 +303,23 @@ function CreateExamPageContent() {
   return (
     <PageTransition>
       <div className="container mx-auto px-4 py-8">
-        {(!startQuizParam || startQuizParam !== 'true') && !creationResultInternal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-            <ExamCreationWizard
-              quizType={currentQuizTypeForWizard} 
-              onComplete={onWizardComplete}
-            />
-          </motion.div>
-        )}
+        <AnimatePresence mode="wait">
+          {(!startQuizParam || creationResultInternal) && (
+            <motion.div
+              key="wizard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ExamCreationWizard
+                quizType={quizTypeLocal}
+                initialFormData={creationResultInternal}
+                onComplete={handleWizardComplete}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {(processingQuiz || (creationResultInternal && !creationResultInternal.error && creationResultInternal.status === 'success')) && (
           <div className="text-center py-10">

@@ -297,8 +297,9 @@ export class QuizzesController {
       const difficulty = body.difficulty || 'medium';
       const documentId = body.documentId;
 
-      if (!documentText) {
-        throw new BadRequestException('Belge metni zorunludur');
+      // documentId varsa belge metnini backend bulacak, documentId yoksa documentText zorunlu
+      if (!documentId && !documentText) {
+        throw new BadRequestException('Belge ID veya belge metni zorunludur');
       }
 
       if (!subTopics || !Array.isArray(subTopics) || subTopics.length === 0) {

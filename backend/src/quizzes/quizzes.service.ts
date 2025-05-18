@@ -21,6 +21,7 @@ import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
 import { QuizQuestion } from '../ai/interfaces';
+import { DocumentsService } from '../documents/documents.service';
 
 interface CreateQuizParams {
   userId: string;
@@ -51,6 +52,7 @@ export class QuizzesService {
     @Inject(forwardRef(() => LearningTargetsService))
     private readonly learningTargetsService: LearningTargetsService,
     private readonly quizAnalysisService: QuizAnalysisService,
+    private readonly documentsService: DocumentsService,
   ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
@@ -1296,14 +1298,67 @@ export class QuizzesService {
     try {
       this.flowTracker.trackStep('Hızlı sınav oluşturuluyor', 'QuizzesService');
 
-      // Belge metni kontrol
-      if (!documentText || documentText.length === 0) {
+      // Belge ID varsa, belgenin metnini getir
+      let finalDocumentText = documentText;
+
+      if (documentId) {
+        this.logger.info(
+          `Belge ID mevcut (${documentId}), belge metni alınıyor`,
+          'QuizzesService.createQuickQuiz',
+          __filename,
+          undefined,
+          { documentId, userId, hasProvidedText: !!documentText },
+        );
+
+        try {
+          // DocumentsService'den belge metnini al - getDocumentText metodu hem ID hem userId bekliyor
+          const documentResult = await this.documentsService.getDocumentText(
+            documentId,
+            userId,
+          );
+
+          if (documentResult && documentResult.text) {
+            finalDocumentText = documentResult.text;
+            this.logger.info(
+              `Belge metni veritabanından alındı: ${finalDocumentText.length} karakter`,
+              'QuizzesService.createQuickQuiz',
+              __filename,
+              undefined,
+              { documentId, textLength: finalDocumentText.length },
+            );
+          } else {
+            this.logger.warn(
+              `Belge ID (${documentId}) için metin bulunamadı, kullanıcının sağladığı metin kullanılacak`,
+              'QuizzesService.createQuickQuiz',
+              __filename,
+              undefined,
+              { documentId, userId },
+            );
+          }
+        } catch (docError) {
+          this.logger.logError(docError, 'QuizzesService.createQuickQuiz', {
+            documentId,
+            userId,
+            additionalInfo: 'Belge metni alınırken hata oluştu',
+          });
+
+          // Kullanıcı tarafından sağlanan metin varsa onu kullan
+          if (!finalDocumentText) {
+            throw new BadRequestException(
+              'Belge metni alınamadı ve alternatif metin sağlanmadı. Lütfen tekrar deneyin.',
+            );
+          }
+        }
+      }
+
+      // Belge metni kontrolü - documentId olsa bile finalDocumentText hala boş olabilir
+      if (!finalDocumentText || finalDocumentText.length === 0) {
         this.logger.warn(
           'Belge metni boş',
           'QuizzesService.createQuickQuiz',
           __filename,
-          1301,
-          { textLength: documentText?.length, userId },
+          undefined,
+          { textLength: finalDocumentText?.length, userId, documentId },
         );
         throw new BadRequestException(
           'Belge metni boş. Lütfen geçerli bir belge yükleyin veya metin girin.',
@@ -1311,13 +1366,13 @@ export class QuizzesService {
       }
 
       // Belge metni çok kısa olduğunda sadece uyarı ver ama işlemi engelleme
-      if (documentText.length < 100) {
+      if (finalDocumentText.length < 100) {
         this.logger.warn(
           'Belge metni çok kısa, minimum önerilen 100 karakter',
           'QuizzesService.createQuickQuiz',
           __filename,
-          1302,
-          { textLength: documentText.length, userId },
+          undefined,
+          { textLength: finalDocumentText.length, userId, documentId },
         );
         // Uyarı logla ama işlemi devam ettir
       }
@@ -1328,7 +1383,7 @@ export class QuizzesService {
           'Geçersiz alt konular',
           'QuizzesService.createQuickQuiz',
           __filename,
-          1312,
+          undefined,
           { subTopics, userId },
         );
         throw new BadRequestException(
@@ -1351,7 +1406,7 @@ export class QuizzesService {
         `Hızlı sınav oluşturma AI isteği hazırlanıyor. ${subTopics.length} konu, ${questionCount} soru`,
         'QuizzesService.createQuickQuiz',
         __filename,
-        1330,
+        undefined,
         { userId, subTopicsCount: subTopics.length, questionCount, difficulty },
       );
 
@@ -1381,7 +1436,7 @@ export class QuizzesService {
           'AI soru oluşturma isteği gönderiliyor',
           'QuizzesService.createQuickQuiz',
           __filename,
-          1351,
+          undefined,
           { userId, quizId, traceId },
         );
 
@@ -1393,7 +1448,7 @@ export class QuizzesService {
         while (retryCount <= maxRetries && !success) {
           try {
             questions = await this.aiService.generateQuickQuiz(
-              documentText,
+              finalDocumentText,
               subTopics,
               questionCount,
               difficulty,
@@ -1405,7 +1460,7 @@ export class QuizzesService {
                 `AI ${questions.length} soru üretti`,
                 'QuizzesService.createQuickQuiz',
                 __filename,
-                1370,
+                undefined,
                 { quizId, generatedQuestions: questions.length },
               );
               success = true;
@@ -1418,7 +1473,7 @@ export class QuizzesService {
               `AI soru oluşturma denemesi ${retryCount} başarısız: ${aiError instanceof Error ? aiError.message : 'Bilinmeyen hata'}`,
               'QuizzesService.createQuickQuiz',
               __filename,
-              1380,
+              undefined,
               { retryCount, quizId, error: aiError },
             );
 
@@ -1432,7 +1487,7 @@ export class QuizzesService {
           `${questions.length} soru başarıyla üretildi`,
           'QuizzesService.createQuickQuiz',
           __filename,
-          1395,
+          undefined,
           { quizId, questionCount: questions.length },
         );
       } catch (aiError) {
@@ -1440,7 +1495,6 @@ export class QuizzesService {
           `AI soru üretme hatası (userId: ${userId}, quizId: ${quizId}): ${aiError instanceof Error ? aiError.message : 'Bilinmeyen hata'}`,
           'QuizzesService.createQuickQuiz',
           __filename,
-          1400,
         );
         throw new BadRequestException(
           'Sınav soruları oluşturulurken hata oluştu. Lütfen daha sonra tekrar deneyin.',
@@ -1490,7 +1544,7 @@ export class QuizzesService {
           `Hızlı sınav oluşturuldu: ID=${quizId}`,
           'QuizzesService.createQuickQuiz',
           __filename,
-          1442,
+          undefined,
           { quizId, userId, questionCount: questions.length },
         );
 
@@ -1500,7 +1554,6 @@ export class QuizzesService {
           `Veritabanı kayıt hatası (quizId: ${quizId}, userId: ${userId}): ${firestoreError instanceof Error ? firestoreError.message : 'Bilinmeyen hata'}`,
           'QuizzesService.createQuickQuiz',
           __filename,
-          1450,
         );
         throw new BadRequestException(
           'Sınav veritabanına kaydedilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
@@ -1511,7 +1564,6 @@ export class QuizzesService {
         `Hızlı sınav oluşturma genel hatası (userId: ${userId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
         'QuizzesService.createQuickQuiz',
         __filename,
-        1460,
       );
       throw error;
     }

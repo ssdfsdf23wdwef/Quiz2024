@@ -31,6 +31,8 @@ import quizService from "@/services/quiz.service";
 import { SubTopicItem } from "@/types/quiz";
 import { LearningTarget } from "@/types/learningTarget";
 import { useRouter } from "next/navigation";
+import { ApiError } from "@/services/error.service"; // ApiError importu eklendi
+import { Quiz } from "@/types"; // Quiz importu eklendi
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -44,6 +46,11 @@ interface ExamCreationWizardProps {
       | "comprehensive";
     preferences: QuizPreferences;
     topicNameMap: Record<string, string>;
+    quiz?: Quiz; // Quiz nesnesi (quiz.service.ts'den dönen)
+    quizId?: string;
+    documentId?: string;
+    status?: 'success' | 'error';
+    error?: Error | ApiError; // Hata durumu
   }) => void;
 }
 
@@ -134,11 +141,24 @@ export default function ExamCreationWizard({
     // Seçilen konuları alt konular olarak da güncelle
     const subTopicItems: SubTopicItem[] = selectedTopics.map(topicId => {
       const topic = detectedTopics.find(t => t.id === topicId);
+      if (!topic) {
+        console.warn(`[ECW handleTopicSelectionChange] UYARI: ${topicId} ID'li konu detectedTopics içinde bulunamadı!`);
+      }
       return {
         subTopic: topic?.subTopicName || topicId,
         normalizedSubTopic: topic?.normalizedSubTopicName || topicId,
       };
     });
+    
+    console.log('[ECW handleTopicSelectionChange] Alt konulara dönüştürüldü:', JSON.stringify(subTopicItems));
+    
+    // Alt konuların boş olup olmadığını kontrol et
+    if (subTopicItems.length === 0) {
+      console.warn('[ECW handleTopicSelectionChange] UYARI: Dönüştürülmüş alt konular listesi boş!');
+    } else if (subTopicItems.some(item => !item.subTopic)) {
+      console.warn('[ECW handleTopicSelectionChange] UYARI: Bazı alt konuların subTopic değeri boş veya undefined!');
+    }
+    
     setSelectedTopics(subTopicItems);
     
     setPreferences(prev => ({
@@ -263,31 +283,41 @@ export default function ExamCreationWizard({
     if (selectedTopics && selectedTopics.length > 0) {
       setSelectedTopicIds(selectedTopics); // Update state
       console.log('[ECW handleTopicsDetected] setSelectedTopicIds called with:', JSON.stringify(selectedTopics));
-      setPreferences((prev: QuizPreferences) => {
-        const newPrefs = {
-          ...prev,
-          topicIds: selectedTopics,
-          subTopicIds: selectedTopics, // Alt konular konularla aynı (basitleştirilmiş versiyon)
+      
+      // Alt konular oluştur ve güncelle
+      const subTopicItems: SubTopicItem[] = selectedTopics.map(topicId => {
+        const topic = detectedTopics.find(t => t.id === topicId);
+        if (!topic) {
+          console.warn(`[ECW handleTopicsDetected] UYARI: ${topicId} ID'li konu bulunamadı!`);
+          return {
+            subTopic: topicId,  // Konu bulunamazsa ID'yi kullan
+            normalizedSubTopic: topicId
+          };
+        }
+        return {
+          subTopic: topic.subTopicName,
+          normalizedSubTopic: topic.id
         };
-        console.log('[ECW handleTopicsDetected] Preferences updated to:', JSON.stringify(newPrefs));
-        return newPrefs;
       });
+      
+      console.log('[ECW handleTopicsDetected] Created subTopicItems:', JSON.stringify(subTopicItems));
+      setSelectedTopics(subTopicItems);
+      
+      // Alt konu ID'lerini güncelle
+      const subTopicIds = selectedTopics.map(topicId => topicId);
+      setSelectedSubTopicIds(subTopicIds);
+      console.log('[ECW handleTopicsDetected] setSelectedSubTopicIds called with:', JSON.stringify(subTopicIds));
+      
+      // Tercihleri güncelle
+      setPreferences(prev => ({
+        ...prev,
+        topicIds: selectedTopics,
+        subTopicIds: subTopicIds
+      }));
+      console.log('[ECW handleTopicsDetected] Updated preferences with topic/subTopic IDs');
     } else {
-      console.warn('[ECW handleTopicsDetected] Received empty or no selectedTopics.');
-      // If no topics are selected (e.g., user de-selected all), ensure states are cleared
-      setSelectedTopicIds([]);
-      setPreferences((prev: QuizPreferences) => {
-        const newPrefs = {
-          ...prev,
-          topicIds: [],
-          subTopicIds: [], // Alt konular konularla aynı (basitleştirilmiş versiyon)
-        };
-        console.log('[ECW handleTopicsDetected] Preferences cleared due to no selected topics:', JSON.stringify(newPrefs));
-        return newPrefs;
-      });
+      console.warn('[ECW handleTopicsDetected] UYARI: Boş konu dizisi alındı!');
     }
-    console.log('[ECW handleTopicsDetected] Moving to step 3.');
-    setCurrentStep(3);
   };
 
   // Konu tespiti iptal
@@ -321,7 +351,7 @@ export default function ExamCreationWizard({
       console.log(`✅ Güncel alt konu sayısı: ${updated.length}`);
       
       // Tercihleri güncelle
-      setPreferences((prev: QuizPreferences) => ({
+      setPreferences((prev) => ({
         ...prev,
         subTopicIds: updated,
       }));
@@ -329,6 +359,34 @@ export default function ExamCreationWizard({
       
       return updated;
     });
+
+    // selectedTopics listesini güncelle (handleFinalSubmit'e gönderilecek olan)
+    // Alt konu nesnesini bul
+    const subTopic = detectedTopics.find(topic => topic.id === subTopicId);
+    
+    if (subTopic) {
+      setSelectedTopics(prev => {
+        // Alt konu zaten var mı kontrol et
+        const existingIndex = prev.findIndex(item => item.normalizedSubTopic === subTopicId);
+        
+        if (existingIndex >= 0) {
+          // Alt konu varsa listeden çıkar
+          console.log(`✅ Konu selectedTopics listesinden kaldırıldı: ${subTopicId}`);
+          return prev.filter(item => item.normalizedSubTopic !== subTopicId);
+        } else {
+          // Alt konu yoksa listeye ekle
+          const newSubTopicItem = {
+            subTopic: subTopic.subTopicName,
+            normalizedSubTopic: subTopicId
+          };
+          console.log(`✅ Konu selectedTopics listesine eklendi:`, newSubTopicItem);
+          return [...prev, newSubTopicItem];
+        }
+      });
+      console.log(`✅ selectedTopics listesi güncellendi. Şu anda seçili konular:`, selectedTopics);
+    } else {
+      console.warn(`⚠️ Uyarı: ${subTopicId} ID'sine sahip konu bulunamadı!`);
+    }
   };
 
   // Kişiselleştirilmiş sınav alt türü
@@ -728,46 +786,45 @@ export default function ExamCreationWizard({
           } else { 
             console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ UYARI: Tespit edilen konu yok!`);
             ErrorService.showToast("Belgede konu tespit edilemedi. Varsayılan konular kullanılacak.", "info");
-            const defaultTopics = generateDefaultTopicsFromFileName(file.name);
             
-            if (quizType === "quick" && defaultTopics.length > 0) {
-              let firstDefaultTopicId: string | undefined = undefined;
-              const updatedDefaultTopics = defaultTopics.map(topic => {
-                if (!firstDefaultTopicId && topic.isSelected) {
-                  firstDefaultTopicId = topic.id;
-                  return topic; 
-                } 
-                return topic;
-              });
-
-              if (!firstDefaultTopicId && defaultTopics.length > 0) {
-                 firstDefaultTopicId = defaultTopics[0].id; // This should be a string
-                 if (firstDefaultTopicId) { // Ensure it's not undefined after assignment (though it shouldn't be)
-                    updatedDefaultTopics[0].isSelected = true;
-                 } else {
-                    console.error("[ECW detectTopicsFromUploadedFile] defaultTopics[0].id was unexpectedly undefined.")
-                 }
-              }
-              
-              setDetectedTopics(updatedDefaultTopics);
-              setTopicDetectionStatus("success");
-              console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Konu tespit edilemedi, dosya adından varsayılan konular oluşturuldu, adım 2\'ye geçiliyor.');
-              setCurrentStep(2);
-
-              if (firstDefaultTopicId) {
-                setSelectedTopicIds([firstDefaultTopicId]);
-                setSelectedSubTopicIds([firstDefaultTopicId]);
-                setPreferences(prev => ({ ...prev, topicIds: [firstDefaultTopicId!], subTopicIds: [firstDefaultTopicId!] })); 
-                console.log(`[ECW detectTopicsFromUploadedFile] Hızlı sınav için ilk varsayılan konu (${firstDefaultTopicId}) otomatik seçildi ve detectedTopics güncellendi.`);
-              } else {
-                console.log(`[ECW detectTopicsFromUploadedFile] Hızlı sınav için varsayılan konu bulunamadı veya seçilemedi.`);
-              }
-            } else {
-              setDetectedTopics(defaultTopics);
-              setTopicDetectionStatus("success");
-              console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Konu tespit edilemedi (hızlı sınav değil veya varsayılan konu yok), adım 2\'ye geçiliyor.');
-              setCurrentStep(2);
-            }
+            // Varsayılan bir konu oluştur
+            const defaultTopicId = `default-${uploadedDocumentId.substring(0, 8)}`;
+            const defaultTopicName = selectedFile 
+              ? selectedFile.name.replace(/\.[^/.]+$/, "") // Dosya uzantısını kaldır
+              : "Belge İçeriği";
+            
+            const defaultTopic: DetectedSubTopic = {
+              id: defaultTopicId,
+              subTopicName: defaultTopicName,
+              normalizedSubTopicName: defaultTopicName.toLowerCase().replace(/\s+/g, '-'),
+              isSelected: true,
+              status: undefined,
+              isNew: true
+            };
+            
+            const defaultTopics = [defaultTopic];
+            setDetectedTopics(defaultTopics);
+            setTopicDetectionStatus("success");
+            
+            setSelectedTopicIds([defaultTopicId]);
+            setSelectedSubTopicIds([defaultTopicId]);
+            
+            // Alt konu olarak da ekle
+            const subTopicItem: SubTopicItem = {
+              subTopic: defaultTopicName,
+              normalizedSubTopic: defaultTopicName.toLowerCase().replace(/\s+/g, '-')
+            };
+            setSelectedTopics([subTopicItem]);
+            
+            setPreferences(prev => ({
+              ...prev,
+              topicIds: [defaultTopicId],
+              subTopicIds: [defaultTopicId]
+            }));
+            
+            console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Varsayılan konu oluşturuldu, adım 2\'ye geçiliyor.');
+            setCurrentStep(2);
+            console.log(`[ECW detectTopicsFromUploadedFile] Varsayılan konu ID: ${defaultTopicId}, isim: ${defaultTopicName}`);
           }
         } catch (error: unknown) {
           console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: API isteği başarısız!`, error);
@@ -823,240 +880,176 @@ export default function ExamCreationWizard({
 
   // Final gönderim işleyicisi
   const handleFinalSubmit = async () => {
-    console.log("[ExamCreationWizard] Final submit çağrılıyor...");
-    
-    if (isSubmitting) {
-      console.log("[ExamCreationWizard] İşlem zaten devam ediyor, tekrar submit engellendi");
+    if (isSubmitting) return;
+      setIsSubmitting(true);
+      setErrorMessage(null);
+    console.log(
+      "[ECW handleFinalSubmit] Başlatıldı. Seçili konular:",
+      JSON.stringify(selectedTopics),
+      "Tercihler:",
+      JSON.stringify(preferences),
+      "Dosya:",
+      selectedFile?.name,
+      "Belge ID:",
+      uploadedDocumentId,
+      "Metin İçeriği Var Mı:",
+      !!documentTextContent,
+    );
+
+    if (quizType === "quick") {
+      if (
+        !selectedFile &&
+        !uploadedDocumentId &&
+        selectedTopics.length === 0
+      ) {
+        toast.error(
+          "Lütfen bir dosya yükleyin veya en az bir konu seçin.",
+        );
+        setIsSubmitting(false);
         return;
       }
-      
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    
+    }
+
+    // Diğer quiz tipleri için diğer doğrulamalar
+    if (quizType === "personalized") {
+      if (!selectedCourseId) {
+        toast.error("Lütfen bir kurs seçin.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     try {
-      console.log("[ExamCreationWizard] Sınav oluşturma başlıyor...");
+      console.log("[ECW handleFinalSubmit] Kontrol: selectedTopics dizisi:", selectedTopics);
+      console.log("[ECW handleFinalSubmit] selectedTopics uzunluğu:", selectedTopics.length);
       
-      // Belge metni kontrolü - ID varsa ama içerik yoksa tekrar almayı dene
-      if (uploadedDocumentId && !documentTextContent) {
-        console.log("[ExamCreationWizard] Belge ID var ama belge metni yok. Belge metnini almayı deneyeceğim...");
-        try {
-          toast.loading("Belge metni alınıyor...");
-          const docTextResponse = await documentService.getDocumentText(uploadedDocumentId);
-          
-          if (docTextResponse && docTextResponse.text && docTextResponse.text.trim() !== '') {
-            console.log(`[ExamCreationWizard] Belge metni alındı: ${docTextResponse.text.length} karakter`);
-            setDocumentTextContent(docTextResponse.text);
-            toast.dismiss();
-            toast.success("Belge metni alındı, sınav oluşturuluyor...");
-          } else {
-            console.warn("[ExamCreationWizard] Belge metni alınamadı veya boş");
-            toast.dismiss();
-            // Uyarı göster ama devam et - backend belge ID'sini kullanabilir
-            toast.error("Belge metni alınamadı, belge ID ile devam ediliyor");
-          }
-        } catch (docError) {
-          console.error("[ExamCreationWizard] Belge metni alma hatası:", docError);
-          toast.dismiss();
-          toast.error("Belge metni alınamadı, devam ediliyor...");
-          // Hatayı göster ama işlemi devam ettir - belge ID ile devam edebiliriz
-        }
+      // Çalışacağımız konuların listesi - varsayılan bir konu eklememiz gerekebilir
+      let topicsToUse = [...selectedTopics];
+      
+      // Eğer topicsToUse boşsa ve bir belge yüklenmişse, otomatik bir konu oluştur
+      if (topicsToUse.length === 0 && (uploadedDocumentId || selectedFile)) {
+        console.log("[ECW handleFinalSubmit] Konu seçilmedi ama belge var, otomatik konu oluşturuluyor");
+        const fileName = selectedFile?.name || 'belge';
+        topicsToUse = [{
+          subTopic: `${fileName} İçeriği`,
+          normalizedSubTopic: `belge-${uploadedDocumentId ? uploadedDocumentId.substring(0, 8) : new Date().getTime()}`
+        }];
+        console.log("[ECW handleFinalSubmit] Otomatik oluşturulan konu:", topicsToUse);
       }
       
-      // Minimum belge metni veya belge ID kontrolü - Konular tespit edildiyse metni içeriği kontrolünü atlayabiliriz
-      if (!uploadedDocumentId && (!documentTextContent || documentTextContent.trim().length === 0)) {
-        // Hiç metin içeriği yoksa kontrol et
-        if (selectedTopics && selectedTopics.length > 0) {
-          console.log("[ExamCreationWizard] Belge metni yok ama seçilmiş konular var, devam ediliyor");
-          // Sadece bir bilgilendirme toast'ı göster
-          toast.loading("Seçilen konularla sınav oluşturuluyor...");
+      // API için alt konu nesnelerini oluştur
+      const mappedSubTopics = topicsToUse.map((topic) => {
+        return {
+          subTopic: topic.subTopic,
+          normalizedSubTopic: topic.normalizedSubTopic,
+        };
+      });
+      
+      console.log("[ECW handleFinalSubmit] Hazırlanan alt konu nesneleri:", mappedSubTopics);
+      console.log("[ECW handleFinalSubmit] Alt konuların sayısı:", mappedSubTopics.length);
+      
+      // HATA KONTROLÜ: Alt konu sayısı 0 ise, belge ID kontrolü yap
+      if (mappedSubTopics.length === 0) {
+        console.error("[ECW handleFinalSubmit] KRİTİK HATA: Alt konu nesneleri boş!");
+        
+        if (uploadedDocumentId || selectedFile) {
+          console.log("[ECW handleFinalSubmit] Belge var, varsayılan bir konu ekleniyor");
+          mappedSubTopics.push({
+            subTopic: 'Belge Konusu',
+            normalizedSubTopic: `belge-${Date.now()}`
+          });
+          console.log("[ECW handleFinalSubmit] Varsayılan konu eklendi:", mappedSubTopics);
         } else {
+          console.error("[ECW handleFinalSubmit] Ne konu seçimi ne de belge var! İşlem durduruluyor.");
+          toast.error("Lütfen en az bir konu seçin veya bir belge yükleyin.");
           setIsSubmitting(false);
-          toast.error("Sınav oluşturmak için belge metni, belge ID veya seçilmiş konular gereklidir");
-          console.error("[ExamCreationWizard] Geçerli bir belge metin içeriği, ID'si veya konu seçimi yok");
           return;
         }
-      } else {
-        toast.loading("Sınav oluşturuluyor...");
       }
       
-      console.log("[ExamCreationWizard] Sınav tercihleri hazırlanıyor...");
+      // preferences.subTopicIds var mı kontrol et
+      if (!preferences.subTopicIds || preferences.subTopicIds.length === 0) {
+        console.warn("[ECW handleFinalSubmit] preferences.subTopicIds boş, otomatik dolduruyoruz");
+        
+        // preferences nesnesini güncelle - doğrudan güncellemek yerine setPreferences kullanmak daha güvenli
+        const updatedPreferences = {
+          ...preferences,
+          subTopicIds: mappedSubTopics.map(topic => topic.normalizedSubTopic)
+        };
+        setPreferences(updatedPreferences);
+        console.log("[ECW handleFinalSubmit] preferences.subTopicIds güncellendi:", updatedPreferences.subTopicIds);
+      }
       
-      // Seçilen konuları düzgün formata dönüştür
-      const formattedSelectedSubTopics = selectedTopics.map(topic => ({
-        subTopic: topic.subTopic,
-        normalizedSubTopic: topic.normalizedSubTopic,
-      }));
-      
-      // Quiz oluşturma seçenekleri
-      const difficultyMapping: Record<string, DifficultyLevel> = {
-        'beginner': 'easy',
-        'intermediate': 'medium',
-        'advanced': 'hard',
-        'mixed': 'mixed'
-      };
-      
+      // Sınav oluşturma seçenekleri
       const quizOptions: QuizGenerationOptions = {
-        quizType,
+        quizType: quizType,
+        courseId: selectedCourseId || undefined,
+        personalizedQuizType:
+          quizType === "personalized" ? personalizedQuizType : undefined,
+        selectedSubTopics: mappedSubTopics,
+        documentId: uploadedDocumentId || undefined,
         preferences: {
           questionCount: preferences.questionCount,
-          difficulty: difficultyMapping[preferences.difficulty] || 'mixed',
-          timeLimit: useTimeLimit && timeLimitValue ? timeLimitValue : undefined
+          difficulty: preferences.difficulty as "easy" | "medium" | "hard" | "mixed",
+          timeLimit: preferences.timeLimit,
+          prioritizeWeakAndMediumTopics: true,
         },
-        documentText: documentTextContent || undefined,
-        documentId: uploadedDocumentId || undefined,
-        selectedSubTopics: formattedSelectedSubTopics.length > 0 ? formattedSelectedSubTopics : null
       };
+
+      console.log("[ECW handleFinalSubmit] quizService.generateQuiz çağrılıyor. Seçenekler:", JSON.stringify(quizOptions, null, 2));
       
-      if (quizType === "personalized" && personalizedQuizType) {
-        quizOptions.personalizedQuizType = personalizedQuizType;
-      }
-      
-      console.log("[ExamCreationWizard] Sınav oluşturma isteği gönderiliyor...", {
-        quizType,
-        hasDocumentText: !!documentTextContent,
-        documentTextLength: documentTextContent?.length || 0,
-        hasDocumentId: !!uploadedDocumentId,
-        selectedTopicsCount: formattedSelectedSubTopics.length,
-        preferences: quizOptions.preferences
-      });
-      
-      // Quiz oluştur - en fazla 3 deneme yap
-      let generatedQuiz;
-      let attemptCount = 0;
-      let lastError = null;
-      const maxAttempts = 3;
-      
-      while (attemptCount < maxAttempts) {
-        try {
-          attemptCount++;
-          console.log(`[ExamCreationWizard] Sınav oluşturma denemesi #${attemptCount}`);
-          
-          generatedQuiz = await quizService.generateQuiz(quizOptions);
-          
-          // Başarılı sınav oluşturma kontrolü
-          if (generatedQuiz && generatedQuiz.id) {
-            // Soru sayısını kontrol et
-            if (!generatedQuiz.questions || !Array.isArray(generatedQuiz.questions) || generatedQuiz.questions.length === 0) {
-              console.warn(`[ExamCreationWizard] Sınav oluşturuldu ama soru yok! ID: ${generatedQuiz.id}`);
-              if (attemptCount < maxAttempts) {
-                console.log(`[ExamCreationWizard] Tekrar deneniyor (${attemptCount}/${maxAttempts})...`);
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Biraz daha uzun bekle
-                continue;
-              }
-            }
-            
-            // Başarılı
-            break;
-          } else {
-            // Sınav oluştu ama ID yok veya başka bir sorun var
-            console.warn("[ExamCreationWizard] Sınav nesnesi geçersiz veya ID yok, tekrar deneniyor...");
-            
-            if (attemptCount < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Biraz daha uzun bekle
-              continue;
-            }
-          }
-        } catch (error) {
-          lastError = error;
-          console.error(`[ExamCreationWizard] Sınav oluşturma hatası (Deneme ${attemptCount}/${maxAttempts}):`, error);
-          
-          // Son deneme mi?
-          if (attemptCount >= maxAttempts) {
-            break; // Son denemeydi, döngüden çık
-          }
-          
-          // Tekrar deneyin
-          await new Promise(resolve => setTimeout(resolve, 1500)); // Daha uzun bekle
-        }
-      }
-      
-      // Başarısız olduğunda bile sınav döndürmüş olabilir
-      if (!generatedQuiz && lastError) {
-        throw lastError; // En son hatayı fırlat
-      }
-      
-      // Sınav oluşturuldu mu kontrol et
-      if (!generatedQuiz || !generatedQuiz.id) {
-        throw new Error("Sınav oluşturulamadı. Lütfen tekrar deneyin.");
-      }
-      
-      console.log("[ExamCreationWizard] Sınav başarıyla oluşturuldu:", {
-        quizId: generatedQuiz.id,
-        questionCount: generatedQuiz.questions?.length || 0
-      });
-      
-      toast.dismiss();
-      toast.success(`Sınav başarıyla oluşturuldu! ${generatedQuiz.questions?.length || 0} soru hazır.`);
-      
-      // Başarılı sonuç ile dönüş yap
-      if (onComplete) {
-        // İhtiyaç duyulan topicNameMap formatını oluştur
-        const topicMap: Record<string, string> = {};
-        selectedTopics.forEach(topic => {
-          const key = topic.normalizedSubTopic;
-          const value = topic.subTopic;
-          if (key && value) {
-            topicMap[key] = value;
-          }
-        });
+      try {
+        // Sınav oluştur
+        const quiz = await quizService.generateQuiz(quizOptions);
         
-        onComplete({
+        console.log("[ECW handleFinalSubmit] Sınav oluşturma sonucu:", quiz);
+
+        const wizardResultData = {
           file: selectedFile,
-          quizType,
+          quizType: quizType,
           personalizedQuizType,
           preferences: preferences,
-          topicNameMap: topicMap
-        });
-      }
-      
-      // Sonuç sayfasına yönlendir
-      router.push(`/exams/${generatedQuiz.id}`);
-    } catch (error: unknown) {
-      toast.dismiss();
-      
-      // Detaylı hata loglama
-      console.error("[ExamCreationWizard] Sınav oluşturma hatası:", error);
-      
-      // Hatayı kullanıcıya görüntüle
-      let errorMsg = "Sınav oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.";
-      
-      if (error instanceof Error) {
-        const errorDetails = {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
-          timestamp: new Date().toISOString(),
-          documentId: uploadedDocumentId,
-          hasDocumentText: !!documentTextContent,
-          documentTextLength: documentTextContent?.length || 0,
-          selectedTopicsCount: selectedTopicIds.length
+          topicNameMap: selectedTopics.reduce((acc, item) => {
+            acc[item.normalizedSubTopic] = item.subTopic;
+            return acc;
+          }, {} as Record<string, string>),
+          quiz: quiz,
+          quizId: quiz?.id,
+          documentId: uploadedDocumentId || undefined,
+          status: quiz?.id ? 'success' as const : 'error' as const,
+          error: quiz?.id ? undefined : new ApiError("Sınav oluşturulamadı veya ID alınamadı."),
         };
-        
-        // Konsola detaylı hata bilgisi
-        console.error("[ExamCreationWizard] Detaylı hata bilgisi:", errorDetails);
-        
-        // Hata mesajını düzenle
-        if (error.message.includes("Belge metni zorunludur") || error.message.includes("belge metni") || error.message.includes("dokuman") || error.message.includes("döküman")) {
-          errorMsg = "Sınav oluşturmak için belge metni gereklidir. Lütfen bir belge yükleyin veya konuları manuel olarak seçin.";
-        } else if (error.message.includes("Hiç soru bulunamadı") || error.message.includes("Geçersiz API yanıtı")) {
-          errorMsg = "Yüklenen belgeden soru oluşturulamadı. Lütfen farklı bir belge deneyin veya başka konular seçin.";
-        } else if (error.message.includes("Belge metni çok kısa")) {
-          errorMsg = "Belge metni çok kısa. Lütfen daha uzun bir belge kullanın.";
-        } else if (error.message.includes("timeout") || error.message.includes("zaman aşımı")) {
-          errorMsg = "Sınav oluşturma işlemi zaman aşımına uğradı. Lütfen daha kısa bir belge kullanın veya daha az soru oluşturmayı deneyin.";
-        } else if (error.message.includes("Geçersiz yanıt") || error.message.includes("undefined")) {
-          errorMsg = "Sistemde beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.";
-        } else if (error.message.includes("prepareQuizPayload")) {
-          errorMsg = "Sınav verileri hazırlanamadı. Lütfen yeniden başlatın ve tekrar deneyin.";
-        } else if (error.message.includes("payload") || error.message.includes("istek")) {
-          errorMsg = "Sınav isteği oluşturulamadı. Lütfen tüm alanları doldurduğunuzdan emin olun.";
-        } else if (error.message.includes("Unexpected end of JSON")) {
-          errorMsg = "API JSON hatası oluştu. Lütfen daha kısa bir belge ile tekrar deneyin.";
+
+        // Başarı durumuna göre yönlendir
+        if (quiz?.id) {
+          if (onComplete) {
+            onComplete(wizardResultData);
+          } else {
+            console.log("[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor");
+            router.push(`/exams/${quiz.id}?mode=attempt`);
+          }
+        } else {
+          console.error("[ECW handleFinalSubmit] Sınav ID alınamadı!");
+          setErrorMessage("Sınav oluşturuldu ancak ID alınamadı.");
         }
+      } catch (error) {
+        console.error("[ECW handleFinalSubmit] Sınav oluşturma hatası:", error);
+        
+        // Daha detaylı hata bilgisi
+        if (error instanceof ApiError) {
+          console.error("[ECW handleFinalSubmit] API Hatası:", error.message, error.cause);
+          setErrorMessage(`API Hatası: ${error.message}`);
+        } else {
+          console.error("[ECW handleFinalSubmit] Genel hata:", error);
+          setErrorMessage(`Hata: ${error instanceof Error ? error.message : String(error)}`);
+        }
+        
+        toast.error(`Sınav oluşturulurken bir hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
       }
-      
-      toast.error(errorMsg);
-      setErrorMessage(errorMsg);
+    } catch (error) {
+      console.error("[ECW handleFinalSubmit] Beklenmeyen genel hata:", error);
+      setErrorMessage(`Beklenmeyen hata: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error("Beklenmeyen bir hata oluştu.");
     } finally {
       setIsSubmitting(false);
     }
@@ -1502,6 +1495,13 @@ export default function ExamCreationWizard({
                       isLoading={topicDetectionStatus === "loading"}
                       error={undefined}
                       onTopicsSelected={(selectedTopics, courseId) => {
+                        // Konsolda detaylı log göster
+                        console.log("[ECW TopicSelectionScreen.onTopicsSelected] Seçilen konular:", JSON.stringify(selectedTopics));
+                        console.log("[ECW TopicSelectionScreen.onTopicsSelected] Seçilen kurs ID:", courseId);
+
+                        // Alt konuları da güncelle - direkt olarak handleTopicSelectionChange çağır
+                        handleTopicSelectionChange(selectedTopics);
+                        
                         // topicId ve courseId parametrelerini birleştir
                         handleTopicsDetected(selectedTopics, courseId);
                       }}

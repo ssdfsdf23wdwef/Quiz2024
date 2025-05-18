@@ -879,10 +879,10 @@ export class FlowTrackerService {
     if (!this.configSendLogsToApi || this.apiQueue.length === 0) {
       return;
     }
-    
+
     try {
-      const logsToSend = [...this.apiQueue];
-      this.apiQueue = []; // Kuyruğu temizle
+    const logsToSend = [...this.apiQueue];
+    this.apiQueue = []; // Kuyruğu temizle
 
       // Logları API endpoint'e gönder
       const response = await fetch('/api/logs', {
@@ -902,7 +902,7 @@ export class FlowTrackerService {
         console.warn(`[FlowTrackerService] Flow logları dosyaya kaydedilemedi. Status: ${response.status}`, responseText);
       } else {
         if (this.logger && this.logger.shouldLog(LogLevel.DEBUG)) {
-          this.logger.debug(
+           this.logger.debug(
             `FlowTrackerService: ${logsToSend.length} flow log başarıyla dosyaya kaydedildi.`,
             'FlowTrackerService.sendQueuedLogsToBackend'
           );

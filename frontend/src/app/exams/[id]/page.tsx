@@ -33,7 +33,22 @@ export default function ExamPage() {
         const quizId = Array.isArray(params.id) ? params.id[0] : params.id;
         console.log(`🔄 Sınav verileri yükleniyor: ID=${quizId}`);
         
+        // Hata ile çakışma ihtimali olan ID kontrolü
+        if (quizId.startsWith('error_fallback') || quizId.startsWith('fallback') || quizId.startsWith('parsed_fallback')) {
+          console.error(`❌ Geçersiz sınav ID formatı: ${quizId}`);
+          ErrorService.showToast("Geçersiz sınav formatı. Ana sayfaya yönlendiriliyorsunuz.", "error", "Sınav Hatası");
+          setTimeout(() => {
+            router.push('/');
+          }, 2000);
+          return;
+        }
+        
         const quizData = await quizService.getQuizById(quizId);
+        
+        if (!quizData || !quizData.id) {
+          throw new Error('Sınav verileri eksik veya boş');
+        }
+        
         console.log(`✅ Sınav verileri yüklendi:`, quizData);
         
         setQuiz({
@@ -47,7 +62,7 @@ export default function ExamPage() {
         }
       } catch (error) {
         console.error(`❌ Sınav verileri yüklenemedi:`, error);
-        ErrorService.showToast("Sınav verileri yüklenemedi. Lütfen tekrar deneyin.", "error");
+        ErrorService.showToast("Sınav bulunamadı veya erişim hatası oluştu.", "error", "Sınav Yükleme");
       } finally {
         setLoading(false);
       }

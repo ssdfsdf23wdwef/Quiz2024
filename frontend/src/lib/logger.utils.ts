@@ -704,7 +704,7 @@ export function prettyLogError(error: unknown, componentName: string, extraData?
     componentName,
     ...extraData
   });
-}
+} 
 
 /**
  * Log dosyalarını sunucudan getir

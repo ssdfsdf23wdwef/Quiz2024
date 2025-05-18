@@ -4,7 +4,7 @@ import {
   ApiQuiz,
 } from "./adapter.service";
 import apiService from "./api.service";
-import { ErrorService } from "./error.service";
+import { ErrorService, ApiError } from "./error.service";
 import adapterService from "./adapter.service";
 import type {
   Quiz, 
@@ -19,6 +19,12 @@ import { getLogger, getFlowTracker } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory, FlowTrackerService } from "./flow-tracker.service";
 import { LoggerService } from "./logger.service";
+import axios from "axios";
+
+// Quiz tipine metadata ekleyelim (opsiyonel)
+interface QuizWithMetadata extends Quiz {
+  metadata?: Record<string, any>;
+}
 
 const logger: LoggerService = getLogger();
 const flowTracker: FlowTrackerService = getFlowTracker();
@@ -36,6 +42,20 @@ const API_ENDPOINTS = {
 interface BaseApiResponse {
   status: number;
   data: unknown;
+}
+
+// Quiz yanıt tipi tanımı
+interface QuizResponseDto {
+  id: string;
+  title: string;
+  description?: string;
+  quizType: string;
+  questions: any[]; // Gerekirse daha spesifik bir tip tanımlanabilir
+  courseId?: string;
+  documentId?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Diğer backend yanıt alanları
 }
 
 /**
@@ -336,67 +356,192 @@ class QuizApiService {
   }
 
   /**
+   * QuizResponseDto'yu Quiz tipine dönüştürür
+   */
+  private mapResponseToQuiz(response: QuizResponseDto): Quiz {
+    return {
+      id: response.id,
+      title: response.title,
+      description: response.description || '',
+      quizType: response.quizType as any, // Tip dönüşümü gerekebilir
+      questions: response.questions || [],
+      courseId: response.courseId,
+      documentId: response.documentId,
+      createdAt: new Date(response.createdAt),
+      updatedAt: new Date(response.updatedAt),
+    };
+  }
+
+  /**
    * Verilen seçeneklere göre yeni bir sınav oluşturur
    */
   @LogMethod('QuizApiService', FlowCategory.API)
   async generateQuiz(options: QuizGenerationOptions): Promise<Quiz> {
-    const flowStepId = 'generateQuiz';
+    const flowStepId = `generateQuiz_${options.quizType}_${options.documentId || options.courseId || 'new'}`;
     flowTracker.markStart(flowStepId);
     
-    let endpoint = API_ENDPOINTS.GENERATE_QUICK_QUIZ; // Varsayılan
-    if (options.quizType === 'personalized') {
-      endpoint = API_ENDPOINTS.GENERATE_PERSONALIZED_QUIZ;
-    }
-
     try {
-      // Belge metni uzunluğunu kontrol et
-      if (options.documentText && options.documentText.length > 0 && options.documentText.length < 50) {
-        logger.warn(`Belge metni çok kısa (${options.documentText.length} karakter). Bu az veriyle konular doğru tespit edilemeyebilir.`, 'QuizApiService.generateQuiz', undefined, undefined, { 
-          textLength: options.documentText.length,
-          documentId: options.documentId
-        });
-        // Uyarı ver ama devam et
-      }
+      const endpoint = options.quizType === 'quick' ? API_ENDPOINTS.GENERATE_QUICK_QUIZ : API_ENDPOINTS.GENERATE_PERSONALIZED_QUIZ;
       
-      const apiOptionsPayload = adapterService.fromQuizGenerationOptions(options) as unknown as Record<string, unknown>;
-      logger.debug('Sınav oluşturma isteği gönderiliyor...', 'QuizApiService.generateQuiz', undefined, undefined, { endpoint, type: options.quizType, preferences: options.preferences });
+      // HATA AYIKLAMA: Gönderilecek veriyi detaylı logla
+      console.log(`[QuizApiService.generateQuiz] API isteği hazırlanıyor: ${endpoint}`);
+      console.log(`[QuizApiService.generateQuiz] OPTIONS: ${JSON.stringify(options, null, 2)}`);
+      console.log(`[QuizApiService.generateQuiz] selectedSubTopics tipi: ${typeof options.selectedSubTopics}`);
+      console.log(`[QuizApiService.generateQuiz] selectedSubTopics dizisi mi?: ${Array.isArray(options.selectedSubTopics)}`);
+      console.log(`[QuizApiService.generateQuiz] selectedSubTopics uzunluğu: ${options.selectedSubTopics?.length}`);
+      console.log(`[QuizApiService.generateQuiz] selectedSubTopics içeriği: ${JSON.stringify(options.selectedSubTopics)}`);
       
-      const response = await apiService.post<unknown>(endpoint, apiOptionsPayload, {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 120000, // 2 dakika timeout (Yapay zeka yanıtları uzun sürebilir)
-      });
-
-      if (!this.isApiResponse(response)) {
-        logger.error('API yanıtı beklenen formatta değil (status/data eksik).', 'QuizApiService.generateQuiz', undefined, undefined, { response });
-        throw new Error('Sınav oluşturma API yanıtı geçersiz formatta.');
-      }
-      
-      if (response.status !== 200 && response.status !== 201) {
-        logger.error(`Sınav oluşturma API isteği başarısız oldu. Status: ${response.status}`, 'QuizApiService.generateQuiz', undefined, undefined, { status: response.status, responseData: response.data });
-        throw new Error(`Sınav oluşturma başarısız: ${response.status}`);
-      }
-
-      const quiz = this.parseQuizFromUnknown(response.data, options);
-      
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success'));
-      logger.info('Sınav başarıyla oluşturuldu/alındı', 'QuizApiService.generateQuiz', undefined, undefined, { quizId: quiz.id, questionCount: quiz.questions.length });
-      return quiz;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', err);
-      logger.error('Sınav oluşturulurken genel hata', 'QuizApiService.generateQuiz', err, undefined, { options });
-      const apiError = ErrorService.createApiError("Sınav oluşturulurken bir hata oluştu.", 
-        err.message || String(err), {
+      // Veri doğrulama ve düzeltme
+      if (!options.selectedSubTopics || !Array.isArray(options.selectedSubTopics) || options.selectedSubTopics.length === 0) {
+        console.error('[QuizApiService.generateQuiz] HATA: selectedSubTopics dizisi boş veya geçersiz!');
+        
+        // Eğer belge ID varsa, varsayılan bir alt konu oluştur
+        if (options.documentId) {
+          console.log('[QuizApiService.generateQuiz] Belge ID mevcut, varsayılan alt konu oluşturuluyor');
+          options.selectedSubTopics = [
+            {
+              subTopic: 'Otomatik Oluşturulan Konu',
+              normalizedSubTopic: `belge-${options.documentId.substring(0, 8)}`
+            }
+          ];
+          console.log(`[QuizApiService.generateQuiz] Varsayılan alt konu oluşturuldu: ${JSON.stringify(options.selectedSubTopics)}`);
+        } else {
+          throw new ApiError('En az bir alt konu seçilmelidir', { 
+            code: 'MISSING_SUBTOPICS',
             original: { 
-            error: err,
-            context: 'generateQuiz',
-            options
-          }
+              error: new Error('selectedSubTopics dizisi boş'),
+              context: 'generateQuiz'
+            }
+          });
+        }
+      }
+      
+      // Endpoint'e göre doğru veri formatını hazırla
+      const requestData: Record<string, unknown> = {};
+      
+      // Endpointe göre doğru isimle gönder
+      if (endpoint === API_ENDPOINTS.GENERATE_QUICK_QUIZ) {
+        // Quick quiz için subTopics array formatında gönder
+        requestData.documentText = options.documentText || '';
+        requestData.documentId = options.documentId || null;
+        requestData.questionCount = options.preferences?.questionCount || 10;
+        requestData.difficulty = options.preferences?.difficulty || 'medium';
+        
+        // SubTopics'i string[] formatına dönüştür (backend bunu bekliyor)
+        requestData.subTopics = options.selectedSubTopics.map(topic => {
+          if (typeof topic === 'string') return topic;
+          return topic.normalizedSubTopic || topic.subTopic;
         });
-      ErrorService.handleError(apiError, "Sınav Oluşturma");
-      // Hata durumunda bile bir fallback quiz döndür, böylece UI tamamen kırılmaz.
-      // Ancak, bu durumda bir hata mesajı da gösterilmeli.
-      return this.createFallbackQuiz('error_fallback', options);
+      } else {
+        // Personalized quiz için daha kompleks yapı
+        requestData.courseId = options.courseId;
+        requestData.documentId = options.documentId || null;
+        requestData.documentText = options.documentText || '';
+        requestData.questionCount = options.preferences?.questionCount || 10;
+        requestData.difficulty = options.preferences?.difficulty || 'medium';
+        
+        // SubTopics'i string[] formatına dönüştür
+        requestData.subTopics = options.selectedSubTopics.map(topic => {
+          if (typeof topic === 'string') return topic;
+          return topic.normalizedSubTopic || topic.subTopic;
+        });
+      }
+      
+      console.log(`[QuizApiService.generateQuiz] Son istek verisi: ${JSON.stringify(requestData, null, 2)}`);
+      
+      // API isteğini gönder
+      const response = await apiService.post<QuizResponseDto>(endpoint, requestData);
+      
+      // Yanıt verisi güvenli bir şekilde çıkarılıyor
+      const responseData = this.getResponseData(response);
+      
+      console.log(`[QuizApiService.generateQuiz] API yanıtı başarılı:`, responseData);
+      
+      // DÜZELTME: Yanıt kontrolü ve fallback
+      if (!responseData || !this.isObject(responseData)) {
+        console.warn("[QuizApiService.generateQuiz] API yanıtı beklenen formatta değil, varsayılan sınav oluşturuluyor");
+        const fallbackQuiz = this.createFallbackQuiz("api_fallback", options);
+        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Invalid API response'));
+        return fallbackQuiz;
+      }
+      
+      // DÜZELTME: responseData içinde id kontrolü
+      if (!responseData.id) {
+        console.warn("[QuizApiService.generateQuiz] API yanıtı id içermiyor, muhtemelen farklı bir formatta. Yanıt:", responseData);
+        
+        // Eğer responseData.data yapısı varsa ondan al
+        if (responseData.data && this.isObject(responseData.data) && responseData.data.id) {
+          console.log("[QuizApiService.generateQuiz] API yanıtı içinde data nesnesi bulundu");
+          const mappedQuiz = this.mapResponseToQuiz(responseData.data as QuizResponseDto);
+          flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with nested data'));
+          return mappedQuiz;
+        }
+        
+        // Farklı bir yapıda olup olmadığını kontrol et
+        let possibleQuiz = null;
+        
+        if (this.isObject(responseData.quiz)) {
+          possibleQuiz = responseData.quiz;
+        } else if (this.isObject(responseData.result)) {
+          possibleQuiz = responseData.result;
+        } else if (Array.isArray(responseData.questions)) {
+          // Eğer doğrudan quiz değil ama içerisinde sorular varsa manuel oluştur
+          possibleQuiz = {
+            id: `generated_${Date.now()}`,
+            title: options.title || 'Yeni Sınav',
+            questions: responseData.questions,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            quizType: options.quizType || 'quick'
+          };
+        }
+        
+        if (possibleQuiz && possibleQuiz.id) {
+          console.log("[QuizApiService.generateQuiz] Alternatif formatta quiz bulundu");
+          const mappedQuiz = this.mapResponseToQuiz(possibleQuiz as QuizResponseDto);
+          flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with alternative format'));
+          return mappedQuiz;
+        }
+        
+        // Eğer hiçbir şekilde uygun bir yapı bulunamazsa varsayılan oluştur
+        console.warn("[QuizApiService.generateQuiz] Geçerli bir sınav formatı bulunamadı, varsayılan oluşturuldu");
+        const fallbackQuiz = this.createFallbackQuiz("format_fallback", options);
+        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Missing ID in API response'));
+        return fallbackQuiz;
+      }
+      
+      try {
+        // Normal işleme deneyin
+        const mappedQuiz = this.mapResponseToQuiz(responseData as QuizResponseDto);
+        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success'));
+        return mappedQuiz;
+      } catch (mapError) {
+        // Eşleme hatası oluşursa loglayıp fallback dönün
+        console.error("[QuizApiService.generateQuiz] Quiz dönüşümü sırasında hata:", mapError);
+        const fallbackQuiz = this.createFallbackQuiz("mapping_fallback", options);
+        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error(`Mapping error: ${String(mapError)}`));
+        return fallbackQuiz;
+      }
+    } catch (error) {
+      console.error(`[QuizApiService.generateQuiz] HATA OLUŞTU: ${error instanceof Error ? error.message : String(error)}`);
+      console.error(`[QuizApiService.generateQuiz] Tam hata detayı:`, error);
+      
+      // Detaylı hata bilgisiyle ApiError oluştur
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status;
+        const responseData = error.response?.data;
+        
+        console.error(`[QuizApiService.generateQuiz] Axios hatası: Status=${statusCode}, Data=`, responseData);
+        
+        if (statusCode === 400 && responseData?.message) {
+          throw ErrorService.createApiError(responseData.message);
+        }
+      }
+      
+      // Genel hata
+      throw ErrorService.createApiError(
+        error instanceof Error ? error.message : 'Sınav oluşturulurken beklenmeyen bir hata oluştu'
+      );
     }
   }
 

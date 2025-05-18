@@ -565,9 +565,9 @@ export default function TopicSelectionScreen({
               <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({topics.length})</span>
             </h3>
             <div className="space-y-2">
-              {topics.map((topic) => (
+              {topics.map((topic, index) => (
                 <TopicCard 
-                  key={topic.id} 
+                  key={`${topic.id}-${index}`} 
                   topic={topic} 
                   onToggle={handleTopicToggle} 
                   statusInfo={getStatusInfo(topic.status)}
