@@ -449,74 +449,209 @@ export class QuizValidationService {
   }
 
   /**
-   * AI yanıtında örnek içerik olup olmadığını tespit eder
+   * Metinden örnek içerik olup olmadığını tespit eder
    * @param text AI yanıt metni
-   * @returns Örnek içerik var mı?
+   * @returns Örnek içerik varsa true, yoksa false
    */
   private detectExampleContent(text: string): boolean {
     if (!text) return false;
 
-    // Örnek içerik belirteçleri
-    const exampleIndicators = [
-      /-- ÖRNEK BAŞLANGIÇ/i,
-      /-- EXAMPLE START/i,
-      /Örnek 1 -/i,
-      /Example 1:/i,
-      /soru-id-auto-generated/i,
-      /Bu kısım bir örnek/i,
-      /id: ["']q\d+["']/i,
-      /questionText: ["']Newton'un/i,
-      /correctAnswer: ["']B\) Kapsülleme/i,
+    // Örnek içerikleri gösterdiğine dair işaretler
+    const examplePatterns = [
+      /örnek\s*\d+/i,
+      /example\s*\d+/i,
+      /-- ÖRNEK BAŞLAN[GI]*/i,
+      /ÖRNEK BİTİŞ/i,
+      /\*\*Örnek \d+/i,
+      /id:\s*["']q\d+["']/i,
+      /id:\s*["']soru-id/i,
+      /newton.*ikinci hareket/i,
+      /kapsülleme.*encapsulation/i,
     ];
 
-    // Belirteçlerden herhangi biri metinde geçiyor mu kontrol et
-    return exampleIndicators.some((indicator) => indicator.test(text));
+    return examplePatterns.some((pattern) => pattern.test(text));
   }
 
   /**
-   * Metin tabanlı içerikten soru benzeri yapıları çıkarır
-   * @param text Metin içeriği
-   * @returns Soru dizisi veya null
+   * Ham metinden soru nesneleri çıkarır
+   * @param text Ham AI yanıt metni
+   * @returns Çıkarılan soru nesneleri dizisi
    */
-  private extractQuestionsFromText(text: string): any[] | null {
-    // Soruları tespit etmek için kullanabileceğimiz pattern'lar
-    const questionPatterns = [
-      /(\d+[\.\)]\s*.*\?)/g, // 1. Soru şeklinde veya 1) Soru şeklinde olan, soru işareti ile biten
-      /Soru\s*\d+[\.\:]\s*(.*\?)/gi, // "Soru 1: ..." formatındaki sorular
-      /Q\d+[\.\:]\s*(.*\?)/gi, // "Q1: ..." formatındaki sorular
-    ];
+  private extractQuestionsFromText(text: string): QuizQuestion[] {
+    if (!text) return [];
 
-    // Tüm pattern'ları kullanarak olası soruları bul
-    let allQuestions: string[] = [];
+    const questions: QuizQuestion[] = [];
 
-    questionPatterns.forEach((pattern) => {
-      const matches = text.match(pattern);
-      if (matches) {
-        allQuestions = [...allQuestions, ...matches];
+    try {
+      // Metinde JSON bloklarını bul
+      const jsonRegex = /\{[\s\S]*?\}/g;
+      const matches = text.match(jsonRegex);
+
+      if (!matches) return [];
+
+      // Her bir JSON bloğunu parse etmeyi dene
+      for (const match of matches) {
+        try {
+          const obj = JSON.parse(match);
+
+          // Bir soru nesnesi olup olmadığını kontrol et
+          if (
+            obj &&
+            typeof obj === 'object' &&
+            (obj.questionText || obj.question) &&
+            Array.isArray(obj.options)
+          ) {
+            // Eksik alanları varsayılan değerlerle tamamla
+            const question: QuizQuestion = {
+              id:
+                obj.id || `q_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+              questionText:
+                obj.questionText || obj.question || 'Soru metni eksik',
+              options: obj.options || [
+                'A) Seçenek eksik',
+                'B) Seçenek eksik',
+                'C) Seçenek eksik',
+                'D) Seçenek eksik',
+              ],
+              correctAnswer:
+                obj.correctAnswer || obj.correct || obj.answer || 'Cevap eksik',
+              explanation: obj.explanation || obj.reason || 'Açıklama eksik',
+              subTopicName:
+                obj.subTopicName || obj.subTopic || obj.topic || 'Genel Konu',
+              normalizedSubTopicName:
+                this.normalizationService.normalizeSubTopicName(
+                  obj.subTopicName || obj.subTopic || obj.topic || 'Genel Konu',
+                ),
+              difficulty: obj.difficulty || 'medium',
+              questionType: obj.questionType || 'multiple_choice',
+              cognitiveDomain: obj.cognitiveDomain || 'understanding',
+            };
+
+            questions.push(question);
+          }
+        } catch (e) {
+          // Bu JSON bloğu parse edilemiyor, atla
+          continue;
+        }
       }
-    });
 
-    // Eğer hiç soru bulunamadıysa null döndür
-    if (allQuestions.length === 0) {
-      return null;
+      // Tüm metin içinde bir JSON nesnesi var mı kontrol et
+      if (questions.length === 0) {
+        try {
+          // Tüm metni JSON olarak parse et
+          const json = JSON.parse(text);
+
+          // JSON bir dizi mi kontrol et
+          if (Array.isArray(json)) {
+            // Her bir öğenin soru olup olmadığını kontrol et
+            const validQuestions = json
+              .filter(
+                (item) =>
+                  item &&
+                  typeof item === 'object' &&
+                  (item.questionText || item.question) &&
+                  Array.isArray(item.options),
+              )
+              .map((item) => ({
+                id:
+                  item.id ||
+                  `q_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                questionText:
+                  item.questionText || item.question || 'Soru metni eksik',
+                options: item.options || [
+                  'A) Seçenek eksik',
+                  'B) Seçenek eksik',
+                  'C) Seçenek eksik',
+                  'D) Seçenek eksik',
+                ],
+                correctAnswer:
+                  item.correctAnswer ||
+                  item.correct ||
+                  item.answer ||
+                  'Cevap eksik',
+                explanation:
+                  item.explanation || item.reason || 'Açıklama eksik',
+                subTopicName:
+                  item.subTopicName ||
+                  item.subTopic ||
+                  item.topic ||
+                  'Genel Konu',
+                normalizedSubTopicName:
+                  this.normalizationService.normalizeSubTopicName(
+                    item.subTopicName ||
+                      item.subTopic ||
+                      item.topic ||
+                      'Genel Konu',
+                  ),
+                difficulty: item.difficulty || 'medium',
+                questionType: item.questionType || 'multiple_choice',
+                cognitiveDomain: item.cognitiveDomain || 'understanding',
+              }));
+
+            if (validQuestions.length > 0) {
+              questions.push(...validQuestions);
+            }
+          } else if (json.questions && Array.isArray(json.questions)) {
+            // JSON bir nesne ve questions alanı var mı kontrol et
+            const validQuestions = json.questions
+              .filter(
+                (item) =>
+                  item &&
+                  typeof item === 'object' &&
+                  (item.questionText || item.question) &&
+                  Array.isArray(item.options),
+              )
+              .map((item) => ({
+                id:
+                  item.id ||
+                  `q_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                questionText:
+                  item.questionText || item.question || 'Soru metni eksik',
+                options: item.options || [
+                  'A) Seçenek eksik',
+                  'B) Seçenek eksik',
+                  'C) Seçenek eksik',
+                  'D) Seçenek eksik',
+                ],
+                correctAnswer:
+                  item.correctAnswer ||
+                  item.correct ||
+                  item.answer ||
+                  'Cevap eksik',
+                explanation:
+                  item.explanation || item.reason || 'Açıklama eksik',
+                subTopicName:
+                  item.subTopicName ||
+                  item.subTopic ||
+                  item.topic ||
+                  'Genel Konu',
+                normalizedSubTopicName:
+                  this.normalizationService.normalizeSubTopicName(
+                    item.subTopicName ||
+                      item.subTopic ||
+                      item.topic ||
+                      'Genel Konu',
+                  ),
+                difficulty: item.difficulty || 'medium',
+                questionType: item.questionType || 'multiple_choice',
+                cognitiveDomain: item.cognitiveDomain || 'understanding',
+              }));
+
+            questions.push(...validQuestions);
+          }
+        } catch (e) {
+          // Tüm metni JSON olarak parse edemedik, zaten tek tek bloklara ayırarak denemiştik
+        }
+      }
+    } catch (error) {
+      // Metinde JSON bloğu bulunamadı veya işleme hatalıydı
+      this.logger.warn(
+        `Metinden soru nesneleri çıkarılamadı: ${error.message}`,
+        'QuizValidationService.extractQuestionsFromText',
+      );
     }
 
-    this.logger.debug(
-      `Metin içinde ${allQuestions.length} olası soru tespit edildi, ancak tam JSON formatında değil.`,
-      'QuizValidationService.extractQuestionsFromText',
-    );
-
-    // Hata atmak yerine bir hata nesnesi döndür
-    throw new BadRequestException({
-      code: 'INVALID_RESPONSE_FORMAT',
-      message:
-        'AI yanıtı geçerli bir JSON formatında değil, ancak metin içinde sorular tespit edildi.',
-      details: {
-        possibleQuestionsCount: allQuestions.length,
-        firstQuestionSample: allQuestions[0],
-        rawTextPreview: text.substring(0, 300) + '...',
-      },
-    });
+    return questions;
   }
 
   /**
@@ -537,23 +672,37 @@ export class QuizValidationService {
 
     // Fallback soruların izlenebilmesi için log ekle
     this.logger.warn(
-      `⚠️ [${traceId}] Fallback sorular oluşturuluyor (konu: ${subTopics.slice(0, 3).join(', ')}${
-        subTopics.length > 3 ? '...' : ''
+      `⚠️ [${traceId}] Fallback sorular oluşturuluyor (konu: ${
+        Array.isArray(subTopics)
+          ? typeof subTopics[0] === 'string'
+            ? (subTopics as string[]).slice(0, 3).join(', ')
+            : (subTopics as { subTopicName: string }[])
+                .slice(0, 3)
+                .map((t) => t.subTopicName)
+                .join(', ')
+          : 'bilinmeyen'
+      }${
+        Array.isArray(subTopics) && subTopics.length > 3 ? '...' : ''
       }, belge ID: ${documentId || 'yok'})`,
       'QuizValidationService.createFallbackQuestions',
     );
 
     this.flowTracker.trackStep(
-      `AI yanıtı işlenemiyor, fallback sorular oluşturuluyor. Alt konular: ${subTopics.length} adet`,
+      `AI yanıtı işlenemiyor, fallback sorular oluşturuluyor. Alt konular: ${Array.isArray(subTopics) ? subTopics.length : 0} adet`,
       'QuizValidationService',
     );
 
     // Eğer özel Eksaskala konusu ise, ilgili konuya özel sorular üret
     if (
       specialTopic === 'eksaskala' ||
-      subTopics.some(
-        (topic) => topic && topic.toLowerCase().includes('eksaskala'),
-      )
+      (Array.isArray(subTopics) &&
+        subTopics.some((topic) => {
+          if (typeof topic === 'string')
+            return topic.toLowerCase().includes('eksaskala');
+          if (typeof topic === 'object' && topic && topic.subTopicName)
+            return topic.subTopicName.toLowerCase().includes('eksaskala');
+          return false;
+        }))
     ) {
       this.flowTracker.trackStep(
         `Eksaskala konusuna özel sorular üretiliyor`,
@@ -588,12 +737,33 @@ export class QuizValidationService {
     const defaultSubTopic = 'Genel Konular';
 
     // Alt konuları normalleştirmeyi kontrol et ve konu başlıklarını daha anlaşılır hale getir
-    const normalizedTopics = (subTopics || []).map((topic) => {
-      // Null/undefined kontrolü
-      if (!topic) return defaultSubTopic;
-      // Normalleştirme sırasında - veya _ karakterlerini boşluğa çevir
-      return topic.replace(/-/g, ' ').replace(/_/g, ' ');
-    });
+    const normalizedTopics = Array.isArray(subTopics)
+      ? subTopics.map((topic) => {
+          // Null/undefined kontrolü
+          if (!topic) return defaultSubTopic;
+          // String mi object mi kontrolü
+          if (typeof topic === 'string') {
+            // Normalleştirme sırasında - veya _ karakterlerini boşluğa çevir
+            return topic.replace(/-/g, ' ').replace(/_/g, ' ');
+          } else if (typeof topic === 'object' && topic && topic.subTopicName) {
+            return topic.subTopicName.replace(/-/g, ' ').replace(/_/g, ' ');
+          }
+          return defaultSubTopic;
+        })
+      : [defaultSubTopic];
+
+    // subTopics'ten string değer çıkarma helper fonksiyonu
+    const getTopicString = (index: number): string => {
+      if (!Array.isArray(subTopics) || index >= subTopics.length)
+        return defaultSubTopic;
+
+      const topic = subTopics[index];
+      if (typeof topic === 'string') return topic;
+      if (typeof topic === 'object' && topic && topic.subTopicName)
+        return topic.subTopicName;
+
+      return defaultSubTopic;
+    };
 
     return [
       {
@@ -607,11 +777,10 @@ export class QuizValidationService {
         ],
         correctAnswer: 'C) Gereksinimlerin belirlenmesi',
         explanation: `${normalizedTopics[0] || 'Yazılım geliştirme'} sürecinde gereksinimlerin doğru belirlenmesi, projenin başarısı için en kritik adımdır. Diğer tüm adımlar da önemlidir ancak doğru gereksinimler olmadan başarılı bir proje geliştirmek mümkün değildir.`,
-        subTopicName:
-          subTopicsCount > 0 && subTopics[0] ? subTopics[0] : defaultSubTopic,
+        subTopicName: subTopicsCount > 0 ? getTopicString(0) : defaultSubTopic,
         normalizedSubTopicName:
-          subTopicsCount > 0 && subTopics[0]
-            ? this.normalizationService.normalizeSubTopicName(subTopics[0])
+          subTopicsCount > 0
+            ? this.normalizationService.normalizeSubTopicName(getTopicString(0))
             : this.normalizationService.normalizeSubTopicName(defaultSubTopic),
         difficulty: difficultyLevel,
         questionType: 'multiple_choice',
@@ -629,16 +798,18 @@ export class QuizValidationService {
         correctAnswer: 'A) İteratif geliştirme',
         explanation: `${normalizedTopics[1] || normalizedTopics[0] || 'Bilgisayar Bilimleri'} alanında iteratif geliştirme, geri bildirim döngülerini kullanarak sürekli iyileştirme sağladığı için genellikle daha verimli sonuçlar verir. Bu yaklaşım, hataların erken tespit edilmesini ve düzeltilmesini kolaylaştırır.`,
         subTopicName:
-          subTopicsCount > 1 && subTopics[1]
-            ? subTopics[1]
-            : subTopicsCount > 0 && subTopics[0]
-              ? subTopics[0]
+          subTopicsCount > 1
+            ? getTopicString(1)
+            : subTopicsCount > 0
+              ? getTopicString(0)
               : 'Yazılım Metodolojileri',
         normalizedSubTopicName:
-          subTopicsCount > 1 && subTopics[1]
-            ? this.normalizationService.normalizeSubTopicName(subTopics[1])
-            : subTopicsCount > 0 && subTopics[0]
-              ? this.normalizationService.normalizeSubTopicName(subTopics[0])
+          subTopicsCount > 1
+            ? this.normalizationService.normalizeSubTopicName(getTopicString(1))
+            : subTopicsCount > 0
+              ? this.normalizationService.normalizeSubTopicName(
+                  getTopicString(0),
+                )
               : this.normalizationService.normalizeSubTopicName(
                   'Yazılım Metodolojileri',
                 ),
@@ -658,16 +829,18 @@ export class QuizValidationService {
         correctAnswer: 'B) Zaman karmaşıklığı',
         explanation: `${normalizedTopics[2] || normalizedTopics[0] || 'Veri Yapıları'} değerlendirilirken zaman karmaşıklığı, bir algoritmanın veri miktarına göre ölçeklenmesini temsil eder ve genellikle en kritik performans faktörüdür. Özellikle büyük veri setleriyle çalışırken, zaman karmaşıklığı algoritma seçiminde belirleyici rol oynar.`,
         subTopicName:
-          subTopicsCount > 2 && subTopics[2]
-            ? subTopics[2]
-            : subTopicsCount > 0 && subTopics[0]
-              ? subTopics[0]
+          subTopicsCount > 2
+            ? getTopicString(2)
+            : subTopicsCount > 0
+              ? getTopicString(0)
               : 'Algoritma Analizi',
         normalizedSubTopicName:
-          subTopicsCount > 2 && subTopics[2]
-            ? this.normalizationService.normalizeSubTopicName(subTopics[2])
-            : subTopicsCount > 0 && subTopics[0]
-              ? this.normalizationService.normalizeSubTopicName(subTopics[0])
+          subTopicsCount > 2
+            ? this.normalizationService.normalizeSubTopicName(getTopicString(2))
+            : subTopicsCount > 0
+              ? this.normalizationService.normalizeSubTopicName(
+                  getTopicString(0),
+                )
               : this.normalizationService.normalizeSubTopicName(
                   'Algoritma Analizi',
                 ),
@@ -688,16 +861,18 @@ export class QuizValidationService {
           'C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur',
         explanation: `${normalizedTopics[3] || normalizedTopics[0] || 'Modern Yazılım Geliştirme'} pratiklerinde sürekli entegrasyon (CI), kodun düzenli olarak entegre edilmesini, otomatik testlerden geçirilmesini sağlayarak hataların erken tespit edilmesine ve kod kalitesinin artmasına yardımcı olur.`,
         subTopicName:
-          subTopicsCount > 3 && subTopics[3]
-            ? subTopics[3]
-            : subTopicsCount > 0 && subTopics[0]
-              ? subTopics[0]
+          subTopicsCount > 3
+            ? getTopicString(3)
+            : subTopicsCount > 0
+              ? getTopicString(0)
               : 'Yazılım Kalitesi',
         normalizedSubTopicName:
-          subTopicsCount > 3 && subTopics[3]
-            ? this.normalizationService.normalizeSubTopicName(subTopics[3])
-            : subTopicsCount > 0 && subTopics[0]
-              ? this.normalizationService.normalizeSubTopicName(subTopics[0])
+          subTopicsCount > 3
+            ? this.normalizationService.normalizeSubTopicName(getTopicString(3))
+            : subTopicsCount > 0
+              ? this.normalizationService.normalizeSubTopicName(
+                  getTopicString(0),
+                )
               : this.normalizationService.normalizeSubTopicName(
                   'Yazılım Kalitesi',
                 ),
@@ -718,16 +893,18 @@ export class QuizValidationService {
           'C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır',
         explanation: `${normalizedTopics[4] || normalizedTopics[0] || 'Bilgisayar Bilimi'} alanında, NP-Tam problemlerin polinom zamanda çözülüp çözülemeyeceği (P=NP problemi) hala açık bir sorudur. Bu problemlerin verimli çözümleri henüz bulunamamıştır ve bu, teorik bilgisayar biliminin en önemli açık problemlerinden biridir.`,
         subTopicName:
-          subTopicsCount > 4 && subTopics[4]
-            ? subTopics[4]
-            : subTopicsCount > 0 && subTopics[0]
-              ? subTopics[0]
+          subTopicsCount > 4
+            ? getTopicString(4)
+            : subTopicsCount > 0
+              ? getTopicString(0)
               : 'Teorik Bilgisayar Bilimi',
         normalizedSubTopicName:
-          subTopicsCount > 4 && subTopics[4]
-            ? this.normalizationService.normalizeSubTopicName(subTopics[4])
-            : subTopicsCount > 0 && subTopics[0]
-              ? this.normalizationService.normalizeSubTopicName(subTopics[0])
+          subTopicsCount > 4
+            ? this.normalizationService.normalizeSubTopicName(getTopicString(4))
+            : subTopicsCount > 0
+              ? this.normalizationService.normalizeSubTopicName(
+                  getTopicString(0),
+                )
               : this.normalizationService.normalizeSubTopicName(
                   'Teorik Bilgisayar Bilimi',
                 ),
@@ -1086,70 +1263,117 @@ export class QuizValidationService {
   ) {
     const { traceId } = metadata;
 
+    this.flowTracker.trackStep(
+      'Şema validasyonu yapılıyor',
+      'QuizValidationService.validateQuizResponseSchema',
+    );
+
     try {
-      // Önce basit bir yapı kontrolü yapalım
-      if (!parsedJson || typeof parsedJson !== 'object') {
-        this.logger.error(
-          `[${traceId}] Quiz AI yanıtı geçersiz: yanıt bir nesne değil`,
-          'QuizValidationService.validateQuizResponseSchema',
-        );
+      // Hata ayıklama için JSON yapısını logla
+      this.logger.debug(
+        `[${traceId}] JSON şema validasyonu başlatılıyor. Yapı: ${JSON.stringify(
+          Object.keys(parsedJson || {}),
+        )}`,
+        'QuizValidationService.validateQuizResponseSchema',
+      );
 
-        // Geçersiz yanıt durumunda hata fırlat
-        throw new BadRequestException({
-          code: 'INVALID_RESPONSE_STRUCTURE',
-          message: 'AI yanıtı geçersiz bir formatta: nesne değil',
-          details: {
-            traceId,
-            receivedType: typeof parsedJson,
-            rawResponsePreview: rawResponse.substring(0, 100) + '...',
-          },
-        });
-      }
-
-      // Sorular direkt bir array olarak gelmiş olabilir
+      // Gelen veri doğrudan bir dizi ise, questions dizisine dönüştür
       if (Array.isArray(parsedJson)) {
-        this.logger.info(
-          `[${traceId}] Quiz AI yanıtı direkt soru dizisi olarak geldi, şema uyumlu hale getiriliyor`,
+        this.logger.debug(
+          `[${traceId}] Dizi olarak gelen yanıt, questions formatına dönüştürülüyor`,
+          'QuizValidationService.validateQuizResponseSchema',
+        );
+        parsedJson = { questions: parsedJson };
+      }
+
+      // Yanıt içinde questions yoksa (ama doğrudan soru listesi içerik olabilir)
+      if (!parsedJson.questions) {
+        this.logger.debug(
+          `[${traceId}] Yanıtta 'questions' alanı bulunamadı, alternatif yapılar aranıyor`,
           'QuizValidationService.validateQuizResponseSchema',
         );
 
-        // Direkt array geldiyse bunu questions property'si olan bir nesne olarak sarmalayalım
-        return { questions: parsedJson };
-      }
+        // ID, questionText ve options içeren nesneleri bul
+        const foundQuestions: Record<string, any>[] = [];
 
-      // questions property'si var mı kontrol edelim
-      if (!parsedJson.questions && !Array.isArray(parsedJson.questions)) {
-        // Eğer "quiz", "data" veya "result" gibi farklı bir property içinde sorular olabilir
-        const possibleKeys = [
-          'quiz',
-          'data',
-          'result',
-          'sorulist',
-          'questionlist',
-        ];
-        let foundQuestions = null;
-
-        for (const key of possibleKeys) {
-          if (
+        // Gelen objede soru benzeri alanlar var mı kontrol et
+        const keys = Object.keys(parsedJson);
+        const containsQuestionProperties = keys.some(
+          (key) =>
+            typeof parsedJson[key] === 'object' &&
             parsedJson[key] &&
-            (Array.isArray(parsedJson[key]) ||
-              (parsedJson[key].questions &&
-                Array.isArray(parsedJson[key].questions)))
-          ) {
-            foundQuestions = Array.isArray(parsedJson[key])
-              ? parsedJson[key]
-              : parsedJson[key].questions;
+            parsedJson[key].questionText &&
+            Array.isArray(parsedJson[key].options),
+        );
 
-            this.logger.info(
-              `[${traceId}] Sorular '${key}' özelliği içinde bulundu`,
-              'QuizValidationService.validateQuizResponseSchema',
-            );
+        if (containsQuestionProperties) {
+          this.logger.debug(
+            `[${traceId}] JSON içinde soru benzeri nesneler tespit edildi, bunları işlemeye çalışılacak`,
+            'QuizValidationService.validateQuizResponseSchema',
+          );
 
-            break;
+          for (const key of keys) {
+            const obj = parsedJson[key];
+            if (
+              typeof obj === 'object' &&
+              obj &&
+              obj.questionText &&
+              Array.isArray(obj.options)
+            ) {
+              foundQuestions.push(obj);
+            }
           }
         }
 
-        if (foundQuestions) {
+        // Eğer hala soru bulunamadıysa, içiçe yapıları kontrol et
+        if (foundQuestions.length === 0) {
+          for (const key of Object.keys(parsedJson)) {
+            const value = parsedJson[key];
+
+            // İç içe yapılarda soru dizisi olabilir
+            if (Array.isArray(value) && value.length > 0) {
+              const likelyQuestions = value.filter(
+                (item) =>
+                  typeof item === 'object' &&
+                  item &&
+                  item.questionText &&
+                  Array.isArray(item.options),
+              );
+
+              if (likelyQuestions.length > 0) {
+                this.logger.debug(
+                  `[${traceId}] '${key}' alanı altında ${likelyQuestions.length} adet soru bulundu`,
+                  'QuizValidationService.validateQuizResponseSchema',
+                );
+                foundQuestions.push(
+                  ...(likelyQuestions as Record<string, any>[]),
+                );
+              }
+            }
+          }
+        }
+
+        // Son bir deneme: metinde JSON bloklarını bul
+        if (foundQuestions.length === 0 && rawResponse) {
+          this.logger.debug(
+            `[${traceId}] Standart yapıda sorular bulunamadı, ham yanıttan sorular çıkarılmaya çalışılacak`,
+            'QuizValidationService.validateQuizResponseSchema',
+          );
+
+          const extractedQuestions = this.extractQuestionsFromText(rawResponse);
+          if (extractedQuestions && extractedQuestions.length > 0) {
+            // QuizQuestion tipindeki soruları foundQuestions dizisine ekle
+            extractedQuestions.forEach((question) => {
+              foundQuestions.push(question as unknown as Record<string, any>);
+            });
+            this.logger.info(
+              `[${traceId}] Ham yanıttan ${extractedQuestions.length} adet soru çıkarıldı`,
+              'QuizValidationService.validateQuizResponseSchema',
+            );
+          }
+        }
+
+        if (foundQuestions.length > 0) {
           return { questions: foundQuestions };
         }
 
@@ -1162,21 +1386,78 @@ export class QuizValidationService {
           { parsedJsonKeys: Object.keys(parsedJson) },
         );
 
+        // Örnek içerik tespit edildi mi kontrol et
+        const containsExamples = this.detectExampleContent(rawResponse);
+
         // questions bulunamadıysa hata fırlat
         throw new BadRequestException({
           code: 'MISSING_QUESTIONS_FIELD',
-          message: 'AI yanıtında "questions" alanı bulunamadı',
+          message: containsExamples
+            ? 'AI yanıtı şablondaki örnekleri yanıt olarak döndürdü'
+            : 'AI yanıtında "questions" alanı bulunamadı',
           details: {
             traceId,
             availableKeys: Object.keys(parsedJson),
             expectedKey: 'questions',
             rawResponsePreview: rawResponse.substring(0, 100) + '...',
+            containsExampleContent: containsExamples,
           },
         });
       }
 
       // Şema doğrulaması yap
-      return QuizGenerationResponseSchema.parse(parsedJson);
+      try {
+        return QuizGenerationResponseSchema.parse(parsedJson);
+      } catch (zodError) {
+        // Zod hatası durumunda daha toleranslı doğrulama deneyelim
+        this.logger.warn(
+          `[${traceId}] Strict şema validasyonu başarısız oldu, esnek doğrulama deneniyor: ${zodError.message}`,
+          'QuizValidationService.validateQuizResponseSchema',
+        );
+
+        // Soruları özel işleyerek doğrulama
+        if (parsedJson.questions && Array.isArray(parsedJson.questions)) {
+          // Her bir soruyu temizle ve gerekli alanları ekle
+          const cleanedQuestions = parsedJson.questions.map((q, index) => ({
+            id: q.id || `q_${Date.now()}_${index}`,
+            questionText:
+              q.questionText || q.question || q.text || 'Soru metni eksik',
+            options: Array.isArray(q.options)
+              ? q.options
+              : [
+                  'A) Seçenek eksik',
+                  'B) Seçenek eksik',
+                  'C) Seçenek eksik',
+                  'D) Seçenek eksik',
+                ],
+            correctAnswer:
+              q.correctAnswer || q.correct || q.answer || 'Cevap eksik',
+            explanation: q.explanation || q.reason || 'Açıklama eksik',
+            subTopicName:
+              q.subTopicName ||
+              q.subTopic ||
+              q.topic ||
+              metadata.subTopics?.[0] ||
+              'Genel Konu',
+            normalizedSubTopicName:
+              this.normalizationService.normalizeSubTopicName(
+                q.subTopicName ||
+                  q.subTopic ||
+                  q.topic ||
+                  metadata.subTopics?.[0] ||
+                  'Genel Konu',
+              ),
+            difficulty: q.difficulty || metadata.difficulty || 'medium',
+            questionType: q.questionType || 'multiple_choice',
+            cognitiveDomain: q.cognitiveDomain || 'understanding',
+          }));
+
+          return { questions: cleanedQuestions };
+        }
+
+        // Bu da başarısızsa orjinal hatayı fırlat
+        throw zodError;
+      }
     } catch (validationError) {
       this.logger.error(
         `[${traceId}] Quiz AI yanıtı şema validasyonundan geçemedi: ${validationError.message}`,
@@ -1185,20 +1466,26 @@ export class QuizValidationService {
         validationError,
       );
 
+      // Örnek içerik tespit edildi mi kontrol et
+      const containsExamples = this.detectExampleContent(rawResponse);
+
       // Log için debug bilgisi (ayrı bir log kaydı olarak)
       this.logger.debug(
-        `[${traceId}] Hatalı yanıt detayları: ${rawResponse?.substring(0, 1000)}, Yapı: ${JSON.stringify(Object.keys(parsedJson || {}))}`,
+        `[${traceId}] Hatalı yanıt detayları: ${rawResponse?.substring(0, 1000)}, Yapı: ${JSON.stringify(Object.keys(parsedJson || {}))}, Örnek içeriği: ${containsExamples}`,
         'QuizValidationService.validateQuizResponseSchema',
       );
 
       // Hata fırlat
       throw new BadRequestException({
         code: 'SCHEMA_VALIDATION_ERROR',
-        message: 'AI yanıtı şema validasyonundan geçemedi',
+        message: containsExamples
+          ? 'AI yanıtında örnek içerik tespit edildi ve şema doğrulaması başarısız oldu'
+          : 'AI yanıtı şema validasyonundan geçemedi',
         details: {
           traceId,
           validationError: validationError.message,
           rawResponsePreview: rawResponse.substring(0, 200) + '...',
+          containsExamples,
         },
       });
     }
