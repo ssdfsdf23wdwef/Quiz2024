@@ -27,10 +27,20 @@
 7. Her soru için kısa bir açıklama ekle
 8. Kullanılan terminoloji ve dil seviyesi hedef kitleye uygun olmalı
 
+**ÇOK ÖNEMLİ: JSON FORMATINDA ÇIKTI KURALLARI:**
+* Yanıt SADECE geçerli bir JSON nesnesi olmalıdır ve hiçbir ek açıklama içermemelidir
+* JSON dışında hiçbir ek metin, açıklama, yorum veya metin eklenmemelidir
+* ```json ve ``` etiketlerini KULLANMA, doğrudan saf JSON döndür
+* JSON yapısı tam ve doğru olmalı - tüm açılış-kapanış parantezleri dengeli olmalı
+* Her soruda zorunlu alanların tamamı doldurulmalı: id, questionText, options, correctAnswer, explanation, subTopicName, difficulty
+* Çıktının kesinlikle JSON parser ile çözümlenebilir olduğunu kontrol et
+* Döndürdüğün JSON, aşağıdaki çıktı formatına tamamen uygun olmalı, hiçbir yorumlayıcı hatası içermemeli
+* Her question objesi doğru şekilde tırnak işine alınmalı ve virgüllerle ayrılmalı
+* Çıktı formatında gösterildiği gibi "questions" anahtarı altında bir dizi olarak tüm soruları döndür
+
 **Çıktı Formatı:**
 Yanıtını aşağıdaki JSON formatında ver:
 
-```json
 {
   "questions": [
     {
@@ -45,19 +55,6 @@ Yanıtını aşağıdaki JSON formatında ver:
     ...
   ]
 }
-```
-
-**ÇOK ÖNEMLİ: JSON FORMATINDA ÇIKTI KURALLARI:**
-* Yanıt SADECE geçerli bir JSON nesnesi olmalıdır
-* Eksiksiz bir JSON yapısı olduğundan emin ol - tüm parantez ve tırnak işaretleri dengeli olmalı
-* Her bir alan için uygun JSON sözdizimi kullanılmalı
-* Değerleri uygun tırnak işaretleri içine almalısın
-* JSON'da ek açıklama, metin veya yorum OLMAMALI
-* Çıktının JSON formatına uygun olduğunu, bozuk olmadığını kontrol et
-* Bir önceki **Çıktı Formatı** bölümünde tam olarak verilen yapıya uy
-* SADECE GEÇERLİ JSON DÖNDÜR, BAŞKA HİÇBİR YORUM, AÇIKLAMA VEYA EK BİLGİ EKLEME. EN ÖNEMLİSİ ```json ve ``` ETİKETLERİNİ DE KULLANMA, DOĞRUDAN JSON DÖNDÜR!
-* JSON içindeki metin alanlarında özel karakterlerden kaçınmaya çalış, özellikle çift tırnak işaretleri kullanırken dikkatli ol
-* Zorunlu kontrol: Çıktını JSON.parse() ile ayrıştırılabilir olduğundan emin ol - ayrıştırıldığında hata vermeyecek şekilde olmalı
 
 **Rol:** Sen, verilen konu listesine ve sınav ayarlarına göre, eğitimsel açıdan değerli, çeşitli soru tiplerine sahip ve açıklamalı sınav soruları üreten bir Eğitim Değerlendirme Uzmanısın. Görevin, Bloom Taksonomisi'nin farklı bilişsel seviyelerini (Hatırlama, Anlama, Uygulama, Analiz, Değerlendirme, Yaratma) kapsayan, kavramsal anlayışı ölçen ve öğrencilerin öğrenmesini pekiştiren sorular oluşturmaktır.
 
@@ -81,7 +78,8 @@ Yanıtını aşağıdaki JSON formatında ver:
     - Zor: Analiz (analyzing) - kompleks düzeyde, Değerlendirme (evaluating), Yaratma (creating)
 
 **JSON Çıktı Şeması (Her soru için):**
-```json
+Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
+
 {
   "id": "soru-id-auto-generated",
   "questionText": "Soru metni?",
@@ -94,12 +92,10 @@ Yanıtını aşağıdaki JSON formatında ver:
   "normalizedSubTopicName": "normalize_edilmis_konu_adi",
   "difficulty": "kolay|orta|zor"
 }
-```
 
-**Farklı Soru Tipleri için Örnekler:**
+**SON UYARI: Aşağıdaki soru örnekleri SADECE REFERANS içindir, bunlar gerçek sorular DEĞİLDİR ve yanıtında bu örnekleri KULLANMA veya yanıtına EKLEME. Bu örnekler sadece soru formatı hakkında fikir vermek içindir:**
 
 **Örnek 1 - Çoktan Seçmeli:**
-```json
 {
   "id": "q1",
   "questionText": "Newton'un İkinci Hareket Kanunu'nu matematiksel olarak ifade eden denklem hangisidir?",
@@ -112,10 +108,8 @@ Yanıtını aşağıdaki JSON formatında ver:
   "normalizedSubTopicName": "newtonun_ikinci_hareket_kanunu",
   "difficulty": "kolay"
 }
-```
 
 **Örnek 2 - Doğru/Yanlış:**
-```json
 {
   "id": "q2",
   "questionText": "Kapsülleme (Encapsulation) ilkesi, bir sınıfın başka bir sınıfın özelliklerini miras almasını sağlar.",
@@ -128,94 +122,6 @@ Yanıtını aşağıdaki JSON formatında ver:
   "normalizedSubTopicName": "kapsulleme_encapsulation",
   "difficulty": "orta"
 }
-```
-
-**Örnek 3 - Boşluk Doldurma:**
-```json
-{
-  "id": "q3",
-  "questionText": "Nesne Yönelimli Programlamada, _____ ilkesi sayesinde aynı arayüzü kullanarak farklı türdeki nesneler işlenebilir.",
-  "questionType": "fill_in_blank",
-  "cognitiveDomain": "understanding",
-  "options": ["Çok Biçimlilik", "Kalıtım", "Kapsülleme", "Soyutlama"],
-  "correctAnswer": "Çok Biçimlilik",
-  "explanation": "Çok Biçimlilik (Polymorphism), aynı arayüzü kullanarak farklı türdeki nesnelerin işlenebilmesini sağlayan OOP ilkesidir. Bu sayede kodun esnekliği ve yeniden kullanılabilirliği artar.",
-  "subTopicName": "Çok Biçimlilik (Polymorphism)",
-  "normalizedSubTopicName": "cok_bicimlilik_polymorphism",
-  "difficulty": "orta"
-}
-```
-
-**Örnek 4 - Kısa Yanıt:**
-```json
-{
-  "id": "q4",
-  "questionText": "Eylemsizlik prensibi olarak da bilinen, Newton'un hangi hareket kanunu, bir cisme etki eden net kuvvet sıfırsa cismin durumunu koruyacağını belirtir?",
-  "questionType": "short_answer",
-  "cognitiveDomain": "remembering",
-  "options": [],
-  "correctAnswer": "Birinci Hareket Kanunu",
-  "explanation": "Newton'un Birinci Hareket Kanunu (Eylemsizlik Prensibi), bir cisme etki eden net kuvvet sıfırsa, cismin hareketsiz duruyorsa hareketsiz kalacağını veya sabit hızla hareket ediyorsa sabit hızla hareketini sürdüreceğini belirtir.",
-  "subTopicName": "Newton'un Birinci Hareket Kanunu",
-  "normalizedSubTopicName": "newtonun_birinci_hareket_kanunu",
-  "difficulty": "kolay"
-}
-```
-
-**Zorluğa ve Bilişsel Düzeye Göre Soru Örnekleri:**
-
-**Kolay/Hatırlama:**
-```json
-{
-  "id": "q5",
-  "questionText": "Aşağıdakilerden hangisi Java'da bir erişim belirleyici (access modifier) değildir?",
-  "questionType": "multiple_choice",
-  "cognitiveDomain": "remembering",
-  "options": ["public", "private", "protected", "extend"],
-  "correctAnswer": "extend",
-  "explanation": "Java'daki erişim belirleyiciler public, private, protected ve default (belirtilmediğinde) olarak sıralanabilir. 'extend' bir anahtar kelimedir ama erişim belirleyici değildir, kalıtım için kullanılır.",
-  "subTopicName": "Erişim Belirleyiciler",
-  "normalizedSubTopicName": "erisim_belirleyiciler",
-  "difficulty": "kolay"
-}
-```
-
-**Orta/Uygulama:**
-```json
-{
-  "id": "q6",
-  "questionText": "Bir sınıf tasarımında, kullanıcının sadece belirli metodlar aracılığıyla nesnenin iç durumunu değiştirmesini sağlamak istiyorsunuz. Hangi OOP prensibi bu amacı en iyi şekilde karşılar?",
-  "questionType": "multiple_choice",
-  "cognitiveDomain": "applying",
-  "options": ["Kalıtım", "Kapsülleme", "Çok Biçimlilik", "Arayüz"],
-  "correctAnswer": "Kapsülleme",
-  "explanation": "Kapsülleme, bir nesnenin iç durumunun doğrudan değiştirilmesini engelleyerek sadece belirli metodlar aracılığıyla erişim sağlar. Bu şekilde, veri gizleme (data hiding) uygulanır ve nesnenin durumu kontrollü bir şekilde değiştirilebilir.",
-  "subTopicName": "Kapsülleme (Encapsulation)",
-  "normalizedSubTopicName": "kapsulleme_encapsulation",
-  "difficulty": "orta"
-}
-```
-
-**Zor/Değerlendirme:**
-```json
-{
-  "id": "q7",
-  "questionText": "Aşağıdaki senaryolardan hangisinde soyutlama (abstraction) yerine arayüz (interface) kullanmak daha uygun olur?",
-  "questionType": "multiple_choice",
-  "cognitiveDomain": "evaluating",
-  "options": [
-    "Hiyerarşik bir sınıf yapısı oluşturmak istediğinizde",
-    "Ortak davranışları tanımlamak ama her sınıfın kendi uygulamasını sağlamasını istediğinizde",
-    "Tek başına anlam ifade etmeyen bir temel sınıf oluşturmak istediğinizde",
-    "Bir sınıfın birden fazla türden davranışı birleştirmesini istediğinizde"
-  ],
-  "correctAnswer": "Bir sınıfın birden fazla türden davranışı birleştirmesini istediğinizde",
-  "explanation": "Java gibi dillerde çoklu kalıtım desteklenmez ama bir sınıf birden fazla arayüz uygulayabilir. Bu nedenle, bir sınıfın birden fazla farklı türden davranışı birleştirmesi gerektiğinde arayüz (interface) kullanmak, soyut sınıf kullanmaktan daha uygundur. Arayüzler, çoklu davranış tanımını mümkün kılar.",
-  "subTopicName": "Arayüzler ve Soyut Sınıflar",
-  "normalizedSubTopicName": "arayuzler_ve_soyut_siniflar",
-  "difficulty": "zor"
-}
-```
 
 **Ek Kalite Kriterleri:**
 1. Soruların çeldiricileri (yanlış şıklar) makul ve inandırıcı olmalı ama açıkça yanlış olmalı.

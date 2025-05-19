@@ -150,9 +150,37 @@ export class PromptManagerService implements OnModuleInit {
       );
     }
 
-    // Kalan değişkenleri kontrol et (iki format için)
-    const remainingVars1 = compiledPrompt.match(/{{[^}]+}}/g);
-    const remainingVars2 = compiledPrompt.match(/\{[^#\/][^}]*\}/g);
+    // Kalan değişkenleri kontrol et ama JSON örnek formatlarını ve şablonları hariç tut
+    // Önce örnek bölümlerini ve JSON blok içeriklerini tespit et
+    const jsonExampleBlocks = [
+      // Markdown JSON bloklarını tespit et
+      /(```json[\s\S]*?```)/g,
+      // Örnek başlıklı bölümleri tespit et
+      /(örnek|example)[\s\S]*?(\{[\s\S]*?\})/gi,
+      // id: "q1" veya id: "soru-id-auto-generated" içeren JSON nesnelerini tespit et
+      /(\{[\s\S]*?("id"\s*:\s*"q\d+"|"id"\s*:\s*"soru-id)[\s\S]*?\})/g,
+      // Örnek sorularını içeren blokları tespit et
+      /(-- ÖRNEK BAŞLANGIÇ[\s\S]*?-- ÖRNEK BİTİŞ --)/g,
+    ];
+
+    // Örnekleri geçici olarak kaldır
+    let tempPrompt = compiledPrompt;
+    let exampleBlocks: string[] = [];
+    for (const pattern of jsonExampleBlocks) {
+      const matches = tempPrompt.match(pattern);
+      if (matches) {
+        for (const match of matches) {
+          // Örnek bloğunu geçici olarak placeholder ile değiştir
+          const placeholder = `__EXAMPLE_BLOCK_${exampleBlocks.length}__`;
+          exampleBlocks.push(match);
+          tempPrompt = tempPrompt.replace(match, placeholder);
+        }
+      }
+    }
+
+    // Şimdi kalan gerçek değişkenleri kontrol et
+    const remainingVars1 = tempPrompt.match(/{{[^}]+}}/g);
+    const remainingVars2 = tempPrompt.match(/\{[^#\/][^}]*\}/g);
 
     const remainingVariables = [
       ...(remainingVars1 || []),
