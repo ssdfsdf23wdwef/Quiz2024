@@ -61,6 +61,9 @@ export class GeminiProviderService implements AIProvider {
   ): Promise<AIResponse> {
     try {
       const startTime = Date.now();
+      const traceId =
+        options?.metadata?.traceId ||
+        `gemini-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
 
       // Özel ayarlar varsa onları kullan, yoksa modeldeki ayarları kullan
       const requestParams = options || {};
@@ -79,89 +82,137 @@ export class GeminiProviderService implements AIProvider {
             },
           ],
         });
-
-        // İçeriği hazırlayıcı komut ekle
-        contents.push({
-          role: 'model',
-          parts: [
-            {
-              text: `I'll act as a professional educator and create educational content based on your requirements. I'll ensure all questions are accurate, specific to the topics, and properly formatted in JSON as requested.`,
-            },
-          ],
-        });
       }
 
-      // Kullanıcı mesajını ekle
+      // Ana promptu ekle
       contents.push({
         role: 'user',
         parts: [{ text: prompt }],
       });
 
-      // İstek için metadata oluştur
-      const metadata = options?.metadata
-        ? JSON.stringify(options.metadata)
-        : 'Metadata yok';
       this.logger.debug(
-        `Gemini API isteği gönderiliyor. Prompt uzunluğu: ${prompt.length} karakter, Model: ${this.config.model || 'bilinmiyor'}, Metadata: ${metadata}`,
+        `[${traceId}] Gemini API isteği hazırlanıyor: ${contents.length} mesaj`,
+        'GeminiProviderService.generateContent',
+        __filename,
+        undefined,
+        { messagesCount: contents.length, promptLength: prompt.length },
       );
 
-      const result: GenerateContentResult = await this.model.generateContent({
-        contents: contents,
-        ...requestParams,
+      // API çağrısı
+      const response = await this.model.generateContent({
+        contents,
+        generationConfig: {
+          temperature: requestParams.temperature || this.config.temperature,
+          maxOutputTokens: requestParams.maxTokens || this.config.maxTokens,
+          topK: requestParams.topK || 40,
+          topP: requestParams.topP || 0.95,
+        },
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+        ],
       });
 
-      const responseText = result.response.text();
-      const duration = Date.now() - startTime;
+      // Tamamlanma süresini hesapla
+      const endTime = Date.now();
+      const duration = endTime - startTime;
 
-      // Token sayılarını kabaca tahmin et
+      // Basit token hesaplaması (kesin değil, sadece tahmin)
       const promptTokenEstimate = Math.ceil(prompt.length / 4);
-      const completionTokenEstimate = Math.ceil(responseText.length / 4);
 
+      // Gemini yanıtını doğru şekilde alıyoruz
+      const responseText = response.response.text();
+
+      const completionTokenEstimate = Math.ceil(
+        (responseText?.length || 0) / 4,
+      );
       const totalTokenEstimate = promptTokenEstimate + completionTokenEstimate;
 
-      this.logger.debug(
-        `Gemini yanıtı alındı (${duration}ms, yaklaşık ${totalTokenEstimate} token, yanıt uzunluğu: ${responseText.length} karakter)`,
+      this.logger.log(
+        `[${traceId}] Gemini yanıtı alındı: ${responseText?.length || 0} karakter, ${duration}ms sürede yanıt verildi`,
+        'GeminiProviderService.generateContent',
+        __filename,
+        undefined,
+        {
+          responseLength: responseText?.length || 0,
+          estimatedTokens: totalTokenEstimate,
+          duration,
+          traceId,
+        },
       );
 
-      // Yanıt yapısını kontrol et
-      if (responseText.length < 10) {
-        this.logger.warn(`Çok kısa yanıt alındı: "${responseText}"`);
-      }
-
-      // JSON döndürülmesi gerekiyorsa ama JSON formatı yoksa uyarı ver
+      // JSON içerik kontrolü - JSON sonuç bekleniyorsa ancak yanıtta geçerli bir JSON yoksa
       if (
-        prompt.includes('JSON') &&
-        !responseText.includes('{') &&
-        !responseText.includes('[')
+        (prompt.toLowerCase().includes('json') ||
+          (options?.systemInstruction &&
+            options.systemInstruction.toLowerCase().includes('json'))) &&
+        responseText
       ) {
-        this.logger.warn(
-          'Yanıt JSON formatında değil, ancak JSON formatı bekleniyor',
-        );
+        try {
+          // Basit bir JSON kontrolü yap
+          const containsJsonBraces =
+            responseText.includes('{') && responseText.includes('}');
+          const jsonPrefix = responseText.indexOf('{');
+          const jsonSuffix = responseText.lastIndexOf('}') + 1;
 
-        // Basit bir JSON dönüşüm denemesi yap
-        if (
-          responseText.includes('questionText') ||
-          responseText.includes('soru')
-        ) {
-          this.logger.log(
-            'Yanıtta soru içeriği tespit edildi, JSON formatına dönüştürme deneniyor',
-          );
+          if (containsJsonBraces) {
+            // JSON olabilecek metni çıkarmayı dene
+            const possibleJson = responseText.substring(jsonPrefix, jsonSuffix);
 
-          try {
-            // Dönüştürme başarısız olursa orijinal metni döndür
-            return {
-              text: responseText,
-              usage: {
-                promptTokens: promptTokenEstimate,
-                completionTokens: completionTokenEstimate,
-                totalTokens: totalTokenEstimate,
+            try {
+              // JSON parse etmeyi dene (sadece kontrol amaçlı)
+              JSON.parse(possibleJson);
+              this.logger.log(
+                `[${traceId}] Yanıtta geçerli JSON formatı tespit edildi`,
+                'GeminiProviderService.generateContent',
+              );
+            } catch (jsonError) {
+              this.logger.warn(
+                `[${traceId}] Yanıtta JSON bulunuyor ancak geçerli JSON formatında değil: ${jsonError.message}`,
+                'GeminiProviderService.generateContent',
+                __filename,
+                undefined,
+                {
+                  jsonError: jsonError.message,
+                  jsonPreview: possibleJson.substring(0, 50) + '...',
+                  traceId,
+                },
+              );
+            }
+          } else {
+            this.logger.warn(
+              `[${traceId}] JSON bekleniyordu ancak yanıtta JSON formatı bulunamadı`,
+              'GeminiProviderService.generateContent',
+              __filename,
+              undefined,
+              {
+                responsePreview: responseText.substring(0, 100) + '...',
+                traceId,
               },
-            };
-          } catch (formatError) {
-            this.logger.error(
-              `JSON formatına dönüştürme hatası: ${formatError.message}`,
             );
           }
+        } catch (formatError) {
+          this.logger.warn(
+            `[${traceId}] JSON formatı kontrol edilirken hata: ${formatError.message}`,
+            'GeminiProviderService.generateContent',
+            __filename,
+            undefined,
+            formatError,
+          );
         }
       }
 
@@ -174,20 +225,51 @@ export class GeminiProviderService implements AIProvider {
         },
       };
     } catch (error) {
-      // Hata detaylarını daha kapsamlı logla
-      const errorDetails = {
-        message: error.message,
-        name: error.name,
-        stack: error.stack?.substring(0, 200), // Stack trace'in ilk 200 karakteri
-        code: error.code || 'Bilinmeyen',
-        details: error.details || 'Detay yok',
-      };
-
       this.logger.error(
-        `Gemini içerik oluşturma hatası: ${error.message}`,
-        error.stack,
-        errorDetails,
+        `Gemini sağlayıcı hatası: ${error.message}`,
+        'GeminiProviderService.generateContent',
+        __filename,
+        undefined,
+        error,
       );
+
+      // Gemini API'nin döndürebileceği özel hata kodlarını kontrol et
+      if (error.status) {
+        // HTTP durum kodu varsa
+        this.logger.error(
+          `Gemini API hatası - HTTP ${error.status}: ${error.message}`,
+          'GeminiProviderService.generateContent',
+        );
+      } else if (error.code) {
+        // Gemini API hata kodu varsa
+        this.logger.error(
+          `Gemini API hatası - Kod ${error.code}: ${error.message}`,
+          'GeminiProviderService.generateContent',
+        );
+      }
+
+      // Rate limit aşımında özel loglama
+      if (
+        error.message?.includes('rate limit') ||
+        error.message?.includes('quota')
+      ) {
+        this.logger.error(
+          `Gemini API kota veya oran sınırı aşıldı: ${error.message}`,
+          'GeminiProviderService.generateContent',
+        );
+      }
+
+      // Input filtering/safety hatalarında özel loglama
+      if (
+        error.message?.includes('safety') ||
+        error.message?.includes('blocked')
+      ) {
+        this.logger.error(
+          `Gemini API güvenlik filtresi hatası: ${error.message}`,
+          'GeminiProviderService.generateContent',
+        );
+      }
+
       throw error;
     }
   }

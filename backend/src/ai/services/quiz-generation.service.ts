@@ -372,6 +372,11 @@ export class QuizGenerationService {
       },
     );
 
+    this.flowTracker.trackStep(
+      `Hızlı quiz oluşturma - ${subTopics.length} konu ile başlatılıyor`,
+      'QuizGenerationService.generateQuickQuizQuestions',
+    );
+
     // Eğer "Eksaskala" kelimesi alt konularda geçiyorsa, özel metadata ekle
     if (subTopics.some((topic) => topic.toLowerCase().includes('eksaskala'))) {
       metadata.specialTopic = 'eksaskala';
@@ -390,7 +395,100 @@ export class QuizGenerationService {
       documentId,
     };
 
-    return this.generateQuizQuestions(options);
+    try {
+      // Maksimum deneme sayısı
+      const maxRetries = 3;
+      let currentTry = 0;
+      let lastError = null;
+
+      while (currentTry < maxRetries) {
+        try {
+          currentTry++;
+          this.logger.info(
+            `[${traceId}] Quiz oluşturma denemesi: ${currentTry}/${maxRetries}`,
+            'QuizGenerationService.generateQuickQuizQuestions',
+          );
+
+          const questions = await this.generateQuizQuestions(options);
+
+          if (
+            !questions ||
+            !Array.isArray(questions) ||
+            questions.length === 0
+          ) {
+            throw new Error('AI soruları oluşturamadı: Boş soru listesi döndü');
+          }
+
+          if (questions.length < Math.max(1, questionCount * 0.5)) {
+            this.logger.warn(
+              `[${traceId}] Yeterli sayıda soru üretilmedi. Beklenen: ${questionCount}, Üretilen: ${questions.length}`,
+              'QuizGenerationService.generateQuickQuizQuestions',
+            );
+            if (currentTry < maxRetries) {
+              continue; // Tekrar dene
+            }
+          }
+
+          this.logger.info(
+            `[${traceId}] Quiz soruları başarıyla oluşturuldu: ${questions.length} soru`,
+            'QuizGenerationService.generateQuickQuizQuestions',
+          );
+
+          this.flowTracker.trackStep(
+            `Hızlı quiz oluşturma başarılı - ${questions.length} soru üretildi`,
+            'QuizGenerationService.generateQuickQuizQuestions',
+          );
+
+          return questions;
+        } catch (error) {
+          lastError = error;
+          const waitTime = Math.min(1000 * currentTry, 5000); // Artan bekleme süresi, en fazla 5 saniye
+
+          this.logger.error(
+            `[${traceId}] Quiz oluşturma hatası (deneme ${currentTry}/${maxRetries}): ${error.message}`,
+            'QuizGenerationService.generateQuickQuizQuestions',
+            __filename,
+            undefined,
+            error,
+          );
+
+          if (currentTry < maxRetries) {
+            this.logger.info(
+              `[${traceId}] ${waitTime}ms sonra yeniden deneniyor...`,
+              'QuizGenerationService.generateQuickQuizQuestions',
+            );
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+        }
+      }
+
+      // Tüm denemeler başarısız olursa ve fallback kullanılabilirse
+      this.logger.error(
+        `[${traceId}] Quiz oluşturma tüm denemeler sonrası başarısız oldu. Fallback mekanizması kullanılacak.`,
+        'QuizGenerationService.generateQuickQuizQuestions',
+      );
+
+      this.flowTracker.trackStep(
+        `Fallback quiz oluşturma - Quiz validasyon servisine yönlendiriliyor`,
+        'QuizGenerationService.generateQuickQuizQuestions',
+      );
+
+      // QuizValidationService'teki fallback sorularını kullan
+      return this.quizValidation.createFallbackQuestions(metadata);
+    } catch (finalError) {
+      this.logger.error(
+        `[${traceId}] Kritik quiz oluşturma hatası: ${finalError.message}`,
+        'QuizGenerationService.generateQuickQuizQuestions',
+        __filename,
+        undefined,
+        finalError,
+      );
+
+      // Herhangi bir sorun olursa BadRequestException fırlat
+      throw new BadRequestException(
+        'Sınav soruları oluşturulurken hata oluştu. Lütfen daha sonra tekrar deneyin.',
+      );
+    }
   }
 
   /**
