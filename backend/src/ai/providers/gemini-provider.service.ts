@@ -152,6 +152,44 @@ export class GeminiProviderService implements AIProvider {
               'GeminiProviderService.generateContent',
             );
           }
+        } else if (typeof (response as any).text === 'function') {
+          // Bazı Gemini API sürümlerinde doğrudan text() metodu ile yanıt dönebilir
+          responseText = (response as any).text();
+          this.logger.log(
+            `[${traceId}] Yanıt metni başarıyla elde edildi (text() metodu ile)`,
+            'GeminiProviderService.generateContent',
+          );
+        } else if (typeof (response as any).text === 'string') {
+          // Text bir string olabilir
+          responseText = (response as any).text;
+          this.logger.log(
+            `[${traceId}] Yanıt metni başarıyla elde edildi (text string özelliği ile)`,
+            'GeminiProviderService.generateContent',
+          );
+        } else {
+          // Gemini API response yapısını ayrıntılı loglayalım (hata ayıklama amaçlı)
+          this.logger.warn(
+            `[${traceId}] Yanıt metni alınamadı, response yapısı beklenenden farklı`,
+            'GeminiProviderService.generateContent',
+          );
+
+          // Eğer response bir fonksiyon içeriyorsa ve adı text ise
+          if (typeof response === 'object' && response !== null) {
+            // Response nesnesinin anahtarlarını loglayalım
+            const keys = Object.keys(response);
+            this.logger.debug(
+              `[${traceId}] Response özellikleri: ${keys.join(', ')}`,
+              'GeminiProviderService.generateContent',
+            );
+
+            if (typeof response.toString === 'function') {
+              responseText = response.toString();
+              this.logger.log(
+                `[${traceId}] Yanıt metni başarıyla elde edildi (toString() metodu ile)`,
+                'GeminiProviderService.generateContent',
+              );
+            }
+          }
         }
       } catch (textError) {
         // Tüm response nesnesini loglayalım (hatayı tespit etmek için)
@@ -165,8 +203,29 @@ export class GeminiProviderService implements AIProvider {
           'GeminiProviderService.generateContent',
         );
 
-        // Boş metin kullan
-        responseText = '';
+        // Son çare: tüm nesneyi JSON'a çevirmeyi dene
+        try {
+          const responseJson = JSON.stringify(response);
+          const textMatch = responseJson.match(/"text"\s*:\s*"([^"]+)"/);
+          if (textMatch && textMatch[1]) {
+            responseText = textMatch[1];
+            this.logger.log(
+              `[${traceId}] Yanıt metni JSON stringfy ile çıkarıldı`,
+              'GeminiProviderService.generateContent',
+            );
+          }
+        } catch (jsonError) {
+          // JSON'a çevirme de başarısız oldu
+          this.logger.error(
+            `[${traceId}] Yanıt JSON'a çevrilemedi: ${jsonError.message}`,
+            'GeminiProviderService.generateContent',
+          );
+        }
+
+        // Yine de yanıt alınamadıysa boş metin kullan
+        if (!responseText) {
+          responseText = '';
+        }
       }
 
       // Basit token hesaplaması (kesin değil, sadece tahmin)

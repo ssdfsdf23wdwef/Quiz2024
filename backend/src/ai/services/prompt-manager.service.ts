@@ -165,7 +165,7 @@ export class PromptManagerService implements OnModuleInit {
 
     // Örnekleri geçici olarak kaldır
     let tempPrompt = compiledPrompt;
-    let exampleBlocks: string[] = [];
+    const exampleBlocks: string[] = [];
     for (const pattern of jsonExampleBlocks) {
       const matches = tempPrompt.match(pattern);
       if (matches) {
@@ -185,7 +185,16 @@ export class PromptManagerService implements OnModuleInit {
     const remainingVariables = [
       ...(remainingVars1 || []),
       ...(remainingVars2 || []),
-    ];
+    ].filter((variable) => {
+      // Örnek değişkenleri filtrele
+      return (
+        !variable.includes('example') &&
+        !variable.includes('örnek') &&
+        !variable.includes('q1') &&
+        !variable.includes('q2') &&
+        !variable.includes('soru-id-auto-generated')
+      );
+    });
 
     if (remainingVariables && remainingVariables.length > 0) {
       this.logger.warn(

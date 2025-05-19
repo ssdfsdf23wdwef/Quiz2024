@@ -53,53 +53,78 @@ export class QuizGenerationService {
   async generateQuizQuestions(
     options: QuizGenerationOptions,
   ): Promise<QuizQuestion[]> {
-    // Unique trace ID oluştur
-    const traceId = this.generateTraceId('quiz');
+    const traceId =
+      options.traceId ||
+      `quiz-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    // Metadata oluştur - aynı tipte alanları direkt aktarıp diğerlerini ayrıca ekle
     const metadata: QuizMetadata = {
       traceId,
-      subTopicsCount: Array.isArray(options.subTopics)
-        ? options.subTopics.length
-        : 0,
       difficulty: options.difficulty,
+      documentText: options.documentText,
+      subTopics: options.subTopics,
       questionCount: options.questionCount,
+      userId: options.userId,
+      documentId: options.documentId,
+      courseId: options.courseId,
+      personalizedQuizType: options.personalizedQuizType,
+      personalizationContext: options.personalizationContext,
     };
 
-    this.flowTracker.trackStep(
-      `Quiz soruları oluşturma süreci başladı (${options.questionCount} soru)`,
-      'QuizGenerationService',
-    );
+    // Sınav başlangıcını logla
+    this.logger.logExamStart(options.userId || 'anon', 'standart', {
+      traceId,
+      subTopics: options.subTopics || [],
+      questionCount: options.questionCount || 5,
+      difficulty: options.difficulty || 'medium',
+      documentId: options.documentId || null,
+    });
 
     try {
-      this.logger.debug(
-        `[${traceId}] Quiz soruları oluşturma işlemi başlatılıyor: ${options.questionCount} soru, ${options.difficulty} zorluk`,
-        'QuizGenerationService.generateQuizQuestions',
-        __filename,
-        undefined,
+      // Prompu hazırla
+      const promptText = await this.prepareQuizPrompt(options, metadata);
+      this.logger.logExamStage(options.userId || 'anon', 'Prompt hazırlandı', {
+        traceId,
+        promptLength: promptText.length,
+      });
+
+      // AI yanıtı oluştur
+      const aiResponseText = await this.generateAIContent(promptText, metadata);
+      this.logger.logExamStage(options.userId || 'anon', 'AI yanıtı alındı', {
+        traceId,
+        responseLength: aiResponseText.length,
+      });
+
+      // AI yanıtını işle
+      const questions = this.processAIResponse(aiResponseText, metadata);
+
+      // Sınav oluşturmayı tamamladığını logla
+      this.logger.logExamCompletion(
+        options.userId || 'anon',
+        'quiz_' + traceId,
         {
-          options,
-          hasDocumentText: !!options.documentText,
-          documentTextLength: options.documentText?.length || 0,
+          traceId,
+          questionsCount: questions.length,
+          startTime: Date.now() - 60000, // Yaklaşık bir başlangıç zamanı
         },
       );
 
-      // 1. Quiz prompt'unu yükle
-      const promptText = await this.prepareQuizPrompt(options, metadata);
-
-      // 2. AI servisi ile içerik oluştur
-      const aiResponseText = await this.generateAIContent(promptText, metadata);
-
-      // 3. Yanıtı işle ve doğrula
-      return this.processAIResponse(aiResponseText, metadata);
+      return questions;
     } catch (error) {
       // Hata durumunu logla
       this.logger.error(
-        `[${traceId}] Quiz soruları oluşturulurken hata: ${error.message}`,
+        `[${traceId}] Quiz oluşturma hatası: ${error.message}`,
         'QuizGenerationService.generateQuizQuestions',
         undefined,
         error,
       );
 
-      // Hatayı yukarı fırlat
+      this.logger.logExamError(options.userId || 'anon', error, {
+        traceId,
+        options,
+      });
+
+      // Hatayı yeniden fırlat, önceki fallback mantığını kaldırdık
       throw error;
     }
   }
@@ -227,6 +252,10 @@ export class QuizGenerationService {
     const { traceId } = metadata;
 
     this.flowTracker.trackStep('AI yanıtı işleniyor', 'QuizGenerationService');
+    this.logger.logExamStage(metadata.userId || 'anon', 'AI yanıtı işleniyor', {
+      traceId,
+      responseLength: aiResponseText?.length || 0,
+    });
 
     try {
       // 1. JSON'a dönüştür
@@ -254,6 +283,16 @@ export class QuizGenerationService {
         'QuizGenerationService.processAIResponse',
       );
 
+      this.logger.logExamStage(
+        metadata.userId || 'anon',
+        'Sorular başarıyla işlendi',
+        {
+          traceId,
+          questionsCount: questions.length,
+          subTopics: metadata.subTopics || [],
+        },
+      );
+
       return questions;
     } catch (error) {
       this.logger.error(
@@ -262,7 +301,25 @@ export class QuizGenerationService {
         undefined,
         error,
       );
-      throw new BadRequestException(`Quiz yanıtı işlenemedi: ${error.message}`);
+
+      // Sınav işlemindeki hatayı logla
+      this.logger.logExamError(metadata.userId || 'anon', error, {
+        traceId,
+        step: 'AI yanıtı işleme',
+        rawResponse: aiResponseText?.substring(0, 500) + '...',
+        metadata,
+      });
+
+      // Hatayı UI'da göstermek için ayrıntılı hata mesajı içeren bir hata fırlat
+      throw new BadRequestException({
+        code: 'QUIZ_PROCESSING_ERROR',
+        message: `Sınav soruları oluşturulamadı: ${error.message}`,
+        details: {
+          rawError: error.message,
+          trace: traceId,
+          aiResponsePreview: aiResponseText?.substring(0, 300) + '...',
+        },
+      });
     }
   }
 

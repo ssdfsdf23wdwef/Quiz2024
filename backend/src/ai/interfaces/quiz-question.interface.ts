@@ -17,12 +17,17 @@ export interface QuizQuestion {
 }
 
 /**
+ * Alt konu tipi
+ */
+export type SubTopicType =
+  | string[]
+  | { subTopicName: string; count: number; status?: string }[];
+
+/**
  * Sınav oluşturma seçenekleri
  */
 export interface QuizGenerationOptions {
-  subTopics:
-    | string[]
-    | { subTopicName: string; count: number; status?: string }[];
+  subTopics: SubTopicType;
   questionCount: number;
   difficulty?: string;
   prioritizeWeakAndMediumTopics?: boolean;
@@ -31,6 +36,9 @@ export interface QuizGenerationOptions {
   quizType?: 'quick' | 'personalized'; // Sınav tipi
   courseId?: string | null; // Kurs ID (personalized için)
   personalizedQuizType?: string | null; // Kişiselleştirilmiş sınav alt tipi
+  userId?: string; // Kullanıcı ID'si (loglama için)
+  documentId?: string; // Belge ID (referans için)
+  traceId?: string; // Trace ID (takip için)
 }
 
 /**
@@ -41,6 +49,15 @@ export interface QuizMetadata {
   subTopicsCount?: number;
   difficulty?: string;
   questionCount?: number;
+  userId?: string;
+  documentId?: string;
+  keywords?: string;
+  specialTopic?: string;
+  subTopics?: SubTopicType;
+  documentText?: string;
+  personalizationContext?: string;
+  courseId?: string | null;
+  personalizedQuizType?: string | null;
 }
 
 // Hata paketleyici

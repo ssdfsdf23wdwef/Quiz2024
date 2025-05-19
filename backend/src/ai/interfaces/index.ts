@@ -3,35 +3,7 @@ import { LoggerService } from '../../common/services/logger.service';
 export * from './topic-detection.interface';
 export * from './quiz-question.interface';
 
-/**
- * Metadata for quiz generation operations
- */
-export interface QuizMetadata {
-  traceId: string;
-  userId?: string;
-  courseName?: string;
-  subTopicsCount?: number;
-  questionCount?: number;
-  difficulty?: string;
-  subTopics?: string[]; // Alt konular listesi
-  documentId?: string; // Belge ID
-  keywords?: string; // Anahtar kelimeler
-  specialTopic?: string; // Özel konu tipi (eksaskala, programlama, vb.)
-}
-
-/**
- * Quiz oluşturma seçenekleri
- */
-export interface QuizGenerationOptions {
-  documentText?: string;
-  subTopics:
-    | string[]
-    | { subTopicName: string; count: number; status?: string }[];
-  questionCount: number;
-  difficulty: string;
-  personalizationContext?: string;
-  documentId?: string; // Belge ID
-}
+// Eski arayüz tanımlamaları kaldırıldı, quiz-question.interface.ts dosyasındaki tanımlar kullanılacak
 
 // Log kaydı
 try {

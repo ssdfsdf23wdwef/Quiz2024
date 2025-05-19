@@ -65,33 +65,85 @@ export class LoggerService {
   > = {};
 
   /**
+   * Sınav oluşturma işlemlerini loglamak için kullanılan logger
+   */
+  public examProcessLogger: any;
+
+  /**
    * Sınav oluşturma aşamalarını kaydetmek için özel bir logger
    */
-  examProcessLogger = createLogger({
-    level: 'debug',
-    format: format.combine(
-      format.timestamp(),
-      format.printf(({ timestamp, level, message }) => {
-        return `[${timestamp}] [${level.toUpperCase()}] ${message}`;
-      }),
-    ),
-    transports: [
-      new transports.File({
-        filename: 'logs/sinav-olusturma.log',
-        maxsize: 5242880, // 5MB
-        maxFiles: 5,
-      }),
-      // Konsola da yazdırmak için
-      new transports.Console({
-        format: format.combine(
-          format.timestamp(),
-          format.printf(({ timestamp, level, message }) => {
-            return `[SINAV SÜRECI] [${timestamp}] [${level.toUpperCase()}] ${message}`;
-          }),
-        ),
-      }),
-    ],
-  });
+  private initExamProcessLogger() {
+    // Önce log dizininin var olduğundan emin olalım
+    try {
+      if (!fs.existsSync(this.logDir)) {
+        fs.mkdirSync(this.logDir, { recursive: true, mode: 0o777 });
+        console.log(`📁 Log dizini oluşturuldu: ${this.logDir}`);
+      }
+
+      // Sınav log dosyasını kontrol et ve gerekirse oluştur
+      const sinavLogPath = path.join(this.logDir, 'sinav-olusturma.log');
+      if (!fs.existsSync(sinavLogPath)) {
+        fs.writeFileSync(sinavLogPath, '', { encoding: 'utf8', mode: 0o666 });
+        console.log(`📄 Sınav log dosyası oluşturuldu: ${sinavLogPath}`);
+      } else {
+        // Dosya var ama yazılabilir mi kontrol et
+        try {
+          fs.accessSync(sinavLogPath, fs.constants.W_OK);
+        } catch (err) {
+          console.error(
+            `❌ Sınav log dosyası yazılabilir değil: ${sinavLogPath}`,
+            err,
+          );
+          // Dosya izinlerini düzeltmeye çalış
+          fs.chmodSync(sinavLogPath, 0o666);
+          console.log(
+            `🔧 Sınav log dosyası izinleri düzeltildi: ${sinavLogPath}`,
+          );
+        }
+      }
+    } catch (err) {
+      console.error(
+        '❌ Sınav log dizini veya dosyası hazırlanırken hata:',
+        err,
+      );
+    }
+
+    // Logger'ı oluştur
+    return createLogger({
+      level: 'debug',
+      format: format.combine(
+        format.timestamp(),
+        format.printf(({ timestamp, level, message }) => {
+          return `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+        }),
+      ),
+      transports: [
+        new transports.File({
+          filename: path.join(this.logDir, 'sinav-olusturma.log'),
+          maxsize: 5242880, // 5MB
+          maxFiles: 5,
+          tailable: true,
+          handleExceptions: true,
+          // Dosya erişim sorunlarını çözmek için ek ayarlar
+          options: {
+            flags: 'a',
+            encoding: 'utf8',
+            mode: 0o666,
+          },
+        }),
+        // Konsola da yazdırmak için
+        new transports.Console({
+          format: format.combine(
+            format.colorize(),
+            format.timestamp(),
+            format.printf(({ timestamp, level, message }) => {
+              return `[SINAV] [${timestamp}] [${level}] ${message}`;
+            }),
+          ),
+        }),
+      ],
+    });
+  }
 
   constructor(options?: LoggerOptions) {
     // Seçenekleri başlat
@@ -105,11 +157,20 @@ export class LoggerService {
     // Log dizini oluşturma
     this.logDir = options?.logDir ?? path.join(process.cwd(), 'logs');
 
-    if (!fs.existsSync(this.logDir)) {
-      fs.mkdirSync(this.logDir, { recursive: true });
+    // Log dizinini oluştur ve izinleri ayarla
+    try {
+      if (!fs.existsSync(this.logDir)) {
+        fs.mkdirSync(this.logDir, { recursive: true, mode: 0o777 });
+        console.log(`📁 Log dizini oluşturuldu: ${this.logDir}`);
+      }
+    } catch (err) {
+      console.error('❌ Log dizini oluşturulurken hata:', err);
     }
 
     this.errorLogPath = path.join(this.logDir, 'backend-error.log');
+
+    // Sınav süreci logger'ını başlat
+    this.examProcessLogger = this.initExamProcessLogger();
 
     // Uygulama başlatıldığında log dosyasını temizle
     if (this.logToFile && (options?.clearLogsOnStartup ?? true)) {

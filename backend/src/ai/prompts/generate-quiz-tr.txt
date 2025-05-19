@@ -95,6 +95,7 @@ Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
 
 **SON UYARI: Aşağıdaki soru örnekleri SADECE REFERANS içindir, bunlar gerçek sorular DEĞİLDİR ve yanıtında bu örnekleri KULLANMA veya yanıtına EKLEME. Bu örnekler sadece soru formatı hakkında fikir vermek içindir:**
 
+-- ÖRNEK BAŞLANGIÇ --
 **Örnek 1 - Çoktan Seçmeli:**
 {
   "id": "q1",
@@ -122,6 +123,7 @@ Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
   "normalizedSubTopicName": "kapsulleme_encapsulation",
   "difficulty": "orta"
 }
+-- ÖRNEK BİTİŞ --
 
 **Ek Kalite Kriterleri:**
 1. Soruların çeldiricileri (yanlış şıklar) makul ve inandırıcı olmalı ama açıkça yanlış olmalı.

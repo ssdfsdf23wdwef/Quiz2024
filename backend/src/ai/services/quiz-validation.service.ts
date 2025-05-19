@@ -1,5 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { QuizQuestion, QuizMetadata } from '../interfaces';
+import {
+  QuizQuestion,
+  QuizMetadata,
+  SubTopicType,
+} from '../interfaces/quiz-question.interface';
 import { LoggerService } from '../../common/services/logger.service';
 import { NormalizationService } from '../../shared/normalization/normalization.service';
 import {
@@ -58,6 +62,14 @@ export class QuizValidationService {
       return this.createFallbackData<T>('', metadata);
     }
 
+    this.logger.debug(
+      `[${traceId}] AI yanıtı parse ediliyor (${text.length} karakter)`,
+      'QuizValidationService.parseAIResponseToJSON',
+      __filename,
+      undefined,
+      { responseLength: text.length },
+    );
+
     // Metin içinden JSON bölümünü çıkar
     const jsonContent = this.extractJsonFromAIResponse(text);
 
@@ -108,6 +120,56 @@ export class QuizValidationService {
         return { questions: [parsedJson] } as unknown as T;
       }
 
+      // Örnek soruları tespit et ve filtreleme
+      if (parsedJson.questions && Array.isArray(parsedJson.questions)) {
+        // Örnek soruları tespit et (q1, q2 gibi id'lere sahip ya da Newton, Kapsülleme gibi örnek içerikli sorular)
+        const filteredQuestions = parsedJson.questions.filter((q) => {
+          // Örnek id'leri içeren soruları filtrele
+          if (
+            q.id &&
+            (q.id === 'q1' ||
+              q.id === 'q2' ||
+              q.id === 'soru-id-auto-generated')
+          ) {
+            this.logger.warn(
+              `[${traceId}] Örnek soru tespit edildi ve filtrelendi: ${q.id}`,
+              'QuizValidationService.parseAIResponseToJSON',
+            );
+            return false;
+          }
+
+          // Örnek açıklamaları içeren soruları filtrele
+          if (
+            q.explanation &&
+            (q.explanation.includes("Newton'un İkinci Hareket Kanunu") ||
+              q.explanation.includes('Kapsülleme') ||
+              q.explanation.includes(
+                'verilerin ve davranışların tek bir birim içinde saklanması',
+              ))
+          ) {
+            this.logger.warn(
+              `[${traceId}] Örnek açıklaması içeren soru filtrelendi`,
+              'QuizValidationService.parseAIResponseToJSON',
+            );
+            return false;
+          }
+
+          return true;
+        });
+
+        // Eğer tüm sorular filtrelendiyse
+        if (filteredQuestions.length === 0 && parsedJson.questions.length > 0) {
+          this.logger.warn(
+            `[${traceId}] Tüm sorular örnek içerik olarak tespit edildi ve filtrelendi. Fallback kullanılacak.`,
+            'QuizValidationService.parseAIResponseToJSON',
+          );
+          return this.createFallbackData<T>(text, metadata);
+        }
+
+        // Filtrelenmiş soruları güncelle
+        parsedJson.questions = filteredQuestions;
+      }
+
       return parsedJson as T;
     } catch (e) {
       // İlk deneme başarısız oldu, onarma denemeleri yap
@@ -142,6 +204,7 @@ export class QuizValidationService {
             .replace(/```[^`]*```/g, '') // Markdown kod bloklarını kaldır
             .replace(/```json[^`]*```/g, '') // JSON kod bloklarını kaldır
             .replace(/exemple:|example:|örnek:/gi, '') // Örnek etiketlerini kaldır
+            .replace(/-- ÖRNEK BAŞLANGIÇ[\s\S]*?-- ÖRNEK BİTİŞ --/g, '') // ÖRNEK BAŞLANGIÇ-BİTİŞ etiketleri arasını kaldır
             .replace(/\{[\s\S]*?"id":\s*"q\d+"[\s\S]*?\}/g, '') // q1, q2 gibi örnek ID'li objeleri kaldır
             .replace(
               /\{[\s\S]*?"id":\s*"soru-id-auto-generated"[\s\S]*?\}/g,
@@ -297,79 +360,117 @@ export class QuizValidationService {
   }
 
   /**
-   * Parse işlemi başarısız olduğunda fallback veri oluşturur
+   * Parse işlemi başarısız olduğunda fallback veri oluşturur yerine hata fırlatır
    * @param text AI yanıt metni
    * @param metadata Metadata
-   * @returns Fallback veri
+   * @returns Fallback veri yerine hata fırlatır
    */
   private createFallbackData<T>(text: string, metadata: QuizMetadata): T {
     const { traceId, questionCount = 5, difficulty = 'mixed' } = metadata;
 
-    // Bu bir Quiz yanıtı mı kontrol et
-    const isQuizResponse =
-      typeof text === 'string' &&
-      (text.toLowerCase().includes('question') ||
-        text.toLowerCase().includes('soru') ||
-        text.toLowerCase().includes('quiz') ||
-        text.toLowerCase().includes('test'));
-
-    if (isQuizResponse) {
-      this.logger.info(
-        `[${traceId}] Yapay zeka yanıtında sorular tespit edildi, ancak JSON formatında değil. Metin tabanlı içerikten sorular çıkarılmaya çalışılacak.`,
-        'QuizValidationService.createFallbackData',
-      );
-
-      // Metin tabanlı içerikten soru benzeri yapılar çıkarmaya çalış
-      try {
-        const extractedQuestions = this.extractQuestionsFromText(text);
-
-        if (extractedQuestions && extractedQuestions.length > 0) {
-          this.logger.info(
-            `[${traceId}] Metin tabanlı içerikten ${extractedQuestions.length} adet soru çıkarıldı.`,
-            'QuizValidationService.createFallbackData',
-          );
-
-          // Çıkarılan soruları expected tipe dönüştür
-          if (Array.isArray(extractedQuestions)) {
-            return { questions: extractedQuestions } as unknown as T;
-          } else {
-            return extractedQuestions as unknown as T;
-          }
-        }
-      } catch (extractError) {
-        this.logger.warn(
-          `[${traceId}] Metin tabanlı içerikten sorular çıkarılırken hata: ${extractError.message}`,
-          'QuizValidationService.createFallbackData',
-        );
-      }
-    }
-
-    // Normal fallback içeriği oluştur
-    this.logger.info(
-      `[${traceId}] Fallback veri oluşturuluyor: ${questionCount} soru, ${difficulty} zorluk`,
+    // AI yanıtı işlemede hata oluştu, bunu logla
+    this.logger.warn(
+      `[${traceId}] AI yanıtı düzgün işlenemedi. Hata fırlatılacak.`,
       'QuizValidationService.createFallbackData',
     );
 
-    const fallbackQuestions = this.createFallbackQuestions(metadata);
+    // Sınav oluşturma hatasını detaylı loglama
+    this.logger.logExamError(
+      metadata.userId || 'anonymous',
+      new Error('AI yanıtı işlenirken hata oluştu'),
+      {
+        traceId,
+        rawResponseLength: text?.length || 0,
+        documentId: metadata.documentId,
+        subTopics: Array.isArray(metadata.subTopics)
+          ? metadata.subTopics.slice(0, 3)
+          : metadata.subTopics
+            ? Object.keys(metadata.subTopics).slice(0, 3)
+            : [],
+        timestamp: new Date().toISOString(),
+      },
+    );
 
-    // Döndürülen tip bir dizi mi yoksa { questions: [] } formatında mı, kontrol et
-    if (this.shouldReturnQuestionsArray<T>()) {
-      return fallbackQuestions as unknown as T;
-    } else {
-      return { questions: fallbackQuestions } as unknown as T;
+    // Örnek içeriklerin tespit edilip edilmediğini kontrol et
+    const containsExamples = this.detectExampleContent(text);
+    let errorDetails = {
+      code: 'AI_RESPONSE_PARSING_ERROR',
+      message:
+        'AI yanıtı işlenirken bir hata oluştu. Sınav soruları oluşturulamadı.',
+      details: {
+        traceId,
+        reason: 'Yanıt formatı geçersiz veya beklenen JSON şemasına uymuyor',
+        responsePreview: text ? text.substring(0, 200) + '...' : 'Boş yanıt',
+        errorType: 'PARSING_ERROR',
+        containsExamples: false, // Varsayılan olarak ekle
+      },
+    };
+
+    // Örnek içerik tespiti varsa, bu bilgiyi hata mesajına ekle
+    if (containsExamples) {
+      errorDetails.message =
+        'AI yanıtında örnek içerik tespit edildi. Gerçek sorular yerine şablonda bulunan örnek sorular döndürüldü.';
+      errorDetails.details.errorType = 'EXAMPLE_CONTENT_DETECTED';
+      errorDetails.details.containsExamples = true;
+
+      // Örnek içerik tespitini loglama
+      this.logger.logExamProcess(
+        `[HATA] ${metadata.userId || 'anonymous'} kullanıcısı için sınav oluşturulurken AI yanıtında örnek içerik tespit edildi.`,
+        {
+          traceId,
+          userId: metadata.userId,
+          timestamp: new Date().toISOString(),
+          containsExamples: true,
+        },
+        'error',
+      );
     }
+
+    // AI yanıtının ilk 500 karakterini loglayalım (debugging amaçlı)
+    if (text) {
+      this.logger.debug(
+        `[${traceId}] İşlenemeyen AI yanıtının başlangıcı: ${text.substring(0, 500)}...`,
+        'QuizValidationService.createFallbackData',
+      );
+
+      // sinav-olusturma.log'a da kaydedelim
+      this.logger.logExamProcess(
+        `AI yanıtı işlenemedi - Trace ID: ${traceId}`,
+        {
+          responsePreview: text.substring(0, 300) + '...',
+          metadata: JSON.stringify(metadata),
+        },
+        'error',
+      );
+    }
+
+    // Ayrıntılı hata bilgisiyle BadRequestException fırlat
+    throw new BadRequestException(errorDetails);
   }
 
   /**
-   * Döndürülen T tipinin doğrudan dizi olup olmadığını kontrol eder
-   * Bu yöntem mükemmel değil ancak çoğu durumda çalışacaktır
+   * AI yanıtında örnek içerik olup olmadığını tespit eder
+   * @param text AI yanıt metni
+   * @returns Örnek içerik var mı?
    */
-  private shouldReturnQuestionsArray<T>(): boolean {
-    // Bu kontrolü daha güvenli yapmak için bazı yöntemler kullanılabilir
-    // Bu örnekte tip adına bakarak bir tahmin yapıyoruz
-    const typeName = 'T'; // Bu sadece bir tahmin, gerçekte T'nin adını bilemeyiz
+  private detectExampleContent(text: string): boolean {
+    if (!text) return false;
 
-    return typeName.includes('Array') || typeName.includes('[]');
+    // Örnek içerik belirteçleri
+    const exampleIndicators = [
+      /-- ÖRNEK BAŞLANGIÇ/i,
+      /-- EXAMPLE START/i,
+      /Örnek 1 -/i,
+      /Example 1:/i,
+      /soru-id-auto-generated/i,
+      /Bu kısım bir örnek/i,
+      /id: ["']q\d+["']/i,
+      /questionText: ["']Newton'un/i,
+      /correctAnswer: ["']B\) Kapsülleme/i,
+    ];
+
+    // Belirteçlerden herhangi biri metinde geçiyor mu kontrol et
+    return exampleIndicators.some((indicator) => indicator.test(text));
   }
 
   /**
@@ -400,27 +501,21 @@ export class QuizValidationService {
       return null;
     }
 
-    // Sorulardan basit bir soru dizisi oluştur
-    return allQuestions.map((questionText, index) => {
-      // Basit şıklar oluştur
-      const options = [
-        'A) Seçenek 1',
-        'B) Seçenek 2',
-        'C) Seçenek 3',
-        'D) Seçenek 4',
-      ];
+    this.logger.debug(
+      `Metin içinde ${allQuestions.length} olası soru tespit edildi, ancak tam JSON formatında değil.`,
+      'QuizValidationService.extractQuestionsFromText',
+    );
 
-      return {
-        id: `q${index + 1}`,
-        questionText: questionText.trim(),
-        options,
-        correctAnswer: 'A) Seçenek 1', // Varsayılan olarak A şıkkını doğru kabul et
-        explanation:
-          'Bu soru AI tarafından oluşturulan metinden çıkarılmıştır. Açıklama mevcut değil.',
-        subTopicName: 'Genel Konu',
-        normalizedSubTopicName: 'genel-konu',
-        difficulty: 'orta',
-      };
+    // Hata atmak yerine bir hata nesnesi döndür
+    throw new BadRequestException({
+      code: 'INVALID_RESPONSE_FORMAT',
+      message:
+        'AI yanıtı geçerli bir JSON formatında değil, ancak metin içinde sorular tespit edildi.',
+      details: {
+        possibleQuestionsCount: allQuestions.length,
+        firstQuestionSample: allQuestions[0],
+        rawTextPreview: text.substring(0, 300) + '...',
+      },
     });
   }
 
@@ -647,10 +742,23 @@ export class QuizValidationService {
    * Eksaskala konularına özel sorular üretir
    */
   private createEksaskalaSpecificQuestions(
-    subTopics: string[],
+    subTopics: SubTopicType,
   ): QuizQuestion[] {
+    // Alt konu adlarını dizeye çevirelim
+    const subTopicNames = Array.isArray(subTopics)
+      ? typeof subTopics[0] === 'string'
+        ? (subTopics as string[])
+        : (
+            subTopics as {
+              subTopicName: string;
+              count: number;
+              status?: string;
+            }[]
+          ).map((t) => t.subTopicName)
+      : ['Eksaskala'];
+
     this.logger.info(
-      `Eksaskala özel soruları oluşturuluyor (${subTopics.length} konu)`,
+      `Eksaskala özel soruları oluşturuluyor (${subTopicNames.length} konu)`,
       'QuizValidationService.createEksaskalaSpecificQuestions',
     );
 
@@ -761,8 +869,21 @@ export class QuizValidationService {
    */
   private createKeywordBasedQuestions(
     keywords: string[],
-    subTopics: string[],
+    subTopics: SubTopicType,
   ): QuizQuestion[] {
+    // Alt konu adlarını dizeye çevirelim
+    const subTopicNames = Array.isArray(subTopics)
+      ? typeof subTopics[0] === 'string'
+        ? (subTopics as string[])
+        : (
+            subTopics as {
+              subTopicName: string;
+              count: number;
+              status?: string;
+            }[]
+          ).map((t) => t.subTopicName)
+      : [];
+
     this.logger.info(
       `Anahtar kelime tabanlı sorular oluşturuluyor (${keywords.slice(0, 5).join(', ')}...)`,
       'QuizValidationService.createKeywordBasedQuestions',
@@ -772,9 +893,9 @@ export class QuizValidationService {
     const questions: QuizQuestion[] = [];
 
     // İlk 5 alt konu veya daha azı varsa hepsini kullan
-    const availableTopics = (subTopics || [])
+    const availableTopics = subTopicNames
       .filter((topic) => topic) // undefined/null değerleri filtrele
-      .slice(0, Math.min(5, subTopics.length));
+      .slice(0, Math.min(5, subTopicNames.length));
 
     // Alt konu yoksa varsayılan konular kullan
     const defaultTopics = [
@@ -973,8 +1094,16 @@ export class QuizValidationService {
           'QuizValidationService.validateQuizResponseSchema',
         );
 
-        // Geçersiz yanıt durumunda fallback sorular döndür
-        return { questions: this.createFallbackQuestions(metadata) };
+        // Geçersiz yanıt durumunda hata fırlat
+        throw new BadRequestException({
+          code: 'INVALID_RESPONSE_STRUCTURE',
+          message: 'AI yanıtı geçersiz bir formatta: nesne değil',
+          details: {
+            traceId,
+            receivedType: typeof parsedJson,
+            rawResponsePreview: rawResponse.substring(0, 100) + '...',
+          },
+        });
       }
 
       // Sorular direkt bir array olarak gelmiş olabilir
@@ -1033,8 +1162,17 @@ export class QuizValidationService {
           { parsedJsonKeys: Object.keys(parsedJson) },
         );
 
-        // questions bulunamadıysa fallback sorular döndür
-        return { questions: this.createFallbackQuestions(metadata) };
+        // questions bulunamadıysa hata fırlat
+        throw new BadRequestException({
+          code: 'MISSING_QUESTIONS_FIELD',
+          message: 'AI yanıtında "questions" alanı bulunamadı',
+          details: {
+            traceId,
+            availableKeys: Object.keys(parsedJson),
+            expectedKey: 'questions',
+            rawResponsePreview: rawResponse.substring(0, 100) + '...',
+          },
+        });
       }
 
       // Şema doğrulaması yap
@@ -1053,8 +1191,16 @@ export class QuizValidationService {
         'QuizValidationService.validateQuizResponseSchema',
       );
 
-      // Fallback olarak örnek sorular döndür
-      return { questions: this.createFallbackQuestions(metadata) };
+      // Hata fırlat
+      throw new BadRequestException({
+        code: 'SCHEMA_VALIDATION_ERROR',
+        message: 'AI yanıtı şema validasyonundan geçemedi',
+        details: {
+          traceId,
+          validationError: validationError.message,
+          rawResponsePreview: rawResponse.substring(0, 200) + '...',
+        },
+      });
     }
   }
 
@@ -1079,11 +1225,20 @@ export class QuizValidationService {
         'QuizValidationService.transformAndValidateQuestions',
       );
 
-      // Soru dizisi bulunamazsa fallback sorular oluştur
-      return this.createFallbackQuestions(metadata);
+      // Hata fırlat
+      throw new BadRequestException({
+        code: 'INVALID_QUESTIONS_FORMAT',
+        message: 'Doğrulanmış veride soru dizisi bulunamadı',
+        details: {
+          traceId,
+          receivedStructure:
+            JSON.stringify(validatedData).substring(0, 200) + '...',
+        },
+      });
     }
 
     const validQuestions: QuizQuestion[] = [];
+    const invalidQuestions: Array<{ index: number; error: string }> = [];
 
     for (let i = 0; i < questionsArray.length; i++) {
       const q_input = questionsArray[i];
@@ -1152,18 +1307,43 @@ export class QuizValidationService {
           undefined,
           questionValidationError,
         );
+
+        // Hatalı soruları kaydet
+        invalidQuestions.push({
+          index: i,
+          error: questionValidationError.message,
+        });
+
         // Hatalı soruyu atla ve diğerlerine devam et
         continue;
       }
     }
 
-    // Eğer hiç geçerli soru yoksa, fallback sorular oluştur
+    // Eğer hiç geçerli soru yoksa, hata fırlat
     if (validQuestions.length === 0) {
       this.logger.warn(
-        `[${traceId}] Hiç geçerli soru oluşturulamadı, fallback sorular kullanılıyor`,
+        `[${traceId}] Hiç geçerli soru oluşturulamadı, hata fırlatılıyor`,
         'QuizValidationService.transformAndValidateQuestions',
       );
-      return this.createFallbackQuestions(metadata);
+
+      throw new BadRequestException({
+        code: 'NO_VALID_QUESTIONS',
+        message: 'Hiç geçerli soru oluşturulamadı',
+        details: {
+          traceId,
+          invalidQuestionsCount: invalidQuestions.length,
+          errors: invalidQuestions.slice(0, 5), // İlk 5 hatayı göster
+          totalQuestionsInResponse: questionsArray.length,
+        },
+      });
+    }
+
+    // Bazı sorular hatalıysa loglayalım
+    if (invalidQuestions.length > 0) {
+      this.logger.info(
+        `[${traceId}] ${validQuestions.length} geçerli soru oluşturuldu, ${invalidQuestions.length} soru geçersiz olduğu için atlandı`,
+        'QuizValidationService.transformAndValidateQuestions',
+      );
     }
 
     return validQuestions;
