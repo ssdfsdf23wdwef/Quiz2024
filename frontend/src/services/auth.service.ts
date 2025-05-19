@@ -1115,6 +1115,44 @@ class AuthService {
         FlowCategory.Error,
         { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
       );
+
+      // Eğer Firebase kullanıcısı varsa, yeni bir token almayı deneyelim
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          this.logger.info(
+            'Firebase kullanıcısı mevcut, otomatik token yenileme deneniyor',
+            'AuthService.refreshToken',
+            __filename,
+            800
+          );
+          
+          // Firebase'den yeni token al
+          const idToken = await currentUser.getIdToken(true);
+          
+          // Yeni ID token ile backend oturumu güncelle
+          const idTokenResponse = await this.loginWithIdToken(idToken);
+          
+          if (idTokenResponse && idTokenResponse.token) {
+            this.logger.info(
+              'Firebase token ile yenileme başarılı',
+              'AuthService.refreshToken',
+              __filename,
+              811
+            );
+            
+            return { token: idTokenResponse.token };
+          }
+        }
+      } catch (firebaseError) {
+        this.logger.error(
+          'Firebase token ile yenileme hatası',
+          'AuthService.refreshToken',
+          __filename,
+          821,
+          { error: firebaseError }
+        );
+      }
       
       // Tüm token'ları temizle
       localStorage.removeItem("auth_token");

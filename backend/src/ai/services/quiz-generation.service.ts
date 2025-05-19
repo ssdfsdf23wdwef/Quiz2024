@@ -189,7 +189,14 @@ export class QuizGenerationService {
         'QuizGenerationService.generateAIContent',
       );
 
-      const result = await this.aiProviderService.generateContent(promptText);
+      // Metadata'yı AI provider'a ilet
+      const result = await this.aiProviderService.generateContent(promptText, {
+        metadata: {
+          ...metadata,
+          traceId,
+        },
+      });
+
       if (!result || !result.text) {
         this.logger.warn(
           `[${traceId}] AI Provider'dan boş yanıt alındı. Yeniden denenecek.`,
@@ -199,7 +206,7 @@ export class QuizGenerationService {
       }
 
       this.logger.debug(
-        `[${traceId}] AI yanıtı alındı. Yanıt uzunluğu: ${result.text.length} karakter`,
+        `[${traceId}] AI yanıtı alındı. Yanıt uzunluğu: ${result.text.length} karakter, token kullanımı: ${result.usage?.totalTokens || 'bilinmiyor'}`,
         'QuizGenerationService.generateAIContent',
       );
 
@@ -304,6 +311,7 @@ export class QuizGenerationService {
    * @param subTopics Seçilen alt konular
    * @param questionCount Soru sayısı
    * @param difficulty Zorluk seviyesi
+   * @param documentId Belge ID (opsiyonel)
    * @returns Quiz soruları
    */
   async generateQuickQuizQuestions(
@@ -311,35 +319,77 @@ export class QuizGenerationService {
     subTopics: string[],
     questionCount: number = 10,
     difficulty: string = 'medium',
+    documentId?: string,
   ): Promise<QuizQuestion[]> {
-    const traceId = this.generateTraceId('quick-quiz');
-
-    this.logger.info(
-      `[${traceId}] Hızlı sınav soruları oluşturuluyor: ${questionCount} soru, ${difficulty} zorluk, ${subTopics.length} alt konu`,
-      'QuizGenerationService.generateQuickQuizQuestions',
+    const traceId = this.generateTraceId(
+      `quick_quiz_${documentId || 'no-doc'}_${subTopics.join('_').substring(0, 30)}`,
     );
 
-    // Belge metnini kısalt
-    const maxTextLength = 12000;
-    let truncatedText = documentText;
+    // Belgeden ve alt konulardan anahtar kelimeleri çıkar
+    let keywordsFromContent = '';
+    if (documentText && documentText.length > 0) {
+      // Basit kelime frekansı analizi
+      const words = documentText
+        .toLowerCase()
+        .replace(/[^\wçğıöşüâîû]/g, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length > 3);
 
-    if (documentText.length > maxTextLength) {
-      truncatedText = documentText.substring(0, maxTextLength) + '...';
-      this.logger.warn(
-        `[${traceId}] Belge metni çok uzun, ${maxTextLength} karaktere kısaltıldı (orijinal: ${documentText.length} karakter)`,
+      // En sık geçen 20 kelimeyi al
+      const wordFreq: Record<string, number> = {};
+      words.forEach((word) => {
+        wordFreq[word] = (wordFreq[word] || 0) + 1;
+      });
+
+      keywordsFromContent = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([word]) => word)
+        .join(', ');
+    }
+
+    const metadata: QuizMetadata = {
+      traceId,
+      subTopicsCount: subTopics.length,
+      questionCount,
+      difficulty,
+      userId: 'anonymous', // Anonim kullanıcı
+      subTopics, // Alt konuları metadata'ya ekle
+      documentId, // Belge ID'yi metadata'ya ekle
+      keywords: keywordsFromContent, // Anahtar kelimeleri ekle
+    };
+
+    this.logger.debug(
+      `[${traceId}] Hızlı quiz soruları oluşturuluyor: ${questionCount} soru, ${subTopics.length} alt konu, ${difficulty} zorluk`,
+      'QuizGenerationService.generateQuickQuizQuestions',
+      __filename,
+      undefined,
+      {
+        subTopics,
+        documentTextLength: documentText?.length || 0,
+        documentId: documentId || 'yok',
+        keywordsCount: keywordsFromContent.split(',').length,
+      },
+    );
+
+    // Eğer "Eksaskala" kelimesi alt konularda geçiyorsa, özel metadata ekle
+    if (subTopics.some((topic) => topic.toLowerCase().includes('eksaskala'))) {
+      metadata.specialTopic = 'eksaskala';
+      this.logger.info(
+        `[${traceId}] Eksaskala konulu özel içerik oluşturulacak`,
         'QuizGenerationService.generateQuickQuizQuestions',
       );
     }
 
-    // QuizGenerationOptions nesnesini oluştur
+    // Standart quiz oluşturma sürecini çağır
     const options: QuizGenerationOptions = {
-      documentText: truncatedText,
+      documentText,
       subTopics,
       questionCount,
       difficulty,
+      documentId,
     };
 
-    // Standart generateQuizQuestions metodunu çağır
     return this.generateQuizQuestions(options);
   }
 

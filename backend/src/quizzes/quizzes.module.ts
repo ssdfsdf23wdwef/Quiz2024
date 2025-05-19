@@ -7,6 +7,7 @@ import { AiModule } from '../ai/ai.module';
 import { SharedModule } from '../shared/shared.module';
 import { LearningTargetsModule } from '../learning-targets/learning-targets.module';
 import { DocumentsModule } from '../documents/documents.module';
+import { CoursesModule } from '../courses/courses.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DocumentsModule } from '../documents/documents.module';
     SharedModule,
     forwardRef(() => LearningTargetsModule),
     forwardRef(() => DocumentsModule),
+    CoursesModule,
   ],
   controllers: [QuizzesController],
   providers: [QuizzesService, QuizAnalysisService],

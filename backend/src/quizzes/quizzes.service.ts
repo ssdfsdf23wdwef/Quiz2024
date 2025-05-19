@@ -22,6 +22,7 @@ import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
 import { QuizQuestion } from '../ai/interfaces';
 import { DocumentsService } from '../documents/documents.service';
+import { CoursesService } from '../courses/courses.service';
 
 interface CreateQuizParams {
   userId: string;
@@ -53,6 +54,7 @@ export class QuizzesService {
     private readonly learningTargetsService: LearningTargetsService,
     private readonly quizAnalysisService: QuizAnalysisService,
     private readonly documentsService: DocumentsService,
+    private readonly coursesService: CoursesService,
   ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
@@ -225,9 +227,22 @@ export class QuizzesService {
    * Generate a new quiz using AI
    */
   async generateQuiz(dto: GenerateQuizDto, userId: string) {
+    // Log sınav oluşturma sürecinin başlangıcı
+    this.logger.logExamProcess(
+      `Sınav oluşturma başladı. Kullanıcı: ${userId}, Quiz Türü: ${dto.quizType}`,
+      {
+        userId,
+        quizType: dto.quizType,
+        documentId: dto.sourceDocument?.documentId,
+        hasFile: !!dto.sourceDocument?.fileName,
+        selectedSubTopics: dto.selectedSubTopics?.length || 0,
+      },
+    );
+
     // Validate course ownership if a course ID is provided
     if (dto.courseId) {
       await this.validateCourseOwnership(dto.courseId, userId);
+      this.logger.logExamProcess(`Kurs sahipliği doğrulandı: ${dto.courseId}`);
     }
 
     // Set up generation options
@@ -241,8 +256,59 @@ export class QuizzesService {
         dto.preferences.prioritizeWeakAndMediumTopics !== false,
     };
 
+    // Log aktif yapılandırma
+    this.logger.logExamProcess(
+      `Quiz oluşturma yapılandırması`,
+      generationOptions,
+    );
+
     // Get selected topics if not provided
     let selectedTopics = dto.selectedSubTopics || [];
+    if (selectedTopics.length === 0) {
+      this.logger.logExamProcess(
+        `Seçili alt konu bulunamadı - otomatik konu oluşturma kontrolü yapılıyor`,
+      );
+
+      // Eğer belge var ama konu seçilmemişse otomatik oluştur
+      if (dto.sourceDocument) {
+        // Dosya adından bir belge ID oluştur veya storage path'i kullan
+        const fileIdentifier =
+          dto.sourceDocument.fileName ||
+          (dto.sourceDocument.storagePath
+            ? dto.sourceDocument.storagePath.split('/').pop()
+            : 'belge');
+
+        this.logger.logExamProcess(
+          `Belge bilgisi bulundu, varsayılan konu oluşturuluyor: ${fileIdentifier}`,
+        );
+
+        // Varsayılan alt konu oluştur
+        const defaultTopicName = 'Belge İçeriği';
+        const documentIdentifier = fileIdentifier
+          ? fileIdentifier.replace(/\.[^/.]+$/, '')
+          : 'belge'; // Dosya uzantısını kaldır
+        const defaultSubTopic = {
+          subTopic: defaultTopicName,
+          normalizedSubTopic: `belge-${documentIdentifier.substring(0, 8)}`,
+        };
+
+        this.logger.logExamProcess(
+          `Varsayılan alt konu oluşturuldu`,
+          defaultSubTopic,
+        );
+        selectedTopics = [defaultSubTopic];
+      } else {
+        this.logger.logExamProcess(
+          `Belge bilgisi ve seçili konu bulunamadı - hata fırlatılıyor`,
+        );
+        throw new BadRequestException('En az bir alt konu seçilmelidir');
+      }
+    } else {
+      this.logger.logExamProcess(
+        `Seçili alt konular (${selectedTopics.length})`,
+        selectedTopics,
+      );
+    }
 
     // For personalized quizzes, get topics based on the personalization type
     if (dto.quizType === 'personalized' && dto.courseId) {
@@ -552,32 +618,46 @@ export class QuizzesService {
       }
     }
 
+    // Normalize subTopics for AI service
+    const normalizedSubTopics = selectedTopics
+      .map((t) => (typeof t === 'string' ? t : t.normalizedSubTopic))
+      .filter(Boolean) as string[];
+
+    // Sınav oluşturma için AI servisine istek
+    this.logger.logExamProcess(`OpenAI soru üretici servisi çağrılıyor`, {
+      subTopics: normalizedSubTopics,
+      documentId: dto.sourceDocument?.documentId,
+      questionCount: generationOptions.questionCount,
+      difficulty: generationOptions.difficulty,
+    });
+
     // Call AI service to generate questions
     const questions = await this.aiService.generateQuizQuestions({
       ...generationOptions,
-      subTopics: (selectedTopics as TopicDto[])
-        .map((t) => (typeof t === 'string' ? t : t.normalizedSubTopic))
-        .filter((t): t is string => typeof t === 'string' && !!t),
+      subTopics: normalizedSubTopics,
     });
 
-    // Create a new quiz object (not saved to DB yet)
-    const newQuiz = {
+    // Sorular üretildikten sonra
+    this.logger.logExamProcess(
+      `Sorular başarıyla üretildi. Soru sayısı: ${questions.length}`,
+    );
+
+    // Create a new quiz object
+    const newQuiz = await this.saveQuiz({
       userId,
       quizType: dto.quizType,
       personalizedQuizType: dto.personalizedQuizType,
-      courseId: dto.courseId ?? '',
+      courseId: dto.courseId,
       sourceDocument: dto.sourceDocument,
-      selectedSubTopics: selectedTopics.map((t) =>
-        typeof t === 'string'
-          ? t
-          : {
-              subTopic: t.subTopic,
-              normalizedSubTopic: t.normalizedSubTopic,
-            },
-      ),
+      selectedSubTopics: selectedTopics as TopicDto[],
       preferences: dto.preferences,
       questions,
-    };
+    });
+
+    // Quiz veritabanına kaydedildikten sonra
+    this.logger.logExamProcess(
+      `Quiz veritabanına kaydedildi. Quiz ID: ${newQuiz.id}`,
+    );
 
     return newQuiz;
   }
@@ -1517,7 +1597,7 @@ export class QuizzesService {
         correctCount: 0,
         totalQuestions: questions.length,
         elapsedTime: 0,
-        userAnswers: {},
+        userAnswers: {} as Record<string, string>,
         preferences: {
           questionCount,
           difficulty,
@@ -1788,5 +1868,88 @@ export class QuizzesService {
         questions,
         totalQuestions: questions.length,
       });
+  }
+
+  /**
+   * Sınav verilerini kaydet ve oluşturulan sınavı döndür
+   * @private
+   */
+  private async saveQuiz(params: {
+    userId: string;
+    quizType: 'quick' | 'personalized';
+    personalizedQuizType?: string | null;
+    courseId?: string | null;
+    sourceDocument?: {
+      documentId?: string;
+      fileName?: string;
+      text?: string;
+    } | null;
+    selectedSubTopics: any[];
+    preferences: {
+      questionCount: number;
+      difficulty: string;
+      timeLimit?: number | null;
+      prioritizeWeakAndMediumTopics?: boolean | null;
+    };
+    questions: any[];
+  }): Promise<Quiz> {
+    try {
+      // Quiz verileri oluştur
+      const timestamp = new Date();
+
+      // Log kaydı
+      this.logger.logExamProcess(
+        `Sınav kaydediliyor: ${params.userId} ID'li kullanıcı, ${params.quizType} türünde`,
+        {
+          userId: params.userId,
+          quizType: params.quizType,
+          questionCount: params.questions.length,
+          timestamp,
+        },
+      );
+
+      // Quiz nesnesi oluştur
+      const quiz = {
+        userId: params.userId,
+        quizType: params.quizType,
+        personalizedQuizType: params.personalizedQuizType || null,
+        courseId: params.courseId || undefined,
+        questions: params.questions,
+        timestamp,
+        selectedSubTopics: params.selectedSubTopics,
+        preferences: params.preferences,
+        score: 0,
+        correctCount: 0,
+        totalQuestions: params.questions.length,
+        elapsedTime: 0,
+        userAnswers: {} as Record<string, string>,
+        sourceDocument: params.sourceDocument
+          ? {
+              documentId: params.sourceDocument.documentId,
+              fileName: params.sourceDocument.fileName,
+              uploadDate: timestamp,
+            }
+          : null,
+        analysisResult: null,
+      };
+
+      // Firestore'a kaydet
+      const docRef = await this.firebaseService.firestore
+        .collection(FIRESTORE_COLLECTIONS.QUIZZES)
+        .add(quiz);
+
+      // ID'yi ekleyerek döndür
+      return {
+        ...quiz,
+        id: docRef.id,
+      } as Quiz;
+    } catch (error) {
+      this.logger.logError(error, 'QuizzesService.saveQuiz', {
+        userId: params.userId,
+        quizType: params.quizType,
+        courseId: params.courseId,
+      });
+      throw new Error(`Sınav kaydedilemedi: ${error.message}`);
+    }
   }
 }

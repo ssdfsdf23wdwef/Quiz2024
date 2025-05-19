@@ -91,7 +91,7 @@ class QuestionDto {
 
 class DocumentSourceDto {
   @ApiProperty({
-    description: 'Dosya adı',
+    description: 'Belge adı',
     example: 'ders1.pdf',
   })
   @IsString()
@@ -105,6 +105,15 @@ class DocumentSourceDto {
   @IsString()
   @IsNotEmpty()
   storagePath: string;
+
+  @ApiProperty({
+    description: 'Belge ID (FireStore)',
+    example: 'abc123def456',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  documentId?: string;
 }
 
 class QuizPreferencesDto {

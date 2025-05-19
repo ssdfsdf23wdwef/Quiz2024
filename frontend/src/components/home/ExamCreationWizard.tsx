@@ -24,15 +24,14 @@ import {
   DetectedSubTopic,
   QuizPreferences,
   QuizGenerationOptions,
-  DifficultyLevel
 } from "@/types";
 import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
 import { SubTopicItem } from "@/types/quiz";
 import { LearningTarget } from "@/types/learningTarget";
 import { useRouter } from "next/navigation";
-import { ApiError } from "@/services/error.service"; // ApiError importu eklendi
-import { Quiz } from "@/types"; // Quiz importu eklendi
+import { ApiError } from "@/services/error.service"; 
+import { Quiz } from "@/types";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
@@ -115,7 +114,6 @@ export default function ExamCreationWizard({
     personalizedQuizType: quizType === "personalized" ? "comprehensive" : undefined, 
   });
   const [useTimeLimit, setUseTimeLimit] = useState<boolean>(false);
-  const [timeLimitValue, setTimeLimitValue] = useState<number | undefined>(undefined);
 
   // Kurs ve konu seçimi
   const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
@@ -314,9 +312,40 @@ export default function ExamCreationWizard({
         topicIds: selectedTopics,
         subTopicIds: subTopicIds
       }));
-      console.log('[ECW handleTopicsDetected] Updated preferences with topic/subTopic IDs');
-    } else {
-      console.warn('[ECW handleTopicsDetected] UYARI: Boş konu dizisi alındı!');
+    } else if (uploadedDocumentId) {
+      // Seçilen konular boş ama belge ID varsa, varsayılan bir konu oluştur
+      console.log('[ECW handleTopicsDetected] Seçilen konular boş ancak belge yüklenmiş, varsayılan konu oluşturuluyor');
+      
+      const fileName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "Belge İçeriği";
+      const defaultTopicId = `default-${uploadedDocumentId.substring(0, 8)}`;
+      
+      // Tek bir varsayılan konu oluştur
+      const defaultTopics = [defaultTopicId];
+      setSelectedTopicIds(defaultTopics);
+      
+      // Aynı konu ID'sini alt konu olarak da kullan
+      setSelectedSubTopicIds(defaultTopics);
+      
+      // Görüntülenecek alt konu nesnesi oluştur
+      const subTopicItem: SubTopicItem = {
+        subTopic: fileName,
+        normalizedSubTopic: defaultTopicId
+      };
+      setSelectedTopics([subTopicItem]);
+      
+      console.log('[ECW handleTopicsDetected] Varsayılan konu oluşturuldu:', defaultTopicId, fileName);
+      
+      // Tercihleri güncelle
+      setPreferences(prev => ({
+        ...prev,
+        topicIds: defaultTopics,
+        subTopicIds: defaultTopics
+      }));
+    }
+    
+    // Adım 3'e geç
+    if (currentStep === 2) {
+    setCurrentStep(3);
     }
   };
 
@@ -437,12 +466,10 @@ export default function ExamCreationWizard({
     // Geçerli bir sayı ise veya boş ise güncelle
     if (!isNaN(numValue) && numValue >= 1) {
       handlePreferenceChange("timeLimit", numValue);
-      setTimeLimitValue(numValue);
     } else if (value === "") {
       // Input boşsa state'i undefined yapabiliriz ama kullanıcı deneyimi için 0 veya 1 gibi min değer daha iyi olabilir.
       // Şimdilik minimum 1 varsayalım.
       handlePreferenceChange("timeLimit", 1);
-      setTimeLimitValue(1);
     }
   };
 
@@ -832,7 +859,7 @@ export default function ExamCreationWizard({
             // Alt konu olarak da ekle
             const subTopicItem: SubTopicItem = {
               subTopic: defaultTopicName,
-              normalizedSubTopic: defaultTopicName.toLowerCase().replace(/\s+/g, '-')
+              normalizedSubTopic: defaultTopicId // Değiştirildi: ID'yi kullan, daha tutarlı olması için
             };
             setSelectedTopics([subTopicItem]);
             
@@ -916,19 +943,38 @@ export default function ExamCreationWizard({
       !!documentTextContent,
     );
     
-    // Oturum kontrolü
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      console.error("[ECW handleFinalSubmit] Token bulunamadı! Oturum kontrolü gerekiyor.");
-      // Mevcut sayfayı kaydet
-      if (typeof window !== 'undefined') {
-        const currentPath = window.location.pathname + window.location.search;
-        sessionStorage.setItem('redirectAfterLogin', currentPath);
-        toast.error("Oturum süreniz dolmuş. Giriş sayfasına yönlendiriliyorsunuz.");
-        setTimeout(() => {
-          window.location.href = "/auth/login?session_expired=true";
-        }, 1500);
-        return;
+    // Hızlı sınav için oturum kontrolünü atlayalım veya alternatif kontrol yapalım
+    if (quizType !== "quick") {
+      // Oturum kontrolü - sadece normal sınavlar için
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        console.error("[ECW handleFinalSubmit] Token bulunamadı! Oturum kontrolü gerekiyor.");
+        
+        try {
+          // Auth servisinden oturum kontrolü yapalım - useAuth hook'u React Component dışında kullanılamaz
+          // doğrudan authService'i kullanmalıyız
+          const authService = (await import("@/services/auth.service")).default;
+          try {
+            await authService.getCurrentToken();
+            console.log("[ECW handleFinalSubmit] AuthService ile oturum kontrolü başarılı");
+          } catch (tokenError) {
+            console.error("[ECW handleFinalSubmit] AuthService ile oturum kontrolü başarısız", tokenError);
+            
+            // Mevcut sayfayı kaydet
+            if (typeof window !== 'undefined') {
+              const currentPath = window.location.pathname + window.location.search;
+              sessionStorage.setItem('redirectAfterLogin', currentPath);
+              toast.error("Oturum süreniz dolmuş. Giriş sayfasına yönlendiriliyorsunuz.");
+              setTimeout(() => {
+                window.location.href = "/auth/login?session_expired=true";
+              }, 1500);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("[ECW handleFinalSubmit] Oturum kontrolü hatası:", error);
+          // Hata durumunda devam edelim - sonraki adımlarda nasılsa API hatası alacak
+        }
       }
     }
 
@@ -966,11 +1012,16 @@ export default function ExamCreationWizard({
       if (topicsToUse.length === 0 && (uploadedDocumentId || selectedFile)) {
         console.log("[ECW handleFinalSubmit] Konu seçilmedi ama belge var, otomatik konu oluşturuluyor");
         const fileName = selectedFile?.name || 'belge';
+        const defaultTopicId = `belge-${uploadedDocumentId ? uploadedDocumentId.substring(0, 8) : new Date().getTime()}`;
         topicsToUse = [{
-          subTopic: `${fileName} İçeriği`,
-          normalizedSubTopic: `belge-${uploadedDocumentId ? uploadedDocumentId.substring(0, 8) : new Date().getTime()}`
+          subTopic: `${fileName.replace(/\.[^/.]+$/, "")} İçeriği`,
+          normalizedSubTopic: defaultTopicId
         }];
         console.log("[ECW handleFinalSubmit] Otomatik oluşturulan konu:", topicsToUse);
+        
+        // State güncellemesi - gerçek bir uygulamada burada yapılmaz ama tutarlılık için ekleyelim
+        setSelectedTopicIds([defaultTopicId]);
+        setSelectedSubTopicIds([defaultTopicId]);
       }
       
       // API için alt konu nesnelerini oluştur
@@ -1097,7 +1148,7 @@ export default function ExamCreationWizard({
         } else {
           console.error("[ECW handleFinalSubmit] Sınav ID alınamadı!");
           setErrorMessage("Sınav oluşturuldu ancak ID alınamadı.");
-      }
+        }
       } catch (error) {
         console.error("[ECW handleFinalSubmit] Sınav oluşturma hatası:", error);
         

@@ -18,6 +18,7 @@ import ExamCreationWizard from "@/components/home/ExamCreationWizard";
 import { toast } from "react-hot-toast";
 import { ApiError } from "@/services/error.service";
 import { Quiz, QuizPreferences as GlobalQuizPreferences } from "@/types";
+import { redirect } from "next/navigation";
 
 // Sayfa içinde kullanılacak tipler (geçici)
 // export type CreatePage_QuizCreationResult = any; // Geçici çözüm
@@ -276,6 +277,39 @@ function CreateExamPageContent() {
       }, null, 2));
       
       setCreationResultInternal(resultData as Parameters<NonNullable<React.ComponentProps<typeof ExamCreationWizard>["onComplete"]>>[0]);
+    }
+
+    // URL parametreleri üzerinden doğrudan sınav oluşturmaya geçme kontrolü
+    if (documentIdParam && startQuizParam === "true") {
+      console.log("Doğrudan sınav oluşturma modu. Document ID:", documentIdParam);
+      
+      // Bu fonksiyon için URL parametrelerinden konu seçimleri sağlandı mı?
+      const queryTopicIds = searchParams.get('topicIds') || '';
+      const querySubTopicIds = searchParams.get('subTopicIds') || '';
+      
+      const topicIds = queryTopicIds ? queryTopicIds.split(',') : [];
+      const subTopicIds = querySubTopicIds ? querySubTopicIds.split(',') : [];
+      
+      console.log("Doğrudan modda konu seçimleri:", { topicIds, subTopicIds });
+      
+      // Konu seçilmemiş ama belge var, varsayılan konu oluşturalım
+      if ((topicIds.length === 0 || subTopicIds.length === 0) && documentIdParam) {
+        console.log("URL parametrelerinde konu seçimleri bulunamadı, varsayılan konu oluşturuluyor");
+        
+        const docName = searchParams.get('fileName') || 'Belge';
+        const defaultTopicId = `doc-${documentIdParam.substring(0, 8)}`;
+        
+        // Varsayılan konu parametrelerini belirle
+        const defaultTopicParams = new URLSearchParams(searchParams);
+        defaultTopicParams.set('topicIds', defaultTopicId);
+        defaultTopicParams.set('subTopicIds', defaultTopicId);
+        
+        console.log("Varsayılan konu parametreleri:", defaultTopicParams.toString());
+        
+        // Yönlendirme
+        console.log("Varsayılan konu parametreleriyle yönlendiriliyor");
+        return redirect(`/exams/create?${defaultTopicParams.toString()}`);
+      }
     }
   }, [searchParams, startQuizParam, router]);
 

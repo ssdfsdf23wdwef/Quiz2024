@@ -219,7 +219,7 @@ export const checkApiAvailability = async (
 
     // Hiçbir port çalışmıyorsa kullanıcıya bildir
     const errorMsg = "API sunucusuna erişilemiyor. Lütfen backend servisinin çalıştığından emin olun.";
-    ErrorService.showToast(new Error(errorMsg), "error");
+    ErrorService.showToast(errorMsg, "error");
     logger.error(errorMsg, 'checkApiAvailability', __filename, 97);
     flowTracker.trackStep(FlowCategory.API, 'Hiçbir API portu aktif değil!', 'checkApiAvailability');
     
@@ -518,7 +518,7 @@ axiosInstance.interceptors.response.use(
                   }
                 }
 
-              // Kullanıcıyı logout yap ve login sayfasına yönlendir
+                // Kullanıcıyı logout yap ve login sayfasına yönlendir
                 await authService.signOut();
                 
                 // Zustand store'dan kullanıcıyı çıkış yap
@@ -535,7 +535,28 @@ axiosInstance.interceptors.response.use(
                     sessionStorage.setItem('redirectAfterLogin', currentPath);
                   }
                   
-                  window.location.href = "/auth/login?session_expired=true";
+                  // Hızlı sınav URL'sindeyse sadece toast mesajı gösterelim, yönlendirme yapmayalım
+                  if (currentPath.includes('/exams/quick') || 
+                      (currentPath.includes('/exams/create') && currentPath.includes('type=quick'))) {
+                    console.log("🔐 Hızlı sınav sayfasındayız, yönlendirme yapmadan uyarı göster");
+                    const { toast } = await import("react-hot-toast");
+                    toast.error("Oturum bilgileriniz güncellenemedi, ancak hızlı sınav için devam edebilirsiniz.");
+                    
+                    // Hatayı göster ama işlemi iptal etme, hızlı sınav için oturum gerektirmez
+                    console.log("⚠️ Hızlı sınav için oturum hatası yok sayılıyor");
+                    const quizError = new Error("Hızlı sınav için işleme devam ediliyor");
+                    quizError.name = "QuickQuizSessionError";
+                    
+                    // Hızlı sınav için orijinal isteği token olmadan tekrar deneyelim
+                    if (originalRequest.headers) {
+                      delete originalRequest.headers.Authorization;
+                    }
+                    (originalRequest as { _retry?: boolean })._retry = true;
+                    return axiosInstance(originalRequest);
+                  } else {
+                    // Normal durum - login sayfasına yönlendir
+                    window.location.href = "/auth/login?session_expired=true";
+                  }
                 }
               } catch (logoutError) {
                 console.error("❌ Çıkış işlemi başarısız:", logoutError);
@@ -945,6 +966,145 @@ class ApiService {
     
     // Bilinmeyen hatalar için yeniden dene
     return true;
+  }
+
+  /**
+   * Axios error handler
+   * @param error Axios error
+   * @returns Error response or rethrows
+   */
+  private handleAxiosError(error: any, endpointType?: 'quick_quiz' | 'general'): any {
+    console.error('[ApiService.handleAxiosError] API işlemi sırasında hata:', error);
+
+    // Axios hata yapısını kontrol et
+    if (error.response) {
+      // Sunucu cevabı varsa (4xx-5xx kodları)
+      const { status, data } = error.response;
+      console.error(`[ApiService.handleAxiosError] Status: ${status}, Data:`, data);
+
+      // 401 Unauthorized durumu, token süresi dolmuş olabilir
+      if (status === 401) {
+        console.error("[ApiService.handleAxiosError] 401 Unauthorized hatası. Token geçersiz veya süresi dolmuş.");
+        
+        // Eğer bu bir hızlı sınav endpointi ise ve quick_quiz tipindeyse, sessiz davran ve işleme devam et
+        if (endpointType === 'quick_quiz') {
+          console.warn("[ApiService.handleAxiosError] Hızlı sınav için 401 hatası yok sayılıyor ve varsayılan cevap döndürülüyor");
+          // Hızlı sınav API'si için temel bir yanıt sağlayın
+          return {
+            id: `mock_quiz_${Date.now()}`,
+            questions: this.createMockQuestions(),
+            timestamp: new Date().toISOString(),
+            quizType: 'quick',
+            status: 'Unauthorized but continuing',
+          };
+        }
+        
+        // Diğer API çağrıları için normal yönlendirme yap
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname + window.location.search;
+          sessionStorage.setItem('redirectAfterLogin', currentPath);
+          // Client-side yönlendirme için toast ekle
+          if (this.toast) {
+            this.toast.error("Oturum süreniz dolmuş. Giriş sayfasına yönlendiriliyorsunuz.");
+          }
+          
+          // Yönlendirmeyi zamanlı yap
+          setTimeout(() => {
+            console.log("[ApiService.handleAxiosError] Giriş sayfasına yönlendiriliyor");
+            window.location.href = "/auth/login?session_expired=true";
+          }, 1500);
+        }
+      }
+
+      // Diğer hata detaylarını döndür
+      return {
+        status,
+        data,
+        message: data?.message || "API isteği başarısız oldu",
+      };
+    } else if (error.request) {
+      // İstek yapıldı ama cevap alınamadı
+      console.error("[ApiService.handleAxiosError] İstek gönderildi ama cevap alınamadı.");
+      
+      // Network hatası, ancak quick_quiz için hız devam et
+      if (endpointType === 'quick_quiz') {
+        console.warn("[ApiService.handleAxiosError] Hızlı sınav için network hatası yok sayılıyor");
+        return {
+          id: `offline_quiz_${Date.now()}`,
+          questions: this.createMockQuestions(),
+          timestamp: new Date().toISOString(),
+          quizType: 'quick',
+          status: 'Offline mode',
+        };
+      }
+      
+      return {
+        status: 0,
+        data: null,
+        message: "Sunucuya ulaşılamadı. Lütfen internet bağlantınızı kontrol edin.",
+      };
+    } else {
+      // İstek oluşturulamadı, başka bir hata var
+      console.error("[ApiService.handleAxiosError] İstek oluşturulurken hata:", error.message);
+      return {
+        status: 0,
+        data: null,
+        message: error.message || "Bilinmeyen bir hata oluştu.",
+      };
+    }
+  }
+
+  /**
+   * Mock sınav soruları oluşturur (bağlantı hatalarında kullanılır)
+   */
+  private createMockQuestions() {
+    return [
+      {
+        id: `mock_q1_${Date.now()}`,
+        questionText: "Bu sorular, sunucu bağlantısı olmadığı için otomatik oluşturulmuştur. Aşağıdakilerden hangisi bir programlama dilidir?",
+        options: [
+          "A) HTML",
+          "B) Python",
+          "C) HTTP",
+          "D) FTP"
+        ],
+        correctAnswer: "B) Python",
+        explanation: "Python, genel amaçlı yüksek seviyeli bir programlama dilidir.",
+        subTopicName: "Programlama Dilleri",
+        normalizedSubTopicName: "programlama-dilleri",
+        difficulty: "easy"
+      },
+      {
+        id: `mock_q2_${Date.now()}`,
+        questionText: "Hangisi bir veri yapısı değildir?",
+        options: [
+          "A) Dizi (Array)",
+          "B) Yığın (Stack)",
+          "C) Kuyruk (Queue)",
+          "D) Komut (Command)"
+        ],
+        correctAnswer: "D) Komut (Command)",
+        explanation: "Komut (Command) bir tasarım desenidir, veri yapısı değildir.",
+        subTopicName: "Veri Yapıları",
+        normalizedSubTopicName: "veri-yapilari",
+        difficulty: "medium"
+      },
+      {
+        id: `mock_q3_${Date.now()}`,
+        questionText: "Web uygulamalarında HTTPS protokolünün kullanım amacı nedir?",
+        options: [
+          "A) Daha hızlı sayfa yükleme",
+          "B) Güvenli veri iletimi",
+          "C) Daha fazla bant genişliği",
+          "D) Arama motoru optimizasyonu"
+        ],
+        correctAnswer: "B) Güvenli veri iletimi",
+        explanation: "HTTPS, veri iletimini şifreleyerek güvenli hale getirir.",
+        subTopicName: "Web Teknolojileri",
+        normalizedSubTopicName: "web-teknolojileri",
+        difficulty: "medium"
+      }
+    ];
   }
 }
 

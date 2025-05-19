@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, lazy, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { QuizPreferences } from "@/types/quiz";
+import { Quiz } from "@/types";
 import {
   FiArrowRight,
   FiPlay,
@@ -16,11 +17,7 @@ import {
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
 import { useAuth } from "@/context/AuthContext";
-
-// Lazy loading ile bileşenleri yükle
-const ExamCreationWizard = lazy(
-  () => import("@/components/home/ExamCreationWizard"),
-);
+import ExamCreationWizard from "@/components/home/ExamCreationWizard";
 
 const gradientVariants = {
   hidden: {
@@ -88,6 +85,10 @@ export default function Home() {
     personalizedQuizType?: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive";
     preferences: QuizPreferences;
     topicNameMap?: Record<string, string>;
+    quiz?: Quiz;
+    quizId?: string;
+    documentId?: string;
+    status?: 'success' | 'error';
   }) => {
     try {
       // URL'e quiz türünü ve dosya adını ekle
@@ -103,22 +104,26 @@ export default function Home() {
       if (result.file) {
         params.set("fileName", encodeURIComponent(result.file.name));
       }
+
+      // Eğer quiz ID ve belge ID varsa ekle
+      if (result.quizId) {
+        params.set("quizId", result.quizId);
+      }
+
+      if (result.documentId) {
+        params.set("documentId", result.documentId);
+      }
       
       console.log("Ana sayfada ExamCreationWizard tamamlandı, doğrudan quiz oluşturma API çağrısı yapılacak");
       
-      // Form verisi oluştur
-      const formData = {
-        quizType: result.quizType,
-        personalizedQuizType: result.personalizedQuizType,
-        document: result.file,
-        preferences: result.preferences,
-        selectedTopics: result.preferences.topicIds || [],
-        topicNames: result.topicNameMap || {}
-      };
+      // Quiz ID varsa doğrudan sınav sayfasına yönlendir
+      if (result.quizId) {
+        console.log(`Quiz ID mevcut (${result.quizId}), doğrudan sınav sayfasına yönlendiriliyor`);
+        router.push(`/exams/${result.quizId}?mode=attempt`);
+        return;
+      }
       
-      // Quiz oluşturma servisi doğrudan çağrılacak
-      // Fakat bu, yaratıcılık yönüyle uygun olmayabilir
-      // En iyisi quiz oluşturma sayfasına yönlendirmek
+      // Quiz oluşturma sayfasına yönlendir
       const url = `/exams/create?${params.toString()}&startQuiz=true`;
       router.push(url);
     } catch (error) {

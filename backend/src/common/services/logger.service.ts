@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { createLogger, format, transports } from 'winston';
 
 /**
  * Hata kayıt seviyesi
@@ -62,6 +63,35 @@ export class LoggerService {
       memory: NodeJS.MemoryUsage;
     }
   > = {};
+
+  /**
+   * Sınav oluşturma aşamalarını kaydetmek için özel bir logger
+   */
+  examProcessLogger = createLogger({
+    level: 'debug',
+    format: format.combine(
+      format.timestamp(),
+      format.printf(({ timestamp, level, message }) => {
+        return `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+      }),
+    ),
+    transports: [
+      new transports.File({
+        filename: 'logs/sinav-olusturma.log',
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+      }),
+      // Konsola da yazdırmak için
+      new transports.Console({
+        format: format.combine(
+          format.timestamp(),
+          format.printf(({ timestamp, level, message }) => {
+            return `[SINAV SÜRECI] [${timestamp}] [${level.toUpperCase()}] ${message}`;
+          }),
+        ),
+      }),
+    ],
+  });
 
   constructor(options?: LoggerOptions) {
     // Seçenekleri başlat
@@ -876,5 +906,144 @@ export class LoggerService {
       // Konsola yazdırma kaldırıldı
       // console.error(`Log dosyasına yazma hatası: ${(error as Error).message}`);
     }
+  }
+
+  /**
+   * Sınav oluşturma süreciyle ilgili log kaydeder
+   * @param message Log mesajı
+   * @param context Ek bağlam bilgileri (opsiyonel)
+   * @param level Log seviyesi (default: 'info')
+   */
+  logExamProcess(
+    message: string,
+    context?: any,
+    level: 'info' | 'debug' | 'warn' | 'error' = 'info',
+  ) {
+    // Timestamp ekleyerek daha zengin bir log oluştur
+    const logPrefix = `[${new Date().toISOString()}]`;
+
+    // Log metni
+    let logText = `${logPrefix} ${message}`;
+
+    // Context bilgisi varsa ekle
+    if (context) {
+      // Object ya da array'i formatlı göster
+      const contextStr =
+        typeof context === 'object'
+          ? JSON.stringify(context, null, 2)
+          : context.toString();
+
+      logText += `\nContext: ${contextStr}`;
+    }
+
+    // Log seviyesine göre kaydet
+    switch (level) {
+      case 'debug':
+        this.examProcessLogger.debug(logText);
+        break;
+      case 'warn':
+        this.examProcessLogger.warn(logText);
+        break;
+      case 'error':
+        this.examProcessLogger.error(logText);
+        break;
+      default:
+        this.examProcessLogger.info(logText);
+    }
+
+    // Kritik loglar için ayrıca normal log sistemine de kaydet
+    if (level === 'error' || level === 'warn') {
+      this[level](
+        `SINAV SÜRECI: ${message}`,
+        'ExamProcessLogger',
+        __filename,
+        undefined,
+        context,
+      );
+    }
+  }
+
+  /**
+   * Sınav oluşturma sürecinin başlangıcını loglar
+   * @param userId Kullanıcı ID'si
+   * @param quizType Sınav türü
+   * @param metadata Sınav meta bilgileri
+   */
+  logExamStart(
+    userId: string,
+    quizType: string,
+    metadata: Record<string, any> = {},
+  ) {
+    this.logExamProcess(
+      `[BAŞLANGIÇ] ${userId} ID'li kullanıcı için ${quizType} türünde sınav oluşturma süreci başlatıldı`,
+      { ...metadata, userId, quizType, timestamp: new Date().toISOString() },
+    );
+  }
+
+  /**
+   * Sınav oluşturma sürecinin bitişini loglar
+   * @param userId Kullanıcı ID'si
+   * @param quizId Oluşturulan sınav ID'si
+   * @param metadata Sınav meta bilgileri
+   */
+  logExamCompletion(
+    userId: string,
+    quizId: string,
+    metadata: Record<string, any> = {},
+  ) {
+    const duration = metadata.startTime
+      ? `${Math.round((Date.now() - metadata.startTime) / 1000)} saniye`
+      : 'bilinmiyor';
+
+    this.logExamProcess(
+      `[TAMAMLANDI] ${userId} ID'li kullanıcı için ${quizId} ID'li sınav oluşturuldu. Süreç ${duration} sürdü.`,
+      { ...metadata, userId, quizId, completedAt: new Date().toISOString() },
+    );
+  }
+
+  /**
+   * Sınav oluşturma sürecinde bir aşamayı loglar
+   * @param userId Kullanıcı ID'si
+   * @param step Aşama adı
+   * @param metadata Aşama meta bilgileri
+   */
+  logExamStage(
+    userId: string,
+    step: string,
+    metadata: Record<string, any> = {},
+  ) {
+    this.logExamProcess(`[AŞAMA] ${userId} ID'li kullanıcı: ${step}`, {
+      ...metadata,
+      userId,
+      step,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Sınav oluşturma sürecinde bir hata loglar
+   * @param userId Kullanıcı ID'si
+   * @param error Hata
+   * @param context Hata bağlamı
+   */
+  logExamError(
+    userId: string,
+    error: Error | string,
+    context: Record<string, any> = {},
+  ) {
+    const errorMessage = error instanceof Error ? error.message : error;
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    this.logExamProcess(
+      `[HATA] ${userId} ID'li kullanıcı: ${errorMessage}`,
+      {
+        ...context,
+        userId,
+        error: errorMessage,
+        stack: errorStack,
+        timestamp: new Date().toISOString(),
+      },
+      'error',
+    );
   }
 }
