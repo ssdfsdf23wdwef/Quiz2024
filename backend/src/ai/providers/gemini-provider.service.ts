@@ -131,12 +131,46 @@ export class GeminiProviderService implements AIProvider {
       const endTime = Date.now();
       const duration = endTime - startTime;
 
+      // Yanıt metnini alma -  response.response.candidates[0].content.parts[0].text kullanabiliriz
+      let responseText = '';
+
+      try {
+        // Direktmen response'u string olarak almaya çalış
+        if (response.response) {
+          if (
+            response.response.candidates &&
+            response.response.candidates[0] &&
+            response.response.candidates[0].content &&
+            response.response.candidates[0].content.parts &&
+            response.response.candidates[0].content.parts[0]
+          ) {
+            responseText =
+              response.response.candidates[0].content.parts[0].text || '';
+
+            this.logger.log(
+              `[${traceId}] Yanıt metni başarıyla elde edildi (candidates yoluyla)`,
+              'GeminiProviderService.generateContent',
+            );
+          }
+        }
+      } catch (textError) {
+        // Tüm response nesnesini loglayalım (hatayı tespit etmek için)
+        this.logger.warn(
+          `[${traceId}] Yanıt metni alınamadı, hata: ${textError.message}`,
+          'GeminiProviderService.generateContent',
+        );
+
+        this.logger.debug(
+          `[${traceId}] Response yapısı: ${JSON.stringify(response).substring(0, 500)}`,
+          'GeminiProviderService.generateContent',
+        );
+
+        // Boş metin kullan
+        responseText = '';
+      }
+
       // Basit token hesaplaması (kesin değil, sadece tahmin)
       const promptTokenEstimate = Math.ceil(prompt.length / 4);
-
-      // Gemini yanıtını doğru şekilde alıyoruz
-      const responseText = response.response.text();
-
       const completionTokenEstimate = Math.ceil(
         (responseText?.length || 0) / 4,
       );
@@ -155,21 +189,22 @@ export class GeminiProviderService implements AIProvider {
         },
       );
 
-      // JSON içerik kontrolü - JSON sonuç bekleniyorsa ancak yanıtta geçerli bir JSON yoksa
+      // JSON içerik kontrolü
       if (
+        responseText &&
         (prompt.toLowerCase().includes('json') ||
           (options?.systemInstruction &&
-            options.systemInstruction.toLowerCase().includes('json'))) &&
-        responseText
+            options.systemInstruction.toLowerCase().includes('json')))
       ) {
         try {
           // Basit bir JSON kontrolü yap
           const containsJsonBraces =
             responseText.includes('{') && responseText.includes('}');
-          const jsonPrefix = responseText.indexOf('{');
-          const jsonSuffix = responseText.lastIndexOf('}') + 1;
 
           if (containsJsonBraces) {
+            const jsonPrefix = responseText.indexOf('{');
+            const jsonSuffix = responseText.lastIndexOf('}') + 1;
+
             // JSON olabilecek metni çıkarmayı dene
             const possibleJson = responseText.substring(jsonPrefix, jsonSuffix);
 
@@ -184,34 +219,18 @@ export class GeminiProviderService implements AIProvider {
               this.logger.warn(
                 `[${traceId}] Yanıtta JSON bulunuyor ancak geçerli JSON formatında değil: ${jsonError.message}`,
                 'GeminiProviderService.generateContent',
-                __filename,
-                undefined,
-                {
-                  jsonError: jsonError.message,
-                  jsonPreview: possibleJson.substring(0, 50) + '...',
-                  traceId,
-                },
               );
             }
           } else {
             this.logger.warn(
               `[${traceId}] JSON bekleniyordu ancak yanıtta JSON formatı bulunamadı`,
               'GeminiProviderService.generateContent',
-              __filename,
-              undefined,
-              {
-                responsePreview: responseText.substring(0, 100) + '...',
-                traceId,
-              },
             );
           }
         } catch (formatError) {
           this.logger.warn(
             `[${traceId}] JSON formatı kontrol edilirken hata: ${formatError.message}`,
             'GeminiProviderService.generateContent',
-            __filename,
-            undefined,
-            formatError,
           );
         }
       }

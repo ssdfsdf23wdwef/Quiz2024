@@ -103,3 +103,7 @@ Details: {"reason":"AxiosError: Network Error\n    at XMLHttpRequest.handleError
 ------------------------------------------------------------
 [2025-05-19T21:07:55.516Z] [info] [ClientLogSetup] Uygulama başlatıldı
 ------------------------------------------------------------
+[2025-05-19T21:18:07.806Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-19T21:18:07.813Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------

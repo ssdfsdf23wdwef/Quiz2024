@@ -450,7 +450,9 @@ export class QuizValidationService {
     // Eğer özel Eksaskala konusu ise, ilgili konuya özel sorular üret
     if (
       specialTopic === 'eksaskala' ||
-      subTopics.some((topic) => topic.toLowerCase().includes('eksaskala'))
+      subTopics.some(
+        (topic) => topic && topic.toLowerCase().includes('eksaskala'),
+      )
     ) {
       this.flowTracker.trackStep(
         `Eksaskala konusuna özel sorular üretiliyor`,
@@ -472,17 +474,22 @@ export class QuizValidationService {
       }
     }
 
-    // Zorluk seviyesine göre farklı soru tipleri dağıt
-    const difficultyLevel =
-      difficulty === 'hard' ? 'zor' : difficulty === 'easy' ? 'kolay' : 'orta';
+    // Zorluk seviyesine göre farklı soru tipleri dağıt - İngilizce değerleri kullan
+    // 'hard', 'medium', 'easy' değerlerini doğrudan kullan, Türkçe dönüşüm yapma
+    const difficultyLevel = difficulty === 'mixed' ? 'medium' : difficulty;
 
     this.flowTracker.trackStep(
       `Standart fallback sorular üretiliyor, zorluk: ${difficultyLevel}`,
       'QuizValidationService',
     );
 
+    // Varsayılan alt konu adı
+    const defaultSubTopic = 'Genel Konular';
+
     // Alt konuları normalleştirmeyi kontrol et ve konu başlıklarını daha anlaşılır hale getir
-    const normalizedTopics = subTopics.map((topic) => {
+    const normalizedTopics = (subTopics || []).map((topic) => {
+      // Null/undefined kontrolü
+      if (!topic) return defaultSubTopic;
       // Normalleştirme sırasında - veya _ karakterlerini boşluğa çevir
       return topic.replace(/-/g, ' ').replace(/_/g, ' ');
     });
@@ -499,11 +506,12 @@ export class QuizValidationService {
         ],
         correctAnswer: 'C) Gereksinimlerin belirlenmesi',
         explanation: `${normalizedTopics[0] || 'Yazılım geliştirme'} sürecinde gereksinimlerin doğru belirlenmesi, projenin başarısı için en kritik adımdır. Diğer tüm adımlar da önemlidir ancak doğru gereksinimler olmadan başarılı bir proje geliştirmek mümkün değildir.`,
-        subTopicName: subTopicsCount > 0 ? subTopics[0] : 'Genel Konular',
+        subTopicName:
+          subTopicsCount > 0 && subTopics[0] ? subTopics[0] : defaultSubTopic,
         normalizedSubTopicName:
-          subTopicsCount > 0
+          subTopicsCount > 0 && subTopics[0]
             ? this.normalizationService.normalizeSubTopicName(subTopics[0])
-            : this.normalizationService.normalizeSubTopicName('Genel Konular'),
+            : this.normalizationService.normalizeSubTopicName(defaultSubTopic),
         difficulty: difficultyLevel,
         questionType: 'multiple_choice',
         cognitiveDomain: 'understanding',
@@ -520,15 +528,15 @@ export class QuizValidationService {
         correctAnswer: 'A) İteratif geliştirme',
         explanation: `${normalizedTopics[1] || normalizedTopics[0] || 'Bilgisayar Bilimleri'} alanında iteratif geliştirme, geri bildirim döngülerini kullanarak sürekli iyileştirme sağladığı için genellikle daha verimli sonuçlar verir. Bu yaklaşım, hataların erken tespit edilmesini ve düzeltilmesini kolaylaştırır.`,
         subTopicName:
-          subTopicsCount > 1
+          subTopicsCount > 1 && subTopics[1]
             ? subTopics[1]
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? subTopics[0]
               : 'Yazılım Metodolojileri',
         normalizedSubTopicName:
-          subTopicsCount > 1
+          subTopicsCount > 1 && subTopics[1]
             ? this.normalizationService.normalizeSubTopicName(subTopics[1])
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? this.normalizationService.normalizeSubTopicName(subTopics[0])
               : this.normalizationService.normalizeSubTopicName(
                   'Yazılım Metodolojileri',
@@ -549,15 +557,15 @@ export class QuizValidationService {
         correctAnswer: 'B) Zaman karmaşıklığı',
         explanation: `${normalizedTopics[2] || normalizedTopics[0] || 'Veri Yapıları'} değerlendirilirken zaman karmaşıklığı, bir algoritmanın veri miktarına göre ölçeklenmesini temsil eder ve genellikle en kritik performans faktörüdür. Özellikle büyük veri setleriyle çalışırken, zaman karmaşıklığı algoritma seçiminde belirleyici rol oynar.`,
         subTopicName:
-          subTopicsCount > 2
+          subTopicsCount > 2 && subTopics[2]
             ? subTopics[2]
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? subTopics[0]
               : 'Algoritma Analizi',
         normalizedSubTopicName:
-          subTopicsCount > 2
+          subTopicsCount > 2 && subTopics[2]
             ? this.normalizationService.normalizeSubTopicName(subTopics[2])
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? this.normalizationService.normalizeSubTopicName(subTopics[0])
               : this.normalizationService.normalizeSubTopicName(
                   'Algoritma Analizi',
@@ -579,15 +587,15 @@ export class QuizValidationService {
           'C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur',
         explanation: `${normalizedTopics[3] || normalizedTopics[0] || 'Modern Yazılım Geliştirme'} pratiklerinde sürekli entegrasyon (CI), kodun düzenli olarak entegre edilmesini, otomatik testlerden geçirilmesini sağlayarak hataların erken tespit edilmesine ve kod kalitesinin artmasına yardımcı olur.`,
         subTopicName:
-          subTopicsCount > 3
+          subTopicsCount > 3 && subTopics[3]
             ? subTopics[3]
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? subTopics[0]
               : 'Yazılım Kalitesi',
         normalizedSubTopicName:
-          subTopicsCount > 3
+          subTopicsCount > 3 && subTopics[3]
             ? this.normalizationService.normalizeSubTopicName(subTopics[3])
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? this.normalizationService.normalizeSubTopicName(subTopics[0])
               : this.normalizationService.normalizeSubTopicName(
                   'Yazılım Kalitesi',
@@ -609,15 +617,15 @@ export class QuizValidationService {
           'C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır',
         explanation: `${normalizedTopics[4] || normalizedTopics[0] || 'Bilgisayar Bilimi'} alanında, NP-Tam problemlerin polinom zamanda çözülüp çözülemeyeceği (P=NP problemi) hala açık bir sorudur. Bu problemlerin verimli çözümleri henüz bulunamamıştır ve bu, teorik bilgisayar biliminin en önemli açık problemlerinden biridir.`,
         subTopicName:
-          subTopicsCount > 4
+          subTopicsCount > 4 && subTopics[4]
             ? subTopics[4]
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? subTopics[0]
               : 'Teorik Bilgisayar Bilimi',
         normalizedSubTopicName:
-          subTopicsCount > 4
+          subTopicsCount > 4 && subTopics[4]
             ? this.normalizationService.normalizeSubTopicName(subTopics[4])
-            : subTopicsCount > 0
+            : subTopicsCount > 0 && subTopics[0]
               ? this.normalizationService.normalizeSubTopicName(subTopics[0])
               : this.normalizationService.normalizeSubTopicName(
                   'Teorik Bilgisayar Bilimi',
@@ -758,7 +766,9 @@ export class QuizValidationService {
     const questions: QuizQuestion[] = [];
 
     // İlk 5 alt konu veya daha azı varsa hepsini kullan
-    const availableTopics = subTopics.slice(0, Math.min(5, subTopics.length));
+    const availableTopics = (subTopics || [])
+      .filter((topic) => topic) // undefined/null değerleri filtrele
+      .slice(0, Math.min(5, subTopics.length));
 
     // Alt konu yoksa varsayılan konular kullan
     const defaultTopics = [
@@ -859,16 +869,19 @@ export class QuizValidationService {
       // Seçenekleri oluştur
       const options = optionTemplate(kw1, kw2, kw3);
 
+      // Konu null/undefined kontrolü
+      const safeTopicName = topic || 'Genel Kavramlar';
+
       questions.push({
         id: `keyword_fallback_${index + 1}_${Date.now()}`,
         questionText,
         options,
         correctAnswer: answer,
         explanation,
-        subTopicName: topic,
+        subTopicName: safeTopicName,
         normalizedSubTopicName:
-          this.normalizationService.normalizeSubTopicName(topic),
-        difficulty: 'medium',
+          this.normalizationService.normalizeSubTopicName(safeTopicName),
+        difficulty: 'medium', // Türkçe değer yerine İngilizce değer kullan
         questionType: 'multiple_choice',
         cognitiveDomain: 'understanding',
       });
@@ -911,18 +924,19 @@ export class QuizValidationService {
           generalTopics[topicIndex],
         );
 
+        // Konu adı
+        const safeTopicName = generalTopics[topicIndex];
+
         questions.push({
           id: `keyword_fallback_general_${i + 1}_${Date.now()}`,
           questionText,
           options,
           correctAnswer: answer,
           explanation,
-          subTopicName: generalTopics[topicIndex],
+          subTopicName: safeTopicName,
           normalizedSubTopicName:
-            this.normalizationService.normalizeSubTopicName(
-              generalTopics[topicIndex],
-            ),
-          difficulty: 'medium',
+            this.normalizationService.normalizeSubTopicName(safeTopicName),
+          difficulty: 'medium', // Türkçe değer yerine İngilizce değer kullan
           questionType: 'multiple_choice',
           cognitiveDomain: 'analyzing',
         });
