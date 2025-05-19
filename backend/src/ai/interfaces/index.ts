@@ -24,7 +24,9 @@ export interface QuizMetadata {
  */
 export interface QuizGenerationOptions {
   documentText?: string;
-  subTopics: string[];
+  subTopics:
+    | string[]
+    | { subTopicName: string; count: number; status?: string }[];
   questionCount: number;
   difficulty: string;
   personalizationContext?: string;

@@ -36,12 +36,39 @@ export class AIProviderService {
       this.config = {
         provider: 'gemini',
         apiKey: 'AIzaSyCIYYYDSYB_QN00OgoRPQgXR2cUUWCzRmw', // Varsayılan demo anahtar
-        model: 'gemini-1.5-flash',
-        temperature: 0.7,
-        maxTokens: 1024,
+        model: 'gemini-1.5-flash-001',
+        temperature: 0.5,
+        maxTokens: 2048,
       };
     } else {
       this.config = llmConfig as AIProviderConfig;
+
+      // Yapılandırma bulunsa bile, belirli ayarların varsayılan değerlerini güncelle
+      if (this.config.model === 'gemini-1.5-flash') {
+        this.logger.log(
+          'Gemini model sürümü "gemini-1.5-flash-001" olarak güncelleniyor (daha kaliteli içerik üretimi için)',
+        );
+        this.config.model = 'gemini-1.5-flash-001';
+      }
+
+      // Sıcaklık değeri 0.7'den yüksekse, daha tutarlı yanıtlar için 0.5'e düşür
+      if (
+        this.config.temperature === undefined ||
+        this.config.temperature > 0.7
+      ) {
+        this.logger.log(
+          'Sıcaklık değeri 0.5 olarak ayarlanıyor (daha tutarlı içerik üretimi için)',
+        );
+        this.config.temperature = 0.5;
+      }
+
+      // Token limiti düşükse güncelle
+      if (this.config.maxTokens === undefined || this.config.maxTokens < 1024) {
+        this.logger.log(
+          'Token limiti 2048 olarak güncelleniyor (daha kapsamlı yanıtlar için)',
+        );
+        this.config.maxTokens = 2048;
+      }
     }
 
     // Aktif sağlayıcıyı ayarla
@@ -55,7 +82,7 @@ export class AIProviderService {
     this.activeProvider = provider;
 
     this.logger.log(
-      `AI Provider Service başlatıldı (sağlayıcı: ${this.config.provider})`,
+      `AI Provider Service başlatıldı (sağlayıcı: ${this.config.provider}, model: ${this.config.model})`,
     );
   }
 
@@ -71,7 +98,41 @@ export class AIProviderService {
     }
 
     try {
-      return await this.activeProvider.generateContent(prompt, options);
+      // Prompt'un uzunluğunu logla
+      this.logger.debug(
+        `AI içerik üretme isteği: ${prompt.length} karakter, model: ${this.config.model}`,
+      );
+
+      // AI'ya gönderilen prompt'u iyileştirmek için yapılandırmayı ayarla
+      const enhancedOptions = {
+        ...options,
+        systemInstruction:
+          options?.systemInstruction ||
+          `Sen eğitim içeriği hazırlayan profesyonel bir eğitmensin. 
+          Verilen konulara özel, doğru, kapsamlı ve eğitici sorular hazırla.
+          
+          Talimatlar:
+          1. Sorular, belirtilen alt konulara ve belge içeriğine uygun ve spesifik olmalı
+          2. Her soru, öğrenmeyi destekleyici ve net olmalı
+          3. Açıklamalar detaylı ve öğretici olmalı, öğrencinin konuyu anlamasına yardımcı olmalı
+          4. Doğru cevaplar, alt konulara ve gerçek bilgiye dayalı olmalı
+          5. Sadece yanıtını bildiğin soruları hazırla, uydurma veya hatalı içerik kullanma
+          6. Yanıtlarını JSON formatında ver ve formatı kesinlikle bozma
+          
+          İstenilen format:
+          {
+            "questions": [{
+              "questionText": "Soru metni",
+              "options": ["A) Şık 1", "B) Şık 2", "C) Şık 3", "D) Şık 4"],
+              "correctAnswer": "A) Şık 1",
+              "explanation": "Neden bu cevabın doğru olduğuna dair açıklama",
+              "subTopicName": "İlgili alt konu adı",
+              "difficulty": "medium" // kolay, orta, zor
+            }]
+          }`,
+      };
+
+      return await this.activeProvider.generateContent(prompt, enhancedOptions);
     } catch (error) {
       this.logger.error(`İçerik üretme hatası: ${error.message}`, error.stack);
       throw error;
