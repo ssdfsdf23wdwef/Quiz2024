@@ -4,7 +4,7 @@ import { ErrorService } from "./error.service";
 import { LoggerService } from "./logger.service";
 import { FlowTrackerService, FlowCategory } from "./flow-tracker.service";
 import { getLogger, getFlowTracker } from "../lib/logger.utils";
-  
+
 /**
  * API temel URL'si
  * 
@@ -59,174 +59,117 @@ export const checkApiAvailability = async (
   
   flowTracker.trackStep(FlowCategory.API, 'API erişilebilirlik kontrolü başladı', 'checkApiAvailability');
   
-  // Başlangıç gecikme değeri ve üstel artış faktörü
-  const initialRetryDelay = 100; // Daha hızlı ilk deneme için 500ms'den 100ms'e düşürüldü
-  const maxRetries = 8; // Daha fazla deneme yapabilmek için 5'ten 8'e çıkarıldı
-  const backoffFactor = 1.2; // Daha az agresif büyüme için 1.5'ten 1.2'ye düşürüldü
-  const maxDelay = 2000; // Maximum gecikme süresini sınırla 
-  
-  let currentDelay = initialRetryDelay;
-  const currentAPI = API_URL;
-  
-  // Önce yerel port belleğini kontrol et (ön deneme için)
-  if (typeof window !== "undefined") {
-    const lastSuccessPort = localStorage.getItem("last_success_api_port");
-    if (lastSuccessPort) {
-      const baseUrl = currentAPI.replace(/:\d+\/api$/, "");
-      const lastSuccessAPI = `${baseUrl}:${lastSuccessPort}/api`;
-      
-      // Daha önce çalışan port'u hızlıca kontrol et
-      try {
-        const response = await axios.get(`${lastSuccessAPI}/health`, { 
-          timeout: 1000,
-          validateStatus: () => true
-        });
-        
-        if (response.status >= 200 && response.status < 300) {
-          logger.info(new Error(`Önceki başarılı API port'u kullanıldı: ${lastSuccessPort}`), 
-            'checkApiAvailability', __filename, 44);
-          API_URL = lastSuccessAPI;
-          axiosInstance.defaults.baseURL = lastSuccessAPI;
-          return lastSuccessAPI;
-        }
-      } catch (_error) {
-        // Sessizce devam et, önceki port artık çalışmıyor
-      }
-    }
-  }
-  
-  // Mevcut API_URL ile birkaç kez kontrol et
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+  const initialRetryDelay = 100; 
+  const maxRetries = 8; 
+  const backoffFactor = 1.2; 
+  const maxDelay = 2000; 
+
+  const portsToTry: { port: number; testUrl: string }[] = [
+    { port: 3001, testUrl: 'http://localhost:3001/api' },
+    { port: 3002, testUrl: 'http://localhost:3002/api' },
+    { port: 8080, testUrl: 'http://localhost:8080/api' }, 
+  ];
+
+  const lastSuccessPort = localStorage.getItem('lastSuccessfulApiPort');
+  const lastSuccessAPI = localStorage.getItem('lastSuccessfulApiUrl');
+
+  if (lastSuccessPort && lastSuccessAPI && retryPorts) {
     try {
-      // İlk deneme hariç bekle (ilk denemeyi hemen yap)  
-      if (attempt > 0) {
-      await new Promise(resolve => setTimeout(resolve, currentDelay));
-      }
-      
-      const startTime = performance.now();
-      const response = await axios.get(`${currentAPI}/health`, { 
-        timeout: 2000,
-        validateStatus: () => true // Herhangi bir durum kodunu kabul et
-      });
-      const endTime = performance.now();
-      
-      // Başarılı durum kodlarını kontrol et
+      const response = await axios.get(`${lastSuccessAPI}/health`, { timeout: 2000 });
       if (response.status >= 200 && response.status < 300) {
         logger.info(
-          `API bağlantısı başarılı: ${currentAPI}, ${Math.round(endTime - startTime)}ms`,
+          `Önceki başarılı API port\'u kullanıldı: ${lastSuccessPort}`,
           'checkApiAvailability',
           __filename,
-          44
         );
-        
-        // Başarılı port'u localStorage'a kaydet
-        if (typeof window !== "undefined") {
-          const portMatch = currentAPI.match(/:(\d+)/);
-          if (portMatch && portMatch[1]) {
-            localStorage.setItem("last_success_api_port", portMatch[1]);
-          }
-        }
-        
-        flowTracker.trackStep(FlowCategory.API, 'API erişilebilirlik kontrolü başarılı', 'checkApiAvailability');
-        return currentAPI; // Mevcut URL çalışıyor
+        API_URL = lastSuccessAPI;
+        axiosInstance.defaults.baseURL = lastSuccessAPI;
+        return lastSuccessAPI;
       }
-      
-      logger.warn(
-        `API yanıt verdi fakat durum kodu: ${response.status}`,
-        'checkApiAvailability',
-        __filename,
-        54
-      );
-      
-    } catch (error) {
-      logger.warn(
-        `Deneme ${attempt+1}/${maxRetries}: API bağlantı hatası: ${currentAPI}, ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
-        'checkApiAvailability',
-        __filename,
-        54
-      );
-      
-      flowTracker.trackStep(FlowCategory.API, `API deneme ${attempt+1} başarısız`, 'checkApiAvailability', {
-        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      });
+    } catch (_error) {
     }
-    
-    // Üstel artış ile bekleme süresini artır (maximum değeri geçmeyecek şekilde)
-    currentDelay = Math.min(currentDelay * backoffFactor, maxDelay);
+  }
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    for (const { port, testUrl } of portsToTry) {
+      const currentAPI = testUrl;
+      logger.info(
+        `API deneniyor: ${currentAPI} (deneme ${attempt + 1}/${maxRetries})`,
+        'checkApiAvailability',
+        __filename,
+      );
+      try {
+        const startTime = performance.now();
+        const response = await axios.get(`${currentAPI}/health`, {
+          timeout: attempt < 2 ? 1500 : 3000, 
+        });
+        const endTime = performance.now();
+
+        if (response.status >= 200 && response.status < 300) {
+          logger.info(
+            `API bağlantısı başarılı: ${currentAPI}, ${Math.round(endTime - startTime)}ms`,
+            'checkApiAvailability',
+            __filename,
+          );
+          API_URL = currentAPI;
+          axiosInstance.defaults.baseURL = currentAPI;
+          localStorage.setItem('lastSuccessfulApiPort', port.toString());
+          localStorage.setItem('lastSuccessfulApiUrl', currentAPI);
+          return currentAPI;
+        } else {
+          logger.warn(
+            `API yanıt verdi fakat durum kodu: ${response.status}`,
+            'checkApiAvailability',
+            __filename,
+          );
+        }
+      } catch (error) {
+        logger.warn(
+          `Deneme ${attempt+1}/${maxRetries}: API bağlantı hatası: ${currentAPI}, ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+          'checkApiAvailability',
+          __filename,
+        );
+      }
+    }
+    if (attempt < maxRetries - 1) {
+      const delay = Math.min(initialRetryDelay * Math.pow(backoffFactor, attempt), maxDelay);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
   
-  if (!retryPorts) return currentAPI; // Tekrar deneme kapalıysa mevcut URL'i döndür
-
-  // Backend çalışıyor mu kontrol et - bunu sadece geliştirme ortamında yap
-  if (process.env.NODE_ENV === "development") {
-    // Port tarama - 3001, 3002, 3003, 3004, 3005 portlarını dene
-    const baseUrl = currentAPI.replace(/:\d+\/api$/, ""); // localhost kısmını al
-    const portsToTry = [3001, 3002, 3003, 3004, 3005, 3000, 8000, 8080];
-
+  if (retryPorts && portsToTry.length > 1) { 
     logger.info(
-      `Alternatif portlar deneniyor: ${portsToTry.join(', ')}`,
+      `Alternatif portlar deneniyor: ${portsToTry.map(p => p.port).join(', ')}`,
       'checkApiAvailability',
       __filename,
-      72
     );
-
-    // Portları paralel test et (daha hızlı bağlantı için)
-    const portPromises = portsToTry.map(async (port) => {
-      const testUrl = `${baseUrl}:${port}/api`;
-      try {
-        flowTracker.trackStep(FlowCategory.API, `Port ${port} deneniyor`, 'checkApiAvailability');
-            
-            const response = await axios.get(`${testUrl}/health`, { 
-          timeout: 1500, // Daha kısa zaman aşımı süresi
-              validateStatus: () => true
-            });
-            
+    for (const successfulPort of portsToTry) {
+        if (successfulPort.testUrl === API_URL) continue; 
+        try {
+            const response = await axios.get(`${successfulPort.testUrl}/health`, { timeout: 2000 });
             if (response.status >= 200 && response.status < 300) {
-          return { port, testUrl, success: true };
+                logger.info(
+                    `Çalışan API URL\'i bulundu: ${successfulPort.testUrl}`,
+                    'checkApiAvailability',
+                    __filename,
+                );
+                API_URL = successfulPort.testUrl;
+                axiosInstance.defaults.baseURL = API_URL;
+                localStorage.setItem('lastSuccessfulApiPort', successfulPort.port.toString());
+                localStorage.setItem('lastSuccessfulApiUrl', API_URL);
+                return API_URL;
+            }
+        } catch (error) {
         }
-        return { port, testUrl, success: false };
-      } catch (error) {
-        return { port, testUrl, success: false, error };
-      }
-    });
-    
-    // Tüm port denemelerini paralel çalıştır ve ilk başarılı olanı seç
-    const results = await Promise.all(portPromises);
-    const successfulPort = results.find(result => result.success);
-    
-    if (successfulPort) {
-              logger.info(
-        `Çalışan API URL'i bulundu: ${successfulPort.testUrl}`,
-                'checkApiAvailability',
-                __filename,
-                83
-              );
-              
-      flowTracker.trackStep(FlowCategory.API, `Port ${successfulPort.port} başarılı`, 'checkApiAvailability');
-
-              // Çalışan URL'i güncelle ve kaydet
-      API_URL = successfulPort.testUrl;
-              if (typeof window !== "undefined") {
-        localStorage.setItem("api_base_url", successfulPort.testUrl);
-        localStorage.setItem("last_success_api_port", successfulPort.port.toString());
-              }
-
-              // apiClient'ın baseURL'ini güncelle
-      axiosInstance.defaults.baseURL = successfulPort.testUrl;
-
-      return successfulPort.testUrl;
     }
-
-    // Hiçbir port çalışmıyorsa kullanıcıya bildir
-    const errorMsg = "API sunucusuna erişilemiyor. Lütfen backend servisinin çalıştığından emin olun.";
-    ErrorService.showToast(errorMsg, "error");
-    logger.error(errorMsg, 'checkApiAvailability', __filename, 97);
-    flowTracker.trackStep(FlowCategory.API, 'Hiçbir API portu aktif değil!', 'checkApiAvailability');
-    
-    return API_URL; // En azından orijinal URL'i döndür
   }
+
+  const errorMsg = "API sunucusuna erişilemiyor. Lütfen backend servisinin çalıştığından emin olun.";
+  ErrorService.showToast(errorMsg, "error");
+  logger.error(new Error(errorMsg), 'checkApiAvailability', __filename);
+  flowTracker.trackStep(FlowCategory.API, 'Hiçbir API portu aktif değil!', 'checkApiAvailability');
   
-  return API_URL;
+  return API_URL; 
 };
 
 // Retry mekanizması

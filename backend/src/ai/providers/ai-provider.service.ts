@@ -44,11 +44,11 @@ export class AIProviderService {
       this.config = llmConfig as AIProviderConfig;
 
       // Yapılandırma bulunsa bile, belirli ayarların varsayılan değerlerini güncelle
-      if (this.config.model === 'gemini-1.5-flash') {
+      if (this.config.model === 'gemini-2.0-flash') {
         this.logger.log(
-          'Gemini model sürümü "gemini-1.5-flash-001" olarak güncelleniyor (daha kaliteli içerik üretimi için)',
+          'Gemini model sürümü "gemini-2.0-flash-001" olarak güncelleniyor (daha kaliteli içerik üretimi için)',
         );
-        this.config.model = 'gemini-1.5-flash-001';
+        this.config.model = 'gemini-2.0-flash-001';
       }
 
       // Sıcaklık değeri 0.7'den yüksekse, daha tutarlı yanıtlar için 0.5'e düşür

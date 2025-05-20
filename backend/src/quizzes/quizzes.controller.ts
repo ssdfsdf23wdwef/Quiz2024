@@ -27,6 +27,7 @@ import {
 import { QuizzesService } from './quizzes.service';
 import { FirebaseGuard } from '../auth/firebase/firebase.guard';
 import { Quiz, QuizSummary } from '../common/types/quiz.type';
+import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { FailedQuestion } from '../common/types/question.type';
 import { RequestWithUser } from '../common/types/request.type';
 import { LoggerService } from '../common/services/logger.service';
@@ -566,6 +567,70 @@ export class QuizzesController {
 
       throw new InternalServerErrorException(
         'Sınav getirilirken bir hata oluştu',
+        { cause: error },
+      );
+    }
+  }
+
+  @Post(':id/submit')
+  @HttpCode(HttpStatus.OK)
+  @LogMethod({ trackParams: true })
+  @ApiOperation({
+    summary: 'Bir sınavın cevaplarını gönderir ve sonuçları alır',
+  })
+  @ApiParam({ name: 'id', description: 'Sınav ID', type: String })
+  @ApiBody({ type: SubmitQuizDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Sınav başarıyla gönderildi ve analiz edildi',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Kimlik doğrulama hatası',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Sınav bulunamadı',
+  })
+  async submitQuiz(
+    @Param('id') quizId: string,
+    @User() user: { uid: string },
+    @Body() submitQuizDto: SubmitQuizDto,
+  ): Promise<any> {
+    try {
+      this.flowTracker.trackStep(
+        `Sınav gönderiliyor: ${quizId}`,
+        'QuizzesController.submitQuiz',
+      );
+
+      const result = await this.quizzesService.submitQuiz(
+        submitQuizDto,
+        user.uid,
+      );
+
+      this.logger.info(
+        `Sınav başarıyla gönderildi ve analiz edildi: ${quizId}`,
+        'QuizzesController.submitQuiz',
+        __filename,
+        undefined,
+        { quizId, userId: user.uid, score: result.analysis.overallScore },
+      );
+      return result;
+    } catch (error) {
+      this.logger.logError(error, 'QuizzesController.submitQuiz', {
+        quizId,
+        userId: user.uid,
+        additionalInfo: 'Sınav gönderilirken hata oluştu',
+      });
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Sınav gönderilirken bir hata oluştu',
         { cause: error },
       );
     }

@@ -19,69 +19,65 @@
 3. Sorular, öğrencinin konuyu ne kadar anladığını ölçecek şekilde tasarlanmalıdır.
 4. Cevap seçenekleri, konuyla ilgili ve makul olmalıdır. Yanıltıcı ama mantıklı seçenekler eklenmelidir.
 5. Her sorunun TEK BİR DOĞRU cevabı olmalıdır.
-6. Sorular, belirtilen zorluk seviyesine (İNGİLİZCE: easy, medium, hard, mixed) uygun olmalıdır.
+6. Sorular, verilen zorluk seviyesine (easy, medium, hard, mixed) uygun olmalıdır.
 7. Her soru için, hangi alt konuyu ölçtüğünü belirten "subTopicName" ve "normalizedSubTopicName" alanları eklenmelidir.
 8. Sorular, verilen konu dağılımına (ör. bazı konulara daha fazla soru) KESİNLİKLE uymalıdır. Eğer konu listesinde "count" alanı varsa, her konu için tam olarak belirtilen sayıda soru üret.
 9. Sorular, gerçekçi, özgün ve kavramsal olmalı; ezber veya yüzeysel bilgiye dayalı olmamalı.
 10. Her zorluk seviyesine uygun Bloom Taksonomisi bilişsel düzeyleri kullan:
-    - easy: Hatırlama (remembering), Anlama (understanding)
-    - medium: Uygulama (applying), Analiz (analyzing) - daha basit düzeyde
-    - hard: Analiz (analyzing) - kompleks düzeyde, Değerlendirme (evaluating), Yaratma (creating)
-11. ÇOK ÖNEMLİ: `options` alanı HER ZAMAN tam olarak 4 adet string içermelidir. ÖRNEK: `"options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"]`
-12. `questionType` alanı HER ZAMAN "multiple_choice" olmalıdır.
+    - Kolay (easy): Hatırlama (remembering), Anlama (understanding)
+    - Orta (medium): Uygulama (applying), Analiz (analyzing) - daha basit düzeyde
+    - Zor (hard): Analiz (analyzing) - kompleks düzeyde, Değerlendirme (evaluating), Yaratma (creating)
+11. Soru metinleri, seçenekler ve açıklamalar net, anlaşılır ve dilbilgisi açısından doğru olmalıdır.
+
+**Ek Kurallar (Türkçe Metin Kalitesi):**
+*   Üretilen tüm Türkçe metinler (soru metinleri, seçenekler, açıklamalar) dil bilgisi açısından doğru olmalı ve **kesinlikle harf eksikliği veya yazım hatası içermemelidir.**
+*   Türkçe karakterlerin (ş, ç, ö, ğ, ü, ı, İ) doğru kullanıldığından emin ol.
 
 **ÇOK ÖNEMLİ: JSON FORMATINDA ÇIKTI KURALLARI:**
-* Yanıt SADECE geçerli bir JSON nesnesi olmalıdır ve dışına HİÇBİR ek metin, açıklama, yorum veya ```json ``` etiketleri eklenmemelidir. Yanıt DOĞRUDAN JSON ile başlamalı ve bitmelidir.
-* JSON yapısı tam ve doğru olmalı - tüm açılış-kapanış parantezleri {}, köşeli parantezler [] ve tırnak işaretleri "" doğru şekilde kullanılmalı ve dengeli olmalıdır.
-* Tüm string değerler çift tırnak (" ") içinde olmalıdır.
-* Virgüller (,) ve iki nokta üst üste (:) doğru yerlerde kullanılmalıdır.
-* Her soru nesnesi içinde aşağıdaki alanlar ZORUNLU olarak bulunmalıdır ve doğru veri tipinde olmalıdır:
-    - `id`: String (benzersiz bir soru ID'si, örnek: "q1", "q2" vb.)
-    - `questionText`: String (soru metni)
-    - `questionType`: String (DEĞERİ HER ZAMAN "multiple_choice" OLMALIDIR)
-    - `cognitiveDomain`: String (Bloom taksonomisi seviyesi: remembering, understanding, applying, analyzing, evaluating, creating)
-    - `options`: Array<String> (TAM OLARAK 4 adet cevap seçeneği içeren bir string dizisi OLMALIDIR)
-    - `correctAnswer`: String (doğru cevabı içeren seçenek metni - `options` dizisindeki değerlerden biri olmalıdır)
-    - `explanation`: String (doğru cevabın ve varsa diğer seçeneklerin kısa bir açıklaması)
-    - `subTopicName`: String (sorunun ait olduğu alt konu başlığı)
-    - `normalizedSubTopicName`: String (alt konunun normalize edilmiş hali, küçük harf ve boşluklar yerine tire)
-    - `difficulty`: String (SADECE ŞU DEĞERLERDEN BİRİ OLMALIDIR: "easy", "medium", "hard", "mixed")
-* Döndürdüğün JSON, aşağıdaki çıktı formatına ve örneklerine TAMAMEN uygun olmalıdır.
+* Yanıt SADECE geçerli bir JSON nesnesi olmalıdır ve hiçbir ek açıklama içermemelidir.
+* JSON dışında hiçbir ek metin, açıklama, yorum veya metin eklenmemelidir.
+* ```json ve ``` etiketlerini KULLANMA, doğrudan saf JSON döndür.
+* JSON yapısı tam ve doğru olmalı - tüm açılış-kapanış parantezleri dengeli olmalı.
+* Her soruda zorunlu alanların tamamı doldurulmalı: id, questionText, options, correctAnswer, explanation, subTopicName, difficulty.
+* Çıktının kesinlikle JSON parser ile çözümlenebilir olduğunu kontrol et.
+* Döndürdüğün JSON, aşağıdaki çıktı formatına tamamen uygun olmalı, hiçbir yorumlayıcı hatası içermemeli.
+* Her question objesi doğru şekilde tırnak işaretleri ve virgüllerle ayrılmalıdır.
+* `difficulty` alanı için SADECE `easy`, `medium`, `hard`, `mixed` değerlerini kullan.
 
-**Çıktı Formatı (JSON Array of Objects):**
+**İstenen Çıktı Formatı (JSON):**
 ```json
-[
-  {
-    "id": "benzersiz_soru_id_1",
-    "questionText": "Soru metni buraya gelecek...",
-    "questionType": "multiple_choice",
-    "cognitiveDomain": "remembering",
-    "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
-    "correctAnswer": "Seçenek B",
-    "explanation": "Bu sorunun açıklaması...",
-    "subTopicName": "Alt Konu Başlığı 1",
-    "normalizedSubTopicName": "alt_konu_basligi_1",
-    "difficulty": "easy"
-  },
-  {
-    "id": "benzersiz_soru_id_2",
-    "questionText": "Başka bir soru metni...",
-    "questionType": "multiple_choice",
-    "cognitiveDomain": "applying",
-    "options": ["Yanıt 1", "Yanıt 2", "Yanıt 3", "Yanıt 4"],
-    "correctAnswer": "Yanıt 3",
-    "explanation": "Diğer sorunun açıklaması...",
-    "subTopicName": "Alt Konu Başlığı 2",
-    "normalizedSubTopicName": "alt_konu_basligi_2",
-    "difficulty": "medium"
-  }
-]
+{
+  "questions": [
+    {
+      "id": "benzersiz_soru_id_1",
+      "questionText": "Soru metni buraya gelecek...",
+      "questionType": "multiple_choice", // veya "true_false", "fill_in_blank", "short_answer"
+      "cognitiveDomain": "remembering", // Bloom Taksonomisi seviyesi (remembering, understanding, applying, analyzing, evaluating, creating)
+      "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      "correctAnswer": "Seçenek B",
+      "explanation": "Bu sorunun doğru cevabının açıklaması buraya gelecek...",
+      "subTopicName": "İlgili Alt Konu Adı",
+      "normalizedSubTopicName": "ilgili_alt_konu_adi_normalize_edilmis",
+      "difficulty": "medium" // SADECE easy, medium, hard, mixed
+    },
+    {
+      "id": "benzersiz_soru_id_2",
+      "questionText": "Başka bir soru metni...",
+      "questionType": "true_false",
+      "cognitiveDomain": "understanding",
+      "options": ["Doğru", "Yanlış"],
+      "correctAnswer": "Doğru",
+      "explanation": "Bu doğru/yanlış sorusunun açıklaması...",
+      "subTopicName": "Diğer Bir Alt Konu",
+      "normalizedSubTopicName": "diger_bir_alt_konu",
+      "difficulty": "easy" // SADECE easy, medium, hard, mixed
+    }
+    // ... Ek sorular buraya eklenebilir
+  ]
+}
 ```
 
-**Örnekler (LÜTFEN BU FORMATI DİKKATE ALIN):**
-
 **Örnek 1 - Çoktan Seçmeli:**
-```json
 {
   "id": "q1",
   "questionText": "Newton'un İkinci Hareket Kanunu'nu matematiksel olarak ifade eden denklem hangisidir?",
@@ -94,46 +90,26 @@
   "normalizedSubTopicName": "newtonun_ikinci_hareket_kanunu",
   "difficulty": "easy"
 }
-```
 
-**Örnek 2 - Zorluk Seviyesi "medium":**
-```json
+**Örnek 2 - Doğru/Yanlış:**
 {
   "id": "q2",
-  "questionText": "Bir araba 10 saniyede durağan halden 20 m/s hıza ulaşıyorsa, arabanın ortalama ivmesi nedir?",
-  "questionType": "multiple_choice",
-  "cognitiveDomain": "applying",
-  "options": ["1 m/s²", "2 m/s²", "5 m/s²", "10 m/s²"],
-  "correctAnswer": "2 m/s²",
-  "explanation": "İvme, hızdaki değişimin zamana oranıdır (a = Δv/Δt). Bu durumda a = (20 m/s - 0 m/s) / 10 s = 2 m/s².",
-  "subTopicName": "Kinematik Hesaplamalar",
-  "normalizedSubTopicName": "kinematik_hesaplamalar",
+  "questionText": "Fotosentez sadece bitkilerin kloroplastlarında gerçekleşir.",
+  "questionType": "true_false",
+  "cognitiveDomain": "understanding",
+  "options": ["Doğru", "Yanlış"],
+  "correctAnswer": "Doğru",
+  "explanation": "Fotosentez, bitkilerde ve bazı diğer organizmalarda (örneğin algler ve bazı bakteriler) ışık enerjisini kimyasal enerjiye dönüştürme işlemidir ve tipik olarak kloroplastlarda meydana gelir.",
+  "subTopicName": "Fotosentez Süreci",
+  "normalizedSubTopicName": "fotosentez_sureci",
   "difficulty": "medium"
 }
-```
 
-**Örnek 3 - Zorluk Seviyesi "hard":**
-```json
-{
-  "id": "q3",
-  "questionText": "Sürtünmesiz bir ortamda, serbest düşmeye bırakılan bir cismin 3 saniye sonraki hızı ve katettiği mesafe nedir? (Yerçekimi ivmesi g = 9.8 m/s²)",
-  "questionType": "multiple_choice",
-  "cognitiveDomain": "analyzing",
-  "options": [
-    "Hız: 29.4 m/s, Mesafe: 44.1 m",
-    "Hız: 9.8 m/s, Mesafe: 29.4 m",
-    "Hız: 19.6 m/s, Mesafe: 19.6 m",
-    "Hız: 44.1 m/s, Mesafe: 29.4 m"
-  ],
-  "correctAnswer": "Hız: 29.4 m/s, Mesafe: 44.1 m",
-  "explanation": "Serbest düşmede hız v = g × t = 9.8 m/s² × 3 s = 29.4 m/s. Kat edilen mesafe x = 0.5 × g × t² = 0.5 × 9.8 m/s² × (3 s)² = 44.1 m.",
-  "subTopicName": "Serbest Düşme ve Atışlar",
-  "normalizedSubTopicName": "serbest_dusme_ve_atislar",
-  "difficulty": "hard"
-}
-```
-
-**SON UYARI:** Lütfen yukarıdaki tüm kurallara, özellikle JSON formatı, zorunlu alanlar, `difficulty` için İNGİLİZCE değerler ve `options` için TAM OLARAK 4 seçenek kuralına UYUN. Çıktınızın doğrudan bir JSON parser tarafından hatasız işlenebilir olması KRİTİKTİR.
+**ÖNEMLİ UYARILAR:**
+*   Yukarıdaki JSON formatına ve kurallara harfiyen uyulmalıdır.
+*   `difficulty` alanı için Türkçe değerler KESİNLİKLE KULLANILMAMALIDIR. Sadece `easy`, `medium`, `hard`, `mixed` kabul edilir.
+*   Çıktı olarak SADECE ve SADECE JSON metni verilmeli, başka hiçbir ek bilgi, yorum veya başlık eklenmemelidir.
+*   Türkçe metin kalitesine özen gösterilmeli, harf eksikliği veya yazım hatası yapılmamalıdır.
 
 **Rol:** Sen, verilen konu listesine ve sınav ayarlarına göre, eğitimsel açıdan değerli, çeşitli soru tiplerine sahip ve açıklamalı sınav soruları üreten bir Eğitim Değerlendirme Uzmanısın. Görevin, Bloom Taksonomisi'nin farklı bilişsel seviyelerini (Hatırlama, Anlama, Uygulama, Analiz, Değerlendirme, Yaratma) kapsayan, kavramsal anlayışı ölçen ve öğrencilerin öğrenmesini pekiştiren sorular oluşturmaktır.
 
