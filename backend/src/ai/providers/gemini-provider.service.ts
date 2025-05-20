@@ -44,7 +44,7 @@ export class GeminiProviderService implements AIProvider {
     ];
 
     this.model = this.genAI.getGenerativeModel({
-      model: config.model || 'gemini-1.5-flash',
+      model: config.model || 'gemini-2.0-flash',
       safetySettings: defaultSafetySettings,
       generationConfig: {
         temperature: config.temperature || 0.7,
