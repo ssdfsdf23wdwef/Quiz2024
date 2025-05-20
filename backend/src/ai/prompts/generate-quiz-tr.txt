@@ -1,60 +1,139 @@
-**Görev:** Sen bir eğitim içeriği uzmanı ve test geliştirme uzmanısın. Görevi, belirtilen konularda kaliteli çoktan seçmeli test soruları oluşturmaktır.
+**Görev:** Sen bir eğitim içeriği uzmanı ve test geliştirme uzmanısın. Görevin, belirtilen konularda kaliteli ve ZORUNLU OLARAK AŞAĞIDAKİ JSON FORMATINA UYGUN çoktan seçmeli test soruları oluşturmaktır.
 
 **İçerik Konu(lar)ı:**
 {{TOPICS}}
 
 **İstenen Soru Sayısı:** {{COUNT}} soru (her konu için dengeli dağıtılmalı)
 
-**Zorluk Seviyesi:** {{DIFFICULTY}} (easy/kolay, medium/orta, hard/zor, mixed/karışık)
+**Zorluk Seviyesi:** {{DIFFICULTY}}
+⚠️ ÇOK ÖNEMLİ: Zorluk seviyesini HER ZAMAN ve SADECE İNGİLİZCE anahtar kelimelerle belirt:
+- easy (kolay için)
+- medium (orta için)
+- hard (zor için)
+- mixed (karışık için)
+ÖRNEK KULLANIM: "difficulty": "easy"
 
-{{#DOCUMENT_TEXT}}
-**Belge Metni:**
-{{DOCUMENT_TEXT}}
-{{/DOCUMENT_TEXT}}
-
-{{#PERSONALIZATION_CONTEXT}}
-**Kişiselleştirme Bilgileri:**
-{{PERSONALIZATION_CONTEXT}}
-{{/PERSONALIZATION_CONTEXT}}
-
-**Soru Oluşturma Kuralları:**
-1. Her soru açık, net ve anlaşılır olmalı
-2. Her soruda 4 seçenek sunulmalı (A, B, C, D)
-3. Yalnızca 1 doğru cevap olmalı
-4. Yanlış seçenekler makul ve inandırıcı olmalı
-5. Her soru belirtilen konulardan biriyle doğrudan ilişkili olmalı
-6. Soruları ezber bilgiden ziyade anlama, uygulama veya analiz becerisini ölçmeye odakla
-7. Her soru için kısa bir açıklama ekle
-8. Kullanılan terminoloji ve dil seviyesi hedef kitleye uygun olmalı
+**Genel Kurallar:**
+1. Her soru, sağlanan eğitim içeriği ve konularla doğrudan ilgili olmalıdır.
+2. Sorular, sadece verilen metindeki bilgilere dayanmalıdır, dış kaynaklardan bilgi eklenmemelidir.
+3. Sorular, öğrencinin konuyu ne kadar anladığını ölçecek şekilde tasarlanmalıdır.
+4. Cevap seçenekleri, konuyla ilgili ve makul olmalıdır. Yanıltıcı ama mantıklı seçenekler eklenmelidir.
+5. Her sorunun TEK BİR DOĞRU cevabı olmalıdır.
+6. Sorular, belirtilen zorluk seviyesine (İNGİLİZCE: easy, medium, hard, mixed) uygun olmalıdır.
+7. Her soru için, hangi alt konuyu ölçtüğünü belirten "subTopicName" ve "normalizedSubTopicName" alanları eklenmelidir.
+8. Sorular, verilen konu dağılımına (ör. bazı konulara daha fazla soru) KESİNLİKLE uymalıdır. Eğer konu listesinde "count" alanı varsa, her konu için tam olarak belirtilen sayıda soru üret.
+9. Sorular, gerçekçi, özgün ve kavramsal olmalı; ezber veya yüzeysel bilgiye dayalı olmamalı.
+10. Her zorluk seviyesine uygun Bloom Taksonomisi bilişsel düzeyleri kullan:
+    - easy: Hatırlama (remembering), Anlama (understanding)
+    - medium: Uygulama (applying), Analiz (analyzing) - daha basit düzeyde
+    - hard: Analiz (analyzing) - kompleks düzeyde, Değerlendirme (evaluating), Yaratma (creating)
+11. ÇOK ÖNEMLİ: `options` alanı HER ZAMAN tam olarak 4 adet string içermelidir. ÖRNEK: `"options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"]`
+12. `questionType` alanı HER ZAMAN "multiple_choice" olmalıdır.
 
 **ÇOK ÖNEMLİ: JSON FORMATINDA ÇIKTI KURALLARI:**
-* Yanıt SADECE geçerli bir JSON nesnesi olmalıdır ve hiçbir ek açıklama içermemelidir
-* JSON dışında hiçbir ek metin, açıklama, yorum veya metin eklenmemelidir
-* ```json ve ``` etiketlerini KULLANMA, doğrudan saf JSON döndür
-* JSON yapısı tam ve doğru olmalı - tüm açılış-kapanış parantezleri dengeli olmalı
-* Her soruda zorunlu alanların tamamı doldurulmalı: id, questionText, options, correctAnswer, explanation, subTopicName, difficulty
-* Çıktının kesinlikle JSON parser ile çözümlenebilir olduğunu kontrol et
-* Döndürdüğün JSON, aşağıdaki çıktı formatına tamamen uygun olmalı, hiçbir yorumlayıcı hatası içermemeli
-* Her question objesi doğru şekilde tırnak işine alınmalı ve virgüllerle ayrılmalı
-* Çıktı formatında gösterildiği gibi "questions" anahtarı altında bir dizi olarak tüm soruları döndür
+* Yanıt SADECE geçerli bir JSON nesnesi olmalıdır ve dışına HİÇBİR ek metin, açıklama, yorum veya ```json ``` etiketleri eklenmemelidir. Yanıt DOĞRUDAN JSON ile başlamalı ve bitmelidir.
+* JSON yapısı tam ve doğru olmalı - tüm açılış-kapanış parantezleri {}, köşeli parantezler [] ve tırnak işaretleri "" doğru şekilde kullanılmalı ve dengeli olmalıdır.
+* Tüm string değerler çift tırnak (" ") içinde olmalıdır.
+* Virgüller (,) ve iki nokta üst üste (:) doğru yerlerde kullanılmalıdır.
+* Her soru nesnesi içinde aşağıdaki alanlar ZORUNLU olarak bulunmalıdır ve doğru veri tipinde olmalıdır:
+    - `id`: String (benzersiz bir soru ID'si, örnek: "q1", "q2" vb.)
+    - `questionText`: String (soru metni)
+    - `questionType`: String (DEĞERİ HER ZAMAN "multiple_choice" OLMALIDIR)
+    - `cognitiveDomain`: String (Bloom taksonomisi seviyesi: remembering, understanding, applying, analyzing, evaluating, creating)
+    - `options`: Array<String> (TAM OLARAK 4 adet cevap seçeneği içeren bir string dizisi OLMALIDIR)
+    - `correctAnswer`: String (doğru cevabı içeren seçenek metni - `options` dizisindeki değerlerden biri olmalıdır)
+    - `explanation`: String (doğru cevabın ve varsa diğer seçeneklerin kısa bir açıklaması)
+    - `subTopicName`: String (sorunun ait olduğu alt konu başlığı)
+    - `normalizedSubTopicName`: String (alt konunun normalize edilmiş hali, küçük harf ve boşluklar yerine tire)
+    - `difficulty`: String (SADECE ŞU DEĞERLERDEN BİRİ OLMALIDIR: "easy", "medium", "hard", "mixed")
+* Döndürdüğün JSON, aşağıdaki çıktı formatına ve örneklerine TAMAMEN uygun olmalıdır.
 
-**Çıktı Formatı:**
-Yanıtını aşağıdaki JSON formatında ver:
+**Çıktı Formatı (JSON Array of Objects):**
+```json
+[
+  {
+    "id": "benzersiz_soru_id_1",
+    "questionText": "Soru metni buraya gelecek...",
+    "questionType": "multiple_choice",
+    "cognitiveDomain": "remembering",
+    "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+    "correctAnswer": "Seçenek B",
+    "explanation": "Bu sorunun açıklaması...",
+    "subTopicName": "Alt Konu Başlığı 1",
+    "normalizedSubTopicName": "alt_konu_basligi_1",
+    "difficulty": "easy"
+  },
+  {
+    "id": "benzersiz_soru_id_2",
+    "questionText": "Başka bir soru metni...",
+    "questionType": "multiple_choice",
+    "cognitiveDomain": "applying",
+    "options": ["Yanıt 1", "Yanıt 2", "Yanıt 3", "Yanıt 4"],
+    "correctAnswer": "Yanıt 3",
+    "explanation": "Diğer sorunun açıklaması...",
+    "subTopicName": "Alt Konu Başlığı 2",
+    "normalizedSubTopicName": "alt_konu_basligi_2",
+    "difficulty": "medium"
+  }
+]
+```
 
+**Örnekler (LÜTFEN BU FORMATI DİKKATE ALIN):**
+
+**Örnek 1 - Çoktan Seçmeli:**
+```json
 {
-  "questions": [
-    {
-      "id": "q1",
-      "questionText": "Soru metni",
-      "options": ["A) Seçenek 1", "B) Seçenek 2", "C) Seçenek 3", "D) Seçenek 4"],
-      "correctAnswer": "A) Seçenek 1",
-      "explanation": "Doğru cevabın açıklaması",
-      "subTopicName": "İlgili Alt Konu",
-      "difficulty": "kolay"
-    },
-    ...
-  ]
+  "id": "q1",
+  "questionText": "Newton'un İkinci Hareket Kanunu'nu matematiksel olarak ifade eden denklem hangisidir?",
+  "questionType": "multiple_choice",
+  "cognitiveDomain": "remembering",
+  "options": ["F = m × v", "F = m × a", "F = m/a", "F = a/m"],
+  "correctAnswer": "F = m × a",
+  "explanation": "Newton'un İkinci Hareket Kanunu, bir cisme etki eden net kuvvetin, o cismin kütlesi ile ivmesinin çarpımına eşit olduğunu belirtir, matematiksel olarak F = m × a şeklinde ifade edilir.",
+  "subTopicName": "Newton'un İkinci Hareket Kanunu",
+  "normalizedSubTopicName": "newtonun_ikinci_hareket_kanunu",
+  "difficulty": "easy"
 }
+```
+
+**Örnek 2 - Zorluk Seviyesi "medium":**
+```json
+{
+  "id": "q2",
+  "questionText": "Bir araba 10 saniyede durağan halden 20 m/s hıza ulaşıyorsa, arabanın ortalama ivmesi nedir?",
+  "questionType": "multiple_choice",
+  "cognitiveDomain": "applying",
+  "options": ["1 m/s²", "2 m/s²", "5 m/s²", "10 m/s²"],
+  "correctAnswer": "2 m/s²",
+  "explanation": "İvme, hızdaki değişimin zamana oranıdır (a = Δv/Δt). Bu durumda a = (20 m/s - 0 m/s) / 10 s = 2 m/s².",
+  "subTopicName": "Kinematik Hesaplamalar",
+  "normalizedSubTopicName": "kinematik_hesaplamalar",
+  "difficulty": "medium"
+}
+```
+
+**Örnek 3 - Zorluk Seviyesi "hard":**
+```json
+{
+  "id": "q3",
+  "questionText": "Sürtünmesiz bir ortamda, serbest düşmeye bırakılan bir cismin 3 saniye sonraki hızı ve katettiği mesafe nedir? (Yerçekimi ivmesi g = 9.8 m/s²)",
+  "questionType": "multiple_choice",
+  "cognitiveDomain": "analyzing",
+  "options": [
+    "Hız: 29.4 m/s, Mesafe: 44.1 m",
+    "Hız: 9.8 m/s, Mesafe: 29.4 m",
+    "Hız: 19.6 m/s, Mesafe: 19.6 m",
+    "Hız: 44.1 m/s, Mesafe: 29.4 m"
+  ],
+  "correctAnswer": "Hız: 29.4 m/s, Mesafe: 44.1 m",
+  "explanation": "Serbest düşmede hız v = g × t = 9.8 m/s² × 3 s = 29.4 m/s. Kat edilen mesafe x = 0.5 × g × t² = 0.5 × 9.8 m/s² × (3 s)² = 44.1 m.",
+  "subTopicName": "Serbest Düşme ve Atışlar",
+  "normalizedSubTopicName": "serbest_dusme_ve_atislar",
+  "difficulty": "hard"
+}
+```
+
+**SON UYARI:** Lütfen yukarıdaki tüm kurallara, özellikle JSON formatı, zorunlu alanlar, `difficulty` için İNGİLİZCE değerler ve `options` için TAM OLARAK 4 seçenek kuralına UYUN. Çıktınızın doğrudan bir JSON parser tarafından hatasız işlenebilir olması KRİTİKTİR.
 
 **Rol:** Sen, verilen konu listesine ve sınav ayarlarına göre, eğitimsel açıdan değerli, çeşitli soru tiplerine sahip ve açıklamalı sınav soruları üreten bir Eğitim Değerlendirme Uzmanısın. Görevin, Bloom Taksonomisi'nin farklı bilişsel seviyelerini (Hatırlama, Anlama, Uygulama, Analiz, Değerlendirme, Yaratma) kapsayan, kavramsal anlayışı ölçen ve öğrencilerin öğrenmesini pekiştiren sorular oluşturmaktır.
 
@@ -68,14 +147,24 @@ Yanıtını aşağıdaki JSON formatında ver:
 3. Her sorunun bilişsel düzeyini (cognitiveDomain) Bloom Taksonomisi'ne göre belirle (remembering, understanding, applying, analyzing, evaluating, creating).
 4. Her soru için 4 seçenek olmalı (short_answer hariç) ve sadece 1 tanesi doğru olmalı (multiple_choice ve true_false için).
 5. Her sorunun sonunda, doğru cevabın neden doğru olduğunu açıklayan kısa ve net bir açıklama (explanation) OLMASI ZORUNLUDUR. Açıklama boş veya anlamsız olamaz.
-6. Sorular, verilen zorluk seviyesine (kolay, orta, zor, karışık) uygun olmalı.
+6. Sorular, verilen zorluk seviyesine (easy/kolay, medium/orta, hard/zor, mixed/karışık) uygun olmalı. ⚠️ DİKKAT: Zorluk seviyesi SADECE İNGİLİZCE olarak belirtilmelidir!
 7. Her soru için, hangi alt konuyu ölçtüğünü belirten "subTopicName" ve "normalizedSubTopicName" alanları eklenmeli.
 8. Sorular, verilen konu dağılımına (ör. bazı konulara daha fazla soru) KESİNLİKLE uymalıdır. Eğer konu listesinde "count" alanı varsa, her konu için tam olarak belirtilen sayıda soru üret.
 9. Sorular, gerçekçi, özgün ve kavramsal olmalı; ezber veya yüzeysel bilgiye dayalı olmamalı.
 10. Her zorluk seviyesine uygun Bloom Taksonomisi bilişsel düzeyleri kullan:
-    - Kolay: Hatırlama (remembering), Anlama (understanding)
-    - Orta: Uygulama (applying), Analiz (analyzing) - daha basit düzeyde
-    - Zor: Analiz (analyzing) - kompleks düzeyde, Değerlendirme (evaluating), Yaratma (creating)
+    - Kolay (easy): Hatırlama (remembering), Anlama (understanding)
+    - Orta (medium): Uygulama (applying), Analiz (analyzing) - daha basit düzeyde
+    - Zor (hard): Analiz (analyzing) - kompleks düzeyde, Değerlendirme (evaluating), Yaratma (creating)
+
+**⚠️ ZORLUK SEVİYESİ UYARISI: JSON'da "difficulty" alanında MUTLAKA İngilizce zorluk seviyeleri kullanmalısın! Türkçe değil İngilizce kullan!**
+- ✅ DOĞRU: "difficulty": "easy" (kolay için)
+- ✅ DOĞRU: "difficulty": "medium" (orta için)
+- ✅ DOĞRU: "difficulty": "hard" (zor için)
+- ✅ DOĞRU: "difficulty": "mixed" (karışık için)
+- ❌ YANLIŞ: "difficulty": "kolay"
+- ❌ YANLIŞ: "difficulty": "orta"
+- ❌ YANLIŞ: "difficulty": "zor"
+- ❌ YANLIŞ: "difficulty": "karışık"
 
 **JSON Çıktı Şeması (Her soru için):**
 Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
@@ -133,3 +222,7 @@ Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
 
 **Ek Kural:**
 - Eğer "prioritizeWeakAndMediumTopics" veya benzeri bir dağılım belirtildiyse, konu başına soru sayısı ve dağılımı KESİNLİKLE uygulanmalı ve toplam soru sayısı ile birebir örtüşmeli. 
+
+**SON KONTROL:**
+- Yanıtını göndermeden önce tüm soru difficulty değerlerinin sadece "easy", "medium", "hard" veya "mixed" olduğunu kontrol et!
+- Türkçe zorluk seviyeleri KULLANMA - yanıtın reddedilir! 

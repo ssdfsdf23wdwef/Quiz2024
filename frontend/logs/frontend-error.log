@@ -1,12 +1,11 @@
-[2025-05-20T18:59:05.260Z] [info] [ClientLogSetup] Uygulama başlatıldı
+[2025-05-20T19:46:35.755Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Network Error\n    at XMLHttpRequest.handleError (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:124:14)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:495:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:205:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:494:20)\n    at async CourseService.getCourses (webpack-internal:///(app-pages-browser)/./src/services/course.service.ts:32:29)"}
 ------------------------------------------------------------
-[2025-05-20T18:59:05.258Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+[2025-05-20T19:47:47.299Z] [info] [LogSetup] Frontend log sistemi başlatıldı
 ------------------------------------------------------------
-[2025-05-20T19:14:26.166Z] [info] [ClientLogSetup] Uygulama başlatıldı
+[2025-05-20T19:47:47.303Z] [info] [ClientLogSetup] Uygulama başlatıldı
 ------------------------------------------------------------
-[2025-05-20T19:14:26.162Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+[2025-05-20T19:48:57.164Z] [info] [LogSetup] Frontend log sistemi başlatıldı
 ------------------------------------------------------------
-[2025-05-20T19:15:42.719Z] [info] [LogSetup] Frontend log sistemi başlatıldı
-------------------------------------------------------------
-[2025-05-20T19:15:42.735Z] [info] [ClientLogSetup] Uygulama başlatıldı
+[2025-05-20T19:48:57.170Z] [info] [ClientLogSetup] Uygulama başlatıldı
 ------------------------------------------------------------

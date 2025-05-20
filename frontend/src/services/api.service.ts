@@ -28,7 +28,7 @@ if (typeof window !== "undefined") {
 }
 
 // API istek konfigürasyonu
-const DEFAULT_TIMEOUT = 30000; // 30 saniye (daha uzun bir timeout)
+const DEFAULT_TIMEOUT = 60000; // 30 saniye (daha uzun bir timeout)
 const MAX_RETRY_COUNT = 5; // Daha fazla deneme
 const RETRY_DELAY = 1000; // 1 saniye
 

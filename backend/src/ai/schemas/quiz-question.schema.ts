@@ -17,7 +17,10 @@ export const QuizQuestionSchema = z.object({
   normalizedSubTopicName: z
     .string()
     .min(1, 'Normalize edilmiş alt konu adı boş olamaz'),
-  difficulty: z.enum(['easy', 'medium', 'hard']).optional().default('medium'),
+  difficulty: z
+    .enum(['easy', 'medium', 'hard', 'mixed'])
+    .optional()
+    .default('medium'),
   questionType: z
     .enum(['multiple_choice', 'true_false', 'fill_in_blank', 'short_answer'])
     .optional()
