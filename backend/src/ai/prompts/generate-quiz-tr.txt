@@ -5,7 +5,7 @@
 
 **İstenen Soru Sayısı:** {{COUNT}} soru (her konu için dengeli dağıtılmalı)
 
-**Zorluk Seviyesi:** {{DIFFICULTY}} (kolay, orta, zor)
+**Zorluk Seviyesi:** {{DIFFICULTY}} (easy/kolay, medium/orta, hard/zor, mixed/karışık)
 
 {{#DOCUMENT_TEXT}}
 **Belge Metni:**
@@ -90,7 +90,7 @@ Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
   "explanation": "Doğru cevabın detaylı açıklaması (zorunlu)",
   "subTopicName": "Alt konu başlığı",
   "normalizedSubTopicName": "normalize_edilmis_konu_adi",
-  "difficulty": "kolay|orta|zor"
+  "difficulty": "easy|medium|hard|mixed"
 }
 
 **SON UYARI: Aşağıdaki soru örnekleri SADECE REFERANS içindir, bunlar gerçek sorular DEĞİLDİR ve yanıtında bu örnekleri KULLANMA veya yanıtına EKLEME. Bu örnekler sadece soru formatı hakkında fikir vermek içindir:**
@@ -107,7 +107,7 @@ Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
   "explanation": "Newton'un İkinci Hareket Kanunu, bir cisme etki eden net kuvvetin, o cismin kütlesi ile ivmesinin çarpımına eşit olduğunu belirtir, matematiksel olarak F = m × a şeklinde ifade edilir.",
   "subTopicName": "Newton'un İkinci Hareket Kanunu",
   "normalizedSubTopicName": "newtonun_ikinci_hareket_kanunu",
-  "difficulty": "kolay"
+  "difficulty": "easy"
 }
 
 **Örnek 2 - Doğru/Yanlış:**
@@ -121,7 +121,7 @@ Aşağıdaki şemayı takip et, ancak bu bir şablondur, direkt kopyalama:
   "explanation": "Kapsülleme, verilerin ve davranışların tek bir birim içinde saklanması ve yalnızca seçili bölümlerinin dış dünyaya açılmasını tanımlar. Bir sınıfın başka bir sınıfın özelliklerini miras alması, kalıtım (inheritance) ilkesidir.",
   "subTopicName": "Kapsülleme (Encapsulation)",
   "normalizedSubTopicName": "kapsulleme_encapsulation",
-  "difficulty": "orta"
+  "difficulty": "medium"
 }
 -- ÖRNEK BİTİŞ --
 

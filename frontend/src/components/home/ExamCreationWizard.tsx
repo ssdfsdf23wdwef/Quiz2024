@@ -340,7 +340,7 @@ export default function ExamCreationWizard({
       
       // Tercihleri güncelle
       setPreferences(prev => ({
-        ...prev,
+          ...prev,
         topicIds: selectedTopics,
         subTopicIds: subTopicIds
       }));
@@ -379,7 +379,7 @@ export default function ExamCreationWizard({
     
     // Adım 3'e geç
     if (currentStep === 2) {
-      setCurrentStep(3);
+    setCurrentStep(3);
     }
   };
 
@@ -739,16 +739,16 @@ export default function ExamCreationWizard({
         console.log(`[ECW detectTopicsFromUploadedFile] 📄 Belge yükleme başarılı! Belge ID: ${documentId}`);
 
         // Belge metni yükleme işlemini hemen başlat
-                  try {
-            console.log(`[ECW detectTopicsFromUploadedFile] 📄 Belge metni yükleniyor (ID: ${documentId})...`);
-            const docTextResponse = await documentService.getDocumentText(documentId);
-            
-            if (docTextResponse && docTextResponse.text && docTextResponse.text.trim() !== '') {
-              setDocumentTextContent(docTextResponse.text);
-              console.log(`[ECW detectTopicsFromUploadedFile] ✅ Belge metni başarıyla yüklendi (${docTextResponse.text.length} karakter)`);
-            } else {
-              console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ Belge metni boş veya geçersiz format`);
-            }
+        try {
+          console.log(`[ECW detectTopicsFromUploadedFile] 📄 Belge metni yükleniyor (ID: ${documentId})...`);
+          const docTextResponse = await documentService.getDocumentText(documentId);
+          
+          if (docTextResponse && docTextResponse.text && docTextResponse.text.trim() !== '') {
+            setDocumentTextContent(docTextResponse.text);
+            console.log(`[ECW detectTopicsFromUploadedFile] ✅ Belge metni başarıyla yüklendi (${docTextResponse.text.length} karakter)`);
+          } else {
+            console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ Belge metni boş veya geçersiz format`);
+          }
         } catch (textError) {
           console.error(`[ECW detectTopicsFromUploadedFile] ❌ Belge metni yüklenirken hata: ${textError instanceof Error ? textError.message : 'Bilinmeyen hata'}`);
           // Metin yükleme hatası olsa bile konu tespiti devam edebilir

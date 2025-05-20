@@ -1115,7 +1115,7 @@ class AuthService {
         FlowCategory.Error,
         { error: error instanceof Error ? error.message : 'Bilinmeyen hata' }
       );
-
+      
       // Eğer Firebase kullanıcısı varsa, yeni bir token almayı deneyelim
       try {
         const currentUser = auth.currentUser;

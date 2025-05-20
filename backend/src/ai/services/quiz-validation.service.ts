@@ -1418,39 +1418,46 @@ export class QuizValidationService {
         // Soruları özel işleyerek doğrulama
         if (parsedJson.questions && Array.isArray(parsedJson.questions)) {
           // Her bir soruyu temizle ve gerekli alanları ekle
-          const cleanedQuestions = parsedJson.questions.map((q, index) => ({
-            id: q.id || `q_${Date.now()}_${index}`,
-            questionText:
-              q.questionText || q.question || q.text || 'Soru metni eksik',
-            options: Array.isArray(q.options)
-              ? q.options
-              : [
-                  'A) Seçenek eksik',
-                  'B) Seçenek eksik',
-                  'C) Seçenek eksik',
-                  'D) Seçenek eksik',
-                ],
-            correctAnswer:
-              q.correctAnswer || q.correct || q.answer || 'Cevap eksik',
-            explanation: q.explanation || q.reason || 'Açıklama eksik',
-            subTopicName:
-              q.subTopicName ||
-              q.subTopic ||
-              q.topic ||
-              metadata.subTopics?.[0] ||
-              'Genel Konu',
-            normalizedSubTopicName:
-              this.normalizationService.normalizeSubTopicName(
+          const cleanedQuestions = parsedJson.questions.map((q, index) => {
+            // Zorluk seviyesini Türkçe'den İngilizce'ye çevir
+            const difficulty = q.difficulty || metadata.difficulty || 'medium';
+            const translatedDifficulty =
+              this.translateDifficultyToEnglish(difficulty);
+
+            return {
+              id: q.id || `q_${Date.now()}_${index}`,
+              questionText:
+                q.questionText || q.question || q.text || 'Soru metni eksik',
+              options: Array.isArray(q.options)
+                ? q.options
+                : [
+                    'A) Seçenek eksik',
+                    'B) Seçenek eksik',
+                    'C) Seçenek eksik',
+                    'D) Seçenek eksik',
+                  ],
+              correctAnswer:
+                q.correctAnswer || q.correct || q.answer || 'Cevap eksik',
+              explanation: q.explanation || q.reason || 'Açıklama eksik',
+              subTopicName:
                 q.subTopicName ||
-                  q.subTopic ||
-                  q.topic ||
-                  metadata.subTopics?.[0] ||
-                  'Genel Konu',
-              ),
-            difficulty: q.difficulty || metadata.difficulty || 'medium',
-            questionType: q.questionType || 'multiple_choice',
-            cognitiveDomain: q.cognitiveDomain || 'understanding',
-          }));
+                q.subTopic ||
+                q.topic ||
+                metadata.subTopics?.[0] ||
+                'Genel Konu',
+              normalizedSubTopicName:
+                this.normalizationService.normalizeSubTopicName(
+                  q.subTopicName ||
+                    q.subTopic ||
+                    q.topic ||
+                    metadata.subTopics?.[0] ||
+                    'Genel Konu',
+                ),
+              difficulty: translatedDifficulty,
+              questionType: q.questionType || 'multiple_choice',
+              cognitiveDomain: q.cognitiveDomain || 'understanding',
+            };
+          });
 
           return { questions: cleanedQuestions };
         }
@@ -1488,6 +1495,38 @@ export class QuizValidationService {
           containsExamples,
         },
       });
+    }
+  }
+
+  /**
+   * Türkçe zorluk seviyelerini İngilizce karşılıklarına çevirir
+   * @param difficulty Türkçe zorluk seviyesi
+   * @returns İngilizce zorluk seviyesi
+   */
+  private translateDifficultyToEnglish(difficulty: string): string {
+    if (!difficulty) return 'medium';
+
+    const lowerDifficulty = difficulty.toLowerCase().trim();
+
+    switch (lowerDifficulty) {
+      case 'kolay':
+        return 'easy';
+      case 'orta':
+        return 'medium';
+      case 'zor':
+        return 'hard';
+      case 'karışık':
+      case 'karısık':
+      case 'karisik':
+      case 'karma':
+        return 'mixed';
+      default:
+        // Halihazırda İngilizce değer mi kontrol et
+        if (['easy', 'medium', 'hard', 'mixed'].includes(lowerDifficulty)) {
+          return lowerDifficulty;
+        }
+        // Varsayılan değeri döndür
+        return 'medium';
     }
   }
 
@@ -1570,6 +1609,11 @@ export class QuizValidationService {
           normalizedSubTopicName = subTopicNameFromInput.toLowerCase().trim();
         }
 
+        // Zorluk seviyesini Türkçe'den İngilizce'ye çevir
+        const translatedDifficulty = this.translateDifficultyToEnglish(
+          q_input.difficulty,
+        );
+
         // QuizQuestion interface'ine göre veri oluştur
         const questionData = {
           id: q_input.id || `q_${Date.now()}_${i}`,
@@ -1579,7 +1623,7 @@ export class QuizValidationService {
           explanation: q_input.explanation || 'Açıklama yok',
           subTopicName: subTopicNameFromInput,
           normalizedSubTopicName: normalizedSubTopicName,
-          difficulty: q_input.difficulty || 'medium',
+          difficulty: translatedDifficulty,
           questionType: q_input.questionType || 'multiple_choice',
           cognitiveDomain: q_input.cognitiveDomain || 'understanding',
         };

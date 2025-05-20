@@ -518,7 +518,7 @@ axiosInstance.interceptors.response.use(
                   }
                 }
 
-                // Kullanıcıyı logout yap ve login sayfasına yönlendir
+              // Kullanıcıyı logout yap ve login sayfasına yönlendir
                 await authService.signOut();
                 
                 // Zustand store'dan kullanıcıyı çıkış yap
