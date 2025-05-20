@@ -878,25 +878,28 @@ export default function ExamCreationWizard({
           console.log(`[ECW detectTopicsFromUploadedFile] 📊 Son işlenen konular (${processedTopics.length}):`, JSON.stringify(processedTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
           
           if (processedTopics.length > 0) {
-            setDetectedTopics(processedTopics);
+            // Tüm konuları seçili olarak ayarla
+            const selectedTopics = processedTopics.map(topic => ({
+              ...topic,
+              isSelected: true
+            }));
+            
+            setDetectedTopics(selectedTopics);
             setTopicDetectionStatus("success");
             console.log(`[ECW detectTopicsFromUploadedFile] ✅ Konu tespiti başarılı, adım 2'ye geçiliyor.`);
             setCurrentStep(2); 
             ErrorService.showToast(`${processedTopics.length} konu tespit edildi.`, "success");
 
-            // Eğer hızlı sınav ise ve konular tespit edildiyse, ilk konuyu otomatik seç
-            if (quizType === "quick" && processedTopics.length > 0) {
-              const firstTopicId = processedTopics[0].id;
-              const updatedTopics = processedTopics.map((topic, index) => index === 0 ? { ...topic, isSelected: true } : topic);
-              setDetectedTopics(updatedTopics); 
-              setSelectedTopicIds([firstTopicId]);
-              setSelectedSubTopicIds([firstTopicId]); 
-              if (firstTopicId) { 
-                setPreferences(prev => ({ ...prev, topicIds: [firstTopicId!], subTopicIds: [firstTopicId!] })); // Non-null assertion
-              }
-              console.log(`[ECW detectTopicsFromUploadedFile] Hızlı sınav için ilk konu (${firstTopicId}) otomatik seçildi ve detectedTopics güncellendi.`);
-            }
-
+            // Tüm konuları otomatik olarak seç
+            const allTopicIds = selectedTopics.map(topic => topic.id);
+            setSelectedTopicIds(allTopicIds);
+            setSelectedSubTopicIds(allTopicIds); 
+            setPreferences(prev => ({ 
+              ...prev, 
+              topicIds: allTopicIds,
+              subTopicIds: allTopicIds 
+            }));
+            console.log(`[ECW detectTopicsFromUploadedFile] Tüm konular (${allTopicIds.length}) otomatik seçildi.`);
           } else { 
             console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ UYARI: Tespit edilen konu yok!`);
             ErrorService.showToast("Belgede konu tespit edilemedi. Varsayılan konular kullanılacak.", "info");
@@ -1009,6 +1012,12 @@ export default function ExamCreationWizard({
       "Metin İçeriği Var Mı:",
       !!documentTextContent,
     );
+    
+    // Kullanıcıya işlemin başladığını bildiren tost mesajı göster
+    toast.loading("Sınav oluşturuluyor... Lütfen bekleyin", {
+      duration: 10000, // 10 saniye sonra otomatik kapanır
+      id: "quiz-generation-toast"
+    });
     
     // Hızlı bir son kontrol yapalım - belge yüklendiyse ama alt konu yoksa
     if (uploadedDocumentId && (!selectedTopics || selectedTopics.length === 0)) {
@@ -1193,10 +1202,14 @@ export default function ExamCreationWizard({
 
         // Başarı durumuna göre yönlendir
         if (quiz?.id) {
-      if (onComplete) {
+          // Yükleme toast mesajını kapat ve başarı mesajı göster
+          toast.dismiss("quiz-generation-toast");
+          toast.success("Sınav başarıyla oluşturuldu! Yönlendiriliyorsunuz...");
+          
+          if (onComplete) {
             console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu çağrılıyor, quizId: ${quiz.id}`);
-        onComplete(wizardResultData);
-      } else {
+            onComplete(wizardResultData);
+          } else {
             console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor: /exams/${quiz.id}?mode=attempt`);
             router.push(`/exams/${quiz.id}?mode=attempt`);
           }
@@ -1229,11 +1242,16 @@ export default function ExamCreationWizard({
           setErrorMessage(`Hata: ${error instanceof Error ? error.message : String(error)}`);
         }
         
+        // Yükleme mesajını kapat
+        toast.dismiss("quiz-generation-toast");
         toast.error(`Sınav oluşturulurken bir hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
       }
     } catch (error) {
       console.error("[ECW handleFinalSubmit] Beklenmeyen genel hata:", error);
       setErrorMessage(`Beklenmeyen hata: ${error instanceof Error ? error.message : String(error)}`);
+      
+      // Yükleme mesajını kapat
+      toast.dismiss("quiz-generation-toast");
       toast.error("Beklenmeyen bir hata oluştu.");
     } finally {
       setIsSubmitting(false);

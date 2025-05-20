@@ -157,6 +157,20 @@ export default function TopicSelectionScreen({
     onTopicSelectionChange(selectedIds);
   }, [filteredTopics, onTopicSelectionChange]);
 
+  // İlk render sırasında tüm konuları otomatik olarak seç
+  useEffect(() => {
+    if (filteredTopics.length > 0) {
+      // Herhangi bir isSelected=false olan konu var mı kontrol et
+      const hasUnselectedTopics = filteredTopics.some(topic => !topic.isSelected);
+      
+      // Eğer seçilmemiş konular varsa, tümünü seç
+      if (hasUnselectedTopics) {
+        console.log('[TopicSelectionScreen] İlk render, tüm konular otomatik seçiliyor');
+        handleToggleAll(true);
+      }
+    }
+  }, [filteredTopics, handleToggleAll]);
+
   // Seçilen konuları takip et
   const handleTopicToggle = useCallback((id: string) => {
     console.log('[TopicSelectionScreen] handleTopicToggle çağrıldı:', id);
@@ -200,21 +214,11 @@ export default function TopicSelectionScreen({
       topics = [...uniqueDetectedTopics, ...existingTopics];
     }
 
-    // Tüm konuları otomatik olarak seçili hale getir (quick sınav türünde veya konular henüz seçilmemişse)
-    if (personalizedQuizType === "weakTopicFocused") {
-      topics = topics.map((topic) => ({ ...topic, isSelected: true }));
-    } else if (personalizedQuizType === "comprehensive" || personalizedQuizType === "learningObjectiveFocused") {
-      topics = topics.map((topic) => ({
-        ...topic,
-        isSelected: topic.status === "failed" || topic.status === "medium",
-      }));
-    } else {
-      // Hızlı sınav için veya diğer türlerde tüm konuları otomatik seç
-      topics = topics.map((topic) => ({
-        ...topic,
-        isSelected: true // Tüm konuları otomatik olarak seçili hale getir
-      }));
-    }
+    // Tüm konuları otomatik olarak seçili hale getir (her koşulda)
+    topics = topics.map((topic) => ({
+      ...topic,
+      isSelected: true
+    }));
 
     setFilteredTopics(topics);
     console.log('[TSS useEffect] Detected topics prop:', JSON.stringify(detectedTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
