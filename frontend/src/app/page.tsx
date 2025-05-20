@@ -331,50 +331,7 @@ export default function Home() {
                       </div>
                     </motion.div>
 
-                    {/* Platformun Özellikleri */}
-                    <motion.div
-                      custom={4}
-                      variants={fadeInUp}
-                      initial="hidden"
-                      animate="visible"
-                      className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10 max-w-4xl mx-auto"
-                    >
-                      <div 
-                        onClick={() => navigateTo('/learning-goals')}
-                        className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
-                      >
-                        <div className="bg-indigo-500/20 p-3 rounded-lg inline-block mb-3">
-                          <FiTarget className="text-white text-xl" />
-                        </div>
-                        <h3 className="text-white text-lg font-medium mb-2">Öğrenme Hedefleri</h3>
-                        <p className="text-indigo-100/70 text-sm">Kişisel öğrenme hedeflerinizi belirleyin ve takip edin</p>
-                        <FiArrowRight className="text-white/50 mt-3 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                      
-                      <div 
-                        onClick={() => navigateTo('/courses')}
-                        className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
-                      >
-                        <div className="bg-purple-500/20 p-3 rounded-lg inline-block mb-3">
-                          <FiBook className="text-white text-xl" />
-                        </div>
-                        <h3 className="text-white text-lg font-medium mb-2">Dersler</h3>
-                        <p className="text-indigo-100/70 text-sm">Çalışma alanlarınızı yönetin ve içerik ekleyin</p>
-                        <FiArrowRight className="text-white/50 mt-3 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                      
-                      <div 
-                        onClick={() => navigateTo('/performance')}
-                        className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
-                      >
-                        <div className="bg-blue-500/20 p-3 rounded-lg inline-block mb-3">
-                          <FiBarChart2 className="text-white text-xl" />
-                        </div>
-                        <h3 className="text-white text-lg font-medium mb-2">Performans</h3>
-                        <p className="text-indigo-100/70 text-sm">İlerlemenizi takip edin ve güçlü/zayıf yönlerinizi görün</p>
-                        <FiArrowRight className="text-white/50 mt-3 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </motion.div>
+                   
                   </div>
                 </div>
               </div>

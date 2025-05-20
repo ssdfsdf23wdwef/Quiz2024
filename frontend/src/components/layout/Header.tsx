@@ -1,15 +1,8 @@
 "use client";
 
-import React, { useState, useCallback, memo } from "react";
+import React, { memo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
-  FiMenu,
-  FiX,
-  FiHome,
-  FiBook,
-  FiFileText,
-  FiTarget,
   FiMoon,
   FiSun,
   FiLogIn,
@@ -22,12 +15,6 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useAuthStore } from "@/store/auth.store";
 import { useTheme } from "@/context/ThemeContext";
-
-interface NavItem {
-  path: string;
-  label: string;
-  icon: React.ReactNode;
-}
 
 interface HeaderProps {
   userName?: string;
@@ -43,10 +30,10 @@ const HeaderComponent: React.FC<HeaderProps> = ({
   isDarkMode = false,
   onToggleTheme = () => {},
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
   const { user, isLoading, isAuthenticated } = useAuthStore();
   const { logout } = useAuth();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Eğer kullanıcı giriş yapmışsa, firstName ve lastName'i veya email'i göster
   const displayName = user
@@ -56,28 +43,41 @@ const HeaderComponent: React.FC<HeaderProps> = ({
       "Kullanıcı"
     : "Kullanıcı";
 
-  const navItems: NavItem[] = [
-    { path: "/", label: "Ana Sayfa", icon: <FiHome /> },
-    { path: "/courses", label: "Kurslarım", icon: <FiBook /> },
-    { path: "/exams", label: "Sınavlar", icon: <FiFileText /> },
-    {
-      path: "/learning-goals",
-      label: "Öğrenme Hedeflerim",
-      icon: <FiTarget />,
-    },
-  ];
+  // Baş harfleri al
+  const getInitials = () => {
+    if (!user) return "K";
+    
+    const firstName = user.firstName || '';
+    const lastName = user.lastName || '';
+    
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    } else if (firstName) {
+      return firstName[0].toUpperCase();
+    } else if (user.email) {
+      return user.email[0].toUpperCase();
+    } else {
+      return "K";
+    }
+  };
 
-  const toggleMobileMenu = useCallback(() => {
-    setMobileMenuOpen((prev) => !prev);
-  }, []);
-
-  const handleLogout = useCallback(async () => {
-    setMobileMenuOpen(false);
+  const handleLogout = async () => {
     await logout();
-  }, [logout]);
+    setIsDropdownOpen(false);
+  };
 
-  const closeMobileMenu = useCallback(() => {
-    setMobileMenuOpen(false);
+  // Dropdown dışına tıklandığında dropdown'ı kapat
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
@@ -94,25 +94,6 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             </span>
           </Link>
 
-          {/* Masaüstü Navigasyon */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                prefetch={true}
-                className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center transition-colors ${
-                  pathname === item.path
-                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
-                    : "text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-              >
-                <span className="mr-1.5">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
           {/* Sağ taraftaki aksiyonlar */}
           <div className="flex items-center space-x-3">
             {/* Tema değiştirme butonu */}
@@ -126,29 +107,37 @@ const HeaderComponent: React.FC<HeaderProps> = ({
 
             {/* Kullanıcı Kimlik Doğrulama Bağlantıları */}
             {isLoading ? (
-              <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
             ) : isAuthenticated ? (
-              <>
-                <Link href="/profile" prefetch={true}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-700 dark:text-gray-300 flex items-center"
-                  >
-                    <FiUser className="mr-1" />
-                    {displayName}
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-700 dark:text-gray-300 flex items-center"
-                  onClick={handleLogout}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-9 h-9 rounded-full bg-purple-600 text-white font-medium flex items-center justify-center hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  <FiLogOut className="mr-1" />
-                  Çıkış Yap
-                </Button>
-              </>
+                  {getInitials()}
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-700">
+                    <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{displayName}</p>
+                    </div>
+                    <Link href="/profile" prefetch={true}>
+                      <div className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                        <FiUser className="inline mr-2" />
+                        Profil
+                      </div>
+                    </Link>
+                    <div 
+                      onClick={handleLogout}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                    >
+                      <FiLogOut className="inline mr-2" />
+                      Çıkış Yap
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link href="/auth/login" prefetch={true}>
@@ -183,83 +172,8 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 </Link>
               </div>
             )}
-
-            {/* Mobil menü toggle */}
-            <button
-              className="p-2 rounded-lg md:hidden text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              onClick={toggleMobileMenu}
-              aria-label="Mobil menüyü aç/kapat"
-            >
-              {mobileMenuOpen ? <FiX /> : <FiMenu />}
-            </button>
           </div>
         </div>
-
-        {/* Mobil menü */}
-        {mobileMenuOpen && (
-          <nav className="mt-3 md:hidden border-t border-gray-100 dark:border-gray-800 pt-3 pb-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                prefetch={true}
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 ${
-                  pathname === item.path
-                    ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={closeMobileMenu}
-              >
-                <span className="mr-2">{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-
-            {/* Mobil menüde kimlik doğrulama bağlantılarını da ekleyelim */}
-            {!isLoading && !isAuthenticated && (
-              <>
-                <Link
-                  href="/auth/login"
-                  prefetch={true}
-                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  onClick={closeMobileMenu}
-                >
-                  <FiLogIn className="mr-2" />
-                  Giriş Yap
-                </Link>
-                <Link
-                  href="/auth/register"
-                  prefetch={true}
-                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  onClick={closeMobileMenu}
-                >
-                  <FiUserPlus className="mr-2" />
-                  Kayıt Ol
-                </Link>
-                <Link
-                  href="/auth/forgot-password"
-                  prefetch={true}
-                  className="flex items-center px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  onClick={closeMobileMenu}
-                >
-                  <FiKey className="mr-2" />
-                  Şifremi Unuttum
-                </Link>
-              </>
-            )}
-            {!isLoading && isAuthenticated && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center justify-start w-full px-3 py-2 rounded-lg text-sm font-medium my-1 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                onClick={handleLogout}
-              >
-                <FiLogOut className="mr-2" />
-                Çıkış Yap
-              </Button>
-            )}
-          </nav>
-        )}
       </div>
     </header>
   );
