@@ -71,6 +71,26 @@ export class QuizGenerationService {
       personalizationContext: options.personalizationContext,
     };
 
+    // DETAYLI LOGLAMA EKLE: Soru oluşturma işlemi başlatılırken tüm parametreleri logla
+    console.log(
+      `[QUIZ_DEBUG] [${traceId}] Quiz oluşturma işlemi başlatılıyor. İstek parametreleri:`,
+      {
+        difficulty: options.difficulty,
+        questionCount: options.questionCount,
+        subTopics: Array.isArray(options.subTopics)
+          ? typeof options.subTopics[0] === 'string'
+            ? options.subTopics
+            : options.subTopics.map((t) =>
+                typeof t === 'object' ? JSON.stringify(t) : t,
+              )
+          : options.subTopics,
+        documentId: options.documentId,
+        courseId: options.courseId,
+        quizType: options.quizType,
+        personalizedQuizType: options.personalizedQuizType,
+      },
+    );
+
     // Sınav başlangıcını logla
     this.logger.logExamStart(options.userId || 'anon', 'standart', {
       traceId,
@@ -83,20 +103,77 @@ export class QuizGenerationService {
     try {
       // Prompu hazırla
       const promptText = await this.prepareQuizPrompt(options, metadata);
+
+      // DETAYLI LOGLAMA EKLE: Hazırlanan promptu logla
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Hazırlanan prompt (ilk 500 karakter):\n${promptText.substring(0, 500)}...`,
+      );
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Prompt toplam uzunluğu: ${promptText.length} karakter`,
+      );
+
       this.logger.logExamStage(options.userId || 'anon', 'Prompt hazırlandı', {
         traceId,
         promptLength: promptText.length,
       });
 
       // AI yanıtı oluştur
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] AI modeline istek gönderiliyor...`,
+      );
       const aiResponseText = await this.generateAIContent(promptText, metadata);
+
+      // DETAYLI LOGLAMA EKLE: AI yanıtını logla
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] AI yanıtı alındı (ilk 500 karakter):\n${aiResponseText.substring(0, 500)}...`,
+      );
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] AI yanıtı toplam uzunluğu: ${aiResponseText.length} karakter`,
+      );
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Yanıt JSON içeriyor mu: ${aiResponseText.includes('{') && aiResponseText.includes('}') ? 'EVET' : 'HAYIR'}`,
+      );
+
       this.logger.logExamStage(options.userId || 'anon', 'AI yanıtı alındı', {
         traceId,
         responseLength: aiResponseText.length,
       });
 
       // AI yanıtını işle
+      console.log(`[QUIZ_DEBUG] [${traceId}] AI yanıtı işleniyor...`);
       const questions = this.processAIResponse(aiResponseText, metadata);
+
+      // DETAYLI LOGLAMA EKLE: İşlenen soruları logla
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] İşlem sonrası soru sayısı: ${questions.length}`,
+      );
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] İlk soru örneği:`,
+        questions.length > 0
+          ? JSON.stringify(questions[0], null, 2)
+          : 'Soru yok',
+      );
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Tüm sorular:`,
+        JSON.stringify(
+          questions.map((q) => ({
+            id: q.id,
+            text: q.questionText.substring(0, 50) + '...',
+            subTopic: q.subTopicName,
+            normalized: q.normalizedSubTopicName,
+            difficulty: q.difficulty,
+          })),
+          null,
+          2,
+        ),
+      );
+
+      // KONTROL EKLE: İstenen soru sayısı ve dönen soru sayısı karşılaştırması
+      if (questions.length < options.questionCount) {
+        console.warn(
+          `[QUIZ_DEBUG] [${traceId}] UYARI: Üretilen soru sayısı (${questions.length}) istenen soru sayısından (${options.questionCount}) az! AI yanıtı eksik olabilir.`,
+        );
+      }
 
       // Sınav oluşturmayı tamamladığını logla
       this.logger.logExamCompletion(
@@ -111,6 +188,23 @@ export class QuizGenerationService {
 
       return questions;
     } catch (error) {
+      // DETAYLI LOGLAMA EKLE: Hata detaylarını artır
+      console.error(
+        `[QUIZ_DEBUG] [${traceId}] HATA: Quiz oluşturma başarısız. Hata mesajı: ${error.message}`,
+      );
+      console.error(`[QUIZ_DEBUG] [${traceId}] Hata detayları:`, {
+        errorName: error.name,
+        stack: error.stack,
+        code: error.code,
+        params: {
+          difficulty: options.difficulty,
+          questionCount: options.questionCount,
+          subTopicsLength: Array.isArray(options.subTopics)
+            ? options.subTopics.length
+            : 'N/A',
+        },
+      });
+
       // Hata durumunu logla
       this.logger.error(
         `[${traceId}] Quiz oluşturma hatası: ${error.message}`,
@@ -251,6 +345,26 @@ export class QuizGenerationService {
   ): QuizQuestion[] {
     const { traceId } = metadata;
 
+    // DETAYLI LOGLAMA: İşleme başlangıcı
+    console.log(
+      `[QUIZ_DEBUG] [${traceId}] AI yanıtının işlenmesi başlatılıyor`,
+    );
+    console.log(
+      `[QUIZ_DEBUG] [${traceId}] Yanıt uzunluğu: ${aiResponseText?.length || 0} karakter`,
+    );
+    console.log(
+      `[QUIZ_DEBUG] [${traceId}] İşlem başlangıcında meta bilgiler:`,
+      {
+        userId: metadata.userId || 'anon',
+        questionCount: metadata.questionCount,
+        difficulty: metadata.difficulty,
+        subTopics: Array.isArray(metadata.subTopics)
+          ? metadata.subTopics.length + ' adet'
+          : 'yok',
+        documentId: metadata.documentId || 'yok',
+      },
+    );
+
     this.flowTracker.trackStep('AI yanıtı işleniyor', 'QuizGenerationService');
     this.logger.logExamStage(metadata.userId || 'anon', 'AI yanıtı işleniyor', {
       traceId,
@@ -259,25 +373,135 @@ export class QuizGenerationService {
 
     try {
       // 1. JSON'a dönüştür
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] ADIM 1: AI yanıtı JSON'a dönüştürülüyor...`,
+      );
+      console.time(`[QUIZ_DEBUG] [${traceId}] JSON'a dönüştürme süresi`);
       const parsedJson = this.quizValidation.parseAIResponseToJSON(
         aiResponseText,
         metadata,
       );
+      console.timeEnd(`[QUIZ_DEBUG] [${traceId}] JSON'a dönüştürme süresi`);
+
+      // JSON çıktısının özeti
+      if (parsedJson) {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 1 SONUÇ: JSON'a dönüştürme başarılı`,
+        );
+        if (typeof parsedJson === 'object' && parsedJson !== null) {
+          console.log(
+            `[QUIZ_DEBUG] [${traceId}] JSON içeriği anahtarlar:`,
+            Object.keys(parsedJson),
+          );
+
+          // Questions varsa içindeki soru sayısı
+          if (
+            parsedJson &&
+            'questions' in parsedJson &&
+            Array.isArray((parsedJson as any).questions)
+          ) {
+            console.log(
+              `[QUIZ_DEBUG] [${traceId}] JSON içinde ${(parsedJson as any).questions.length} adet soru bulundu`,
+            );
+          } else {
+            console.warn(
+              `[QUIZ_DEBUG] [${traceId}] JSON içinde 'questions' dizisi bulunamadı!`,
+            );
+          }
+        }
+      } else {
+        console.error(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 1 SONUÇ: JSON'a dönüştürme başarısız, sonuç null veya undefined`,
+        );
+      }
 
       // 2. Şema doğrulaması
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] ADIM 2: Şema doğrulaması yapılıyor...`,
+      );
+      console.time(`[QUIZ_DEBUG] [${traceId}] Şema doğrulama süresi`);
       const validatedData = this.quizValidation.validateQuizResponseSchema(
         parsedJson,
         metadata,
         aiResponseText,
       );
+      console.timeEnd(`[QUIZ_DEBUG] [${traceId}] Şema doğrulama süresi`);
+
+      // Doğrulama sonucu
+      if (validatedData) {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 2 SONUÇ: Şema doğrulaması başarılı`,
+        );
+        if (
+          validatedData &&
+          typeof validatedData === 'object' &&
+          'questions' in validatedData &&
+          Array.isArray((validatedData as any).questions)
+        ) {
+          console.log(
+            `[QUIZ_DEBUG] [${traceId}] Doğrulanan veri ${(validatedData as any).questions.length} adet soru içeriyor`,
+          );
+        }
+      } else {
+        console.error(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 2 SONUÇ: Şema doğrulaması başarısız, sonuç null veya undefined`,
+        );
+      }
 
       // 3. Soruları dönüştür ve valide et
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] ADIM 3: Soru dönüştürme ve detaylı validasyon yapılıyor...`,
+      );
+      console.time(`[QUIZ_DEBUG] [${traceId}] Soru dönüştürme süresi`);
       const questions = this.quizValidation.transformAndValidateQuestions(
         validatedData,
         metadata,
       );
+      console.timeEnd(`[QUIZ_DEBUG] [${traceId}] Soru dönüştürme süresi`);
+
+      // Dönüştürme sonucu
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] ADIM 3 SONUÇ: Soru dönüştürme tamamlandı, ${questions.length} adet geçerli soru`,
+      );
+
+      // İstenen soru sayısıyla karşılaştırma
+      if (
+        metadata.questionCount &&
+        questions.length !== metadata.questionCount
+      ) {
+        console.warn(
+          `[QUIZ_DEBUG] [${traceId}] UYARI: İstenen soru sayısı (${metadata.questionCount}) ile üretilen soru sayısı (${questions.length}) eşleşmiyor!`,
+        );
+
+        if (questions.length === 0) {
+          console.error(
+            `[QUIZ_DEBUG] [${traceId}] KRİTİK HATA: Hiç geçerli soru üretilemedi!`,
+          );
+        } else if (questions.length < metadata.questionCount) {
+          console.warn(
+            `[QUIZ_DEBUG] [${traceId}] UYARI: Üretilen soru sayısı (${questions.length}) istenen sayıdan (${metadata.questionCount}) az`,
+          );
+        } else {
+          console.log(
+            `[QUIZ_DEBUG] [${traceId}] BİLGİ: Üretilen soru sayısı (${questions.length}) istenen sayıdan (${metadata.questionCount}) fazla`,
+          );
+        }
+      }
 
       // 4. Sonuçları logla
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] AI yanıtı işleme tamamlandı. Toplam: ${questions.length} geçerli soru`,
+      );
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Üretilen sorular:`,
+        questions.map((q) => ({
+          id: q.id,
+          question: q.questionText.substring(0, 30) + '...',
+          difficulty: q.difficulty,
+          subTopic: q.subTopicName,
+        })),
+      );
+
       this.logger.info(
         `[${traceId}] Quiz soruları başarıyla oluşturuldu. Toplam: ${questions.length} soru`,
         'QuizGenerationService.processAIResponse',
@@ -295,31 +519,29 @@ export class QuizGenerationService {
 
       return questions;
     } catch (error) {
+      console.error(
+        `[QUIZ_DEBUG] [${traceId}] HATA: AI yanıtı işlenirken bir hata oluştu:`,
+        error.message,
+      );
+      console.error(`[QUIZ_DEBUG] [${traceId}] Hata detayları:`, {
+        errorName: error.name,
+        stack: error.stack,
+        code: error.code || 'bilinmiyor',
+      });
+      console.error(
+        `[QUIZ_DEBUG] [${traceId}] Yanıt içeriği (ilk 500 karakter):`,
+        aiResponseText?.substring(0, 500) + '...',
+      );
+
+      // Hatayı logla ve yeniden fırlat
       this.logger.error(
-        `[${traceId}] Quiz yanıtı işlenemedi: ${error.message}`,
+        `[${traceId}] AI yanıtı işlerken hata: ${error.message}`,
         'QuizGenerationService.processAIResponse',
-        undefined,
+        __filename,
         error,
       );
 
-      // Sınav işlemindeki hatayı logla
-      this.logger.logExamError(metadata.userId || 'anon', error, {
-        traceId,
-        step: 'AI yanıtı işleme',
-        rawResponse: aiResponseText?.substring(0, 500) + '...',
-        metadata,
-      });
-
-      // Hatayı UI'da göstermek için ayrıntılı hata mesajı içeren bir hata fırlat
-      throw new BadRequestException({
-        code: 'QUIZ_PROCESSING_ERROR',
-        message: `Sınav soruları oluşturulamadı: ${error.message}`,
-        details: {
-          rawError: error.message,
-          trace: traceId,
-          aiResponsePreview: aiResponseText?.substring(0, 300) + '...',
-        },
-      });
+      throw error;
     }
   }
 

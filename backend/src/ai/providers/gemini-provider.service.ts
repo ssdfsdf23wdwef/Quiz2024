@@ -65,6 +65,14 @@ export class GeminiProviderService implements AIProvider {
         options?.metadata?.traceId ||
         `gemini-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
 
+      // DETAYLI LOGLAMA: API isteği başlangıcı
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Gemini API isteği hazırlanıyor (${prompt.length} karakter)`,
+      );
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Prompt ilk 500 karakteri: ${prompt.substring(0, 500)}...`,
+      );
+
       // Özel ayarlar varsa onları kullan, yoksa modeldeki ayarları kullan
       const requestParams = options || {};
 
@@ -74,6 +82,9 @@ export class GeminiProviderService implements AIProvider {
 
       // Sistem mesajı varsa ekle
       if (options?.systemInstruction) {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] Sistem talimatı ekleniyor (${options.systemInstruction.length} karakter)`,
+        );
         contents.push({
           role: 'user', // Gemini modelinde system role yerine user kullanılır
           parts: [
@@ -90,6 +101,10 @@ export class GeminiProviderService implements AIProvider {
         parts: [{ text: prompt }],
       });
 
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Toplam mesaj sayısı: ${contents.length}, toplam karakter: ${contents.reduce((sum, msg) => sum + msg.parts.reduce((s, p) => s + p.text.length, 0), 0)}`,
+      );
+
       this.logger.debug(
         `[${traceId}] Gemini API isteği hazırlanıyor: ${contents.length} mesaj`,
         'GeminiProviderService.generateContent',
@@ -97,6 +112,28 @@ export class GeminiProviderService implements AIProvider {
         undefined,
         { messagesCount: contents.length, promptLength: prompt.length },
       );
+
+      // API çağrısı öncesi son hazırlıklar
+      const generationConfig = {
+        temperature:
+          requestParams.temperature || this.config.temperature || 0.5,
+        maxOutputTokens:
+          requestParams.maxTokens || this.config.maxTokens || 2048,
+        topK: requestParams.topK || 40,
+        topP: requestParams.topP || 0.95,
+      };
+
+      console.log(`[QUIZ_DEBUG] [${traceId}] Gemini API konfigürasyonu:`, {
+        model: this.config.model,
+        temperature: generationConfig.temperature,
+        maxOutputTokens: generationConfig.maxOutputTokens,
+        topK: generationConfig.topK,
+        topP: generationConfig.topP,
+      });
+
+      // DETAYLI LOGLAMA: API çağrısı yapılıyor
+      console.log(`[QUIZ_DEBUG] [${traceId}] Gemini API çağrısı yapılıyor...`);
+      console.time(`[QUIZ_DEBUG] [${traceId}] Gemini API yanıt süresi`);
 
       // API çağrısı
       const response = await this.model.generateContent({
@@ -130,6 +167,10 @@ export class GeminiProviderService implements AIProvider {
       // Tamamlanma süresini hesapla
       const endTime = Date.now();
       const duration = endTime - startTime;
+      console.timeEnd(`[QUIZ_DEBUG] [${traceId}] Gemini API yanıt süresi`);
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Gemini API yanıtı alındı, süre: ${duration}ms`,
+      );
 
       // Yanıt metnini alma -  response.response.candidates[0].content.parts[0].text kullanabiliriz
       let responseText = '';
@@ -137,6 +178,11 @@ export class GeminiProviderService implements AIProvider {
       try {
         // Direktmen response'u string olarak almaya çalış
         if (response.response) {
+          console.log(
+            `[QUIZ_DEBUG] [${traceId}] Yanıt nesnesinin yapısı:`,
+            Object.keys(response.response),
+          );
+
           if (
             response.response.candidates &&
             response.response.candidates[0] &&
@@ -147,14 +193,35 @@ export class GeminiProviderService implements AIProvider {
             responseText =
               response.response.candidates[0].content.parts[0].text || '';
 
+            console.log(
+              `[QUIZ_DEBUG] [${traceId}] Yanıt metni (ilk 500 karakter): ${responseText.substring(0, 500)}...`,
+            );
+            console.log(
+              `[QUIZ_DEBUG] [${traceId}] Yanıt uzunluğu: ${responseText.length} karakter`,
+            );
+            console.log(
+              `[QUIZ_DEBUG] [${traceId}] JSON içeriyor mu: ${responseText.includes('{') && responseText.includes('}') ? 'EVET' : 'HAYIR'}`,
+            );
+
             this.logger.log(
               `[${traceId}] Yanıt metni başarıyla elde edildi (candidates yoluyla)`,
               'GeminiProviderService.generateContent',
+            );
+          } else {
+            console.warn(
+              `[QUIZ_DEBUG] [${traceId}] UYARI: Yanıt candidates yapısında beklendiği gibi değil!`,
+            );
+            console.log(
+              `[QUIZ_DEBUG] [${traceId}] Yanıt nesnesinin detayları:`,
+              JSON.stringify(response.response).substring(0, 1000),
             );
           }
         } else if (typeof (response as any).text === 'function') {
           // Bazı Gemini API sürümlerinde doğrudan text() metodu ile yanıt dönebilir
           responseText = (response as any).text();
+          console.log(
+            `[QUIZ_DEBUG] [${traceId}] Yanıt text() metodu ile alındı. Uzunluk: ${responseText.length} karakter`,
+          );
           this.logger.log(
             `[${traceId}] Yanıt metni başarıyla elde edildi (text() metodu ile)`,
             'GeminiProviderService.generateContent',
