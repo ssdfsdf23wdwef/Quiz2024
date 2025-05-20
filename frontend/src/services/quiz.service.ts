@@ -484,12 +484,11 @@ class QuizApiService {
         // Eğer belge ID varsa, varsayılan bir alt konu oluştur
         if (options.documentId) {
           console.log('[QuizApiService.generateQuiz] Belge ID mevcut, varsayılan alt konu oluşturuluyor');
-          options.selectedSubTopics = [
-            {
-              subTopic: 'Otomatik Oluşturulan Konu',
-              normalizedSubTopic: `belge-${options.documentId.substring(0, 8)}`
-            }
-          ];
+          const defaultTopic = {
+            subTopic: 'Belge İçeriği',
+            normalizedSubTopic: `belge-${options.documentId.substring(0, 8)}`
+          };
+          options.selectedSubTopics = [defaultTopic];
           console.log(`[QuizApiService.generateQuiz] Varsayılan alt konu oluşturuldu: ${JSON.stringify(options.selectedSubTopics)}`);
         } else {
           throw new ApiError('En az bir alt konu seçilmelidir', { 
@@ -500,6 +499,30 @@ class QuizApiService {
             }
           });
         }
+      }
+      
+      // Her alt konunun doğru formatta olduğunu kontrol et ve düzelt
+      if (Array.isArray(options.selectedSubTopics)) {
+        options.selectedSubTopics = options.selectedSubTopics.map(topic => {
+          // Eğer topic bir string ise veya gerekli property'leri eksikse düzelt
+          if (typeof topic === 'string') {
+            return {
+              subTopic: topic,
+              normalizedSubTopic: topic
+            };
+          } else if (!topic.normalizedSubTopic && topic.subTopic) {
+            return {
+              ...topic,
+              normalizedSubTopic: topic.subTopic.toLowerCase().replace(/\s+/g, '-')
+            };
+          } else if (!topic.subTopic && topic.normalizedSubTopic) {
+            return {
+              ...topic,
+              subTopic: topic.normalizedSubTopic
+            };
+          }
+          return topic;
+        });
       }
       
       // Endpoint'e göre doğru veri formatını hazırla
@@ -531,6 +554,22 @@ class QuizApiService {
           if (typeof topic === 'string') return topic;
           return topic.normalizedSubTopic || topic.subTopic;
         });
+      }
+      
+      // Son kontrol: subTopics dizisi boş mu?
+      if (!requestData.subTopics || (Array.isArray(requestData.subTopics) && requestData.subTopics.length === 0)) {
+        console.error('[QuizApiService.generateQuiz] HATA: API isteği için subTopics dizisi hâlâ boş!');
+        
+        if (requestData.documentId) {
+          console.log('[QuizApiService.generateQuiz] Son çare: Belge ID kullanarak varsayılan alt konu ekleniyor');
+          requestData.subTopics = [`belge-${String(requestData.documentId).substring(0, 8)}`];
+          console.log(`[QuizApiService.generateQuiz] Eklenen varsayılan alt konu: ${requestData.subTopics[0]}`);
+        } else {
+          throw new ApiError('En az bir alt konu seçilmelidir. Lütfen tekrar deneyin.', {
+            code: 'EMPTY_SUBTOPICS_IN_REQUEST',
+            original: new Error('Son API isteği için subTopics dizisi boş kaldı.')
+          });
+        }
       }
       
       console.log(`[QuizApiService.generateQuiz] Son istek verisi: ${JSON.stringify(requestData, null, 2)}`);

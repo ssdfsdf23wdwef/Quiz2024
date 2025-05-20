@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiTarget,
   FiZap,
@@ -35,6 +35,8 @@ import { Quiz } from "@/types";
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
+  initialDocumentId?: string; // URL'den gelen belge ID'si
+  initialTopics?: string[]; // URL'den gelen konular
   onComplete?: (result: {
     file: File | null;
     quizType: "quick" | "personalized";
@@ -66,6 +68,8 @@ interface TopicsResponseData {
 
 export default function ExamCreationWizard({
   quizType, // Dışarıdan gelen sınav türü
+  initialDocumentId,
+  initialTopics,
   onComplete,
 }: ExamCreationWizardProps) {
   const router = useRouter();
@@ -86,7 +90,7 @@ export default function ExamCreationWizard({
   >("idle");
 
   // Seçilen konuları takip etmek için state (TopicSelectionScreen için)
-  const [selectedTopicsList, setSelectedTopicsList] = useState<string[]>([]);
+  const [selectedTopicsList, setSelectedTopicsList] = useState<string[]>(initialTopics || []);
   const [onInitialLoad, setOnInitialLoad] = useState<boolean>(true);
 
   // Sınav oluşturma durumu için yeni state
@@ -96,7 +100,7 @@ export default function ExamCreationWizard({
   
   // Belge metni ve belge ID'si
   const [documentTextContent, setDocumentTextContent] = useState<string>("");
-  const [uploadedDocumentId, setUploadedDocumentId] = useState<string>("");
+  const [uploadedDocumentId, setUploadedDocumentId] = useState<string>(initialDocumentId || "");
   
   // Seçilen konular (alt konu olarak)
   const [selectedTopics, setSelectedTopics] = useState<SubTopicItem[]>([]);
@@ -128,43 +132,71 @@ export default function ExamCreationWizard({
   // Tespit edilen konular
   const [detectedTopics, setDetectedTopics] = useState<DetectedSubTopic[]>([]);
 
-  // TopicSelectionScreen'den seçilen konular değiştiğinde bu fonksiyon çağrılacak
-  const handleTopicSelectionChange = useCallback((selectedTopics: string[]) => {
-    console.log('[ECW handleTopicSelectionChange] Seçilen konular güncellendi:', selectedTopics);
-    setSelectedTopicsList(selectedTopics);
-    // Burada seçilen konuları doğrudan diğer state'lere de ekleyebiliriz
-    setSelectedTopicIds(selectedTopics);
-    setSelectedSubTopicIds(selectedTopics);
-    
-    // Seçilen konuları alt konular olarak da güncelle
-    const subTopicItems: SubTopicItem[] = selectedTopics.map(topicId => {
-      const topic = detectedTopics.find(t => t.id === topicId);
-      if (!topic) {
-        console.warn(`[ECW handleTopicSelectionChange] UYARI: ${topicId} ID'li konu detectedTopics içinde bulunamadı!`);
-      }
-      return {
-        subTopic: topic?.subTopicName || topicId,
-        normalizedSubTopic: topic?.normalizedSubTopicName || topicId,
-      };
-    });
-    
-    console.log('[ECW handleTopicSelectionChange] Alt konulara dönüştürüldü:', JSON.stringify(subTopicItems));
-    
-    // Alt konuların boş olup olmadığını kontrol et
-    if (subTopicItems.length === 0) {
-      console.warn('[ECW handleTopicSelectionChange] UYARI: Dönüştürülmüş alt konular listesi boş!');
-    } else if (subTopicItems.some(item => !item.subTopic)) {
-      console.warn('[ECW handleTopicSelectionChange] UYARI: Bazı alt konuların subTopic değeri boş veya undefined!');
+  // URL'den belge ID ve konular alındıysa otomatik olarak işle
+  useEffect(() => {
+    if (initialDocumentId && initialDocumentId.trim() !== "" && currentStep === 1) {
+      console.log('[ECW useEffect] URL üzerinden belge ID algılandı:', initialDocumentId);
+      setUploadedDocumentId(initialDocumentId);
+      
+      // Belge metin içeriğini yükle
+      documentService.getDocumentText(initialDocumentId)
+        .then(response => {
+          setDocumentTextContent(response.text);
+          console.log('[ECW useEffect] Belge metni yüklendi, uzunluk:', response.text.length);
+          
+          // Konu teşhisi için adım 2'ye geç
+          setCurrentStep(2);
+          
+          // Belge içeriğinden varsayılan konu oluştur
+          if ((!initialTopics || initialTopics.length === 0) && response.text) {
+            const defaultTopicId = `belge-${initialDocumentId.substring(0, 8)}`;
+            const defaultTopic: DetectedSubTopic = {
+              id: defaultTopicId,
+              subTopicName: "Belge İçeriği",
+              normalizedSubTopicName: defaultTopicId,
+              isSelected: true
+            };
+            
+            setDetectedTopics([defaultTopic]);
+            setSelectedTopicIds([defaultTopicId]);
+            setSelectedSubTopicIds([defaultTopicId]);
+            
+            const subTopicItem: SubTopicItem = {
+              subTopic: "Belge İçeriği",
+              normalizedSubTopic: defaultTopicId
+            };
+            setSelectedTopics([subTopicItem]);
+            
+            console.log('[ECW useEffect] Varsayılan konu oluşturuldu:', subTopicItem);
+          }
+        })
+        .catch(error => {
+          console.error('[ECW useEffect] Belge metni yüklenirken hata:', error);
+          ErrorService.showToast("Belge içeriği yüklenemedi, lütfen tekrar deneyin.", "error");
+        });
     }
     
-    setSelectedTopics(subTopicItems);
-    
-    setPreferences(prev => ({
-      ...prev,
-      topicIds: selectedTopics,
-      subTopicIds: selectedTopics
-    }));
-  }, [detectedTopics, setSelectedTopicIds, setSelectedSubTopicIds, setSelectedTopics]);
+    // İlk konular belirtilmişse
+    if (initialTopics && initialTopics.length > 0 && currentStep === 1) {
+      console.log('[ECW useEffect] URL üzerinden konular algılandı:', initialTopics);
+      setSelectedTopicIds(initialTopics);
+      setSelectedSubTopicIds(initialTopics);
+      
+      // Konu adları bilinmediğinden varsayılan isimleri kullan
+      const subTopicItems: SubTopicItem[] = initialTopics.map((topicId, index) => ({
+        subTopic: `Konu ${index + 1}`,
+        normalizedSubTopic: topicId
+      }));
+      
+      setSelectedTopics(subTopicItems);
+      console.log('[ECW useEffect] URL konuları alt konulara dönüştürüldü:', subTopicItems);
+      
+      // Belge ve konular hazır, adım 3'e geç
+      if (initialDocumentId) {
+        setCurrentStep(3);
+      }
+    }
+  }, [initialDocumentId, initialTopics, currentStep]);
 
   // Kursları yükle
   useEffect(() => {
@@ -308,44 +340,46 @@ export default function ExamCreationWizard({
       
       // Tercihleri güncelle
       setPreferences(prev => ({
-          ...prev,
+        ...prev,
         topicIds: selectedTopics,
         subTopicIds: subTopicIds
       }));
-    } else if (uploadedDocumentId) {
+    } else {
       // Seçilen konular boş ama belge ID varsa, varsayılan bir konu oluştur
-      console.log('[ECW handleTopicsDetected] Seçilen konular boş ancak belge yüklenmiş, varsayılan konu oluşturuluyor');
-      
-      const fileName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "Belge İçeriği";
-      const defaultTopicId = `default-${uploadedDocumentId.substring(0, 8)}`;
-      
-      // Tek bir varsayılan konu oluştur
-      const defaultTopics = [defaultTopicId];
-      setSelectedTopicIds(defaultTopics);
-      
-      // Aynı konu ID'sini alt konu olarak da kullan
-      setSelectedSubTopicIds(defaultTopics);
-      
-      // Görüntülenecek alt konu nesnesi oluştur
-      const subTopicItem: SubTopicItem = {
-        subTopic: fileName,
-        normalizedSubTopic: defaultTopicId
-      };
-      setSelectedTopics([subTopicItem]);
-      
-      console.log('[ECW handleTopicsDetected] Varsayılan konu oluşturuldu:', defaultTopicId, fileName);
-      
-      // Tercihleri güncelle
-      setPreferences(prev => ({
-        ...prev,
-        topicIds: defaultTopics,
-        subTopicIds: defaultTopics
-      }));
+      if (uploadedDocumentId) {
+        console.log('[ECW handleTopicsDetected] Seçilen konular boş ancak belge yüklenmiş, varsayılan konu oluşturuluyor');
+        
+        const fileName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "Belge İçeriği";
+        const defaultTopicId = `default-${uploadedDocumentId.substring(0, 8)}`;
+        
+        // Tek bir varsayılan konu oluştur
+        const defaultTopics = [defaultTopicId];
+        setSelectedTopicIds(defaultTopics);
+        
+        // Aynı konu ID'sini alt konu olarak da kullan
+        setSelectedSubTopicIds(defaultTopics);
+        
+        // Görüntülenecek alt konu nesnesi oluştur
+        const subTopicItem: SubTopicItem = {
+          subTopic: fileName,
+          normalizedSubTopic: defaultTopicId
+        };
+        setSelectedTopics([subTopicItem]);
+        
+        console.log('[ECW handleTopicsDetected] Varsayılan konu oluşturuldu:', defaultTopicId, fileName);
+        
+        // Tercihleri güncelle
+        setPreferences(prev => ({
+          ...prev,
+          topicIds: defaultTopics,
+          subTopicIds: defaultTopics
+        }));
+      }
     }
     
     // Adım 3'e geç
     if (currentStep === 2) {
-    setCurrentStep(3);
+      setCurrentStep(3);
     }
   };
 
@@ -365,6 +399,39 @@ export default function ExamCreationWizard({
         ? prev.filter((id) => id !== topicId)
         : [...prev, topicId],
     );
+  };
+
+  // Konu seçimlerini değiştirme fonksiyonu - topicSelectionScreen için
+  const handleTopicSelectionChange = (selectedTopicIds: string[]) => {
+    console.log(`[ECW handleTopicSelectionChange] Konu seçimleri değişiyor: ${selectedTopicIds.length} konu seçildi`);
+    
+    // Seçilen konu ID'lerini güncelle
+    setSelectedTopicIds(selectedTopicIds);
+    
+    // Seçilen konuların listesini de güncelleyelim
+    setSelectedTopicsList(selectedTopicIds);
+    
+    // Konu listesini güncelle
+    const updatedTopics: SubTopicItem[] = selectedTopicIds.map(topicId => {
+      const topic = detectedTopics.find(t => t.id === topicId);
+      return {
+        subTopic: topic ? topic.subTopicName : topicId,
+        normalizedSubTopic: topicId
+      };
+    });
+    
+    console.log(`[ECW handleTopicSelectionChange] Güncellenmiş konu listesi: ${JSON.stringify(updatedTopics)}`);
+    setSelectedTopics(updatedTopics);
+    
+    // Alt konuları da güncelle
+    setSelectedSubTopicIds(selectedTopicIds);
+    
+    // Tercihleri güncelle
+    setPreferences(prev => ({
+      ...prev,
+      topicIds: selectedTopicIds,
+      subTopicIds: selectedTopicIds
+    }));
   };
 
   // Alt konu seçimini değiştir
@@ -672,16 +739,16 @@ export default function ExamCreationWizard({
         console.log(`[ECW detectTopicsFromUploadedFile] 📄 Belge yükleme başarılı! Belge ID: ${documentId}`);
 
         // Belge metni yükleme işlemini hemen başlat
-        try {
-          console.log(`[ECW detectTopicsFromUploadedFile] 📄 Belge metni yükleniyor (ID: ${documentId})...`);
-          const docTextResponse = await documentService.getDocumentText(documentId);
-          
-          if (docTextResponse && docTextResponse.text && docTextResponse.text.trim() !== '') {
-            setDocumentTextContent(docTextResponse.text);
-            console.log(`[ECW detectTopicsFromUploadedFile] ✅ Belge metni başarıyla yüklendi (${docTextResponse.text.length} karakter)`);
-          } else {
-            console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ Belge metni boş veya geçersiz format`);
-          }
+                  try {
+            console.log(`[ECW detectTopicsFromUploadedFile] 📄 Belge metni yükleniyor (ID: ${documentId})...`);
+            const docTextResponse = await documentService.getDocumentText(documentId);
+            
+            if (docTextResponse && docTextResponse.text && docTextResponse.text.trim() !== '') {
+              setDocumentTextContent(docTextResponse.text);
+              console.log(`[ECW detectTopicsFromUploadedFile] ✅ Belge metni başarıyla yüklendi (${docTextResponse.text.length} karakter)`);
+            } else {
+              console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ Belge metni boş veya geçersiz format`);
+            }
         } catch (textError) {
           console.error(`[ECW detectTopicsFromUploadedFile] ❌ Belge metni yüklenirken hata: ${textError instanceof Error ? textError.message : 'Bilinmeyen hata'}`);
           // Metin yükleme hatası olsa bile konu tespiti devam edebilir
@@ -943,39 +1010,26 @@ export default function ExamCreationWizard({
       !!documentTextContent,
     );
     
-    // Hızlı sınav için oturum kontrolünü atlayalım veya alternatif kontrol yapalım
-    if (quizType !== "quick") {
-      // Oturum kontrolü - sadece normal sınavlar için
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        console.error("[ECW handleFinalSubmit] Token bulunamadı! Oturum kontrolü gerekiyor.");
-        
-        try {
-          // Auth servisinden oturum kontrolü yapalım - useAuth hook'u React Component dışında kullanılamaz
-          // doğrudan authService'i kullanmalıyız
-          const authService = (await import("@/services/auth.service")).default;
-          try {
-            await authService.getCurrentToken();
-            console.log("[ECW handleFinalSubmit] AuthService ile oturum kontrolü başarılı");
-          } catch (tokenError) {
-            console.error("[ECW handleFinalSubmit] AuthService ile oturum kontrolü başarısız", tokenError);
-            
-            // Mevcut sayfayı kaydet
-            if (typeof window !== 'undefined') {
-              const currentPath = window.location.pathname + window.location.search;
-              sessionStorage.setItem('redirectAfterLogin', currentPath);
-              toast.error("Oturum süreniz dolmuş. Giriş sayfasına yönlendiriliyorsunuz.");
-              setTimeout(() => {
-                window.location.href = "/auth/login?session_expired=true";
-              }, 1500);
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("[ECW handleFinalSubmit] Oturum kontrolü hatası:", error);
-          // Hata durumunda devam edelim - sonraki adımlarda nasılsa API hatası alacak
-        }
-      }
+    // Hızlı bir son kontrol yapalım - belge yüklendiyse ama alt konu yoksa
+    if (uploadedDocumentId && (!selectedTopics || selectedTopics.length === 0)) {
+      console.log("[ECW handleFinalSubmit] Belge yüklendi fakat alt konu seçilmedi - otomatik konu oluşturuluyor");
+      
+      // Varsayılan bir konu oluştur
+      const fileName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "Belge";
+      const defaultTopicId = `belge-${uploadedDocumentId.substring(0, 8)}`;
+      
+      // Alt konu olarak ekle
+      const subTopicItem: SubTopicItem = {
+        subTopic: `${fileName} İçeriği`,
+        normalizedSubTopic: defaultTopicId
+      };
+      
+      // State'leri güncelle
+      setSelectedTopicIds([defaultTopicId]);
+      setSelectedSubTopicIds([defaultTopicId]);
+      setSelectedTopics([subTopicItem]);
+      
+      console.log("[ECW handleFinalSubmit] Varsayılan konu eklendi:", subTopicItem);
     }
 
     if (quizType === "quick") {
@@ -1041,9 +1095,10 @@ export default function ExamCreationWizard({
         
         if (uploadedDocumentId || selectedFile) {
           console.log("[ECW handleFinalSubmit] Belge var, varsayılan bir konu ekleniyor");
+          const fileName = selectedFile?.name || 'Belge';
           mappedSubTopics.push({
-            subTopic: 'Belge Konusu',
-            normalizedSubTopic: `belge-${Date.now()}`
+            subTopic: `${fileName.replace(/\.[^/.]+$/, "")} İçeriği`,
+            normalizedSubTopic: `belge-${uploadedDocumentId || Date.now()}`
           });
           console.log("[ECW handleFinalSubmit] Varsayılan konu eklendi:", mappedSubTopics);
         } else {

@@ -190,126 +190,68 @@ function CreateExamPageContent() {
 
   useEffect(() => {
     const typeParam = searchParams.get("type") as QuizType | null;
-    const personalizedQuizTypeParam = searchParams.get("personalizedQuizType") as
-      | "weakTopicFocused"
-      | "learningObjectiveFocused"
-      | "newTopicFocused"
-      | "comprehensive" | null;
-    const courseIdParam = searchParams.get("courseId");
-    const fileNameParam = searchParams.get("fileName"); 
-    const documentIdParam = searchParams.get("documentId");
+    const personalizedParam = searchParams.get("personalized") as string | null;
+    const documentIdParam = searchParams.get("documentId") as string | null;
+    const topicsParam = searchParams.get("topics") as string | null;
+    
+    // Belge ID ile geldiğini kontrol et
+    if (documentIdParam && !hasAttemptedInitialProcessing.current) {
+      console.log("[CreateExamPage] URL belge ID parametresi ile gelindi:", documentIdParam);
+      
+      // Varsayılan olarak hızlı sınav olarak ayarla
+      if (!typeParam && !quizTypeLocal) {
+        console.log("[CreateExamPage] Type parametresi yok, varsayılan olarak 'quick' seçiliyor");
+        setQuizTypeLocal("quick");
+      }
+      
+      // İlk konular verilmişse ayarla
+      if (topicsParam) {
+        try {
+          // URL'den gelen topics parametresini diziye dönüştür
+          const parsedTopics = decodeURIComponent(topicsParam).split(',');
+          if (parsedTopics && parsedTopics.length > 0) {
+            console.log("[CreateExamPage] URL'den gelen konular işleniyor:", parsedTopics);
+            // Konuların ön işlemesi burada yapılabilir
+          }
+        } catch (e) {
+          console.error("[CreateExamPage] Topics parametresi işlenirken hata:", e);
+        }
+      }
+      
+      // İlk işlemeyi yaptığımızı belirt
+      hasAttemptedInitialProcessing.current = true;
+    }
 
     if (typeParam) {
-      setQuizTypeLocal(typeParam);
-    }
-    if (personalizedQuizTypeParam) {
-      setPersonalizedTypeLocal(personalizedQuizTypeParam || undefined);
-    }
-    if (courseIdParam) {
-      setCourseIdLocal(courseIdParam);
-    }
-
-    if (startQuizParam === "true" && !hasAttemptedInitialProcessing.current) {
-      hasAttemptedInitialProcessing.current = true;
+      console.log(`[CreateExamPage] URL parametre algılandı: type=${typeParam}`);
       
-      console.log('[CreateExamPage useEffect startQuiz] Start. quizType:', typeParam, 'personalizedType:', personalizedQuizTypeParam, 'courseId:', courseIdParam, 'documentId:', documentIdParam);
-      
-      if (fileNameParam) {
-        console.log('[CreateExamPage useEffect startQuiz] fileNameParam:', fileNameParam);
-        if (!documentIdParam) {
-          console.warn("[CreateExamPage useEffect startQuiz] fileNameParam mevcut ama documentId eksik.");
+      // Geçerli bir quiz tipi mi kontrol et
+      if (typeParam === "quick" || typeParam === "personalized") {
+        console.log(`[CreateExamPage] Geçerli quiz tipi: ${typeParam}`);
+        setQuizTypeLocal(typeParam);
+        
+        // Personalized quiz alt tipini de kontrol et
+        if (typeParam === "personalized" && personalizedParam) {
+          const validPersonalizedTypes = ["weakTopicFocused", "learningObjectiveFocused", "newTopicFocused", "comprehensive"];
+          
+          if (validPersonalizedTypes.includes(personalizedParam)) {
+            console.log(`[CreateExamPage] Personalized quiz alt tipi: ${personalizedParam}`);
+            setPersonalizedTypeLocal(personalizedParam as any);
+          }
         }
+      } else {
+        console.error(`[CreateExamPage] Geçersiz quiz tipi: ${typeParam}`);
       }
-
-      let placeholderFile: File | null = null;
-      if (fileNameParam) {
-        try {
-          const emptyBlob = new Blob([''], { type: 'application/octet-stream' });
-          placeholderFile = new File([emptyBlob], fileNameParam, { type: 'application/octet-stream' });
-          console.log('[CreateExamPage useEffect startQuiz] URL file adından placeholder File nesnesi oluşturuldu:', placeholderFile.name);
-        } catch (error) {
-          console.error('[CreateExamPage useEffect startQuiz] Placeholder file oluşturma hatası:', error);
-        }
-      }
-
-      // URL'den gelen topicIds ve subTopicIds parametrelerini al
-      const topicIdsParam = searchParams.get("topicIds");
-      const subTopicIdsParam = searchParams.get("subTopicIds");
-      
-      // Eğer topicIds veya subTopicIds parametreleri boşsa, en az bir default konu oluştur
-      const topicIds = topicIdsParam?.split(',') || [];
-      const subTopicIds = subTopicIdsParam?.split(',') || [];
-      
-      // Eğer hiç konu yoksa ve document ID varsa, default bir konu ID'si oluştur
-      const defaultTopicId = documentIdParam ? `default-topic-${documentIdParam.substring(0, 8)}` : 'default-topic-general';
-      const defaultSubTopicId = defaultTopicId;
-      
-      // Varsayılan konu adı
-      const defaultTopicName = fileNameParam 
-        ? decodeURIComponent(fileNameParam).replace(/\.[^/.]+$/, "") // Dosya uzantısını kaldır
-        : 'Genel Konu';
-      
-      // Konu topicNameMap'ini oluştur
-      const topicNameMap: Record<string, string> = {};
-      if (topicIds.length === 0 && documentIdParam) {
-        topicNameMap[defaultTopicId] = defaultTopicName;
-      }
-
-      const resultData: ExamCreationResultInternal = {
-        file: placeholderFile,
-        quizType: typeParam || "quick",
-        personalizedQuizType: personalizedQuizTypeParam || undefined,
-        preferences: {
-          questionCount: parseInt(searchParams.get("questionCount") || "10"),
-          difficulty: (searchParams.get("difficulty") as GlobalQuizPreferences['difficulty']) || "mixed",
-          timeLimit: searchParams.get("timeLimit") ? parseInt(searchParams.get("timeLimit")!) : undefined,
-          topicIds: topicIds.length > 0 ? topicIds : documentIdParam ? [defaultTopicId] : [],
-          subTopicIds: subTopicIds.length > 0 ? subTopicIds : documentIdParam ? [defaultSubTopicId] : [],
-          courseId: courseIdParam || undefined,
-          personalizedQuizType: personalizedQuizTypeParam || undefined,
-        },
-        topicNameMap: Object.keys(topicNameMap).length > 0 ? topicNameMap : {},
-        documentId: documentIdParam || undefined,
-      };
-      console.log('[CreateExamPage useEffect startQuiz] Constructed resultData for processing:', JSON.stringify({
-        ...resultData,
-        file: resultData.file ? { name: resultData.file.name, size: resultData.file.size, type: resultData.file.type } : null
-      }, null, 2));
-      
-      setCreationResultInternal(resultData as Parameters<NonNullable<React.ComponentProps<typeof ExamCreationWizard>["onComplete"]>>[0]);
     }
-
-    // URL parametreleri üzerinden doğrudan sınav oluşturmaya geçme kontrolü
-    if (documentIdParam && startQuizParam === "true") {
-      console.log("Doğrudan sınav oluşturma modu. Document ID:", documentIdParam);
+    
+    // URL'de startQuiz parametresi varsa otomatik olarak başlatma moduna geç
+    if (startQuizParam) {
+      console.log(`[CreateExamPage] startQuiz parametresi algılandı: ${startQuizParam}`);
+      setProcessingQuiz(true);
+      setIsSubmitting(true);
       
-      // Bu fonksiyon için URL parametrelerinden konu seçimleri sağlandı mı?
-      const queryTopicIds = searchParams.get('topicIds') || '';
-      const querySubTopicIds = searchParams.get('subTopicIds') || '';
-      
-      const topicIds = queryTopicIds ? queryTopicIds.split(',') : [];
-      const subTopicIds = querySubTopicIds ? querySubTopicIds.split(',') : [];
-      
-      console.log("Doğrudan modda konu seçimleri:", { topicIds, subTopicIds });
-      
-      // Konu seçilmemiş ama belge var, varsayılan konu oluşturalım
-      if ((topicIds.length === 0 || subTopicIds.length === 0) && documentIdParam) {
-        console.log("URL parametrelerinde konu seçimleri bulunamadı, varsayılan konu oluşturuluyor");
-        
-        const docName = searchParams.get('fileName') || 'Belge';
-        const defaultTopicId = `doc-${documentIdParam.substring(0, 8)}`;
-        
-        // Varsayılan konu parametrelerini belirle
-        const defaultTopicParams = new URLSearchParams(searchParams);
-        defaultTopicParams.set('topicIds', defaultTopicId);
-        defaultTopicParams.set('subTopicIds', defaultTopicId);
-        
-        console.log("Varsayılan konu parametreleri:", defaultTopicParams.toString());
-        
-        // Yönlendirme
-        console.log("Varsayılan konu parametreleriyle yönlendiriliyor");
-        return redirect(`/exams/create?${defaultTopicParams.toString()}`);
-      }
+      // Otomatik olarak formu doldurulmuş kabul ederek sınav oluşturma başlatılabilir
+      // Bu genellikle direkt API'ye veri göndermeyi gerektirir
     }
   }, [searchParams, startQuizParam, router]);
 
@@ -366,6 +308,8 @@ function CreateExamPageContent() {
                 quizType={quizTypeLocal}
                 initialFormData={creationResultInternal}
                 onComplete={handleWizardComplete}
+                initialDocumentId={searchParams.get("documentId") || undefined}
+                initialTopics={searchParams.get("topics") ? decodeURIComponent(searchParams.get("topics") || "").split(',') : undefined}
               />
             </motion.div>
           )}
