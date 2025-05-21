@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -8,61 +9,57 @@ import {
   FiBook,
   FiFileText,
   FiTarget,
-  FiUser,
   FiSettings,
   FiLogIn,
   FiUserPlus,
+  FiBarChart2,
 } from "react-icons/fi";
 
 export default function Sidebar() {
   const { isDarkMode } = useTheme();
   const { isAuthenticated, isInitializing } = useAuth();
+  const pathname = usePathname();
 
   // Oturum durumuna göre farklı menü öğeleri
   const authenticatedMenuItems = [
     {
       href: "/",
       label: "Ana Sayfa",
-      icon: <FiHome className="mr-2" />,
+      icon: <FiHome size={18} />,
     },
     { 
       href: "/courses", 
       label: "Derslerim", 
-      icon: <FiBook className="mr-2" /> 
+      icon: <FiBook size={18} /> 
     },
     {
       href: "/exams",
       label: "Sınavlarım",
-      icon: <FiFileText className="mr-2" />,
+      icon: <FiFileText size={18} />,
     },
     {
       href: "/learning-goals",
       label: "Öğrenme Hedeflerim",
-      icon: <FiTarget className="mr-2" />,
+      icon: <FiTarget size={18} />,
     },
     { 
       href: "/performance", 
       label: "Performans Analizi", 
-      icon: <FiUser className="mr-2" /> 
-    },
-    {
-      href: "/settings",
-      label: "Ayarlar",
-      icon: <FiSettings className="mr-2" />,
+      icon: <FiBarChart2 size={18} /> 
     },
   ];
 
   const unauthenticatedMenuItems = [
-    { href: "/", label: "Ana Sayfa", icon: <FiHome className="mr-2" /> },
+    { href: "/", label: "Ana Sayfa", icon: <FiHome size={18} /> },
     {
       href: "/auth/login",
       label: "Giriş Yap",
-      icon: <FiLogIn className="mr-2" />,
+      icon: <FiLogIn size={18} />,
     },
     {
       href: "/auth/register",
       label: "Kayıt Ol",
-      icon: <FiUserPlus className="mr-2" />,
+      icon: <FiUserPlus size={18} />,
     },
   ];
 
@@ -70,6 +67,10 @@ export default function Sidebar() {
   const menuItems = isAuthenticated
     ? authenticatedMenuItems
     : unauthenticatedMenuItems;
+
+  const isActive = (href: string) => {
+    return pathname === href || pathname?.startsWith(`${href}/`);
+  };
 
   return (
     <aside
@@ -82,23 +83,57 @@ export default function Sidebar() {
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+              className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"
             ></div>
           ))}
         </div>
       ) : (
-        <nav className="flex flex-col gap-2 p-4">
-          {menuItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="py-2 px-3 rounded flex items-center text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex flex-col h-[calc(100%-70px)] justify-between">
+          {/* Ana menü öğeleri */}
+          <nav className="flex flex-col gap-1 p-3">
+            {menuItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
+                  isActive(item.href)
+                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/70"
+                }`}
+              >
+                <span className={`${isActive(item.href) ? "text-purple-500 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"} mr-3 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400`}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+                {isActive(item.href) && (
+                  <span className="ml-auto h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
+                )}
+              </Link>
+            ))}
+          </nav>
+          
+          {/* Ayarlar butonu - En altta ayrı bir grup olarak */}
+          {isAuthenticated && (
+            <div className="mt-auto p-3 border-t border-gray-100 dark:border-gray-800">
+              <Link
+                href="/settings"
+                className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
+                  isActive("/settings")
+                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/70"
+                }`}
+              >
+                <span className={`${isActive("/settings") ? "text-purple-500 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"} mr-3 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400`}>
+                  <FiSettings size={18} />
+                </span>
+                <span>Ayarlar</span>
+                {isActive("/settings") && (
+                  <span className="ml-auto h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
+                )}
+              </Link>
+            </div>
+          )}
+        </div>
       )}
     </aside>
   );

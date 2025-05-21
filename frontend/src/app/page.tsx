@@ -6,11 +6,8 @@ import { useRouter } from "next/navigation";
 import { QuizPreferences } from "@/types/quiz";
 import { Quiz } from "@/types";
 import {
-  FiArrowRight,
   FiPlay,
-  FiBook,
   FiTarget,
-  FiBarChart2,
   FiUser,
   FiClock
 } from "react-icons/fi";
@@ -133,18 +130,10 @@ export default function Home() {
       router.push(url);
     }
   };
-  
-  const navigateTo = (path: string) => {
-    if (!isAuthenticated) {
-      router.push(`/auth/login?returnUrl=${path}`);
-      return;
-    }
-    router.push(path);
-  };
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4">
         {showExamCreationWizard ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -153,7 +142,7 @@ export default function Home() {
           >
             <Suspense
               fallback={
-                <div className="flex justify-center my-10">
+                <div className="flex justify-center my-6">
                   <Spinner size="lg" />
                 </div>
               }
@@ -168,7 +157,7 @@ export default function Home() {
           <>
             {/* Hero Section with Enhanced Gradient Background */}
             <motion.div
-              className="relative overflow-hidden rounded-3xl mb-12 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 dark:from-indigo-700 dark:via-purple-700 dark:to-blue-700 shadow-2xl shadow-indigo-500/20"
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 dark:from-indigo-700 dark:via-purple-700 dark:to-blue-700 shadow-xl shadow-indigo-500/20"
               variants={gradientVariants}
               initial="hidden"
               animate="visible"
@@ -230,7 +219,7 @@ export default function Home() {
                 style={{ bottom: "20%", left: "25%" }}
               />
 
-              <div className="relative py-20 md:py-28 px-6 md:px-8">
+              <div className="relative py-14 md:py-20 px-6 md:px-8">
                 <div className="max-w-4xl mx-auto">
                   <div className="text-center">
                     <motion.div
@@ -238,7 +227,7 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible" 
-                      className="mb-4 inline-block"
+                      className="mb-3 inline-block"
                     >
                       <span className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium">
                         Yapay Zeka Destekli Quiz Platformu
@@ -250,7 +239,7 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.2)] tracking-tight leading-tight"
+                      className="text-3xl md:text-5xl font-bold mb-4 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.2)] tracking-tight leading-tight"
                     >
                       Kişiselleştirilmiş Quiz Platformu
                     </motion.h1>
@@ -260,7 +249,7 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="text-xl md:text-2xl text-indigo-100/90 mb-8 max-w-2xl mx-auto font-light leading-relaxed"
+                      className="text-lg md:text-xl text-indigo-100/90 mb-6 max-w-2xl mx-auto font-light leading-relaxed"
                     >
                       Bilgi seviyenizi ölçün, eksiklerinizi tespit edin ve öğrenme sürecinizi
                       kişiselleştirilmiş bir deneyimle optimize edin.
@@ -272,20 +261,20 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="grid md:grid-cols-2 gap-6 mb-10 max-w-4xl mx-auto"
+                      className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto"
                     >
                       {/* Hızlı Sınav Kartı */}
-                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="bg-blue-500/20 p-3 rounded-lg">
-                            <FiClock className="text-white text-xl" />
+                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all group">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="bg-blue-500/20 p-2.5 rounded-lg">
+                            <FiClock className="text-white text-lg" />
                           </div>
                           <span className="text-xs text-indigo-100/70 px-2 py-1 bg-white/10 rounded-full">
                             Üyelik Gerektirmez
                           </span>
                         </div>
-                        <h3 className="text-white text-xl font-medium mb-3">Hızlı Sınav</h3>
-                        <p className="text-indigo-100/80 mb-4">
+                        <h3 className="text-white text-lg font-medium mb-2">Hızlı Sınav</h3>
+                        <p className="text-indigo-100/80 mb-3 text-sm">
                           Üyelik gerektirmeden istediğiniz konuda bilgi seviyenizi hemen test edin. 
                           Seçtiğiniz alanda temel bilgilerinizi ölçmek için ideal.
                         </p>
@@ -295,7 +284,7 @@ export default function Home() {
                           initial="rest"
                           whileHover="hover"
                           whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center justify-center gap-2 bg-blue-600/80 hover:bg-blue-600 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300"
+                          className="w-full flex items-center justify-center gap-2 bg-blue-600/80 hover:bg-blue-600 text-white font-medium rounded-xl px-5 py-2.5 text-base transition-all duration-300"
                         >
                           <FiPlay className="text-lg" />
                           <span>Hızlı Sınav Başlat</span>
@@ -303,17 +292,17 @@ export default function Home() {
                       </div>
 
                       {/* Kişiselleştirilmiş Sınav Kartı */}
-                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="bg-purple-500/20 p-3 rounded-lg">
-                            <FiUser className="text-white text-xl" />
+                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all group">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="bg-purple-500/20 p-2.5 rounded-lg">
+                            <FiUser className="text-white text-lg" />
                           </div>
                           <span className="text-xs text-indigo-100/70 px-2 py-1 bg-white/10 rounded-full">
                             {isAuthenticated ? "Premium Özellik" : "Giriş Gerektirir"}
                           </span>
                         </div>
-                        <h3 className="text-white text-xl font-medium mb-3">Kişiselleştirilmiş Sınav</h3>
-                        <p className="text-indigo-100/80 mb-4">
+                        <h3 className="text-white text-lg font-medium mb-2">Kişiselleştirilmiş Sınav</h3>
+                        <p className="text-indigo-100/80 mb-3 text-sm">
                           Öğrenme geçmişiniz, performansınız ve hedeflerinize göre tamamen size özel 
                           sınavlar oluşturun ve ilerlemenizi takip edin.
                         </p>
@@ -323,15 +312,13 @@ export default function Home() {
                           initial="rest"
                           whileHover="hover"
                           whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300"
+                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-xl px-5 py-2.5 text-base transition-all duration-300"
                         >
                           <FiTarget className="text-lg" />
                           <span>{isAuthenticated ? "Kişiselleştirilmiş Sınav Oluştur" : "Giriş Yap ve Başla"}</span>
                         </motion.button>
                       </div>
                     </motion.div>
-
-                   
                   </div>
                 </div>
               </div>
