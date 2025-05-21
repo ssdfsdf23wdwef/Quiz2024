@@ -346,20 +346,24 @@ export class AuthController {
     );
 
     try {
+      // Her durumda cookie'leri temizle
+      this.clearAuthCookies(res);
+
       if (!userId || !refreshTokenFromCookie) {
         this.logger.warn(
-          'Çıkış yapılırken kullanıcı/token bilgisi bulunamadı',
+          "Çıkış yapılırken kullanıcı/token bilgisi bulunamadı, sadece cookie'ler temizlendi.",
           'AuthController.logout',
           __filename,
           308,
         );
-        throw new UnauthorizedException('Çıkış için oturum gereklidir');
+        // Hata fırlatmak yerine başarılı yanıt dön, çünkü cookie'ler temizlendi.
+        // İstemci tarafı zaten oturumu sonlandıracak.
+        return {
+          message: 'Oturum çerezleri temizlendi, çıkış isteği tamamlandı.',
+        };
       }
 
-      // Cookie'leri temizle
-      this.clearAuthCookies(res);
-
-      // Çıkış işlemini yap
+      // Refresh token varsa ve kullanıcı ID'si varsa, token'ı DB'den sil
       const result = await this.authService.logout(
         userId,
         refreshTokenFromCookie,

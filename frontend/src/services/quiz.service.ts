@@ -715,8 +715,12 @@ class QuizApiService {
     
     try {
       const apiPayload = adapterService.fromQuizSubmissionPayload(payload) as unknown as Record<string, unknown>;
+      // quizId'yi payload'dan çıkar, çünkü URL'de zaten var.
+      if ('quizId' in apiPayload) {
+        delete apiPayload.quizId;
+      }
       const endpoint = `${this.basePath}/${payload.quizId}/submit`;
-      logger.debug(`Sınav yanıtları gönderiliyor: ID=${payload.quizId}`, 'QuizApiService.submitQuiz', undefined, undefined, { quizId: payload.quizId, answerCount: payload.userAnswers.length });
+      logger.debug(`Sınav yanıtları gönderiliyor: ID=${payload.quizId}`, 'QuizApiService.submitQuiz', undefined, undefined, { quizId: payload.quizId, answerCount: Object.keys(payload.userAnswers).length });
       
       const response = await apiService.post<ApiAnalysisResult>(endpoint, apiPayload);
       

@@ -400,10 +400,11 @@ class AuthService {
       // Ardından Firebase'den çıkış yap
       await firebaseSignOut(auth);
 
-      // localStorage'dan token'ı temizle - cookie tamamen kaldırıldı, ancak localStorage'da varsa temizle
+      // localStorage'dan token'ları ve Zustand state'ini temizle
       if (typeof window !== 'undefined') {
         localStorage.removeItem("auth_token");
-        removeAuthCookie();
+        localStorage.removeItem("auth-storage"); // Zustand persist anahtarını temizle
+        removeAuthCookie(); // Varsa diğer cookie temizleme yardımcı fonksiyonu
       }
       
       // Çıkış işlemi başarılı

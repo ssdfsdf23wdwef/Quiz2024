@@ -1210,8 +1210,8 @@ export default function ExamCreationWizard({
             console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu çağrılıyor, quizId: ${quiz.id}`);
             onComplete(wizardResultData);
           } else {
-            console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor: /exams/${quiz.id}?mode=attempt`);
-            router.push(`/exams/${quiz.id}?mode=attempt`);
+            console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor: /exams/${quiz.id}/results`);
+            router.push(`/exams/${quiz.id}/results`);
           }
         } else {
           console.error("[ECW handleFinalSubmit] Sınav ID alınamadı!");
