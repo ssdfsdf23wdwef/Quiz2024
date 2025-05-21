@@ -168,12 +168,17 @@ export interface ApiQuizSubmissionPayloadDto {
   quizId: string;
   userAnswers: Record<string, string>;
   elapsedTime?: number | null;
+  quizType: string;
+  preferences: {
+    questionCount: number;
+    difficulty: string;
+    timeLimit?: number | null;
+    prioritizeWeakAndMediumTopics?: boolean | null;
+  };
+  questions: ApiQuestion[];
 }
 
-/**
- * AdapterService sınıfı
- * Backend API'si ile frontend arasındaki veri dönüşümlerini yönetir
- */
+
 class AdapterService {
   private static instance: AdapterService;
 
@@ -440,6 +445,12 @@ class AdapterService {
       quizId: payload.quizId,
       userAnswers: payload.userAnswers,
       elapsedTime: payload.elapsedTime ?? null,
+      quizType: payload.quizType || 'quick',
+      preferences: payload.preferences || {
+        questionCount: 10,
+        difficulty: 'mixed'
+      },
+      questions: payload.questions || []
     };
   }
 

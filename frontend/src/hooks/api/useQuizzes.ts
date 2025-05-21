@@ -50,25 +50,61 @@ export function useQuiz(quizId: string | undefined | null) {
 }
 
 /**
- * ID'ye göre sınav analiz sonuçlarını getirir
+ * Sınav analiz sonuçlarını getirir
  */
-export function useQuizAnalysis(quizId: string | undefined | null) {
+export function useQuizAnalysis(quizId: string | undefined) {
   return useQuery({
-    queryKey: ['quiz-analysis', quizId],
+    queryKey: ['quizAnalysis', quizId],
     queryFn: async () => {
-      if (!quizId) {
-        throw new Error('Sınav ID\'si belirtilmedi');
-      }
       try {
+        if (!quizId) {
+          throw new Error('Quiz ID belirtilmedi');
+        }
         return await quizService.getQuizAnalysis(quizId);
       } catch (error) {
-        ErrorService.showToast('Sınav analizi yüklenirken bir hata oluştu', 'error');
-        throw error;
+        // Detaylı hata kaydı
+        console.error(`Quiz analizi yüklenirken hata: ${quizId}`, error);
+        
+        // localStorage'dan quiz alalım ve onunla analiz yapmayı deneyelim
+        if (typeof window !== "undefined") {
+          try {
+            const storedQuiz = localStorage.getItem(`quizResult_${quizId}`);
+            if (storedQuiz) {
+              const quiz = JSON.parse(storedQuiz);
+              if (quiz.analysisResult) {
+                console.log("Analiz localStorage'dan elde edildi:", quiz.analysisResult);
+                return quiz.analysisResult;
+              }
+            }
+          } catch (storageError) {
+            console.error("Quiz sonuçları localStorage'dan çekilemedi:", storageError);
+          }
+        }
+        
+        // Hata mesajını daha bilgilendirici yapalım
+        if (error instanceof Error) {
+          throw new Error(`Quiz analizi alınamadı: ${error.message}`);
+        }
+        throw new Error('Quiz analizi alınamadı: Bilinmeyen hata');
       }
     },
     enabled: !!quizId,
     staleTime: 1000 * 60 * 5, // 5 dakika
-    refetchOnWindowFocus: false,
+    gcTime: 1000 * 60 * 60, // 1 saat
+    retry: (failureCount) => {
+      // İlk iki denemede tekrar dene (toplam 3 deneme)
+      // Ancak storage'da veri varsa tekrar denemeyi azalt
+      const hasLocalData = typeof window !== 'undefined' && 
+                            localStorage.getItem(`quizResult_${quizId}`) !== null;
+      
+      // LocalStorage'da veri varsa sadece 1 kez daha dene
+      if (hasLocalData) {
+        return failureCount < 1;
+      }
+      
+      // Normal durumda 2 kez dene (toplam 3 deneme)
+      return failureCount < 2;
+    },
   });
 }
 
@@ -77,7 +113,7 @@ export function useQuizAnalysis(quizId: string | undefined | null) {
  */
 export function useFailedQuestions(courseId?: string) {
   return useQuery({
-    queryKey: ['failed-questions', courseId],
+    queryKey: ['failedQuestions', courseId],
     queryFn: async () => {
       try {
         return await quizService.getFailedQuestions(courseId);
@@ -98,4 +134,4 @@ const quizApi = {
   useFailedQuestions,
 };
 
-export default quizApi; 
+export default quizApi;

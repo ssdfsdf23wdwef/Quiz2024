@@ -37,6 +37,7 @@ const API_ENDPOINTS = {
   FAILED_QUESTIONS: "/failed-questions",
   GENERATE_QUICK_QUIZ: "/quizzes/quick",
   GENERATE_PERSONALIZED_QUIZ: "/quizzes/personalized",
+  SAVE_QUICK_QUIZ: "/quizzes/save-quick-quiz",
 };
 
 interface BaseApiResponse {
@@ -714,15 +715,32 @@ class QuizApiService {
     flowTracker.markStart(flowStepId);
     
     try {
-      const apiPayload = adapterService.fromQuizSubmissionPayload(payload) as unknown as Record<string, unknown>;
-      // quizId'yi payload'dan çıkar, çünkü URL'de zaten var.
-      if ('quizId' in apiPayload) {
-        delete apiPayload.quizId;
+      // Adaptör servisini kullanarak gönderilecek veriyi hazırla
+      const apiPayload = adapterService.fromQuizSubmissionPayload(payload);
+      
+      // Gerekli alanların var olduğundan emin ol
+      if (!apiPayload.quizType) {
+        apiPayload.quizType = 'quick'; // Varsayılan quiz tipi
       }
+      
+      if (!apiPayload.preferences || typeof apiPayload.preferences !== 'object') {
+        apiPayload.preferences = {
+          questionCount: 10,
+          difficulty: 'mixed'
+        };
+      }
+      
+      if (!Array.isArray(apiPayload.questions)) {
+        apiPayload.questions = [];
+      }
+      
+      // quizId'yi payload'dan çıkar, çünkü URL'de zaten var.
+      const { quizId, ...apiPayloadWithoutId } = apiPayload as any;
+      
       const endpoint = `${this.basePath}/${payload.quizId}/submit`;
       logger.debug(`Sınav yanıtları gönderiliyor: ID=${payload.quizId}`, 'QuizApiService.submitQuiz', undefined, undefined, { quizId: payload.quizId, answerCount: Object.keys(payload.userAnswers).length });
       
-      const response = await apiService.post<ApiAnalysisResult>(endpoint, apiPayload);
+      const response = await apiService.post<ApiAnalysisResult>(endpoint, apiPayloadWithoutId);
       
       const analysisResult = this.getResponseData(response) as ApiAnalysisResult;
       
@@ -780,6 +798,22 @@ class QuizApiService {
         });
       ErrorService.handleError(apiError, "Sınav Silme");
       throw apiError;
+    }
+  }
+
+  /**
+   * Hızlı sınavı veritabanına kaydeder
+   */
+  async saveQuickQuiz(quiz: Quiz): Promise<Quiz> {
+    try {
+      const response = await apiService.post<ApiQuiz>(API_ENDPOINTS.SAVE_QUICK_QUIZ, quiz);
+      return adapterService.toQuiz(response);
+    } catch (error) {
+      console.error("[QuizApiService.saveQuickQuiz] Sınav kaydedilirken hata:", error);
+      throw new ApiError("Sınav kaydetme işlemi sırasında bir hata oluştu", { 
+        status: 500, 
+        original: { error, context: "saveQuickQuiz" }
+      });
     }
   }
 }

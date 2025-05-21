@@ -281,7 +281,39 @@ export class QuizGenerationService {
     }
 
     // 6. Prompt'u derle
-    return this.promptManager.compilePrompt(basePrompt, variables);
+    const compiledPrompt = this.promptManager.compilePrompt(
+      basePrompt,
+      variables,
+    );
+
+    // 7. Debug amacıyla prompt'u dosyaya kaydet
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const debugFilePath = path.join(process.cwd(), 'sınav.md');
+
+      let debugContent = `# Sınav Oluşturma Promptu\n\n`;
+      debugContent += `## Tarih: ${new Date().toISOString()}\n\n`;
+      debugContent += `## Trace ID: ${traceId}\n\n`;
+      debugContent += `## Alt Konular (${Array.isArray(options.subTopics) ? options.subTopics.length : 0} adet):\n`;
+      debugContent += `\`\`\`\n${topicsText}\n\`\`\`\n\n`;
+      debugContent += `## Soru Sayısı: ${options.questionCount}\n\n`;
+      debugContent += `## Zorluk: ${options.difficulty || 'medium'}\n\n`;
+      debugContent += `## Tam Prompt:\n\`\`\`\n${compiledPrompt}\n\`\`\`\n\n`;
+
+      fs.writeFileSync(debugFilePath, debugContent, 'utf8');
+      this.logger.info(
+        `[${traceId}] Sınav promptu dosyaya kaydedildi: ${debugFilePath}`,
+        'QuizGenerationService.prepareQuizPrompt',
+      );
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Debug dosyası oluşturulurken hata: ${error.message}`,
+        'QuizGenerationService.prepareQuizPrompt',
+      );
+    }
+
+    return compiledPrompt;
   }
 
   /**
@@ -328,6 +360,28 @@ export class QuizGenerationService {
         `[${traceId}] AI yanıtı alındı. Yanıt uzunluğu: ${result.text.length} karakter, token kullanımı: ${result.usage?.totalTokens || 'bilinmiyor'}`,
         'QuizGenerationService.generateAIContent',
       );
+
+      // AI yanıtını debug dosyasına ekle
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const debugFilePath = path.join(process.cwd(), 'sınav.md');
+
+        if (fs.existsSync(debugFilePath)) {
+          let appendContent = `\n\n## AI Yanıtı:\n\`\`\`json\n${result.text}\n\`\`\`\n\n`;
+
+          fs.appendFileSync(debugFilePath, appendContent, 'utf8');
+          this.logger.info(
+            `[${traceId}] AI yanıtı debug dosyasına eklendi`,
+            'QuizGenerationService.generateAIContent',
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `[${traceId}] Debug dosyasına AI yanıtı eklenirken hata: ${error.message}`,
+          'QuizGenerationService.generateAIContent',
+        );
+      }
 
       return result.text;
     }, this.RETRY_OPTIONS);
@@ -380,7 +434,7 @@ export class QuizGenerationService {
       const parsedJson = this.quizValidation.parseAIResponseToJSON(
         aiResponseText,
         metadata,
-      );
+      ) as any;
       console.timeEnd(`[QUIZ_DEBUG] [${traceId}] JSON'a dönüştürme süresi`);
 
       // JSON çıktısının özeti
@@ -397,22 +451,78 @@ export class QuizGenerationService {
           // Questions varsa içindeki soru sayısı
           if (
             parsedJson &&
-            'questions' in parsedJson &&
-            Array.isArray((parsedJson as any).questions)
+            parsedJson['questions'] &&
+            Array.isArray(parsedJson['questions'])
           ) {
             console.log(
-              `[QUIZ_DEBUG] [${traceId}] JSON içinde ${(parsedJson as any).questions.length} adet soru bulundu`,
+              `[QUIZ_DEBUG] [${traceId}] Soru sayısı: ${parsedJson['questions'].length}`,
             );
-          } else {
-            console.warn(
-              `[QUIZ_DEBUG] [${traceId}] JSON içinde 'questions' dizisi bulunamadı!`,
-            );
+
+            // Alt konuların dağılımını ve sayısını debug dosyasına ekleyelim
+            try {
+              const fs = require('fs');
+              const path = require('path');
+              const debugFilePath = path.join(process.cwd(), 'sınav.md');
+
+              if (fs.existsSync(debugFilePath)) {
+                // Alt konu bazlı sorular
+                const subTopicDistribution: Record<string, number> = {};
+
+                (parsedJson['questions'] as any[]).forEach((q: any) => {
+                  const subTopic = q.subTopicName || 'Belirtilmemiş';
+                  if (!subTopicDistribution[subTopic]) {
+                    subTopicDistribution[subTopic] = 0;
+                  }
+                  subTopicDistribution[subTopic]++;
+                });
+
+                let appendContent = `\n\n## İşlenen Sorular Analizi:\n\n`;
+                appendContent += `- Toplam Soru Sayısı: ${parsedJson['questions'].length}\n`;
+                appendContent += `- Alt Konu Dağılımı:\n\n`;
+
+                Object.entries(subTopicDistribution)
+                  .sort(([, a], [, b]) => (b as number) - (a as number))
+                  .forEach(([subTopic, count]) => {
+                    appendContent += `  - ${subTopic}: ${count} soru\n`;
+                  });
+
+                appendContent += `\n\n### Soru Örnekleri (Her Alt Konudan 1 Adet):\n\n`;
+
+                // Her alt konudan 1 örnek soru ekle
+                const seenSubTopics = new Set<string>();
+                (parsedJson['questions'] as any[]).forEach((q: any) => {
+                  const subTopic = q.subTopicName || 'Belirtilmemiş';
+                  if (!seenSubTopics.has(subTopic)) {
+                    seenSubTopics.add(subTopic);
+
+                    appendContent += `#### ${subTopic}:\n`;
+                    appendContent += `- Soru: ${q.questionText}\n`;
+                    appendContent += `- Seçenekler: ${q.options.join(' | ')}\n`;
+                    appendContent += `- Doğru Cevap: ${q.correctAnswer}\n`;
+                    appendContent += `- Zorluk: ${q.difficulty}\n\n`;
+                  }
+                });
+
+                fs.appendFileSync(debugFilePath, appendContent, 'utf8');
+                this.logger.info(
+                  `[${traceId}] İşlenen sorular analizi debug dosyasına eklendi`,
+                  'QuizGenerationService.processAIResponse',
+                );
+              }
+            } catch (error) {
+              this.logger.error(
+                `[${traceId}] Debug dosyasına soru analizi eklenirken hata: ${error.message}`,
+                'QuizGenerationService.processAIResponse',
+              );
+            }
           }
         }
       } else {
-        console.error(
-          `[QUIZ_DEBUG] [${traceId}] ADIM 1 SONUÇ: JSON'a dönüştürme başarısız, sonuç null veya undefined`,
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 1 SONUÇ: JSON'a dönüştürme başarısız, parsedJson null veya undefined`,
         );
+        // Geçerli JSON yanıtı yoksa, boş bir dizi döndür
+        return [];
       }
 
       // 2. Şema doğrulaması
@@ -446,6 +556,8 @@ export class QuizGenerationService {
         console.error(
           `[QUIZ_DEBUG] [${traceId}] ADIM 2 SONUÇ: Şema doğrulaması başarısız, sonuç null veya undefined`,
         );
+        // Şema doğrulaması başarısız olursa boş dizi döndür
+        return [];
       }
 
       // 3. Soruları dönüştür ve valide et

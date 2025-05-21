@@ -120,11 +120,21 @@ export default function ExamPage() {
     setIsCompleted(true);
 
     try {
+      // Önce sonuçları lokal olarak hesapla ve sakla (API hatası bile olsa sonuç gösterebilmek için)
+      const quizResult = calculateAndStoreResults();
+      
       // API'ye yanıtları gönder
       const payload = {
         quizId: quiz.id,
         userAnswers: userAnswers,
-        elapsedTime: quiz.preferences.timeLimit ? (quiz.preferences.timeLimit * 60) - (remainingTime || 0) : undefined
+        elapsedTime: quiz.preferences.timeLimit ? (quiz.preferences.timeLimit * 60) - (remainingTime || 0) : undefined,
+        // Backend DTO gereksinimlerini karşılamak için eklenen alanlar
+        quizType: quiz.quizType || 'quick', // quizType alanı eklendi
+        preferences: quiz.preferences || { // preferences nesnesi eklendi
+          questionCount: quiz.questions.length,
+          difficulty: 'mixed'
+        },
+        questions: quiz.questions || [] // questions dizisi eklendi
       };
       
       console.log(`🔄 Sınav yanıtları gönderiliyor:`, payload);
@@ -133,28 +143,30 @@ export default function ExamPage() {
         // API bağlantı hatalarında bile ilerleyebilmek için try/catch içine alındı
         const result = await quizService.submitQuiz(payload);
         console.log(`✅ Sınav yanıtları gönderildi:`, result);
+        
+        // Sunucu analiz sonuçlarını da kullanabiliriz, ama şimdilik lokal hesaplama yeterli
       } catch (apiError) {
         console.error("⚠️ API yanıt hatası (sonuçlar yine de gösterilecek):", apiError);
         ErrorService.showToast("Sınav sonuçları sunucuya kaydedilemedi, ancak sonuçlarınızı görebilirsiniz.", "warning");
-        // API hatası olsa da devam ediyoruz
+        // API hatası olsa da devam ediyoruz - lokalde hesaplanmış sonuçlarla
       }
 
-      // Sınav sonuçlarını hesapla ve localStorage'a kaydet (API hatası olsa da çalışır)
-      calculateAndStoreResults();
-
-      // Sonuç sayfasına yönlendir
+      // Sonuç sayfasına yönlendir - sonuçları zaten localStorage'a kaydettik
       router.push(`/quizzes/${quiz.id}/results`);
     } catch (error) {
       console.error("❌ Sınav işleme hatası:", error);
-      ErrorService.showToast("Sınav işlenirken bir hata oluştu. Lütfen tekrar deneyin.", "error");
+      ErrorService.showToast("Sınav sonuçları işlenirken bir hata oluştu. Sonuçları göstermeye çalışıyoruz.", "error");
       
-      // Hata olsa bile sonuçları hesaplamayı deneyelim
+      // Genel bir hata oluştu, lokal sonuçları göstermeyi deneyelim
       try {
+        // Eğer calculateAndStoreResults daha önce çağrılmadıysa şimdi çağır
         calculateAndStoreResults();
         router.push(`/quizzes/${quiz.id}/results`);
-      } catch {
+      } catch (resultError) {
+        console.error("❌❌ Sonuç hesaplama hatası:", resultError);
         // Son çare olarak mevcut sayfada sonuçları göster
         setShowResults(true);
+        ErrorService.showToast("Sonuçları göstermede sorun oluştu. Sayfayı yenileyip tekrar deneyebilirsiniz.", "error");
       }
     } finally {
       setIsSubmitting(false);
@@ -243,12 +255,13 @@ export default function ExamPage() {
       recommendations.push(`${performanceCategorization.medium.join(', ')} konularında daha fazla pratik yapmanız faydalı olabilir.`);
     }
 
-    const analysisResultData: AnalysisResult = {
+    const analysisResultData: AnalysisResult & { scorePercent?: number } = {
       overallScore,
       performanceBySubTopic,
       performanceCategorization,
       performanceByDifficulty,
       recommendations: recommendations.length > 0 ? recommendations : undefined,
+      scorePercent: overallScore, // Backend API'nin beklediği formatta eşleştirme
     };
 
     // Sonuçlar için Quiz nesnesini oluştur
@@ -260,11 +273,14 @@ export default function ExamPage() {
       elapsedTime: quiz.preferences.timeLimit ? (quiz.preferences.timeLimit * 60) - (remainingTime || 0) : undefined,
       analysisResult: analysisResultData,
       timestamp: new Date().toISOString(),
+      userAnswers: userAnswers, // Kullanıcı cevaplarını da saklayalım
     };
 
     // Sonuçları localStorage'a kaydet
     storeQuizResultsInStorage(quiz.id, quizResultData);
     console.log("✅ Sınav sonuçları localStorage'a kaydedildi:", quizResultData);
+    
+    return quizResultData; // Sonuçları döndür, böylece başka yerde de kullanabiliriz
   };
 
   const calculateScore = () => {
