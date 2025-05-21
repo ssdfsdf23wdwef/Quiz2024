@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
-import { Role } from '../../common/constants/roles.constants';
-import { LoggerService } from '../../common/services/logger.service';
+import { Role } from '../../constants/roles.constants';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Rol tanımlama dekoratörü

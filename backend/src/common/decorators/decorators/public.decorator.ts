@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { LoggerService } from '../../common/services/logger.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Public dekoratörü

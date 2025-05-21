@@ -1,4 +1,4 @@
-import { LoggerService } from '../../common/services/logger.service';
+import { LoggerService } from '../../services/logger.service';
 
 export * from './public.decorator';
 export * from './roles.decorator';

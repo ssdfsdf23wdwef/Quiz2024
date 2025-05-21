@@ -12,6 +12,14 @@ import { LoggerService } from './common/services/logger.service';
 import { FlowTrackerService } from './common/services/flow-tracker.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  CORS_WHITELIST,
+  HELMET_CONFIG,
+  COMPRESSION_CONFIG,
+  VALIDATION_PIPE_CONFIG,
+  GLOBAL_PREFIX,
+  DEFAULT_PORT,
+} from './common/constants';
 
 async function bootstrap() {
   // Log klasörünü oluştur
@@ -50,15 +58,7 @@ async function bootstrap() {
     origin: (origin, callback) => {
       // Geliştirme ortamında daha geniş izin ver
       const whitelist = [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://localhost:4000',
-        'http://localhost:5000',
-        'http://localhost:3002',
-        'http://localhost:8000',
-        'http://localhost',
-        'http://127.0.0.1',
-        'capacitor://localhost',
+        ...CORS_WHITELIST,
         configService.get('CORS_ORIGIN'),
       ].filter(Boolean);
 
@@ -96,52 +96,19 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Ek güvenlik ve performans middleware'leri
-  app.use(
-    helmet({
-      // Bazı helmet ayarlarını devre dışı bırakarak başlangıcı hızlandır
-      contentSecurityPolicy: process.env.NODE_ENV === 'production',
-      dnsPrefetchControl: false,
-      frameguard: true,
-      hidePoweredBy: true,
-      hsts: false,
-      ieNoOpen: false,
-      noSniff: true,
-      permittedCrossDomainPolicies: false,
-      referrerPolicy: false,
-      xssFilter: true,
-    }),
-  );
+  app.use(helmet(HELMET_CONFIG));
 
   // Sıkıştırma - düşük seviyede başlat, sonra optimize et
-  app.use(
-    compression({
-      level: 1, // Başlangıçta düşük seviye sıkıştırma ile daha hızlı başlatma
-      threshold: 1024, // 1KB'dan büyük yanıtları sıkıştır
-    }),
-  );
+  app.use(compression(COMPRESSION_CONFIG));
 
   // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // DTO'da tanımlanmamış özellikleri otomatik olarak kaldır
-      forbidNonWhitelisted: true, // DTO'da tanımlanmamış özellikler için hata döndür
-      transform: true, // Parametreleri otomatik olarak DTO tiplerine dönüştür
-      transformOptions: {
-        enableImplicitConversion: true, // Query parametrelerini otomatik olarak dönüştür
-      },
-      // Tüm validasyon mesajlarını önbelleğe alarak performans artışı sağlar
-      validationError: {
-        target: false,
-        value: false,
-      },
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe(VALIDATION_PIPE_CONFIG));
 
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // Health check endpoint
-  app.use('/api/health', (req, res) => {
+  app.use(`/${GLOBAL_PREFIX}/health`, (req, res) => {
     flowTracker.track('Health check isteği alındı', 'Bootstrap');
     res.status(200).json({
       status: 'ok',
@@ -151,7 +118,7 @@ async function bootstrap() {
   });
 
   // Global prefix
-  const globalPrefix = configService.get('API_PREFIX', 'api');
+  const globalPrefix = configService.get('API_PREFIX', GLOBAL_PREFIX);
   app.setGlobalPrefix(globalPrefix);
 
   // Swagger dokümanı - sadece geliştirme ortamında
@@ -159,7 +126,7 @@ async function bootstrap() {
     try {
       setupSwagger(app);
       flowTracker.track(
-        'Swagger dokümantasyonu etkinleştirildi: /api/docs',
+        `Swagger dokümantasyonu etkinleştirildi: /${globalPrefix}/docs`,
         'Bootstrap',
       );
     } catch (error) {
@@ -175,7 +142,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   // Uygulamayı dinlemeye başla
-  const port = configService.get('PORT', 3001);
+  const port = configService.get('PORT', DEFAULT_PORT);
   await app.listen(port);
 
   const appUrl = await app.getUrl();
@@ -200,14 +167,10 @@ async function bootstrap() {
     'Bootstrap',
     __filename,
   );
-  flowTracker.track(`API başlatıldı: ${appUrl}`, 'Bootstrap');
 }
 
-// Uygulamayı başlat ve hataları yakala
-void bootstrap().catch((err) => {
+bootstrap().catch((error) => {
   const loggerService = LoggerService.getInstance();
-  loggerService.logError(err, 'Bootstrap');
-
-  console.error('Uygulama başlatma hatası:', err.message);
-  process.exit(1);
+  loggerService.logError(error, 'Bootstrap.Catch');
+  process.exit(1); // Hata durumunda çıkış yap
 });

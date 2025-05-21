@@ -33,7 +33,7 @@ import { RequestWithUser } from '../common/types/request.type';
 import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
-import { User } from '../auth/decorators/user.decorator';
+import { User } from '../common/decorators/decorators/user.decorator';
 
 @Controller('quizzes')
 @ApiTags('quizzes')

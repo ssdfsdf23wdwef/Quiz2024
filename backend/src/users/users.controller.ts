@@ -69,7 +69,7 @@ export class UsersController {
         firebaseUid: { type: 'string', example: 'firebase_uid_example' },
         email: { type: 'string', example: 'kullanici@example.com' },
         firstName: { type: 'string', example: 'Ahmet' },
-        lastName: { type: 'string', example: 'Yılmaz' },
+        lastName: { type: 'string', example: 'Haman' },
         profileImageUrl: {
           type: 'string',
           example: 'https://example.com/profile.jpg',

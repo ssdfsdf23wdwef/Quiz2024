@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { LoggerService } from '../../common/services/logger.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Autentike olmuş kullanıcı bilgilerini çekmek için decorator

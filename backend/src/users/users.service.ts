@@ -12,20 +12,7 @@ import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
 
-// User için tip tanımı artık types klasöründen import ediliyor
-// export interface User {
-//   id: string;
-//   firebaseUid: string;
-//   email: string;
-//   firstName?: string;
-//   lastName?: string;
-//   profileImageUrl?: string;
-//   role: 'USER' | 'ADMIN';
-//   onboarded: boolean;
-//   createdAt: Date;
-//   updatedAt: Date;
-//   settings?: Record<string, any>;
-// }
+
 
 @Injectable()
 export class UsersService {
