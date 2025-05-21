@@ -26,3 +26,21 @@
 ------------------------------------------------------------
 [2025-05-21T08:31:44.854Z] [info] [LogSetup] Frontend log sistemi başlatıldı
 ------------------------------------------------------------
+[2025-05-21T09:52:28.507Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-21T09:52:28.504Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-21T10:17:28.723Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Network Error\n    at XMLHttpRequest.handleError (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:124:14)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:444:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:154:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:443:20)\n    at async CourseService.getCourses (webpack-internal:///(app-pages-browser)/./src/services/course.service.ts:32:29)"}
+------------------------------------------------------------
+[2025-05-21T10:17:28.708Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Network Error\n    at XMLHttpRequest.handleError (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:124:14)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:444:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:154:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:443:20)\n    at async CourseService.getCourses (webpack-internal:///(app-pages-browser)/./src/services/course.service.ts:32:29)"}
+------------------------------------------------------------
+[2025-05-21T10:37:05.560Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-21T10:37:05.555Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-21T10:59:34.476Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-21T10:59:34.474Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------

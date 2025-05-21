@@ -24,6 +24,20 @@ kişiselleştirmiş sınavda ise
 
 kişiselleştirmiş sınav için hızlı sınav için ama ek olarak kullanıcın eski verileri de kullanarak sınav oluşturuluyor.  
 
+====================
+
+
+ŞİMDİ sınav oluşuyor. ve çözüyorum ama sonuç sayfası yok. 
+şöyle olacak.
+sınav bitikten sonra otumatik olarak sonuç sayfası çıkacak. orda işte hangi soru yanlış ve hangisi doğr. ve hangi alt konu ne kadar başarmışım.
+
+istetiksel  sonuç ilgili her şey görünmeliyim. @prd.md 
+
+şöyle.
+
+backend forntende sınav bilgileri gönderirken. hangi soru hangi alt konuda ait da belirmeli. bu sonra hangi alt konuları kaç tane sorusu var ve bu alt konu başarı oran bakmak için.
+bir de sınav bittikten sonra. sonuçları çıkarmak için backende gitmeye gerek yok. frontend tarafı hesaplamalar olacak.
+
 
 
 

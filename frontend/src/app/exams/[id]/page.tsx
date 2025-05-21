@@ -6,9 +6,16 @@ import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { FiArrowLeft, FiCheck, FiClock, FiX } from "react-icons/fi";
-import { Quiz, Question, QuizType } from "@/types/quiz";
+import { Quiz, Question, QuizType, AnalysisResult, DifficultyLevel } from "@/types/quiz";
 import quizService from "@/services/quiz.service";
 import { ErrorService } from "@/services/error.service";
+
+// Sonuçları localStorage'a kaydetmek için fonksiyon
+const storeQuizResultsInStorage = (quizId: string, resultsToStore: Quiz) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`quizResult_${quizId}`, JSON.stringify(resultsToStore));
+  }
+};
 
 export default function ExamPage() {
   const router = useRouter();
@@ -121,16 +128,143 @@ export default function ExamPage() {
       };
       
       console.log(`🔄 Sınav yanıtları gönderiliyor:`, payload);
-      const result = await quizService.submitQuiz(payload);
-      console.log(`✅ Sınav yanıtları gönderildi:`, result);
+      
+      try {
+        // API bağlantı hatalarında bile ilerleyebilmek için try/catch içine alındı
+        const result = await quizService.submitQuiz(payload);
+        console.log(`✅ Sınav yanıtları gönderildi:`, result);
+      } catch (apiError) {
+        console.error("⚠️ API yanıt hatası (sonuçlar yine de gösterilecek):", apiError);
+        ErrorService.showToast("Sınav sonuçları sunucuya kaydedilemedi, ancak sonuçlarınızı görebilirsiniz.", "warning");
+        // API hatası olsa da devam ediyoruz
+      }
 
-      setShowResults(true);
+      // Sınav sonuçlarını hesapla ve localStorage'a kaydet (API hatası olsa da çalışır)
+      calculateAndStoreResults();
+
+      // Sonuç sayfasına yönlendir
+      router.push(`/quizzes/${quiz.id}/results`);
     } catch (error) {
-      console.error("❌ Sınav gönderme hatası:", error);
-      ErrorService.showToast("Sınav yanıtları gönderilemedi. Lütfen tekrar deneyin.", "error");
+      console.error("❌ Sınav işleme hatası:", error);
+      ErrorService.showToast("Sınav işlenirken bir hata oluştu. Lütfen tekrar deneyin.", "error");
+      
+      // Hata olsa bile sonuçları hesaplamayı deneyelim
+      try {
+        calculateAndStoreResults();
+        router.push(`/quizzes/${quiz.id}/results`);
+      } catch {
+        // Son çare olarak mevcut sayfada sonuçları göster
+        setShowResults(true);
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Sınav sonuçlarını hesapla ve localStorage'a kaydet
+  const calculateAndStoreResults = () => {
+    if (!quiz) return;
+    
+    let correctCount = 0;
+    const subTopicStats: Record<string, { total: number, correct: number }> = {};
+
+    quiz.questions.forEach(q => {
+      const userAnswer = userAnswers[q.id];
+      const isCorrect = userAnswer !== undefined && userAnswer === q.correctAnswer;
+
+      if (isCorrect) {
+        correctCount++;
+      }
+
+      const subTopicKey = q.normalizedSubTopic || q.subTopic || "Genel";
+      if (!subTopicStats[subTopicKey]) {
+        subTopicStats[subTopicKey] = { total: 0, correct: 0 };
+      }
+      subTopicStats[subTopicKey].total++;
+      if (isCorrect) {
+        subTopicStats[subTopicKey].correct++;
+      }
+    });
+
+    const totalQuestions = quiz.questions.length;
+    const overallScore = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+
+    const performanceBySubTopic: AnalysisResult['performanceBySubTopic'] = {};
+    const performanceCategorization: AnalysisResult['performanceCategorization'] = {
+      failed: [],
+      medium: [],
+      mastered: [],
+    };
+
+    Object.entries(subTopicStats).forEach(([name, stats]) => {
+      const scorePercent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+      const status: "pending" | "failed" | "medium" | "mastered" = scorePercent >= 75 ? "mastered" : scorePercent >= 50 ? "medium" : "failed";
+
+      performanceBySubTopic[name] = {
+        scorePercent,
+        status,
+        questionCount: stats.total,
+        correctCount: stats.correct,
+      };
+      
+      if (status === "failed") performanceCategorization.failed.push(name);
+      else if (status === "medium") performanceCategorization.medium.push(name);
+      else if (status === "mastered") performanceCategorization.mastered.push(name);
+    });
+    
+    const performanceByDifficulty: AnalysisResult['performanceByDifficulty'] = {
+      easy: { count: 0, correct: 0, score: 0},
+      medium: { count: 0, correct: 0, score: 0},
+      hard: { count: 0, correct: 0, score: 0},
+      mixed: { count: 0, correct: 0, score: 0},
+    };
+
+    quiz.questions.forEach(q => {
+      const difficultyKey = q.difficulty || 'mixed';
+      performanceByDifficulty[difficultyKey].count++;
+      if (userAnswers[q.id] === q.correctAnswer) {
+        performanceByDifficulty[difficultyKey].correct++;
+      }
+    });
+
+    (Object.keys(performanceByDifficulty) as DifficultyLevel[]).forEach(key => {
+      const stats = performanceByDifficulty[key];
+      if (stats.count > 0) {
+        stats.score = Math.round((stats.correct / stats.count) * 100);
+      }
+    });
+
+    // Açıklayıcı öneriler ekle
+    const recommendations = [];
+    if (performanceCategorization.failed.length > 0) {
+      recommendations.push(`${performanceCategorization.failed.join(', ')} konularını tekrar etmeniz önerilir.`);
+    }
+    if (performanceCategorization.medium.length > 0) {
+      recommendations.push(`${performanceCategorization.medium.join(', ')} konularında daha fazla pratik yapmanız faydalı olabilir.`);
+    }
+
+    const analysisResultData: AnalysisResult = {
+      overallScore,
+      performanceBySubTopic,
+      performanceCategorization,
+      performanceByDifficulty,
+      recommendations: recommendations.length > 0 ? recommendations : undefined,
+    };
+
+    // Sonuçlar için Quiz nesnesini oluştur
+    const quizResultData: Quiz = {
+      ...quiz,
+      score: overallScore,
+      correctCount: correctCount,
+      totalQuestions: totalQuestions,
+      elapsedTime: quiz.preferences.timeLimit ? (quiz.preferences.timeLimit * 60) - (remainingTime || 0) : undefined,
+      analysisResult: analysisResultData,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Sonuçları localStorage'a kaydet
+    storeQuizResultsInStorage(quiz.id, quizResultData);
+    console.log("✅ Sınav sonuçları localStorage'a kaydedildi:", quizResultData);
   };
 
   const calculateScore = () => {
