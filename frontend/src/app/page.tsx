@@ -56,26 +56,30 @@ const buttonHover = {
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitializing: isAuthInitializing } = useAuth();
   const [showExamCreationWizard, setShowExamCreationWizard] = useState(false);
   const [currentQuizType, setCurrentQuizType] = useState<"quick" | "personalized">("personalized");
 
   const handleStartQuickQuiz = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !isAuthInitializing) {
       router.push("/auth/login?returnUrl=/exams/create?type=quick");
       return;
     }
-    setShowExamCreationWizard(true);
-    setCurrentQuizType("quick");
+    if (isAuthenticated && !isAuthInitializing) {
+      setShowExamCreationWizard(true);
+      setCurrentQuizType("quick");
+    }
   };
 
   const handleStartPersonalizedQuiz = () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !isAuthInitializing) {
       router.push("/auth/login?returnUrl=/exams/create?type=personalized");
       return;
     }
-    setShowExamCreationWizard(true);
-    setCurrentQuizType("personalized");
+    if (isAuthenticated && !isAuthInitializing) {
+      setShowExamCreationWizard(true);
+      setCurrentQuizType("personalized");
+    }
   };
 
   const handleExamCreationComplete = (result: {
@@ -132,6 +136,14 @@ export default function Home() {
       router.push(url);
     }
   };
+  
+  if (isAuthInitializing) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <PageTransition>
