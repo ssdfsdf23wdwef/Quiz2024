@@ -122,9 +122,9 @@ export const useAuth = () => {
       // AuthContext üzerinden çıkış yap
       await authContext.signOut();
       
-      // Token'ları temizle ve giriş sayfasına yönlendir
-      console.log("✅ [useAuth] Çıkış işlemi başarılı, login sayfasına yönlendiriliyor");
-      router.push("/auth/login");
+      // Token'ları temizle ve ana sayfaya yönlendir
+      console.log("✅ [useAuth] Çıkış işlemi başarılı, ana sayfaya yönlendiriliyor");
+      router.push("/");
     } catch (error) {
       console.error("❌ [useAuth] Çıkış hatası:", error);
       setAuthError("Çıkış yapılırken bir hata oluştu.");

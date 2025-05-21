@@ -10,18 +10,21 @@ import {
   FiFileText,
   FiTarget,
   FiSettings,
-  FiLogIn,
-  FiUserPlus,
   FiBarChart2,
 } from "react-icons/fi";
 
 export default function Sidebar() {
   const { isDarkMode } = useTheme();
-  const { isAuthenticated, isInitializing } = useAuth();
+  const { isInitializing } = useAuth();
   const pathname = usePathname();
 
-  // Oturum durumuna göre farklı menü öğeleri
-  const authenticatedMenuItems = [
+  // Eğer /auth/login sayfasındaysak, sidebar'ı render etme
+  if (pathname === "/auth/login") {
+    return null;
+  }
+
+  // Her zaman bu menü öğeleri gösterilecek
+  const menuItems = [
     {
       href: "/",
       label: "Ana Sayfa",
@@ -48,25 +51,6 @@ export default function Sidebar() {
       icon: <FiBarChart2 size={18} /> 
     },
   ];
-
-  const unauthenticatedMenuItems = [
-    { href: "/", label: "Ana Sayfa", icon: <FiHome size={18} /> },
-    {
-      href: "/auth/login",
-      label: "Giriş Yap",
-      icon: <FiLogIn size={18} />,
-    },
-    {
-      href: "/auth/register",
-      label: "Kayıt Ol",
-      icon: <FiUserPlus size={18} />,
-    },
-  ];
-
-  // Kullanıcının oturum durumuna göre menü öğelerini seç
-  const menuItems = isAuthenticated
-    ? authenticatedMenuItems
-    : unauthenticatedMenuItems;
 
   const isActive = (href: string) => {
     return pathname === href || pathname?.startsWith(`${href}/`);
@@ -113,26 +97,24 @@ export default function Sidebar() {
           </nav>
           
           {/* Ayarlar butonu - En altta ayrı bir grup olarak */}
-          {isAuthenticated && (
-            <div className="mt-auto p-3 border-t border-gray-100 dark:border-gray-800">
-              <Link
-                href="/settings"
-                className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
-                  isActive("/settings")
-                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/70"
-                }`}
-              >
-                <span className={`${isActive("/settings") ? "text-purple-500 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"} mr-3 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400`}>
-                  <FiSettings size={18} />
-                </span>
-                <span>Ayarlar</span>
-                {isActive("/settings") && (
-                  <span className="ml-auto h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
-                )}
-              </Link>
-            </div>
-          )}
+          <div className="mt-auto p-3 border-t border-gray-100 dark:border-gray-800">
+            <Link
+              href="/settings"
+              className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
+                isActive("/settings")
+                  ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/70"
+              }`}
+            >
+              <span className={`${isActive("/settings") ? "text-purple-500 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"} mr-3 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400`}>
+                <FiSettings size={18} />
+              </span>
+              <span>Ayarlar</span>
+              {isActive("/settings") && (
+                <span className="ml-auto h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
+              )}
+            </Link>
+          </div>
         </div>
       )}
     </aside>

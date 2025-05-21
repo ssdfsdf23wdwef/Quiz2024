@@ -7,9 +7,7 @@ import {
   FiSun,
   FiLogIn,
   FiUser,
-  FiKey,
   FiLogOut,
-  FiUserPlus,
 } from "react-icons/fi";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/auth/useAuth";
@@ -148,26 +146,6 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                   >
                     <FiLogIn className="mr-1" />
                     Giriş Yap
-                  </Button>
-                </Link>
-                <Link href="/auth/register" prefetch={true}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-700 dark:text-gray-300 flex items-center"
-                  >
-                    <FiUserPlus className="mr-1" />
-                    Kayıt Ol
-                  </Button>
-                </Link>
-                <Link href="/auth/forgot-password" prefetch={true}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-700 dark:text-gray-300 flex items-center"
-                  >
-                    <FiKey className="mr-1" />
-                    Şifremi Unuttum
                   </Button>
                 </Link>
               </div>
