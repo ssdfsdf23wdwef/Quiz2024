@@ -10,9 +10,10 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 // ----------------------------------------------------
 
 **📥 GİRDİLER:**
-- **Konu(lar):** {{TOPICS}}
+- **Konu Bilgileri:** {{TOPICS}}
+  *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
 - **Eğitim İçeriği:** {{DOCUMENT_TEXT}}
-- **Soru Sayısı:** {{COUNT}} soru
+- **İstenen Toplam Soru Sayısı:** {{COUNT}} soru
 - **Zorluk Seviyesi:** {{DIFFICULTY}}
 
 // ----------------------------------------------------
@@ -21,8 +22,8 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **🔍 İÇERİK ANALİZ ADIMLARI:**
 1. Önce metni dikkatlice oku ve anla
-2. Ana konuları ve alt konuları belirle (konu verilmemişse içerikten çıkar)
-3. Her bir alt konu için anahtar kavramları tespit et
+2. "Konu Bilgileri" bölümündeki "AKTİF KONULAR (SORU ÜRETİLECEK)" listesindeki alt konulara odaklan
+3. Her bir aktif alt konu için anahtar kavramları tespit et
 4. Her kavram için öğrenilmesi gereken temel noktaları listele
 5. İçeriğin mantık akışını ve bölümleri arasındaki ilişkiyi kavra
 
@@ -35,6 +36,17 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 // ----------------------------------------------------
 // ------------- SORU OLUŞTURMA KURALLARI ------------
 // ----------------------------------------------------
+
+**⭐ ALT KONU DAĞILIMI VE SORU KURGULAMASI:**
+1. SADECE "Konu Bilgileri" bölümündeki "AKTİF KONULAR (SORU ÜRETİLECEK)" listesinde belirtilen alt konular için soru üret
+2. "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" listesindeki konulardan KESİNLİKLE soru ÜRETME
+3. Her aktif alt konu için tam olarak o alt konu yanında belirtilen sayıda soru üret
+   Örneğin: "Nesne Yönelimli Programlama (3 soru)" ifadesi, bu konu için tam 3 soru oluşturulmalıdır
+4. Toplam soru sayısının {{COUNT}} olduğundan emin ol (Bu sayı, aktif konulardaki toplam soru sayısına eşit olmalıdır)
+5. Belirtilen aktif alt konular ve soru sayılarına MUTLAKA UYULMALIDIR
+6. Her sorunun hangi alt konuya ait olduğu JSON çıktısında "subTopicName" alanında AÇIKÇA belirtilmelidir
+7. Her soruyu üretirken, o sorunun hangi aktif alt konudan geldiğini mutlaka kontrol et
+8. Soru dağılımları dengesiz olabilir! Örneğin: "Veri Yapıları" için 5 soru, "Algoritma Analizi" için 2 soru
 
 **📊 ZORLUK SEVİYELERİ (SADECE İNGİLİZCE KULLAN):**
 - "easy" (kolay): Temel hatırlama ve anlama soruları
@@ -92,9 +104,45 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
       "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
       "correctAnswer": "Seçenek B",
       "explanation": "Doğru cevabın açıklaması",
-      "subTopicName": "Alt Konu Adı",
-      "normalizedSubTopicName": "alt_konu_adi",
+      "subTopicName": "Nesne Yönelimli Programlama",
+      "normalizedSubTopicName": "nesne_yonelimli_programlama",
       "difficulty": "medium"
+    },
+    {
+      "id": "q2",
+      "questionText": "İkinci soru metni?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Doğru cevabın açıklaması",
+      "subTopicName": "Nesne Yönelimli Programlama",
+      "normalizedSubTopicName": "nesne_yonelimli_programlama",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q3",
+      "questionText": "Üçüncü soru metni?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "applying",
+      "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      "correctAnswer": "Seçenek C",
+      "explanation": "Doğru cevabın açıklaması",
+      "subTopicName": "Nesne Yönelimli Programlama",
+      "normalizedSubTopicName": "nesne_yonelimli_programlama",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q4",
+      "questionText": "Başka bir alt konudan soru?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "analyzing",
+      "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      "correctAnswer": "Seçenek D",
+      "explanation": "Doğru cevabın açıklaması",
+      "subTopicName": "Algoritma Analizi",
+      "normalizedSubTopicName": "algoritma_analizi",
+      "difficulty": "hard"
     }
   ]
 }
@@ -118,7 +166,14 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 - JSON formatının doğruluğundan emin ol
 - Sorular farklı bilişsel düzeyleri içermeli
 - Tüm gerekli alanlar doldurulmalı
-- Oluşturulan sorular, istenen sayıda ve dağılımda olmalı
+- ALT KONU DAĞILIMI ve SORU SAYISI:
+  1. Toplam soru sayısı tam olarak {{COUNT}} adet olmalı (aktif konulardaki toplam soru sayısıyla eşleşmeli)
+  2. "Konu Bilgileri" bölümündeki "AKTİF KONULAR (SORU ÜRETİLECEK)" listesindeki HER BİR alt konu için belirtilen SORU SAYISINA MUTLAKA uyulmalı
+     Örneğin: "Veri Tabanı Sistemleri (3 soru)" yazıyorsa, bu konudan tam 3 soru üretilmeli
+  3. "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" listesindeki konulardan KESİNLİKLE soru üretilmediğinden emin ol
+  4. Her sorunun "subTopicName" alanında, o sorunun geldiği alt konunun TAM ADI belirtilmeli
+     Örneğin: "Nesne Yönelimli Programlama", "Veri Yapıları" gibi konu adları aynen kullanılmalı
+- Her alt konu için soruların zorluk dağılımı dengeli olmalı
 
 // ====================================================
 // ================ PROMPT SONU ======================

@@ -31,8 +31,9 @@ Sen bir eğitim içeriği analisti olarak görev yapacaksın. Verilen bir eğiti
 2. Ana konular, metindeki majör bölümleri temsil etmeli
 3. Alt konular, ana konuların alt başlıkları olmalı
 4. Her ana konu en az 1, en fazla 5 alt konu içermeli
-5. Toplam en az 3, en fazla 10 ana konu belirle
+5. Toplam ana konu sayısı en az 3, en fazla 10 olmalı
 6. Konu başlıkları 2-6 kelime uzunluğunda ve açıklayıcı olmalı
+7. Toplam alt konu sayısı en fazla 10 adet olmalı (eğer daha fazla tespit edersen, önem sırasına göre en önemli 10 alt konuyu seç)
 
 **⛔ KESİNLİKLE KONU LİSTESİNE DAHİL ETME:**
 * Yapısal/Navigasyonel Başlıklar: "İçindekiler", "Giriş", "Özet", "Sonuç", "Referanslar" 

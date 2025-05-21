@@ -46,6 +46,149 @@ export class QuizGenerationService {
   }
 
   /**
+   * Alt konulara göre soru dağılımını hesaplar.
+   * Her alt konuya en az 2 soru atanır ve kalan sorular alt konulara dengeli şekilde dağıtılır.
+   * Eğer istenen soru sayısı, desteklenebilecek alt konu sayısından azsa,
+   * sadece soru sayısı / 2 kadar alt konu kullanılır.
+   *
+   * @param subTopics Alt konular dizisi
+   * @param questionCount İstenen toplam soru sayısı
+   * @returns Her alt konuya düşen soru sayısını içeren bir nesneler dizisi
+   */
+  distributeQuestionsAmongSubtopics(
+    subTopics: string[],
+    questionCount: number,
+  ): { subTopicName: string; count: number; status: string }[] {
+    // Geçersiz giriş kontrolü
+    if (!Array.isArray(subTopics) || subTopics.length === 0) {
+      throw new BadRequestException('Alt konu listesi boş olamaz');
+    }
+
+    if (questionCount < 2) {
+      throw new BadRequestException('Soru sayısı en az 2 olmalıdır');
+    }
+
+    // Alt konu sayısını en fazla 10 ile sınırla
+    let processedSubTopics = [...subTopics];
+    if (processedSubTopics.length > 10) {
+      this.logger.warn(
+        `Alt konu sayısı (${processedSubTopics.length}) 10'dan fazla. İlk 10 alt konu kullanılacak.`,
+        'distributeQuestionsAmongSubtopics',
+      );
+      processedSubTopics = processedSubTopics.slice(0, 10);
+    }
+
+    // Alt konu isimlerini güzelleştir
+    const beautifySubTopicName = (name: string): string => {
+      if (!name || typeof name !== 'string') return 'Geçersiz Alt Konu Adı';
+
+      // Özel Türkçe karakter dönüşümleri
+      const turkishReplacements = {
+        'l-k': 'lık',
+        'l-l-k': 'lülük',
+        'g-': 'ği',
+        '-': ' ',
+        'sa-l-k': 'sağlık',
+        'g-venlik': 'güvenlik',
+        'y-k-ml-l': 'yükümlülük',
+        'de-erlendirilmesi': 'değerlendirilmesi',
+        nlemler: 'önlemler',
+      };
+
+      // Tireli ifadeleri düzelt
+      let processedName = name.toLowerCase();
+      Object.entries(turkishReplacements).forEach(([key, value]) => {
+        processedName = processedName.replace(new RegExp(key, 'g'), value);
+      });
+
+      // Kelimeleri büyük harfle başlat
+      return processedName
+        .split(' ')
+        .map((word) => {
+          if (!word) return '';
+          return (
+            word.charAt(0).toLocaleUpperCase('tr-TR') +
+            word.slice(1).toLocaleLowerCase('tr-TR')
+          );
+        })
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+
+    const beautifiedSubTopics = processedSubTopics.map(beautifySubTopicName);
+
+    // Kullanılabilecek maksimum alt konu sayısını hesapla
+    // (Her alt konu en az 2 soru almalı)
+    const maxSubTopics = Math.floor(questionCount / 2);
+
+    // Eğer istenen soru sayısı, tüm alt konulara en az 2 soru vermeye yetmiyorsa,
+    // sadece desteklenebilecek kadar alt konu kullanılır
+    const activeSubTopicCount = Math.min(
+      beautifiedSubTopics.length,
+      maxSubTopics,
+    );
+
+    // İlk olarak, kullanılacak alt konuları seç (dizinin başından)
+    const activeTopicsForDistribution = beautifiedSubTopics.slice(
+      0,
+      activeSubTopicCount,
+    );
+    const pendingTopicsForDistribution =
+      beautifiedSubTopics.slice(activeSubTopicCount);
+
+    // Her aktif alt konuya minimum 2 soru atama
+    let remainingQuestions = questionCount - activeSubTopicCount * 2;
+    if (remainingQuestions < 0) remainingQuestions = 0; // Negatif olmasını engelle
+
+    // Kalan soruları dengeli dağıt
+    let result = activeTopicsForDistribution.map((topic) => ({
+      subTopicName: topic,
+      count: activeSubTopicCount > 0 ? 2 : 0, // Eğer hiç aktif konu yoksa 0 ata
+      status: 'active',
+    }));
+
+    // Eğer hiç aktif alt konu yoksa (örn. questionCount = 1 ise, activeSubTopicCount = 0 olabilir)
+    // ve result boşsa, bu durumda tüm konuları pending yap ve soru sayısını 0 yap.
+    if (activeSubTopicCount === 0 && questionCount > 0) {
+      return beautifiedSubTopics.map((topic) => ({
+        subTopicName: topic,
+        count: 0,
+        status: 'pending',
+      }));
+    }
+
+    // Kalan soruları dağıt (önce ilk alt konulara ekstra sorular gelecek şekilde)
+    let index = 0;
+    while (remainingQuestions > 0 && activeSubTopicCount > 0) {
+      result[index % activeSubTopicCount].count++;
+      remainingQuestions--;
+      index++;
+    }
+
+    // Beklemede kalan alt konuları ekle
+    const pendingResult = pendingTopicsForDistribution.map((topic) => ({
+      subTopicName: topic,
+      count: 0,
+      status: 'pending',
+    }));
+
+    // Hem aktif hem beklemede olan alt konuları birleştir
+    // Aktif ama soru sayısı 0 olanları pending olarak güncelle
+    result = result.map((topic) => {
+      if (topic.count === 0) {
+        return { ...topic, status: 'pending' };
+      }
+      return topic;
+    });
+
+    return [...result, ...pendingResult].filter(
+      (value, index, self) =>
+        index === self.findIndex((t) => t.subTopicName === value.subTopicName),
+    ); // Benzersizliği sağla
+  }
+
+  /**
    * Quiz soruları oluşturur
    * @param options Quiz oluşturma seçenekleri
    * @returns Quiz soruları dizisi
@@ -56,6 +199,46 @@ export class QuizGenerationService {
     const traceId =
       options.traceId ||
       `quiz-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    // Alt konuların dağıtımını yap
+    let formattedSubTopics = options.subTopics;
+    if (
+      Array.isArray(options.subTopics) &&
+      typeof options.subTopics[0] === 'string' &&
+      options.subTopics.length > 0
+    ) {
+      // Alt konular basit bir string dizisi ise, dağıtımı yap
+      formattedSubTopics = this.distributeQuestionsAmongSubtopics(
+        options.subTopics as string[],
+        options.questionCount,
+      );
+
+      this.logger.debug(
+        `[${traceId}] Alt konuların soru dağılımı yapıldı: ${JSON.stringify(formattedSubTopics)}`,
+        'QuizGenerationService.generateQuizQuestions',
+      );
+
+      // Sadece aktif durumda olan alt konuları kullan
+      const activeSubTopics = (
+        formattedSubTopics as {
+          subTopicName: string;
+          count: number;
+          status: string;
+        }[]
+      ).filter((topic) => topic.status === 'active');
+
+      // Konsola detaylı bilgi ver
+      console.log(
+        `[QUIZ_DEBUG] Alt konuların dağılımı: Toplam=${options.subTopics.length}, Aktif=${activeSubTopics.length}, Soru Sayısı=${options.questionCount}`,
+        activeSubTopics.map((t) => `${t.subTopicName}: ${t.count} soru`),
+      );
+
+      // Yeni options objesini güncelle
+      options = {
+        ...options,
+        subTopics: formattedSubTopics,
+      };
+    }
 
     // Metadata oluştur - aynı tipte alanları direkt aktarıp diğerlerini ayrıca ekle
     const metadata: QuizMetadata = {
@@ -673,17 +856,58 @@ export class QuizGenerationService {
       subTopics[0] &&
       'subTopicName' in subTopics[0]
     ) {
-      return (
-        subTopics as { subTopicName: string; count: number; status?: string }[]
-      )
-        .map(
-          (t) =>
-            `${t.subTopicName} (${t.count} soru, durum: ${t.status || 'pending'})`,
-        )
-        .join('\n');
+      const typedSubTopics = subTopics as {
+        subTopicName: string;
+        count: number;
+        status?: string;
+      }[];
+
+      // Aktif olanları (soru sayısı > 0) ve beklemede olanları (soru sayısı = 0 veya status = 'pending') ayır
+      const activeTopics = typedSubTopics.filter(
+        (t) => t.status === 'active' && t.count > 0,
+      );
+      const pendingTopics = typedSubTopics.filter(
+        (t) => t.status === 'pending' || t.count === 0,
+      );
+
+      let result = '';
+
+      if (activeTopics.length > 0) {
+        const totalActiveQuestions = activeTopics.reduce(
+          (sum, topic) => sum + topic.count,
+          0,
+        );
+        result += '## AKTİF KONULAR (SORU ÜRETİLECEK)\n\n';
+        result +=
+          '**Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**\n\n';
+        activeTopics.forEach((t, index) => {
+          result += `${index + 1}. **${t.subTopicName}** (${t.count} soru)\n`;
+        });
+        result += `\n**Toplam Aktif: ${activeTopics.length} alt konu, ${totalActiveQuestions} soru**\n`;
+      } else {
+        result +=
+          '## AKTİF KONULAR (SORU ÜRETİLECEK)\n\nSoru üretilecek aktif konu bulunamadı.\n';
+      }
+
+      if (pendingTopics.length > 0) {
+        result += '\n## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)\n\n';
+        result += '**Aşağıdaki konulardan soru üretilmeyecektir:**\n\n';
+        pendingTopics.forEach((t, index) => {
+          result += `${index + 1}. ${t.subTopicName}\n`;
+        });
+      } else {
+        result +=
+          '\n## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)\n\nBekleyen konu yok.\n';
+      }
+
+      return result;
     }
 
-    // String dizisi ise
+    // String dizisi ise (Bu durum artık distributeQuestionsAmongSubtopics tarafından ele alındığı için nadir olmalı)
+    this.logger.warn(
+      'formatTopics: Alt konular string dizisi olarak geldi, bu beklenen bir durum değil. Basit formatlama yapılacak.',
+      'QuizGenerationService.formatTopics',
+    );
     return (subTopics as string[]).join(', ');
   }
 

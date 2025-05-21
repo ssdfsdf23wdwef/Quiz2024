@@ -46,3 +46,31 @@ bir de sınav bittikten sonra. sonuçları çıkarmak için backende gitmeye ger
 
 alt konular soru sayısı dağıtacak. eşitle.ve bu alt konular frontendde dağıtacak
 
+
+
+
+şimdi yeni bi r görev yapacağız. 
+
+biz belge verdikten sonra alt konular tespit edilir. ve bunlara dayanarak sorular oluşturuyoruz. 
+bundan sonra böyle yapacağız:
+örnekle anlatım.
+sistem belgede 5 alt konu tespit et ve kullanıcı hepsi seçilmiş bıraktı.
+sistem frontendde seçilmi alt konuları backend alır ve ve tercihlere bakar. ki kullanıcı kaç soru seçmiş. 
+diyelim ki kullanıcı 12 sor seçmiş
+elimizde 5 alt konu ve 12 soru oluşturacağız.
+
+bu 12 soru 5 alt konuya dağıtacağız.
+1.  alt konu 3 soru
+2.  alt konu 3 soru
+3.  alt konu 2 soru
+4.  alt konu 2 soru
+5.  alt konu 2 soru
+
+böyle dağıtacak.
+
+şunu anlıyoruz. 
+her alt konu en az iki soru almalı. yani sistem belgede en az 3 konu seçilmeli ve en fazla 10 ve kullanıcı tercihlerde en az 6 soru seçilmeli.
+böyle bir şey de var. diyelim ki sistem 10 alt konu tespt edildi. ve kullanıcı 6 soru seçi bu durum 6/2 3 alt konudan soru gelecek ve geri kalan tespit edilen alt konular beklemede değer alacak. 
+
+========
+benim dediklerim hepsi analiz et ve anla. her şey anlamak için bunu da oku @prd.md 

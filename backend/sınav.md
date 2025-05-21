@@ -1,15 +1,31 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-21T16:25:45.754Z
+## Tarih: 2025-05-21T18:09:38.455Z
 
-## Trace ID: quiz-1747844745230-aaijp
+## Trace ID: quiz-1747850978427-a98lu
 
-## Alt Konular (14 adet):
+## Alt Konular (6 adet):
 ```
-fiziksel-risk-etmenleri, fiziksel-risk-etmenlerinin-tan-m-, fiziksel-risk-etmenleri--e-itleri, g-r-lt-n-n-tan-m--ve-kaynaklar-, sesin-fiziksel-nitelikleri--frekans-, g-r-lt--maruziyet-de-erleri, titre-imin-tan-m--ve--zellikleri, el-kol-ve-b-t-n-v-cut-titre-imi, titre-im-maruziyet-de-erleri, ayd-nlatman-n-tan-m--ve--nemi, ayd-nlatma--e-itleri, ayd-nlatma--iddeti-ve--l--m-, termal-konforun-tan-m-, termal-konfor--artlar-n--etkileyen-fakt-rler
+## AKTİF KONULAR (SORU ÜRETİLECEK)
+
+**Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
+
+1. **Biyolojik Risk Etmenleri Tan M** (3 soru)
+2. **Biyolojik Risk Tan M** (3 soru)
+3. **Biyolojik Risk Gruplar** (3 soru)
+4. **Riskli İ Gruplar** (3 soru)
+5. **Enfeksiyon Riski** (3 soru)
+6. **Risk De Erlendirme S Reci** (3 soru)
+
+**Toplam Aktif: 6 alt konu, 18 soru**
+
+## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
+
+Bekleyen konu yok.
+
 ```
 
-## Soru Sayısı: 10
+## Soru Sayısı: 18
 
 ## Zorluk: mixed
 
@@ -27,88 +43,58 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 // ----------------------------------------------------
 
 **📥 GİRDİLER:**
-- **Konu(lar):** fiziksel-risk-etmenleri, fiziksel-risk-etmenlerinin-tan-m-, fiziksel-risk-etmenleri--e-itleri, g-r-lt-n-n-tan-m--ve-kaynaklar-, sesin-fiziksel-nitelikleri--frekans-, g-r-lt--maruziyet-de-erleri, titre-imin-tan-m--ve--zellikleri, el-kol-ve-b-t-n-v-cut-titre-imi, titre-im-maruziyet-de-erleri, ayd-nlatman-n-tan-m--ve--nemi, ayd-nlatma--e-itleri, ayd-nlatma--iddeti-ve--l--m-, termal-konforun-tan-m-, termal-konfor--artlar-n--etkileyen-fakt-rler
+- **Konu Bilgileri:** ## AKTİF KONULAR (SORU ÜRETİLECEK)
+
+**Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
+
+1. **Biyolojik Risk Etmenleri Tan M** (3 soru)
+2. **Biyolojik Risk Tan M** (3 soru)
+3. **Biyolojik Risk Gruplar** (3 soru)
+4. **Riskli İ Gruplar** (3 soru)
+5. **Enfeksiyon Riski** (3 soru)
+6. **Risk De Erlendirme S Reci** (3 soru)
+
+**Toplam Aktif: 6 alt konu, 18 soru**
+
+## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
+
+Bekleyen konu yok.
+
+  *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
 - **Eğitim İçeriği:** 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ÜNİTE
-3
-3
-FİZİKSEL RİSK ETMENLERİ
+5
+
+İÇİNDEKİLER
+•Biyolojik Risk Tanımı
+• Biyolojik Risklere Maruz
+Kalınabilecek İşler
+•Risklerin Belirlenmesi ve
+Değerlendirilmesi
+•Risklere Karşı Alınacak
+Önlemler
 HEDEFLER
 •Bu üniteyi çalıştıktan sonra;
-•Fiziksel risk etmenlerini
-kavrayabilecek,
-•Fiziksel risk etmenleri
-çeşitlerinin detaylarını
-öğrenebilecek,
-•Fiziksel risk etmenlerinin
-insanlar üzerindeki etkilerini
-açıklayabilecek,
-•Fiziksel risk etmenlerinden
-korunma yollarını
-öğrenebileceksiniz.
-İÇİNDEKİLER
-•Fiziksel Risk Etmenleri
-•Fiziksel Risk Etmenlerinin
-İnsanlar Üzerindeki Etkileri
-•Fiziksel Risk Etmenlerinden
-Korunma Yolları
-Öğr. Gör. Yaşar EDE
+•Biyolojik risklerin tanımını
+yapabilecek,
+•Biyolojik risk düzeyleri ve
+sınıfları hakkında bilgi sahibi
+olabilecek,
+•Biyolojik risk altındaki meslek
+gruplarını öğrenebilecek,
+•Biyolojik risk etmenlerine karşı
+alınması gereken önlemler
+hakkında bilgi sahibi olabilecek,
+•Bu konudaki yönetmelik
+hakkında bilgi sahibi
+olabileceksiniz.
+
+
+Prof. Dr.
+Elif ÇADIRCI
 
 
 İŞ SAĞLIĞI VE GÜVENLİĞİ
@@ -118,8 +104,9 @@ Korunma Yolları
 © Bu ünitenin tüm yayın hakları Atatürk Üniversitesi Açıköğretim Fakültesi’ne aittir. Yazılı izin alınmadan
 ünitenin tümünün veya bir kısmının elektronik, mekanik ya da fotokopi yoluyla basımı, yayımı, çoğaltımı ve
 dağıtımı yapılamaz.
+BİYOLOJİK RİSK ETMENLERİ
 
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 2
 
@@ -136,1055 +123,902 @@ Atatürk Üniversitesi Açıköğretim Fakültesi 2
 
 
 
-Fiziksel Risk
-Etmenleri
-Gürültü
-Ses
-Frekans
-Ses Dalgası
-Gürültünün
-Etkileri
-Gürültüden
-Korunma
-Yolları
-Titreşim
-El-Kol Titreşimi
-Bütün Vücut
-Titreşimi
-Maruziyet
-Değerleri
-Titreşimin
-Etkileri
-Titreşimden
-Korunma
-Yolları
-Aydınlatma
-Işık
-Aydınlatmanın
-Etkileri
-Termal
-Konfor
-Şartları
-Hava Sıcaklığı
-Havanın Nem
-Yoğunluğu
-Hava Akım Hızı
-Radyant Isı
-Termal Konfor
-Şartlarının
-Etkileri
-Radyasyon
-Radyoaktif
-ışınlar
-Radyasyonun
-Etkileri
-Radyasyondan
-Korunma
-Yolları
-Basınç
-Basıncın
-Etkileri
-Basıncın
-Etkilerinden
-Korunma
-Yolları
 
-Fiziksel Risk Etmenleri
+
+
+
+
+
+
+
+Biyolojik Risk
+Etmenleri
+Önlemler
+- Biyolojik Risk
+-Biyolojik risk altındaki
+sektörleri
+-Enfeksiyon Riski
+- Parazitler
+- Mantarlar
+- Virüsler
+- Bakteriler
+-Çalınan Aldığı Önlemler
+-İşverenin
+-Aldığı Önlemler
+-Risklerin Belirlenmesi
+-İkame
+-Riskleri Azaltma
+-Hijyen ve Kişisel Korunma
+-Eğitim ve Belgilendirme
+
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 3
 GİRİŞ
-Doğadaki bütün canlıların gelişmesi ve yaşaması için belirli fiziksel ve
-kimyasal koşullar gereklidir. Ekoloji biliminde cansız ögeleri kapsayan fiziksel çevre
-faktörleri: Güneş ışınımı, sıcaklık, su ve topraktır.
-Bir sistem olarak kabul edilen işletmenin iç ve dış çevrede etkilediği ve aynı
-zamanda etkilendiği birçok faktörden bahsedilebilir. İşletmeyi ve işletmenin
-faaliyetlerini bu faktörlerden soyutlayarak ele almak olanaksızdır.
-Genel anlamı ile çevre: Bireyin, örgütün ya da toplumun yaşamını etkileyen
-kültürel, toplumsal, ekonomik ve fiziksel faktörlerin toplamıdır. İşletmenin
-ekonomik faaliyetleri kapalı bir süreç içinde değil, faaliyetlerin koşullandıran ve
-belirli ölçüde de kendisi tarafından şekillendirilmiş bulunan ekonomik, sosyal ve
-teknolojik bir çevre içinde cereyan eder.
-Bu çevre içerisinde çalışan sağlığını ve güvenliğini tehdit edebilecek bazı
-faktörler vardır. Söz konusu faktörlerden biri de konu itibarıyla genel olarak
-aydınlatma, gürültü, titreşim, hava şartlarını kapsayan fiziksel faktörlerdir.
-Fiziksel faktörler, çalışan sağlığını ve güvenliği tehdit eden risk faktörlerinin
-başında gelmektedir ve korunma önlemlerinin alınması gereken faktörlerdir. İş
-yerlerinde hem çalışanların hem de iş sağlığı ve güvenliği profesyonellerinin,
-sağlığı ve güvenliği olumsuz etkileyen fiziksel faktörler hakkında bilgi sahibi
-olmaları gerekmektedir.
-Çalışanların sağlığını ve güvenliğini etkileyen fiziksel faktörlere ise fiziksel
-risk etmenleri denilmektedir. Bu ünitede çalışanları ve işletmeleri etkileyen fiziksel
-risk etmenlerini kavrayıp bu risk etmenlerinden korunma yolları öğrenilecektir.
-FİZİKSEL RİSK ETMENLERİ
-Fiziksel risk etmenleri, çalışanların sağlığını etkileme ihtimali olan fiziksel
-faktörlerdir. Yaşanılan veya çalışılan ortamın sıcaklık, nem, aydınlatma, gürültü,
-titreşim, basınç vb. fiziksel özellikleri bireyin sağlığını önemli ölçüde etkiler.
-Çalışanlar, özellikle çok tehlikeli ve tehlikeli işlerde çalışanlar bu yönden büyük risk
-altındadır. Fiziksel çevre koşulları yönünden her iş yeri aynı değildir. Aynı ürünü
-üreten iki işletmede bile fiziksel çevre koşulları benzer olmayabilir. Burada önemli
-olan her işletmede olabilecek fiziksel olumsuzlukların kaynağında yok edilmesi ve
-çalışanların bu şekilde korunmasıdır.
-Fiziksel Risk Etmenleri Çeşitleri
-Fiziksel risk etkenleri başlıca;
- Gürültü
- Titreşim (vibrasyon)
- Aydınlatma
- Termal konfor şartları
+İş sağlığı ve güvenliğinde karşımıza çıkan en önemli sorunlardan biri çalışma
+ortamında karşılaşılabilecek, çalışanın sağlığını ve güvenliğini tehlikeye atabilecek
+çeşitli risk etmenleridir. Genel olarak bu risk etmenleri çalışanlarda anlık veya
+devamlı maruz kalma sonucunda meslek hastalıklarına, çalışamaz hâle gelmeye ve
+hatta ölüme bile neden olabilir. Bunu önlemek için işçinin çalışma ortamından
+kaynaklı ve işçinin sağlık ve güvenliğini tehlikeye atacak tehlikeler ve bu
+tehlikelerin meydana getirdiği risk kaynakları neyse o kaynağa uygun sağlık ve
+güvenlik gözetimi planlanmalıdır. Bunun için de öncelikle iş yerindeki tehlikeler
+belirlenmeli, kimlerin nasıl zarar görebileceği saptanmalı, risklerin analizi
+yapılmalı, bunun sonucuna göre alınacak kontrol önlemlerine karar verilmeli ve
+önlemler uygulamaya konulmalıdır.
+Meslek hastalıklarına neden olabilecek ve iş yerinde çalışma güvenliğini
+tehdit edebilecek etmenler gürültü, titreşim, yüksek ve alçak basınçlarda çalışma,
+soğuk ve sıcakta çalışma, tozlar ve radyasyon gibi fiziksel risk etmenleri; ağır
+metaller, gazlar ve çözücüler gibi kimyasal risk etmenleri; virüsler, bakteriler,
+mantarlar ve parazitler gibi biyolojik risk etmenleri, psikolojik risk etmenleri ve
+ergonomiye özensizlikten kaynaklanan risk etmenleri olarak sınıflandırılabilir.
+Bu bölümde biyolojik kaynaklı risk etmenlerinin genel tanımı ve biyolojik
+risk grupları, hangi çalışanlarda tehlike oluşturdukları ve görülebilecekleri çalışma
+ortamları, çalışma ortamlarında ve/veya laboratuvarlarda biyolojik risklerin
+azaltılmasına, tanınmasına, bulaşmasına vs. yönelik alınması gereken güvenlik
+önlemleri hakkında genel bilgi mevcuttur.
+BİYOLOJİK RİSK TANIMI
+Yeni adıyla Aile, Çalışma ve Sosyal Hizmetler (AÇSH) Bakanlığının 2013 tarihli
+Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkındaki Yönetmeliği’ne
+göre biyolojik etkenler herhangi bir enfeksiyon, alerji veya zehirlenmeye neden
+olabilen hücresel veya hücresel olmayan mikrobiyolojik varlıklar olarak
+tanımlanmıştır. Bu mikro biyolojik varlıklar, genetik olarak değiştirilmiş olanlar da
+dâhil olmak üzere, mikroorganizmalar, hücre kültürleri ve
+insan endoparazitlerinden oluşmaktadırlar. Burada, hücre kültürü “çok hücreli
+organizmalardan türetilmiş hücrelerin in–vitro olarak geliştirilmesini” ve
+mikroorganizma ise “genetik materyalini replikasyon veya aktarma yeteneğinde
+olan mikrobiyolojik varlıkları” temsil etmektedir. Buna göre genel bir tanım ile
+biyolojik etmenler , yaşayan organizmalar ve/veya (genetik olarak değiştirilmiş
+olanlar da dâhil ) bu organizmaların ürünlerinden oluşur. Biyolojik risk etmenleri
+ise virüsler, bakteriler, mantarlar ve bunların metabolizmaları sonucu ortaya
+çıkardıkları ürünlerin yanı sıra vücutta iç ve dış parazit olarak yerleşebilen
+asalaklar ile bitkileri de kapsar. Aynı zamanda son zamanlarda biyoteknolojik
+ürünler de biyolojik kaynaklı risk etmenleri arasına dâhil edilmektedir.
 
-İşletmeyi ve
-çalışanları etkileyen
-önemli faktörlerden
-biri fiziksel
-faktörlerdir.
 
-Fiziksel risk
-etmenleri,
-çalışanların sağlığını
-etkileme ihtimali
-olan fiziksel
-faktörlerdir.
+Biyolojik risk etmenleri
+virüsler, bakteriler,
+mantarlar, insan
+parazitleri ve bunların
+ürünleridir.
 
-Fiziksel Risk Etmenleri
+
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 4
- Radyasyon
- Basınç değişimleri olarak sıralanabilir. [1]
+Biyolojik Risk Grupları
+Türkiye Cumhuriyeti AÇSH Bakanlığının 2013 tarihli Biyolojik Etkenlere
+Maruziyet Risklerinin Önlenmesi Hakkındaki Yönetmeliği’ne [1] göre biyolojik risk
+etmenleri enfeksiyon yapma risk düzeyine göre 4 risk grubunda sınıflandırılabilir
+(Tablo 5.1 ). Biyolojik bir etkenin sağlıklı kişide hastalığa yol açması; etkenin hasta
+etme yetisinin yüksekliğine (patojenite-virülans) , b ulaşma yollarına (temas, ortak
+kullanılan cansız maddeler, hava ve vektörler), k onakçı adı verilen kişinin
+duyarlılığına, çevre etmenlerine (ısı değişiklikleri, nem, radyasyon, hava basıncı,
+hava akımının hızı, kimyasal maddeler, gazlar ve toksinler) bağlıdır. Bu 4 risk
+grubu;
+Grup 1 biyolojik etkenler: İnsanda hastalığa yol açma ihtimali bulunmayan
+biyolojik etkenler,
+Grup 2 biyolojik etkenler: İnsanda hastalığa neden olabilen, çalışanlara zarar
+verebilecek, ancak topluma yayılma olasılığı olmayan, genellikle etkili korunma
+veya tedavi imkânı bulunan biyolojik etkenler,
 
-Gürültü
-Çağımızın en önemli endüstriyel ve çevre sorunlarından biri olarak karşımıza
-çıkan gürültü yeterli önlemler alınmadığı zaman insanlara zarar veren fiziksel
-etkenlerden biridir.
-Gürültü genellikle istenmeyen ve rahatsız edici sesler olarak tanımlanır.
-Endüstriyel gürültü ise işletmelerde çalışanlarda fizyolojik ve psikolojik
-rahatsızlıklar oluşturan ve iş yeri verimini olumsuz etkileyen sesler olarak
-tanımlanır.
-Resim 3.1 Gürültü yapan makinalar
-İnsanın ruhsal ve fiziksel yapısını olumsuz yönde etkileyen gürültüyü
-tanımlayabilmek için sesin fiziksel nitelikleri ve işitme konusuna değinmekte yarar
-vardır.
-Ses: Gaz, katı ve sıvı ortamlarda oluşan ve canlıların işitme organlarında
-algılanabilen basınç değişimleridir.
-Gürültü: Gelişigüzel bir yapısı olan, arzu edilmeyen, istenmeyen, rahatsız
-edici ses olarak tanımlanabilir.
-Frekans: Fiziksel olarak ses bir dalga hareketi olduğundan her dalga hareketi
-gibi sesin de bir frekansı vardır. Kabaca ses basıncının (mekanik düzensizlik) bir
-saniyede oluşan titreşim sayısıdır.
-Ses dalgası: Ses; katı, sıvı ve gazlarda dalgalar hâlinde yayılan bir enerji
-şeklidir. Ses dalgalarını karakterize eden büyüklükler, ses dalgasının boyu (l),
-frekansı (f), periyodu (T) ve ilerleme hızıdır (v ).
-İş sağlığı ve güvenliği konusunda, bir başka ifade ile gürültüden ileri gelen
-işitme kaybında, gürültüyü meydana getiren sesin basıncını ve frekansını
-belirlemek yeterlidir.
-Sesi meydana getiren titreşimin frekans değeri, bir başka ifade ile sesin
-frekansı, arttıkça (yükseldikçe) ses tizleşir, düştükçe ses pesleşir.
-Gürültüyü meydana getiren ses unsurlarını üç türde tanımlamak
-mümkündür. Bunlar: Subsonik, işitilebilen ve ultrasonik seslerdir.
- Subsonik sesler: frekansı 20 Hz.'den düşük olan sesler,
+Grup 3 biyolojik etkenler: İnsanda ağır hastalıklara neden olan, çalışanlar için
+ciddi tehlike oluşturan, topluma yayılma riski bulunabilen ancak genellikle etkili
+korunma veya tedavi imkânı olan biyolojik etkenler ve
+Grup 4 biyolojik etkenler: İnsanda ağır hastalıklara neden olan, çalışanlar için
+ciddi tehlike oluşturan, topluma yayılma riski yüksek olan ancak etkili korunma ve
+tedavi yöntemi bulunmayan biyolojik etkenler olarak sınıflandırılmışlardır (Tablo
+5.2) [1].
+Tablo 5.1. Biyolojik risk etmenlerinin enfeksiyon yapma, çalışanlara zarar verme ve
+topluma yayılma risk düzeyine ve etkili korunma ve/veya tedavi yöntemi mevcudiyetine
+göre değerlendirilmesi.
+Grup İnsanlarda
+hastalık
+yapma
+Çalışanlara
+zarar verme
+Topluma
+yayılma
+ihtimali
+Etkili
+korunma/tedavi
+1 - - - +
+2 + + - +
+3 + + + +
+4 + + + -
 
-Gürültü, genellikle
-istenmeyen ses
-olarak
-tanımlanmaktadır.
-Gelişigüzel bir yapısı
-olan, arzu
-edilmeyen,
-istenmeyen,
-rahatsız edici ses
-olarak
-tanımlanabilir.
+Grup 1 diğer gruplara kıyasla oldukça geniş listeye sahip olmasına rağmen,
+herhangi bir biyolojik etkenin Grup 2, Grup 3 veya Grup 4 de sınıflandırılmamış
+olması ve listede yer almaması, bu biyolojik etkenin Grup 1 de yer aldığı anlamına
+gelmez. Biyolojik ajanlar yalnızca enfeksiyöz (enfeksiyon yapan) ve toksik
+olmalarından dolayı değil aynı zamanda alerjik rinit, astım ve hipersensitivite
+pnömonisi gibi alerjik reaksiyonlara da neden olabilecekleri için risk teşkil
+etmektedir. Biyolojik ajanların bu aşırı duyarlılık reaksiyonları risk grupları ile
+alakalı değildir. Aşırı duyarlılığa sebep olan etmenler arasında mantarlar,
+bakteriler ve bazı parazitler mevcuttur. Bunlar genellikle solunum sistemini ve
 
-Fiziksel Risk Etmenleri
+Biyolojik risk
+etmenleri insanlarda
+hastalık yapma,
+çalışanlara zarar
+verme, topluma
+yayılma ve tedavi
+edilebilme
+özelliklerine göre 4
+gruba ayrılır.
+
+
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 5
- İşitilebilen sesler: frekansı 20 Hz. ile 20 kHz arasında olan sesler,
- Ultrasonik sesler: frekansı 20 kHz.'den daha yüksek olan seslerdir.
-Gürültü ölçümünde kullanılan araçlar sonometre olarak adlandırılır. Bu
-araçlar ikiye ayrılır: gürültü düzeyi ölçüm aygıtları ve gürültü dozimetresi.
-Sesin şiddeti, desibell (dB) cinsinden ölçülür. Desibell: Ses kaynağının insan
-kulağında meydana getirdiği basıncın bir referans basınca oranının logaritmik
-ifadesi olarak tanımlanır. İnsan kulağının ilk uyum yaptığı ses şiddeti 0 (sıfır) dB
-olup bu değere işitme eşiği adı verilir. 140 dB ise acı eşiği olup kulak daha fazla
-ses şiddetine dayanamaz.
-Titreşen her cisim bir ses kaynağıdır.
-Bazı ses kaynaklarının ölçüleri ise aşağıdaki gibidir:
- İşitme Sınırı ( eşiği ): 0 dB
- Kayıt stüdyosu, orman, 120 cm’de fısıltılı konuşma: 0-20 dB
- Yatak odası: 20-30 dB
- Kütüphane, sessiz ofis, oturma odası: 30-40 dB
- Genel ofis, sohbet konuşması: 40-60 dB
- Çalışma ofisi ( daktilo, vb. ): 60-70 dB
- Ortalama trafik gürültüsü, gürültülü lokanta, matbaa: 70-90 dB
- Havalı çekiç, takım tezgâhları, otamatik matkap: 90-100 dB
- Hidrolik pres, pop grubu, daire testere: 100-120 dB
- Jet motoru, (ağrı veya duyma eşiği): 140 dB
- Roket rampası: 180 dB
-Çalışanların Gürültü İle İlgili Risklerden Korunmalarına Dair Yönetmelik ‘e
-[2] göre gürültü ile ilgili maruziyet eylem değerleri ve maruziyet sınır değerleri
-aşağıda verilmiştir:
- En düşük maruziyet eylem değerleri = 80 dB
- En yüksek maruziyet eylem değerleri= 85 dB
- Maruziyet sınır değerleri: = 87 dB
-Titreşim
-Titreşim (vibrasyon): Mekanik bir sistemdeki salınım hareketlerini
-tanımlayan bir terimdir. Bir başka ifade ile potansiyel enerjinin kinetik enerjiye,
-kinetik enerjinin potansiyel enerjiye dönüşmesi olayına titreşim (vibrasyon) denir.
-Titreşimin özelliğini, frekansı, şiddeti ve yönü belirler.
-Endüstride birçok titreşim kaynağı vardır. Çalışmakta olan ve iyi
-dengelenmemiş araç ve gereçler genellikle titreşim oluştururlar. Titreşimi, insan
-sağlığı üzerindeki etkisi bakımından iki fiziksel büyüklüğü ile tanımlamak
-mümkündür. Bunlar: Titreşimin frekansı ve titreşimin şiddeti kavramlarıdır.
-Titreşimin frekansı: Birim zamandaki titreşim sayısına titreşimin frekansı
-denir. Birimi Hertz olup (Hz) ile gösterilir.
+daha az olarak da deriyi etkileyebilirler. Bunların yanı sıra bazı biyolojik ajanlar
+uzun süreli maruz kalma sonucunda karsinojenik (kansere neden olucu) etkiler de
+oluşturabilirler. Bu risk etmenlerine maruz kalma risk düzeyine göre iş yerlerinin
+ve çalışanların alması gereken önlemler ve uyması gereken güvenlik önlemleri de
+aynı yönetmelikle belirlenmiştir.
+Tablo 5.2. AÇSH Bakanlığının Avrupa Birliği Güvenlik Konseyi listeleri ışığında hazırladığı
+güvenlik risk sınıflandırmasına göre (sınıflandırma yönetmelikte Grup 2’den başlamaktadır)
+bakteri, virüs, mantar ve parazit örnekleri [1].
+Grup Bakteriler Virüsler Mantarlar Parazitler
+2 Bacteroides fragilis
+Clostridium tetani
+Corynebacterium
+diphteriae
+Staphylococcus
+aureus
+Herpesvirus
+varicella–zoster
+İnfluenza virüsleri
+Tip A, B ve C
+Hepatitis A virüsü
+(insan entero
+virüsü Tip 72)
+Epstein-Barr
+virüsü
+Aspergillus
+fumigatus
+Candida
+albicans
+Candida
+tropicalis
+Ascaris
+lumbricoides
+Taenia
+saginata
+Toxoplasma
+gondii
+Trichuris
+trichiura
+3 Bacillus antrhracis
+Brucella abortus
+Mycobacterium
+tuberculosis
+Yersinia pestis
+Salmonella Typhi
+Shigella
+dysenteriae (Tip 1)
+Hepatit C virüsü
+Hantaan virüsü
+Human
+immunodeficienc
+y virüsleri (HIV)
+Yellow fever
+Blastomyces
+dermatiti dis
+Paracoccidioide
+s brasiliensis
+Ajellomyces
+capsulatus
+Echinococcus
+granulosus
+Trypanosom
+a cruzi
+Taenia
+solium
+Leishmania
+brasiliensis
+4 - Ebola virüsü
+Crimean-Congo
+heamorrhagic
+fever
+Marburg virüsü
+Variola virüsü
+- -
+BİYOLOJİK RİSKLERE MARUZ KALINABİLECEK İŞLER
+Biyolojik ajanlar temelde canlılığın devamı için gerekli ve genellikle faydalı etkilere
+sahip olsalar da bazı durumlarda insan hayatını tehdit edebilmektedirler. Dünyada
+yaşayan organizmalar var olduğundan beri biyolojik risk etmenleri de vardır ve her
+yerde bulunabilirler. Çalışma ortamlarında biyolojik risk etmenleri bazen çalışma
+düzeninin gerekliliği olarak mecburen bulunurken çoğu zaman bunlara maruz
+kalma kazara meydana gelmektedir. Çalışma alanlarındaki biyolojik risk etmenleri
+ve bunlara bağlı enfeksiyonlar aşağıdaki kaynaklardan ortaya çıkabilirler [2].
+• Kan ve diğer vücut sıvıları
+• İnsan cesetleri, hayvan leşleri ve çiğ etler
+• Dışkı ve idrar gibi insan veya hayvan atıkları
 
-İnsan kulağının ilk
-uyum yaptığı ses
-şiddeti 0 (sıfır)
-dB'dir ve bu değere
-"işitme eşiği" adı
-verilir. 140 dB ise
-"acı eşiği" dir ve
-kulak daha fazla ses
-şiddetine
-dayanamaz.
+Biyolojik risk
+açısından
+değerlendirildiğinde
+grup 1 en az riskli
+grup 4 ise en yüksek
+riskli grup olarak
+belirlenmiştir.
 
 
-Fiziksel Risk Etmenleri
+Biyolojik risk
+etkenlerinden
+korunmak için “iş
+sağlığı ve güvenliği
+eğitimi” ile
+işverenlerin ve
+çalışanların bilgi
+eksiklikleri
+giderilmeli ve tüm
+çalışanlar gerekli
+ön lemleri
+almalıdır.
+
+
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 6
-Titreşim Şiddeti: Titreşimin oluştuğu ortamda titreşimden ileri gelen
-enerjinin hareket yönüne dik yönde, birim alanda, birim zamandaki güç
-büyüklüğüne titreşimin şiddeti denir. Birimi (m/s
-2
-) dir.
-Bütün vücut titreşimi: Vücudun tümüne aktarıldığında, çalışanın sağlık ve
-güvenliği için risk oluşturan, özellikle de bel bölgesinde rahatsızlık ve omurgada
-travmaya yol açan mekanik titreşimdir.
-El-kol titreşimi: İnsanda el-kol sistemine aktarıldığında, çalışanın sağlık ve
-güvenliği için risk oluşturan ve özellikle de damar, kemik, eklem, sinir ve kas
-bozukluklarına yol açan mekanik titreşimdir.
-Maruziyet eylem değeri: Aşıldığı durumda, çalışanın titreşime
-maruziyetinden kaynaklanabilecek risklerin kontrol altına alınmasını gerektiren
-değerdir.
-Maruziyet sınır değeri: Çalışanların bu değer üzerinde bir titreşime kesinlikle
-maruz kalmaması gereken değerdir.
-Endüstrideki titreşim kaynaklarının başlıcaları genellikle el ve el parmakları
-ile kollara ulaşan titreşimleri oluşturan titreşim kaynaklarıdır. Bunlar, taş kırma
-makineleri, kömür ve madencilikte kullanılan pnömatik çekiçler, ormancılıkta
-kullanılan taşınabilir testereler, parlatma ve rende makineleridir. Bu araçlar,
-dönerek, vurarak veya hem dönerek hem de vurarak titreşirler.
-Çalışanların Titreşimle İlgili Risklerden Korunmalarına Dair Yönetmelik’e[3]
-göre maruziyet sınır değerleri ve maruziyet eylem değerleri aşağıda verilmiştir:
-El-kol titreşimi için:
- Sekiz saatlik çalışma süresi için günlük maruziyet sınır değeri: 5 m/s2.
- Sekiz saatlik çalışma süresi için günlük maruziyet eylem değeri: 2,5 m/s2.
-Bütün vücut titreşimi için:
- Sekiz saatlik çalışma süresi için günlük maruziyet sınır değeri: 1,15 m/s2.
- Sekiz saatlik çalışma süresi için günlük maruziyet eylem değeri: 0,5 m/s2.
+• Öksürük veya hapşırık sırasında saçılmalar
+• Deri teması
+Bunların yanı sıra küfler ve küf sporları, toz maytları (akarları), tüyler,
+hayvan tüyleri ve polenler gibi etmenler de alerjik ve toksik reaksiyonlara neden
+olabilirler.
+Bilim adamları, hekimler ve laboratuvar çalışanları bu risklerin çoğundan
+haberdar olsa bile çoğu çalışan ve işçilerin bu riskler hakkındaki bilgileri sınırlıdır.
+Bu riskler çoğunlukla gözle görünür olmadığı için risk değerlendirmesi yapmak da
+oldukça güç olabilir. Biyolojik riskler hakkındaki bilgi yetersizliği ve çalışanların
+yeterli d üzeyde “iş sağlığı ve güvenliği eğitimi” almamış olması risk
+değerlendirmesini ve önlenmesini zorlaştırmaktadır. Bir çalışma ortamında
+yaşayan veya ölü insan veya hayvanların bulunması, gıda, bitki, toprak veya su
+atıklarının mevcudiyeti biyolojik risk değerlendirmesi yapılmasını zorunlu kılar. Bu
+nedenle bu tür materyallerle temas oranı yüksek olan tarım, gıda endüstrisi, sağlık
+hizmetleri ve sosyal hizmetler, veteriner hizmetleri, katı ve sıvı atık yönetimi,
+cenaze hizmetleri gibi çalışma alanları biyolojik risk etmenlerinin yüksek olduğu iş
+gruplarıdır. Bunların yanı sıra balıkçılık, seramik çini yapımı, kâğıt ve pamuk
+üretimi gibi birçok çalışma alanı da biyolojik risk altında olabilir.
+Türkiye’de biyolojik risk etmenleriyle karşılaşma riskine göre yapılan
+değerlendirmelerde özellikle sağlık çalışanları, laboratuvar çalışanları ve tarım
+işçileri üzerine yoğunlaşılmıştır. AÇSH Bakanlığı Avrupa İş Sağlığı ve Güvenliği
+Ajansı (EU-OSHA) verilerini de dikkate alarak biyolojik etkenlere maruziyetin
+olabileceği bazı işler listesini aşağıdaki gibi belirlemiştir:
+• Gıda üretilen fabrikalarda çalışma
+• Tarımda çalışma
+• Hayvanlarla ve/veya hayvan kaynaklı ürünlerle çalışma
+• Sağlık hizmetlerinin verildiği yerlerde, karantina dâhil morglarda çalışma
+• Mikrobiyolojik teşhis laboratuvarları dışındaki klinik, veterinerlik ve teşhis
+laboratuvarlarındaki çalışma
+• Atıkları yok eden fabrikalarda çalışma
+• Kanalizasyon, arıtma tesislerindeki çalışma
+Yukarıda listelenen alanlardan herhangi birinde işçi çalıştıran işveren,
+yapılan işin özelliğine göre zararlı biyolojik etkenleri kullanmaktan kaçınmakla ve
+mevcut bilgiler ışığında, biyolojik etkenleri kullanım şartlarında durumuna uygun
+olarak çalışanların sağlığı için tehlikeli olmayan veya daha az tehlikeli olanlar ile
+değiştirmekle yükümlüdür. Aynı zamanda işveren işyerinde biyolojik
+etkenlere maruziyet riskinin azaltılması için gerekli önlemleri de almalıdır.
+RİSKLERİN BELİRLENMESİ VE DEĞERLENDİRİLMESİ
+İş yerlerinde karşılaşılabilecek risklerin belirlenmesi ve uygun şekilde
+değerlendirilmesi güvenlik sınıflandırmasına göre hem işverenin hem de
+çalışanların uygun önlemleri alabilmesi açısından oldukça önemlidir. Biyolojik risk
 
-Aydınlatma
-İnsan gözüyle algılanabilen dalga boylarındaki elektromanyetik ışınıma ışık
-denir. Bir yüzeye düşen ışık miktarına ise aydınlatma denilmektedir. İnsan
-algılamasında göz en önemli organdır. Algılamanın yaklaşık %90’ı göz aracılığıyla
-gerçekleşmektedir. Bakılan cisimlere, ışık kaynağına ve kişiye ait özelliklere göre,
-görme ve algılama değişir. Bu nedenle de bir iş ortamında aydınlatma gereksinimi
-değişmektedir. Aslında, en yüksek aydınlatmanın en iyi yaklaşım olmadığı
-bilinmelidir. Temel olan amaca uygun aydınlatmadır.
-Amacı bakımından aydınlatma üçe ayrılır:
- Fizyolojik Aydınlatma: Amaç, cisimleri şekil, renk ve ayrıntıları ile
-rahat ve hızla görebilmektir. Bu koşulları sağlayan aydınlatmaya
-fizyolojik aydınlatma denir.
+Özellikle sağlık
+çalışanları olmak üzere
+laboratuvar çalışanları
+ve tarım işçileri
+biyolojik risk etmenleri
+açısından tehdit
+altındadır.
 
-Potansiyel enerjinin
-kinetik enerjiye,
-kinetik enerjinin
-potansiyel enerjiye
-dönüşmesi olayına
-titreşim (vibrasyon)
-denir.
-
-Bir yüzeye düşen
-ışık miktarına
-aydınlatma
-(illuminance)
-denilmektedir.
-Birimi lüks’tür.
-
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 7
- Dekoratif Aydınlatma: Amaç, görülmesi istenen cisimleri bütün
-ayrıntıları ile göstermek değil, daha çok estetik etkiler
-uyandırmaktır.
- Dikkati Çeken Reklam Amaçlı Aydınlatma: Amaç, dikkati çekmek,
-yani reklam yapmaktır. Bunun için yüksek aydınlık düzeyleri, renkli
-ışıklar, değişken ışıklı şekiller ve yanıp sönen düzenler kullanılır.
+etmenlerinin belirlenmesi ve değerlendirilmesinde Avrupa Birliği normlarına
+uygun olarak belli başlı konular dikkate alınmalıdır [3].
+Öncelikle çalışma ortamındaki insan sağlığına zararlı olan veya olabilecek
+tüm biyolojik etkenlerin sınıflandırılması gereklidir.
+Biyolojik etkenlere maruz kalma riski bulunan herhangi bir çalışmada, işçinin
+sağlık ve güvenliğine yönelik herhangi bir riski değerlendirmek ve alınması gereken
+önlemleri belirlemek için, çalışanın maruziyetinin türü, düzeyi ve süresi
+belirlenmelidir.
+Birden fazla grupta yer alan biyolojik etkenlere maruziyetin söz konusu
+olduğu işlerde risk değerlendirmesi, zararlı biyolojik etkenlerin tümünün
+oluşturduğu tehlike dikkate alınarak yapılmalıdır.
+Risk değerlendirmesi, düzenli aralıklarla ve çalışanın biyolojik etkenlere
+maruziyet koşullarını etkileyebilecek herhangi bir değişiklik olduğunda
+yenilenmelidir.
+AÇSH Bakanlığının ve il müdürlüklerinin, çalışanların sağlığını korumak için
+biyolojik etkenlerin denetim altına alınması hakkında işverenlere önerileri dikkate
+alınmalıdır.
+Çalışanlar, işlerinin sonucu olarak ortaya çıkabilecek hastalıklar, alerjik veya
+toksik etkiler ilgili bilgi sahibi olmalıdır.
+Enfeksiyon Riski
+Çalışanların maruz kaldığı biyolojik riskler, tarihsel olarak ilk sağlık
+çalışanlarında tespit edilmiştir. Yıllar boyunca birçok sağlık çalışanı, araştırma
+yaparken veya hastalıkların tedavisi sırasında biyolojik etmenlere bağlı olarak
+hastalanmış hatta yaşamlarını kaybetmiştir.
+Özellikle sağlık çalışanlarında sık görülen enfeksiyonlar: tüberkü loz,
+menengokoksik menenjit, gastrointestinal sistem enfeksiyonları, lejyoner hastalığı,
+difteri, boğmaca gibi bakteriyel enfeksiyonlar; hepatit-B, kızamık, kızamıkçık,
+kabakulak, suçiçeği veya Varisella Zoster, Herpes enfeksiyonları, Sitomegalovirüs
+enfek siyonları, Edinsel Bağışıklık Yetersizliği Sendromu gibi viral enfeksiyonlar ve
+Histoplazmosis gibi paraziter enfeksiyonlar olabilir.
+Etken, kişinin kendisinde yerleşik ise iç kaynaklı (endojen), dışarıdan
+alınmışsa dış kaynaklı (ekzojen) enfeksiyondan bahsedilir. Tablo 5.3’te çalışma
+alanlarına göre karşılaşılabilecek biyolojik risk etmenleri özetlenmiştir.
+Özellikle sağlık çalışanlarında enfeksiyon riski genel nüfusa göre daha
+yüksektir. Çünkü sağlık çalışanları enfeksiyon zinciri (Şekil 5.1) adı verilen bir süreç
+içerisinde sürekli yer alırlar. Enfeksiyon zincirinde , biyolojik risk etmeninin sağlıklı
+bir insana bulaşabilmesi için bir dizi olaylar meydana gelir ve bu olaylar sırasında
+vücutta enfeksiyon oluşması için bir döngü süreci başlar. Altı aşamadan oluş an bu
+döngü sürecine enfeksiyon zinciri denilmektedir. Bu ayrıntılı bir şekilde
+incelenecek olursa aşağıda sırası ile belirtilmiş faktörlerden oluşur.
 
-Bununla beraber ışık çalışılan bölgeye direkt geliyorsa direkt aydınlatma,
-başka bir yüzeye çarpıp geliyorsa endirekt aydınlatma, sadece çalışılan bölgeyi
-aydınlatıyorsa lokal aydınlatma olarak adlandırılır.
-Işık gereksinimi, yapılacak işin tipi, yüzeyin özelliği (ışığı soğurması ya da
-yansıtması), genel çalışma alanı ve bireyin görme yeterliliğine bağlıdır. İşyerlerinin
-tasarım ve değerlendirilmesinde objektif ışık ölçümleri temeldir.
-Işığın ölçülmesine fotometri denir. Aydınlatma şiddeti ışık kaynağı ya da ışık
-yayan kürenin gücünü tanımlar. Aydınlatma şiddetinin ölçü birimi “lüks”tür (lux).
-Bu değer birim alana ( bir yüzeyin 1 m
-2
-sine) düşen ışık akılarının toplamıdır.
-Çalışanların sağlığının korunması için gerekli uygun fiziksel koşulların
-başında aydınlatma gelmektedir. İş yerlerinde uygun aydınlatma ile çalışanın göz
-sağlığı korunur, birikimli kas ve iskelet sistemi travmaları ve pek çok iş kazası
-önlenir, olumlu psikolojik etki sağlanır.
-Termal Konfor
-Termal konfor, genel olarak bir iş yerinde çalışanların büyük çoğunluğunun
-sıcaklık, nem, hava akımı gibi iklim koşulları açısından gerek bedensel gerekse
-zihinsel faaliyetlerini sürdürürken belirli bir rahatlık içinde bulunmalarını ifade
-eder.
-İklimin çalışanların verimliliği üstünde oldukça önemli bir etkisi vardır.
-Örneğin iş ortamında aşırı ısının genel organik direnci azalttığı, iş verimini
-düşürdüğü, kramplar ve ısı çarpması gibi etkileri oluşturduğu bilinmektedir. Uzun
-süre soğuk bir iş yerinde çalışan insanların aşırı gıda aldıkları, vücutlarının
-yağlanarak kilo aldıkları böylece iş verimlerinin düştüğü görülmüştür.
-Çalışma ortamlarındaki ısı etkilenmeleri ve konforsuz ortam şartları, iş
-kazalarının artmasına ve üretimin azalmasına bir başka değişle verimin düşmesine
-sebep olmaktadır. İnsanın ortamla ısı alışverişine etki eden dört ayrı faktör vardır.
-Bunlar;
- Hava sıcaklığı
- Havanın nem yoğunluğu
- Hava akım hızı
- Radyant ısı şeklinde sıralanabilirler.
-Sıcaklık: Belirlenen bir standarda göre, bir cismin ne kadar soğuk, serin ve
-ılık olduğunu ifade eden niceliğe denir. Serbest yaşam için insan kapasitesini
-oluşturan ve fizyolojik gereksinmeler dediğimiz, insan vücudunun ısı alışverişi,
-oksijen, tuz ve asit-baz dengesi gibi bazı fiziksel ve kimyasal faktörlerin belli sınırlar
+Biyolojik risk
+etmenleri enfekte
+canlı veya cansız
+maddeden çıkan
+bakteri, virüs vb. gibi
+etkenlerin farklı
+taşıyıcılar ile ağız,
+burun , deri gibi bir
+giriş kapısından yeni
+konakçıya
+taşınmasıyla zincir
+şeklinde yayılır.
 
-Termal konfor,
-genel olarak bir iş
-yerinde çalışanların
-büyük
-çoğunluğunun
-sıcaklık, nem, hava
-akımı gibi iklim
-koşulları açısından
-gerek bedensel
-gerekse zihinsel
-faaliyetlerini
-sürdürürken belirli
-bir rahatlık içinde
-bulunmalarını ifade
-eder.
-
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 8
-içinde sürekli dengeli olmaları gerekir. Örneğin, insan vücudunun sıcaklığı 36,5-37
-o
-C arasında değişmezlik gösterir. Bu durum vücut ile çevre arasındaki ısı alışverişi
-ile sağlanır. Isı dış çevrede devamlı olarak bulunan bir çeşit enerjidir.
-Sıcaklık yönünden iş yerleri yaş ve kuru termometre sıcaklığı olarak
-tanımlanan iki ayrı büyüklük ile değerlendirilir. Kuru termometre sıcaklığı normal
-bir termometre ile ölçülen sıcaklık derecesi olup havanın nem oranı hakkında bilgi
-içermeyip sadece sıcaklığı hakkında bir fiziksel ölçü verir. Öte yandan, yaş
-termometre sıcaklığını ölçmek için kullanılan sıcaklık ölçerin ısı algılayan kısmının
-ıslak olması gerekip sıcaklık ölçümü aynı zamanda havanın içerdiği nem miktarı
-hakkında da bilgi içerir.
-Bu iki ayrı ölçüm yaklaşımının kullanılmasının sebebi sıcaklığın derece
-olarak artması veya azalması yanında, ortamdaki nem ve hava akım hızının da
-algılanan sıcaklık etkisini arttırması veya azaltması gerçeğidir. Bu üç değişkenin
-farklı birleşimlerini kişi aynı sıcaklık duygusu olarak hissedebilir.
-Nem: Sıcaklık yanında nemin de etkisi oldukça önemlidir. Havadaki nem
-miktarı mutlak ve bağıl nem olarak ifade edilir. Mutlak nem birim havadaki su
-miktarını ifade eder. Bağıl nem ise havadaki nem miktarının, aynı sıcaklıkta
-doymuş havadaki mutlak nemin yüzde kaçını ihtiva ettiğini gösterir.
-İş sağlığı ve güvenliği yönünden bağıl nemin değeri önemlidir. Bir iş yeri
-ortamının bağıl nemi değerlendirilirken sıcaklık, hava akım hızı gibi diğer şartların
-da değerlendirilmesi gerekir. Ancak, genel olarak herhangi bir iş yerinde bağıl nem
-%30 ile %80 arasında olmalıdır. Yüksek bağıl nem, ortam sıcaklığının yüksek olması
-durumunda bunaltır, düşük olması durumunda ise üşüme ve ürperme hissi verir.
-Hava Akım Hızı: İş yerinde oluşan kirli havanın dışarı atılması ve yerine temiz
-havanın alınması için ortamda uygun bir havalandırmanın, dolayısıyla uygun bir
-hava akım hızının olması gerekmektedir. Hava akım hızı anemometre ile ölçülür.
-Hava sıcaklığı, nemi ve hava akım hızının beraberce oluşturduğu sıcaklık
-etkisine “effektif sıcaklık” denir.
-Örneğin; 37 ºC sıcaklık, %10 nem ve 3 m/sn hava akım hızı ile 27 ºC sıcaklık,
-%75 nem ve 0,1 m/sn hava akım hızı, sıcaklık duygusu bakımından eşdeğer olabilir.
-Yani bu iki farklı durumun kişi üzerindeki etkisi aynıdır.
-Termal Radyasyon
-İletimi için maddesel bir ortama gerek olmayan ısı türüdür. Bu ısı türünü
-havalandırma ile kontrol etmek mümkün değildir. Radyant ısıdan korunmak için,
-koruyucu siperler kullanılabilir ya da sıcak cisimlerin yüzeyleri, ışıma özelliği zayıf
-maddelerle boyanabilir/kaplanabilir. Maden eritme, cam vb. sektörlerde bu tip
-radyant ısı maruziyetine rastlanmaktadır.
-İnsanların, çalışma ortamından önemli ölçüde etkilendiği düşünüldüğünde
-ortamın sıcaklık değeri, nemi vb. termal şartların çalışan üzerindeki negatif etkileri
-mutlaka göz önüne alınmalıdır. Çalışma ortamından negatif etkilenen kişinin
 
-İş sağlığı ve
-güvenliği yönünden
-bağıl nemin değeri
-önemlidir. Bir iş yeri
-ortamının bağıl
-nemi
-değerlendirilirken
-sıcaklık, hava akım
-hızı gibi diğer
-şartların da
-değerlendirilmesi
-gerekir.
 
-Radyasyon Latince
-bir kelime olup
-dilimizde ışıma
-olarak kullanılır.
-Atomlardan,
-Güneş’ten ve diğer
-yıldızlardan yayılan
-enerjiye radyasyon
-enerji denir.
-Radyasyon enerji ya
-dalga biçiminde ya
-da parçacık modeli
-ile yayılırlar.
+Şekil 5.1. Enfeksiyon Zinciri
 
-Fiziksel Risk Etmenleri
+Etken Enfeksiyon: Vücudumuzun çeşitli yerlerine yerleşmiş olan
+mikroorganizmalar vücudun temel savunma sistemlerinin bir parçası hâlini alırlar.
+Enfeksiyon oluşturma yeteneğine sahip bu organizmalar etken enfeksiyonu
+oluştururlar. Bir enfeksiyon etkeninin hastalık yapabilme yeteneği patojenite; bu
+etkenin ağır veya öldürücü bir hastalık tablosuna yol açma yeteneği ise virülans
+olarak tanımlanır. Sağlık hizmeti verilen birimlerde, özellikle hastanelerin belirli
+bölümlerinde patojenitesi ve virülansı çok yüksek dirençli mikroorganizmaların
+varlığı ve yoğunluğu iyi bilinen ve araştırmalarla saptanmış bir olgudur. Bu
+şekildeki hastane enfeksiyonu etkenleri antibiyotik tedavisine oldukça dirençli,
+bulaşıcılığı yüksek süper enfeksiyonlardır ve hastalarla birlikte sağlık çalışanlarını
+da tehdit ederler.
+Kaynak: Enfeksiyonun yerleşip çoğaldığı, canlı ve cansız varlıklardır ve
+zincirin uç noktasıdır. Daha önce enfeksiyon geçirmiş biri dahi kaynak sebebi
+olabilir.
+Çıkış Kapısı: Mikroorganizmaların vücudu terk etmesidir . Sinüs akıntısı, dışkı,
+kulak akıntısı gibi olaylar çıkış kapısı olarak adlandırılır. Birçok enfeksiyonun
+önlenmesinde büyük rol oynayan bu olay, enfeksiyon zincirinin kırılmasında
+etkilidir.
+Bulaşma Yolu: Enfeksiyonlu bir kişinin, sağlam bir kişi ile tokalaşması,
+öpüşmesi, içmiş olduğu bardaktan su içmesi gibi direkt temas yollarıdır.
+Giriş Kapısı: Enfeksiyonun bulaşabileceği en sık yerlerdir. Ağız, burun, boğaz,
+göz ve cilt gibi vücudumuzdaki alanlar giriş kapısını oluşturmaktadır. Etkenler giriş
+kapısından temas, ortak kullanılan cansız maddeler (su, yiyecek, süt ürünleri vb.),
+hava ve vektörler aracılığı ile vücuda girebilir. Ayaktan ve yataklı tedavi kurumları,
+
+Biyolojik risk
+etmenleri olan
+enfeksiyonların
+yayılmasının
+engellenmesi için
+enfeksiyon zincirinin
+oluşması
+engellenmesine
+yönelik tedbirler
+alınmalıdır.
+
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 9
-dikkatinde azalma ve psikolojik olarak etkilenme sonucu kazaların yaşanmaması
-için ortam koşullarının sıkı takip edilmesi gerekmektedir.
-Radyasyon
-Radyasyon Latince bir kelime olup dilimizde ışıma olarak kullanılır.
-Atomlardan, güneşten ve diğer yıldızlardan yayılan enerjiye radyasyon enerji
-denir. Radyasyon enerji ya dalga biçiminde ya da parçacık modeli ile yayılırlar. [4]
-Işık ışınları, ısı, x-ışınları, radyoaktif maddelerin saldığı ışınlar ve evrenden
-gelen kozmik ışınların hepsi birer radyasyon biçimidir.
-Bazı radyasyonlar çok küçük parçacıklardan, bazıları da dalgalardan oluşur.
-Radyoaktif maddelerin saldığı alfa ve beta ışınları ile yıldızlardan savrulan kozmik
-ışınlar parçacık biçiminde yayılan radyasyonlardır.
-Dalga biçimindeki radyasyona en iyi örnek elektromanyetik dalgalardır.
-Gamma ışınları, x-ışınları, morötesi (ultraviyole) ışınlar, görünür ışık, kızılötesi
-(enfraruj) ışınlar, radarlarda kullanılan mikrodalgalar ve radyo dalgaları
-elektromanyetik radyasyon biçimleridir.
-Bunlardan yalnızca ikisinin varlığını bir ölçü aygıtı kullanmaksızın
-belirleyebiliriz. İnsan gözünün algılayabildiği görünür ışık ve etkisini ısı olarak
-hissettiğimiz uzun dalga boylu kızılötesi radyasyondur. Radyo dalgalarının varlığı
-radyo alıcılarıyla, diğer radyasyonların varlığı da çeşitli yöntemlerle belirlenebilir.
-Radyasyonu meydana getiren parçacıklar veya elektromanyetik dalgalar ses
-dalgalarından farklı olarak boşlukta yol alabilir ve 300.000 km/saniye gibi
-olağanüstü bir hızla yayılır.
-Radyasyonun bir enerji olduğundan bahsedilmişti. Bu enerjinin bir bölümü
-tanecik özellikli bir bölümü de dalga özelliklidir. Tanecik özellikli olanlar: Alfa
-ışınları, Beta ışınları, nötron ve proton ışınları ile kozmik ışınlardır. Bu ışınlar bir
-ortamdan geçerken ortamla etkileşerek doğrudan veya dolaylı olarak iyon çiftleri
-oluştururlar, bu nedenle bu ışınlara iyonlayıcı ışınlar da denir.
-Radyasyon, insan sağlığına ciddi zarar verebilecek bir risk etmenidir.
-İşverenlerin, çalışanlarının çalışma ortamlarında radyasyona maruz kalmasını
-önlemek için gerekli tedbirleri almalı ve eğitimleri sağlamalıdır.
-Alfa Işınları (Alfa Partikülü)
-Helyum atomunun pozitif yüklü çekirdeğidir. Yapay olarak meydana
-getirildiği gibi teknolojinin gereği olarak istenmediği hâlde yan ürün olarak ta
-(elektron tüplerinde olduğu gibi) ortaya çıkabilir.
-Beta Işınları: Negatif yüklü hızlı elektronlardır. Yapay olarak izotop elde
-etmekte hızlandırılmış elektronlar kullanılır.
-Nötron Işınları: Atom çekirdeğinde bulunan yüksüz parçacıklar olup önemli
-ve özellikleri olan bir radyasyon tipidir. Nükleer çekirdek bölünmesi ve
-reaksiyonları sırasında meydana gelirler.
+tanı ve araştırma laboratuvarları bu etkenlerin her türlü bulaşma yolu için elverişli
+ortamlardır.
+Uygun Konakçı: Vücut direnci zayıflamış ya da savunma sistemi,
+mikroorganizmalara karşı yeterince güçlü olmayan bireylerden oluşur. Enfeksiyon
+zincirinin son halkasıdır. Çalışma koşulları gereği çeşitli mikroorganizmaların kişinin
+çeşitli yerlerinde kolonize olma olasılığının yüksektir. Bunun yanında özgün ve
+özgün olmayan kişisel savunma mekanizmalarının, yine ağır çalışma koşullarının
+yarattığı stres ve normal nüfusa göre fazla olduğu gözlenen bazı sağlık
+bozucu alışkanlıkların da etkisiyle yeterince işlev göremediği durumlar da söz
+konusu olabilir.
+Çevre sel etkenler ise enfeksiyon zincirinin her basamağında etkilidir. Isı
+değişiklikleri, nem, radyasyon, hava basıncı, hava akımının hızı, kimyasal maddeler,
+gazlar ve toksinler gibi faktörler enfeksiyon oluşumunu etkilerler. Patoloji,
+mikrobiyoloji, biyokimya laboratuvarları; radyoloji ve radyoterapi bölümleri;
+ameliyathaneler başta olmak üzere sağlık kuruluşlarının görev yapılan her
+bölümünde bu etmenlerin olumsuz etkileri söz konusudur.
+Tablo 5.3. Farklı çalışma alanlarında maruz kalınabilecek biyolojik risk etmenlerine örnekler
+Çalışma Alanı Sorun oluşturan ana biyolojik risk etmenleri
+Tarım,
+hayvancılık ve
+veteriner
+hizmetleri
+Allerjenler (polen, bitkisel ürünler ve hayvanların idrar, tüy ve
+derilerinden kaynaklanan proteinler gibi), maytlar, mantarlar,
+(Aspergillus spp, Penicillium spp, dermatophytes gibi) ve
+bakteriler (Actinomycetes, Brucella spp, Bacillus
+anthracis, Coxiella burnetii, Salmonella spp, MRSA, E.coli gibi),
+ve bakterilerin hücre duvarı bileşenleri (endotoksinler ve
+glukanlar gibi), zoonotik virüsler (Rabies ve Influenza gibi),
+parazitler ve keneler.
+Hastaneler,
+sağlık
+hizmetleri
+Virüsler (Hepatitis, AIDS, rubella, Rabies ve influenza gibi),
+bakteriler (Staphylococcus aureus, Streptococcus pyogenes,
+Mycobacterium tuberculosis, Legionella ve Clostridium gibi),
+mantarlar (Tinea spp ve Aspergillus spp gibi), parazitler
+(Giardia lamblia gibi) ve pironlar gibi enfeksiyöz ajanlar.
+Laboratuvarlar
+Zoonotik ajanlar (Trichophyron spp, Toxoplasma gondii,
+Rabies gibi), parazitler (Leismania spp gibi) ve pironların yanı
+sıra alerjenler (maytlardan, hayvanların idrar, tüy ve
+derilerinden kaynaklanan proteinler gibi).
+Yiyecek ve
+içecek üretimi,
+fırınlar
+Mantarlar (küf ve maya mantarları), bakteriler, ve maytlar
+Mikotoksiler, endotoksinler, glukanlar, bitkisel ve hayvansal
+kaynaklı alerjenler (α-amilaz, selülazlar gibi),
+Atık toplama,
+arıtma ve
+ayırma
+Mantarlar (Aspergillus fumigatus, ve maya manmtarları),
+enfeksiyöz olan (Salmonella gibi) ve olmayan bakteriler (E.
+Coli, actinomycetes gibi),
+Endotoksinler, glukanlar ve virüsler (Hepatitis A, Hepatitis B
+gibi)
 
-Hızlı temel
-parçacıklardan
-oluşan kozmik
-ışınlardan sonra en
-kısa dalga
-boyundaki
-radyasyonlar
-gamma ışınlarıdır.
-Gamma ışınları hem
-uranyum ve radyum
-gibi doğan
-radyoaktif
-maddelerin
-parçalanmaları
-sırasında hem de bir
-nükleer reaktörde
-ya da bir atom
-bombası
-patlatıldığında atom
-çekirdeklerinin
-parçalanmasıyla
-meydana gelir.
+Farklı mesleklerde
+çalışma alanlarına
+göre sorun
+oluşturabilecek
+biyolojik risk
+etmenleri de
+farklılık
+gösterebilmektedir.
+Bu nedenle iş
+yerlerinin alması
+gereken önlemler
+kendi risk gruplarına
+göre
+değerlendirilmelidir.
 
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 10
-Proton Işınları: Atom çekirdeğinde bulunan ve pozitif elektron yüklü
-partiküllerdir. Bu ışın da nükleer çekirdek bölünmesi reaksiyonları sırasında
-meydana gelirler.
-Gamma Işınlar: Hızlı temel parçacıklardan oluşan kozmik ışınlardan sonra en
-kısa dalga boyundaki radyasyonlar gamma ışınlarıdır. Gamma ışınları hem
-uranyum ve radyum gibi doğan radyoaktif maddelerin parçalanmaları sırasında
-hem de bir nükleer reaktörde ya da bir atom bombası patlatıldığında atom
-çekirdeklerinin parçalanmasıyla meydana gelir.
-X-Işınları: Röntgen cihazlarında meydana gelen ışınlardır. X-ışınlarının dalga
-boyları gamma ışınlarının dalga boylarına göre 100 kat daha büyüktür.
-Kızılötesi Işınlar (İnfrared Işınlar): Dalga boyları X-Işınlarından daha
-büyüktür. Yapay olarak elde edilebildiği gibi güneş ışınlarında da bulunur.
-Basınç
-Birim alana yapılan kuvvete basınç denir. Birimi Bar veya Newton/m
-2
-dir.
-Barometre ile ölçülür.
-İş Sağlığı ve Güvenliği açısından basınç: Hava basıncının iş yerlerinde
-atmosfer basıncından daha fazla veya daha az olması şeklinde önem gösterir.
-Normal şartlarda hava basıncı 76 cm cıva basınç değerine eşittir.
-Yükseklere çıkıldıkça basınç düşer. Bu durumun nedeni yükseldikçe
-yerçekiminin, atmosferin kalınlığının ve gazların yoğunluğunun azalmasıdır.
-Dolayısıyla, basınç ile yükseklik arasında ters orantı vardır. Atmosfer basıncının
-yükseldikçe düşmesinden faydalanarak yükselti ölçen alet yapılmıştır. Bu alete
-altimetre adı verilir.
-Öte yandan, hava ısındıkça genişler ve hafifler, soğudukça sıkışır ve ağırlaşır.
-Havanın soğuk olduğu alanlarda basınç yüksek, sıcak olduğu alanlarda ise
-düşüktür. Dolayısıyla, sıcaklık ile basınç arasında ters bir orantı vardır.
-Atmosfer basıncından daha yüksek ya da daha düşük basınçlı yerlerde
-çalışan işçilerde, kalp, dolaşım, solunum rahatsızlıkları görülebilir.
-FİZİKSEL RİSK ETMENLERİNİN İNSANLAR ÜZERİNDEKİ
-ETKİSİ
-Bu bölümde fiziksel risk etmenlerinin insanların üzerinde oluşturduğu
-etkiler incelenecektir.
-Gürültünün İnsan Üzerindeki Etkileri
-Gürültünün dalgınlık, unutkanlık, psikolojik etkiler, konuşma bozukluğu,
-çalışma gücünün azalması gibi kulak haricinde de birtakım olumsuz etkilerinin
-olduğu bilinmelidir.
+RİSKLERE KARŞI ALINACAK ÖNLEMLER
+İş yerlerinde karşılaşılabilecek biyolojik risk etmenlerine karşı hem işverenin
+hem de çalışanların alması gereken önlemler mevcuttur. İşveren işe giriş ve aralıklı
+kontrol muayeneleri olmak üzere periyodik taramalarla duyarlı kişileri
+saptamalıdır. Tüm çalışan personelin eğitimi hem işe başlarken hem meslek içi
+eğitim programları ile yapılmalıdır. İşçilerin çalışırken uyacakları hareket tarzlarının
+yönerg e ve uyarı işaretleri ile düzenlenmesi, belirlenmesi ve çalışanlara bildirilmesi
+sağlanmalıdır. Ayrıca ç alışma ortamının (hastane, laboratuvar, hayvan barınağı,
+kesimevi, paketleme atölyeleri, klinikler, kişisel bakım merkezleri, atık arıtma
+atölyeleri vb.) mimari yapılarının işlevlerine uygunluğu sağlanmalıdır. Uygun
+yalıtım ve dezenfeksiyon önlemleri alınarak enfeksiyon zinciri engellenmelidir.
+Çalışanlar için aktif bağışıklama yapılmalıdır. Bu amaçla çalışanlar iş yerinin
+özelliğine göre aşılanmalıdır. Mesela laboratuvar çalışanları ve/veya hayvancılık ile
+uğraşanlar, Hepatit B aşısı, veba aşısı (Yersinia pestis), kuduz aşısı, şarbon aşısı
+(Bacillus anthracis) gibi aşılarla aşılanmalıyken kreş ve gündüz bakımevlerinde
+çalışanlar kızamık, kabakulak, kızamıkçık, poliomyelit, influenza, Hepatit A ve
+Hepatit B gibi hastalıklara karşı aşılanmalıdır. AÇSH Bakanlığı yönetmeliğine göre
+işverenin yükümlülükleri Tablo 5.4’te özetlenmiştir.
+Tablo 5.4. AÇSH Bakanlığı verilerine göre işverenlerin biyolojik risk etmenlerine karşı alması
+gereken önlemler.
+Yükümlülük Neler Yapılmalı
+İkame
+Biyolojik risk etmenini uygun durumda çalışanın sağlığı için tehlikeli
+olmayan veya daha az tehlikeli olanlarla değiştirir.
+Risklerin
+azaltılması
+Risk mevcudiyetinde çalışanların maruziyetini önler.
+Eğer maruziyet zorunlu ise sağlık ve güvenlik yönünden yeterli
+korumayı sağlayacak düzeyde çalışanların maruziyet düzeyini en aza
+indirir.
+Bakanlığın
+bilgilendirilmesi
+İşveren grup 2, 3 ve 4 biyolojik etkenlerle ilk kez çalışmasından 30
+gün önce Bakanlığa bildirir.
+İşveren risk değerlendirmesi sonuçlarını, hangi işlerde ne kadar
+çalışanın riske maruz kaldığını ve buna karşı iş yeri güvenliği personeli
+dâhil alınan önlemleri bildirir.
+Biyolojik risk etmeninin ortama yayılması veya enfeksiyon
+oluşturması gibi kazaları bildirir.
+Faaliyet sonrası riske maruz kalan çalışanların listesi ve tüm tıbbi
+kayıtları bildirir.
+Hijyen ve
+Kişisel
+Korunma
+Çalışanların biyolojik etken bulaşma riski olan ortamlarda yiyip içmesi
+engellenerek uygun koruyucu giysilerle çalışmasını sağlar (Şekil 5.2).
+Gerekli koruyucu donanım ve ekipmanı (göz yıkama sıvısı, cilt
+antiseptiği gibi) temin eder ve devamlılığını (yenilenme, temizleme)
+sağlar.
+Çalışanların
+eğitimi ve
+bilgilendirilmesi
+İşveren çalışanlarını biyolojik risk etmenlerine maruziyet sonucu
+oluşacak olası sağlık riskleri, maruziyet karşı koruma önlemleri, hijyen
+kuralları, koruyucu donanım ve giysi kullanımı, olay anında veya
+önlenmesinde eylem planı gibi konularda çalışma başlamadan önce
+eğitime tabi tutar.
 
+Çalışanların iş yerinde
+karşılaşılabilecek
+risklere karşı
+korunması ancak hem
+iş yerinin hem de
+çalışanın üzerine
+düşen yükümlülükleri
+eksiksiz yerine
+getirmesi ile sağlanır.
 
-Birim alana yapılan
-kuvvete basınç
-denir. Birimi Bar
-veya Newton/cm2
-dir. Kuvvetin tatbik
-edildiği her noktada
-bir basınç vardır. İş
-Sağlığı ve Güvenliği
-konusunda basınç
-ise: Normal hava
-basıncının (atmosfer
-basıncı) daha fazla
-veya daha az olması
-gereken veya olan iş
-yerlerindeki
-basınçtır.
-
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 11
-Gürültünün insan sağlığı üzerindeki olumsuz etkileri:
-Psikolojik Etkiler: sinir bozukluğu, korku duyusu, uyku sorunları, yorgun
-olma hissi, zihinsel aktivitelerin yavaşlaması, rahatsızlık, tedirginlik.
-İletişimi Önleme Etkisi: Gürültünün konuşma ile olan iletişimi önlemesi, iş
-verimine ve iş güvenliğine olan etkileri.
-Fizyolojik Etkileri: işitme duyusunda azalma, kulak ağrısının meydana
-gelmesi, mide bulantısı, kas gerilmeleri, stres, kan basıncında artış, kalp atışlarının
-ve kan dolaşımının değişimi, gözbebeğinin büyümesi vb.
-Titreşimin İnsan Üzerindeki Etkileri
-İnsan, titreşimin düşük frekanslarında sarsıntı hisseder. Buna karşılık
-titreşimin yüksek frekanslarında karıncalanma hatta yanma hissi oluşur. Titreşimin
-insan vücudu üzerindeki etkileri;
- Fizyolojik,
- Psikolojik ve
- Patolojik etkiler şeklindedir.
-Bu etkiler birbiri ile sıkı ilişkilidirler. Titreşimin özelliklerini oluşturan
-faktörlerden en önemlisi frekansıdır. Titreşimin tıbbi ve biyolojik etkisi büyük
-ölçüde şiddetine ve titreşime maruz kalınan süreye bağlıdır. İnsan vücuduna
-belirgin etkisi olan titreşimin frekansı 1 Hz. ile 100 Hz. arasındadır.
-Titreşime neden olan el aletlerini kullanan kişilerde yapılan ölçmelerde; el-
-kol-vücudun titreşim geçirme oranı, 5 Hz’de en yüksek olarak bulunmuştur. İkinci
-maksimum düzey ise 20-30 Hz arasıdır.
-Titreşim enerjisi avuç içinden el sırtına, elden kola ve koldan omuza
-geçerken önemli güç kaybına uğrar. Bu hafifleme omuz eklemlerinde en fazla olur.
-Bu gücün azalarak seyretmesi memnuniyet verici bir husustur.
-Klinik belirtiler genel olarak titreşimli el aleti kullanan çalışanlarda,
-elde dolaşım bozuklukları, hipersentivite ve daha sonra uyuşukluk şeklinde olur.
-Maruziyet sürerse omuz başlarında ağrı, yorgunluk ve soğuğa karşı hassasiyet
-artması olur.
-Aydınlatmanın İnsan Üzerindeki Etkileri
-İnsanın enformasyon algılamasında en önemli algılayıcı gözüdür. Bütün
-algılamanın %80 ile % 90’ı göz kanalıyla gerçekleşir. İş koşullarının doğurduğu
-yorgunluğun büyük bir kısmı göz zorlanmasından ileri gelir.
-Kötü aydınlatmanın vereceği zararlar
- Yetersiz veya uygunsuz aydınlatma sonucunda, görme fonksiyonunda
-zorlanmalar, göz yorgunluğu, gözlerde batma, yanma, kızartı olur, ileri
-derecede etkilenme ile görme bozulur.
+Bu eğitimi risk etmenleri değiştikçe ve belirli periyotlarda yeniler.
+Özel
+durumlarda
+çalışanın
+bilgilen dirilmesi
+İşveren biyolojik risk etmenleri ile çalışma sırasında oluşabilecek
+kazalara karşı yazılı talimatlar oluşturarak çalışanlarını bilgilendirir.
+Çalışanlar benzer olayları işverene ve diğer yetkililere bildirir.
+Bu kazaları, sebeplerini ve sonrasında düzeltmek için alınan önlemler
+çalışana/temsilcilerine bildirilir.
+Biyolojik
+etkenlere
+maruz kalan
+çalışanların
+listesi
+İşverenler grup 3 ve grup 4 biyolojik etkenlere maruz kalanların
+listesini tüm detayları ile kayıt altına alır (yapılan iş, hangi erkene
+maruz kalındığı, kazalar vb.).
+Bu kayıtları maruziyet sona erdikten sonra en az 15 yıl saklar (Özel
+durumlarda kayıtların 40 yıl saklanması gerekebilir).
 
-İnsan, titreşimin
-düşük
-frekanslarında
-sarsıntı hisseder.
-Buna karşılık
-titreşimin yüksek
-frekanslarında
-karıncalanma hatta
-yanma hissi duyar.
-Titreşimin insan
-vücudu üzerindeki
-etkileri;
-Fizyolojik,
-Psikolojik ve
-Patolojik
-etkiler
+İş sağlığı ve güvenliği açısından değerlendirmede yalnızca işveren değil aynı
+zamanda çalışanlarında biyolojik risk etmenlerinden korunmak için uyması
+gereken genel kurallar mevcuttur.
 
+Şekil 5.2. İş yerlerinde biyolojik risk etmenlerine karşı işveren tarafından asılması
+gereken güvenlik işaretlerine örnekler. Kırmızı güvenlik işaretleri tehlikeleri ve yapılması
+yasak olanları gösterir. Mavi güvenlik işaretleri ise yapılması zorunlu olanları gösterir.
+Burada bazı Kişisel Koruyucu Donanım (KKD) örnekleri gösterilmiştir [3].
+Laboratuvar Uygulamalarında Uyulması Gereken Genel
+Kurallar
+Özellikle hastanelerin veya analiz merkezlerinin laboratuvarları biyolojik
+etmenler açısından yüksek riskli alanlardır. Bu nedenle bu ortamlarda çalışanların
+uyması gereken kurallar aşağıdaki gibi genellenebilir.
+• Pipetler kesinlikle ağızla kullanılmamalıdır, baloncuk oluşmamasına özen
+gösterilmelidir.
+• Pipetlerin yerine kesinlikle enjektör veya iğne kullanılmamalıdır.
+• Açılan tüp kapakları ve tüp ağzı alkollü bez ile örtülmelidir.
+• Biyolojik risk tehlikesi olan işlemler “Biyolojik Güvenlik Kabini”nde
+yapılmalıdır.
+• Santrifüj işlemleri yeterli havalandırmaya sahip bir odada yapılmalı ve bu
+işlemler sırasında kullanılan plastik tüplerin sağlam olmasına dikkat
+edilmelidir.
+• Enjeksiyon ve aspirasyon sırasında genel kural olarak iğnesi kilitlenen
+enjektör kullanılmalıdır. İğne enjektörden ayrılırken alkollü bezle tutulması
+gerekir.
 
-Yetersiz veya
-uygunsuz
-aydınlatma
-sonucunda, görme
-fonksiyonunda
-zorlanmalar, göz
-yorgunluğu,
-gözlerde batma,
-yanma, kızartı olur,
-ileri derecede
-etkilenme ile görme
-bozulur.
+Biyolojik risk etmenleri
+ile karşı karşıya olan iş
+yerleri Avrupa Birliği
+uyum süreci
+çerçevesinde Türkiye
+Cumhuriyeti Aile,
+Çalışma ve Sosyal
+Hizmetler Bakanlığının
+2013 tarihli Yönetmeliği
+doğrultusunda hareket
+etmelidir.
 
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 12
- İyi ve yeterli derecede aydınlatılmamış bir ortamda yapılan çalışmalarda
-(ağaç işleme tezgâhları, torna tezgâhları gibi tehlikeli makinaların
-kullanılması ile) iş kazaları artabilir.
-İyi aydınlatmanın sağlayacağı yararlar
-Bunlar:
- Gözün görme yeteneği artar.
- Göz sağlığı korunur.
- Kazalar azalır.
- Yapılan işin verimi yükselir.
- Güvenlik sağlanır.
- Estetik hislere ve konfor gereksinimine yanıt verilir.
- Çalışan performansı artar.
-Termal Konfor Şartlarının İnsan Üzerindeki Etkileri
- Vücut ısısını kontrol eden büyük faktör çevre ısısıdır. Isı arttıkça sinir
-sistemi etkilenir, kas kuvveti düşer, nabız yükselir, yorgunluk artar, ağrılı
-kas krampları oluşur, baş ağrısı, mide bozuklukları, iştah azlığı, uykusuzluk
-vb. değişiklikler oluşabilir.
- Soğuk, özellikle nemli ortamdaki hareketsizlerde ayaklar ıslak ve sıkı
-giydirilmişse daha fazla etkili olur. Isı azaldıkça ayaklarda şişme, kızartı,
-yanma, eklem romatizması gelişebilir.
- Uygun olmayan termal konfor şartlarında daha yavaş çalışmayla verimlilik
-azalır, iş kazalarının oranı artar. Dolaşım bozuklukları, el becerilerinin
-azalması, soğuk algınlığı, üşüme, kas ve eklem hastalıkları, genel bezginlik
-ve iş hevesi kayıpları oluşabilir.
- Çevre sıcaklığı ve nemin artması, çalışan personelin kalp yükünü arttırır.
-Düşük sıcaklık değerleri ise parmak esnekliği ve hassasiyetini önemli
-oranda azaltır. Termal konfor bölgesi çalışma için ideal sıcaklık ve nem
-koşullarını gösterir. Termal konforu etkilemekte olan çevresel faktörler
-havanın sıcaklığı, radyasyon sıcaklığı, hava akım hızı, hava nemi olarak
-sıralanır.
-Radyasyonun İnsan Üzerindeki Etkileri
-Radyasyon vücuda yüksek dozda girdiğinde insan sağlığı için zararlıdır;
-bütün dokulardan kolayca geçerek derine işleyen ışınlar ise en tehlikeli olanlarıdır.
-Alfa ışınları, ağır parçacıklar olup çok uzağa gidemezler. Havada yaklaşık 5
-cm’lik mesafedeki bir kâğıt tabakasını veya alüminyum levhayı geçemezler. Bu
-nedenle çevreden gelebilecek alfa ışınları önemli bir tehlike yaratmazlar. Ancak,
-kaynağından çıktıklarında hücreler üzerinde çok zararlı etkiye sahiptirler.
-Solundukları veya yutuldukları takdirde zararlıdırlar.
-Beta ışınları, madde içine fazla nüfuz etmezler. Bu ışınlar, cilt üzerinde yanık
-etkisi meydana getirirler ve adale içine birkaç milimetre mesafeye kadar etki
-ederler. Beta ışınlarının yutulması ve solunması ise tehlikeli olabilir.
+• İğne ve enjektörler kullanım sonrasında dar ağızlı sağlam özel kaplara
+atılmalıdır.
+• Kullanılan ve kontamine (kirlenmiş) olmuş tüm malzemeler atılmadan
+önce otoklavda steril edilmelidir.
+• Kontamine olmuş pipet ve cam malzemeler otoklavlanmadan önce
+dezenfektanlı kaplara konulmalıdır.
+• Laboratuvarlarda yiyecek , içecek ve sigara tüketilme mesi kesinlikle yasak
+olup, buna dikkat edilmelidir.
+• Laboratuvardan çıkarken eller mutlaka yıkanmalı, işlem sırasında
+kullanılan koruyucu materyal (gözlük, önlük vb.) laboratuvarda
+bırakılmalıdır.
+• Serum veya örnek saklanan buzdolabında kesinlikle gıda maddesi
+bulundurulmamalıdır.
+Bunun yanı sıra çalışanların işyerindeki biyolojik risk etmenlerini bilmesi ve
+bu etmenler için işveren ve yönetmelik tarafından belirlenen tüm önlemleri alması
+gerekmektedir. Bir iş yerinde biyolojik risk etmeninin varlığı uluslararası biyolojik
+tehlike işareti ile gösterilir (Sarı zemin üzerine siyah sembol) (Şekil 5.3).
 
-Gamma ışınları
-nitelik bakımından
-x-ışınlarına
-benzerler. Bu ışınlar
-canlılar için
-zararlıdır. Dokulara
-derinliğine girerler
-ve tahrip ederler.
-Tıpta urları yok
-etmekte, araç ve
-gereçlerin
-mikroplardan
-arındırılması gibi
-yararlı işlerde de
-kullanılır.
 
-Fiziksel Risk Etmenleri
+Şekil 5.3. Biyolojik tehlike işareti [1].
+
+Çalışanların Sağlık Gözetiminde Dikkat Edilmesi Gereken
+Hususlar
+İş yerlerinde risk faktörlerinin yok edilmesi veya en aza indirgenmesi için
+gerekli önlemler alınmış olsa bile bazen yapılan işin zorunlu gerekliliği olarak bazen
+de beklenmedik kaza veya olaylar sonucunda çalışanların biyolojik risk
+etmenlerine maruz kalması ve kontaminasyonu söz konusu olabilir. Bu
+durumlarda iş yeri hekimi ve işveren tarafından bazı uygulamaların yapılması
+gerekmektedir.
+İş yeri hekimi biyolojik etmenlere maruz kalan çalışanların sağlıklarının
+gözetiminden sorumludur. Bu bağlamda iş yerindeki biyolojik risk faktörlerini
+bilmeli, çalışanların sağlık durumlarını ve maruziyet koşullarını takip etmelidir. İş
+yeri hekimi çalışanların sağlık gözetimini
+yaparken iş yeri hekimliğinin uygulama ve
+prensiplerine uygun olarak davranmalı ve aşağıdaki önlemleri almalıdır:
+
+Tüm iş yerleri için
+biyolojik risk
+etmenlerinden
+korunmanın en temel
+kuralı tüm çalışanların
+kişisel hijyen kurallarına
+uyması ve iş yerinin bu
+kuralların uygulanması
+için gerekli ortam ve
+malzemeyi temin
+etmesidir.
+
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 13
-Nötron ışınları, oldukça tehlikelidir. Vücudun derinliklerine girebilirler. Doku
-hücrelerinin, atom çekirdekleri içerisine nüfuz edebilirler. Bu nedenle dokulara
-zarar verirler.
-Proton ışınları da vücudun derinliklerine girebilir ve dokulara hafif derecede
-nüfuz edebilir. Bu nedenle vücuda zararlıdırlar.
-Gamma ışınları nitelik bakımından X-ışınlarına benzerler. Bu ışınlar canlılar
-için zararlıdır. Dokulara derinliğine girerler ve tahrip ederler. Tıpta urları yok
-etmekte, araç ve gereçlerin mikroplardan arındırılması gibi yararlı işlerde de
-kullanılır.
-X-ışınları, vücuda derinlemesine kolayca girebilir ve dokulara nüfuz ederek
-tahrip edici etki gösterir. X-ışını tıpta iç organların incelenmesinde ya da bir
-kemikte kırık olup olmadığının araştırılmasında çok sık kullanılır.
-Kızılötesi ışınlar (infrared ışınlar) vücuda kolayca girer ve aşırı ısı verirler.
-Vücudun açık kısımları ısınır ve fiziki gerginlik meydana getirir. Bu ışınların
-şiddetine, maruziyet süresine ve ışına maruz kalan vücut bölgesine bağlı olarak
-deri yanıkları, katarakt gibi bazı göz hastalıkları da meydana gelebilir.
-Basıncın İnsan Üzerindeki Etkileri
-Balon ve uçak gibi araçlarla süratle yükseklere çıkılması hâlinde, doğal
-olarak atmosfer basıncının düşmesi nedeniyle, normal atmosfer basıncı altında
-dokularda erimiş olan gazların serbest hâle gelmesi ile karıncalanma, kol ve
-bacaklarda ağrılar ile bulanık görme ve kulaklarının iç ve dış tarafındaki basınç
-farkından dolayı kulak ağrıları gibi belirtiler meydana gelir. Vücuttaki oksijenin
-parsiyel basıncının düşmesi sonucu anoksemi, taşikardi görülebilir.
-Denizaltı personeli, dalgıçlar, gemi kurtarıcılarında ise, deniz dibine inildikçe
-vücut üzerinde basınç artması olur. Bu basıncın 4 atmosferi aşması hâlinde, kişi
-solunum ile fazla azot alacağından, azot narkozu içine düşebilir. Karar verme,
-düşünme ve istemli hareketler kötüleşebilir ve su üstüne çıkılmazsa, şuur
-çekilmesi baş gösterebilir. Kişi normal basınca döndüğü taktirde bu belirtiler
-hemen kaybolur.
-Soluma apareyi içine verilen basınçlı havanın bileşimindeki azot yerine
-helyum ikame edilirse azot narkozunun ortaya çıkması önlenmiş olur. Yüksek
-basınç altında, vücuttaki oksijen parsiyel basıncının artması başlangıçta hafif bir
-rahatsızlık hissi verir. Daha sonra ciddi semptomlar izler. İleri safhada koma hâli
-görülebilir.
-FİZİKSEL RİSK ETMENLERİNDEN KORUNMA YOLLARI
-Bu bölümde fiziksel risk etmenlerinin insanlar üzerinde oluşturduğu
-olumsuz etkilerden korunma yollarını göreceksiniz.
+• Çalışanların hem kişisel sağlık durumlarını değerlendirmeli hem de tıbbi ve
+mesleki öz ge çmişleri ile ilgili kayıtları tutmalıdır.
+• Çalışanlarda biyolojik etkenlerin oluşturduğu erken ve geri dönüşlü etkileri
+saptayıp biyolojik olarak analizini takip etmelidir.
+• İş yeri hekimi gerek iş yerinin çalışma sırasında karşılaşabileceği risk
+faktörleri hakkında gerekse uygulanması gereken önlemler açısından
+bilgiler güncellendikçe her çalışan için güncel konu ile ilgili daha ileri
+testler yapılmasına karar verilebilir
 
-Denizaltı personeli,
-dalgıçlar, gemi
-kurtarıcılarında ise,
-deniz dibine
-inildikçe vücut
-üzerinde basınç
-artması olur. Bu
-basıncın 4 atmosferi
-aşması hâlinde, kişi
-solunum ile fazla
-azot alacağından,
-azot narkozu içine
-düşebilir.
 
-Fiziksel Risk Etmenleri
+
+
+
+
+Örnek
+•Son zamanlarda ülkemizde görülme sıklığı artan en önemli ve
+tehlikeli biyolojik risk etmenlerinden birisi kene ısırması sonrası
+hastalara bulaşan ve çok hızlı yayılan Kırım-Kongo kanamalı
+ateşidir .
+•Bu hastalığa AÇSH Bakanlığınnın risk gruplandırmasına göre grup 4
+biyolojik risk etmenleriarasında bulunan Crieman-Congo
+hemorrhagic fever virusünün bulaşması sonucu hayatı tehdit edici
+enfeksiyon oluşur.
+•Hastane laboratuvarı çalışanlarının gerekli önlemleri almadan
+hasta materyaline dokunması sonucu ölüm vakası bildirilmiştir.
+Bireysel Etkinlik
+•Üniversite öğreniminde fen, sosyal ve sağlık bilimleri eğitimi
+sırasında karşılaşılabilecek biyolojik risk etmenleri neler
+olabilir? Araştırınız.
+•Öğrencilerin eğitimleri sırasında karşılaşabilecekleri biyolojik
+risk etmenlerinden korunması için ne tür önlemler
+alınmalıdır? Tartışınız.
+
+İş yeri hekimi biyolojik
+etmenlere maruz kalan
+çalışanların sağlıklarının
+gözetiminden
+sorumludur.
+
+Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 14
-Gürültüden Korunma Yolları
-Çalışanların gürültü ile ilgili risklerden korunması hakkındaki yönetmeliğe
-göre;
-İş Sağlığı ve Güvenliği Kanunu’nun 5 inci maddesinde İşveren, maruziyetin
-önlenmesi veya azaltılmasında, risklerden korunma ilkelerine uyar denilmektedir
-[3].
-İşveren ;
- Gürültüye maruziyetin daha az olduğu başka çalışma yöntemlerini seçer.
- Yapılan işin durumuna göre olabildiğince en düşük düzeyde gürültü yapan
-iş ekipmanı kullandırır.
- İş yeri ve çalışılan yerleri uygun şekilde tasarlar ve düzenler.
- Çalışanlara İş ekipmanını doğru ve güvenli bir şekilde kullanmaları ile ilgili
-gerekli bilgi ve eğitimin verir ya da verdirir.
- Gürültünün teknik yollarla azaltılmasını sağlar.
- İş yeri, iş yeri sistemleri ve iş ekipmanları için uygun bakım programlarının
-uygulanmasını sağlar.
- Gürültünün, iş organizasyonu ile azaltılmasını ve bu amaçla maruziyet
-süresi ve düzeyinin sınırlandırılması sağlar ve yeterli dinlenme aralarıyla
-çalışma sürelerini düzenler.
-Mevzuata göre;
-En düşük maruziyet eylem değeri: (L
-EX, 8saat
-) = 80 dB
-En yüksek maruziyet eylem değerleri: (L
-EX, 8saat
-) = 85 dB
-Maruziyet sınır değerleri: (L
-EX, 8saat
-) = 87 dB dir.
-
-Titreşimden Korunma Yolları
-Titreşimin etkilerinden korunmak için,
- Titreşimin etkilerinden korunmada ilk yaklaşım, titreşimi kaynaktan
-kesmeye çalışmaktır. Bu amaçla, tasarım önlemleriyle titreşim oluşumunu
-azaltmak veya tamamen yok etmek gereklidir. Tasarımla ilgili alınabilecek
-tedbirler şu şekilde özetlenebilir:
- Bütün titreşim sisteminde frekans uyulmaması ya da uyumun
-bozulması (motorda kütle dengesinin sağlanması ),
- Rezonans frekansından kaçınmak için devir sayısının değiştirilmesi,
- Dinamik dengesizliklerin giderilmesi,
- Titreşim amortisörlerinin kullanılması,
- Titreşim yalıtımı,
- Titreşimin insana iletiminin sönümlenmesi,
- Yalıtım yoluyla titreşimin yayılmasını engellemek, taşıtlarda oturma
-yerinde süspansiyon düzeninin kullanılması.
- Titreşim yapan el cihazlarını ve motorlu aletleri kullananların sık sık
-değiştirilerek kısa süreli çalıştırılması önerilir.
-
-Titreşim süresinin,
-titreşim molasına
-oranının önemi
-büyüktür. İnsan
-mekanik sistemlerin
-aksine titreşim
-molası arasında
-dinlenebilir.
-Titreşimler çok
-kuvvetli olduğunda,
-sağlık şikâyetlerinin
-dışında kemik,
-omurga ya da
-midenin zarar
-görmesi söz konusu
-olabilir.
-
-Fiziksel Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 15
- İnsan, örneğin çeşitli kas kasılmaları ile mevcut titreşim yüklenmesine
-uyum yolları arar. [4]
-Titreşim süresinin, titreşim molasına oranının önemi büyüktür. İnsan
-mekanik sistemlerin aksine titreşim molası arasında dinlenebilir. Titreşimler çok
-kuvvetli olduğunda, sağlık şikâyetlerinin dışında kemik, omurga ya da midenin
-zarar görmesi söz konusu olabilir.
-Dokuma bölümünde birçok büyük makine bir arada bulunduğu için çok
-büyük bir titreşim etkisi ortaya çıkmakta, bu durum işçi sağlığını ve iş verimini
-önemli ölçüde etkilemektedir.
-Bu durumu giderebilmek için titreşim yalıtıcı amortisörlerin kullanılması
-önerilebilir.
-Aydınlatmanın Olumsuz Etkilerinden Korunma Yolları
- Gün ışığının odaya doğrudan girmesi önlenmelidir (pencerelerin uygun
-yerde olması, mat camlar kullanılması, açık renk ve ışık geçirme katsayısı
-%30'dan fazla olan perdeler kullanılması, panjur kullanılması),
- Pencerelerin, kolonların, tavanların, duvarların ve bölmelerin yüzeylerinin
-açık renge boyanması,
- Aynı zamanda döşemenin de açık renkte olması, ancak dışarıdan
-gelebilecek veya işlem anında ortaya çıkabilecek tozların renginden açık
-olmaması,
- Genel olarak güvenlik işaretlerinin dışında kalan, möble ve makine
-parçalarının, açık, mat renklere boyanması,
- Yapay ışık kaynaklarının işçilerin görüş açısının dışına yerleştirilmesi, veya
-gerekli gölgeliklerin kullanılması.
- Aydınlatma tekdüze olmalıdır.
-Çalışılan düzeyin her tarafındaki aydınlatma seviyesi eşit olmalıdır.
-Tekdüzelik sağlanamazsa göz değişik aydınlatma seviyesine kendini uyumlamak
-için çaba harcayacak ve çabuk yorulacaktır. Tekdüzelik sağlamak için yaygın ışınlar
-veren ışık kaynakları kullanmak ve bunları birbirine yakın yerleştirmek gerekir.
-Işık kaynakları, çalışılan yüzeye gölge düşmeyecek şekilde yerleştirilmelidir.
-Termal Konfor Şartlarının Olumsuz Etkilerinden Korunma
-Yolları
-İstenmeyen hava koşullarına karşı alınabilecek önlemler
- Uygun bir ısıtma sistemiyle iş yerinin istenen düzeyde ısıtılması ilk yapılacak
-iştir. Fabrikanın ısıtma düzeyini yörenin, iklim koşulları, içinde bulunan
-mevsim, yapının tipi, yapılan işin gerektirdiği kas çalışması (ağır iş, hafif iş),
-üretim süreci ve işçilerin giyinme alışkanlıkları belirleyecektir.
- Olanaklar elverdiği ölçüde uygun yerlere yerleştirilmiş çok sayıda ufak
-ısıtıcılardan yararlanılmalıdır.
-
-Çalışılan düzeyin her
-tarafındaki
-aydınlatma seviyesi
-eşit olmalıdır.
-Tekdüzelik
-sağlanamazsa göz
-değişik aydınlatma
-seviyesine kendini
-uyumlamak için
-çaba harcayacak ve
-çabuk yorulacaktır.
-
-Fiziksel Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 16
- Isıtıcılar, havalandırma deliklerinden ve pencerelerden gelen havanın,
-içeride çalışanlara gelmeden önce ısıtılmasını sağlayacak biçimde
-yerleştirilmelidir.
- Fabrika daha kurulurken iyi bir yalıtıcı malzeme ile çatı ve kuzeye bakan
-duvar yalıtılmalıdır.
- Çalışanlara uygun giysiler verilmelidir. Kullanılacak baretlerin içi kulakları,
-alnı ve hatta gerekirse ağzı da kapatabilecek türde kapüşonlu/muflonlu
-olmalıdır. Kullanılan iş eldivenleri soğuğa karşı uygun yalıtımı/izolasyonu
-sağlamalıdır.
-Havalandırma
-Isı kontrolü için havalandırma yerel aspirasyonla veya genel olarak yapılır.
-Aspirasyonlu havalandırma: Isı kaynağını kısmen kapatmanın olası olduğu
-durumlarda fazla ısı, fazla nem veya her ikisinin de yok edilmesi için kullanılabilir.
-Fırın veya bazı ocaklarda doğal çekiş veya cebri çekiş ısı fazlasının iş yerine
-girmesini önleyebilir.
-Genel havalandırma: Lokal havalandırma sistemlerinin uygulanamadığı
-durumlarda ısı kontrolünde kullanılır. Bu sistemin temeli yeterli miktarda uygun
-sıcaklıkta yeterli bağıl nemi içeren ve kirleticilerden arınmış temiz havanın işçilere
-temin edilmesidir.
-Uygulamada, genel havalandırma bile “normal koşullarda” (örneğin yüksek
-ısı ve nem kaynaklarının, hava kirleticilerinin olmadığı odalarda) iş yerinin
-büyüklüğüne, çalışan kişilerin sayısına ve yapılan işin temizliğine bağlı olarak
-değişir. Buna rağmen “normal” koşullardaki işyerleri için de aşağıdaki değerler
-önerilebilir.
-Radyasyondan Korunma Yöntemleri
- Vücuda giren bir radyoaktif madde, vücutta bulunduğu süre boyunca
-ışınlama yapar. Bu nedenle, iç radyasyon tehlikesinden korunmak için,
-ortamın, giysilerin ve cildin radyoaktif madde ile bulaşmasını, radyoaktif
-maddenin yiyecek ve solunum yoluyla vücuda girmesini önleyici önlemler
-alınması gereklidir. Bu önlemler arasında özel solunum cihazlarının
-kullanılması, tam yüz maske ve filtrelerinin kullanılması koruyucu elbiseler
-giyilmesi, imkân olmaması durumunda mendil, havlu vb. ile solunum
-yollarının kapatılması, kirlenen bölgedeki gıda ve suların tüketilmemesi
-sayılabilir.
- Dış radyasyona karşı korunmak için başlıca üç yöntem bulunmaktadır:
- Uzaklık: Noktasal kaynaklardan yayınlanan radyasyon şiddetleri kaynaktan
-olan uzaklığın karesiyle azaldığından, uzaklık iyi bir korunma aracı
-olmaktadır.
- Zaman: Radyasyon dozu miktarı radyasyon kaynağının yanında geçirilecek
-süre ile orantılı olarak arttığından kaynak yakınında mümkün olabildiğince
-kısa süre kalınmalıdır.
-
-Uygun bir ısıtma
-sistemiyle iş yerinin
-istenen düzeyde
-ısıtılması ilk
-yapılacak iştir.
-
-Fiziksel Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 17
- Zırhlama: Dış radyasyon tehlikelerinden korunmanın en etkin yöntemi
-zırhlama olup radyasyonun şiddetini azaltmak için radyasyon kaynağı ile
-kişi arasına uygun özelliklerde koruyucu engel konulmalıdır. Zırhlama
-toprak, beton, çelik, kurşun gibi koruyuculuğu yüksek materyal
-kullanılarak yapılabilir.
-Manyetik alanın şiddeti kaynaktan uzaklığın karesi ve içinde yayıldığı
-ortamın yoğunluğu ile ters orantılıdır, dolayısıyla bu hatlardan mümkün olduğu
-kadar uzakta yaşamalı ve mümkünse bu hatlar, toprak altına alınmalıdır. [5]
-Basınç Değişiminden Korunma Yöntemleri
-Basınç değişimlerinde ya da düşük ve yüksek basıncın gerektirdiği işlerde,
-çalışanlar mümkünse genç ve tecrübeli isçilerden seçilmelidir. Ayrıca, bu işlerde
-çalışacakların şişman, alkolik ve solunum sistemine ilişkin kronik hastalıkları
-olmamalıdır. Bu işlerde çalışmanın devamı süresince periyodik muayeneler,
-oldukça hassas yapılmalı, kulak, burun, boğaz ve solunum sistemine ilişkin akut
-yakınması olanlar iyileşinceye kadar işten uzaklaştırılmalıdırlar.
-İşe giriş muayenelerinde tam sistemik muayene yapılmalı, akciğer ve sinüs
-grafisi çekilmelidir. Büyük eklemler de işe girişte, her yıl ki periyodik muayenede
-radyolojik olarak incelenmelidir. Bu inceleme işçi işten ayrıldıktan sonra da iki yıl
-tekrarlanmalıdır. Basınç altında kazaya uğrayanlarla, hastalananlar yeniden işe
-döndürülmemelidirler. Basınç altında çalışırken uyulması gereken kurallar ve
-alınması gereken önlemler, basıncın insan vücudundaki etkileri konusunda
-eğitilmelidirler.
-
-
-
-
-Fiziksel Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 18
-
-
 
 
 Özet
-•Doğadaki bütün canlıların gelişmesi ve yaşamasıiçin belirli fiziksel ve
-kimyasal koşullar gereklidir. Ekoloji biliminde cansız ögeleri kapsayan
-fiziksel çevre faktörler: Güneş ışınımı, sıcaklık, su ve topraktır.
-•Bir sistem olarak kabul edilen işletmenin iç ve dış çevrede etkilediği
-ve aynı zamanda etkilendiği birçok faktörden bahsedilebilir.
-İşletmeyi ve işletmenin faaliyetlerini bu faktörlerden soyutlayarak
-ele almak olanaksızdır.
-•Genel anlamı ile çevre: Bireyin, örgütün ya da toplumun yaşamını
-etkileyen kültürel, toplumsal, ekonomik ve fiziksel faktörlerin
-toplamıdır. İşletmenin ekonomik faaliyetleri kapalı bir süreç içinde
-değil, faaliyetlerin koşullandıran ve belirli ölçüde de kendisi
-tarafından şekillendirilmiş bulunan ekonomik, sosyal ve teknolojik bir
-çevre içinde cereyan eder.
-•Fiziksel risk etmenleri, çalışanların sağlığını etkileme ihtimali olan
-fiziksel faktörlerdir. Yaşanılan veya çalışılan ortamın sıcaklık, nem
-aydınlatma, gürültü, titreşim, basınç vb. fiziksel özellikleri bireyin
-sağlığını önemli ölçüde etkiler. Çalışanlar, özellikle çok tehlikeli ve
-tehlikeli işlerde çalışanlar bu yönden büyük risk altındadır.
-•Fiziksel çevre koşulları yönünden her iş yeri aynı değildir. Aynı ürünü
-üreten iki işletmede bile fiziksel çevre koşulları benzer olmayabilir.
-Burada önemli olan her işletmede olabilecek fiziksel olumsuzlukların
-kaynağında yok edilmesi ve çalışanların bu şekilde korunmasıdır.
-•Fiziksel risk etmenleri başlıca gürültü, titreşim, aydınlatma, termal
-konfor, radyasyon ve basınç değişimi olarak sıralanabilir.
-•Tüm bu fiziksel risk etmenlerinin insanlar üzerinde olumsuz etkileri
-vardır ve çalışma verimini düşürür.
-•İşveren,önce insan sağlığı düşüncesi ile hareket edip bu tür fiziksel
-risk etmenlerinin çalışanlar üzerindeki olumsuz etkilerinden
-koruması gerekmektedir.
-•Fiziksel risk etmenlerinin detaylarını bölümümüzde gördünüz ve
-kesinlikle şunu söyleyebiliriz, fiziksel risk etmenlerinin kazaya
-dönüşmesini engelleyebiliriz.
-•Dolayısıyla son sözümüz: "Önce insan sağlığı" olacaktır.
+•Biyolojik risk etmenleri yaşayan organizmalar ve/veya bu organizmaların
+(genetik olarak değiştirilmiş olanlar da dâhil) ürünlerinden oluşur. Biyolojik
+risk etmenleri virüsler, bakteriler, mantarlar ve bunların metabolizmaları
+sonucu ortaya çıkardıkları ürünlerin yanı sıra vücutta iç ve dış parazit olarak
+yerleşebilen asalaklar ile bitkileri de kapsar. Biyolojik risk etmenleri
+enfeksiyon yapma risk düzeyine göre 4 risk grubunda sınıflandırılabilir.
+Çalışma ortamlarında biyolojik risk etmenleri bazen çalışma düzeninin
+gerekliliği olarak mecburen bulunurken çoğu zaman bunlara maruz kalma
+kazara meydana gelmektedir.
+•Bir çalışma ortamında yaşayan veya ölü insan veya hayvanların bulunması,
+gıda, bitki, toprak veya su atıklarının mevcudiyeti biyolojik risk
+değerlendirmesi yapılmasını zorunlu kılar. Bu nedenle bu tür materyallerle
+temas oranı yüksek olan tarım, gıda endüstrisi, sağlık hizmetleri ve sosyal
+hizmetler, veteriner hizmetleri, katı ve sıvı atık yönetimi, cenaze hizmetleri
+gibi çalışma alanları biyolojik risk etmenlerinin yüksek olduğu iş gruplarıdır.
+Türkiye’de biyolojik risk etmenleriyle karşılaşma riskine göre yapılan
+değerlendirmelerde özellikle sağlık çalışanları, laboratuvar çalışanları ve
+tarım işçileri üzerine yoğunlaşılmıştır.
+•İş yerlerinde karşılaşılabilecek risklerin belirlenmesi ve uygun şekilde
+değerlendirilmesi güvenlik sınıflandırmasına göre hem işverenin hem de
+çalışanların uygun önlemleri alabilmesi açısından oldukça önemlidir. Avrupa
+Birliği normlarına uygun olarak biyolojik risk etmenlerinin belirlenmesi ve
+değerlendirilmesi yapılmalıdır. Bu değerlendirme sonucunda biyolojik risk
+etmenleri ile sıklıkla karşılaşan işyerlerinde işveren, yapılan işinözelliğine
+göre zararlıbiyolojik etkenleri kullanmaktan kaçınmakla ve mevcut
+bilgiler ışığında, biyolojik etkenleri kullanımşartlarında durumuna uygun
+olarakçalışanların sağlığıiçin tehlikeli olmayan veya daha az tehlikeli olanlar
+ile değiştirmekle yükümlüdür. İş yerlerinde karşılaşılabilecek biyolojik risk
+etmenlerine karşı hem işverenin hem de çalışanların alması gereken
+önlemler mevcuttur. İşveren başta işe giriş ve aralıklı kontrolmuayeneleri
+olmak üzere periyodik taramalarla duyarlı kişileri saptamalıdır. Tüm çalışan
+personelin eğitimi hem işe başlarken hem meslek içi eğitim programları ile
+yapılmalıdır. İşçilerin çalışırken uyacakları hareket tarzlarının belirlenmesi ve
+çalışanlara bildirilmesi sağlanmasıdır. Çalışma ortamının (hastane,
+laboratuvar, klinikler, hayvan barınağı, kesimevi, paketlemeatölyeleri, kişisel
+bakım merkezleri, atık arıtma atölyeleri vb.) mimari yapılarınınişlevlerine
+uygunluğu sağlanmalıdır. Uygun yalıtım ve dezenfeksiyon önlemleri alınarak
+enfeksiyon zinciri engellenmelidir. Çalışanlar için aktif bağışıklama
+yapılmalıdır.
+•Çalışanlar, biyolojik etkenlerin bulaşma riski bulunan çalışma alanlarında
+herhangi bir şeyyiyip içmemelidir. Tüm çalışanlar uygun koruyucu giysi veya
+ve ekipmanı kullanmalıdır. Gereklikoruyucu ekipmanlar belirlenmiş bir yerde
+uygun olarak muhafaza edilmeli, her kullanımdansonra ve kullanımdan önce
+kontrol edilip temizlenmelidir. Biyolojik etkenlerle kirlenmişolabilecek iş
+elbiseleri ve koruyucu ekipman, çalışma alanından ayrılmadan önce
+çıkarılmalıve kirlenmiş bu elbiselerin vekoruyucu ekipmanın
+dekontaminasyonu ve temizliği sağlanmalı, gerektiğinde imhaedilmelidir.
+•Bütün bu uygulamalar yapılırken Aile, Çalışma ve Sosyal Hizmetler
+Bakanlığının Biyolojik Etkenlere Maruziyet RisklerininÖnlenmesi Hakkında
+Yönetmeliği esas alınmalıdır.
 
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
-Atatürk Üniversitesi Açıköğretim Fakültesi 19
+Atatürk Üniversitesi Açıköğretim Fakültesi 15
 DEĞERLENDİRME SORULARI
-1. Aşağıdakilerden hangisi fiziksel risk etmeni değildir?
-a) Epoksi kullanımı
-b) Gürültü
-c) Basınç
-d) Aydınlatma
-e) Termal konfor
+1. Aşağıdakilerden hangisi biyolojik risk etmenidir?
+a) Gürültü
+b) Tetanoz
+c) Alkol
+d) Enjektör
+e) Kloroform
 
-2. Aşağıdakilerden hangisi işitme eşik değeridir?
-a) 0 dB
-b) 10 dB
-c) 20 dB
-d) 30 dB
-e) 40 dB
+2. Aşağıdakilerden hangisi biyolojik risk etmenlerinde Grup 1 Risk Düzeyi’nin
+tanımıdır?
+a) İnsanda hastalığa neden olabilen, ancak topluma yayılma
+olasılığı olmayan etkenler
+b) İnsanda ağır hastalıklara neden olmayan ancak çevresel kirliliğe
+neden olabileceği için topluma yayılma riski olan biyolojik etkenler
+c) İnsanda hastalığa yol açma ihtimali bulunmayan biyolojik etkenler
+d) İnsan da ağır hastalıklara neden olan ve tedavi yöntemi bulunmayan
+biyolojik etkenler
+e) İnsanda ağır hastalıklara neden olan ancak tedavi edilebilen biyolojik
+etkenler
 
-3. Aşağıdakilerden hangisi el-kol titreşimi için sekiz saatlik çalışma süresi için
-günlük maruziyet sınır değeridir?
-a) 2,5 m/s2
-b) 1,5 m/s2
-c) 5 m/s2
-d) 0,5 m/s2
-e) 3 m/s2
+3. Biyolojik risk etmenlerinin belirlenmesi ve değerlendirilmesi ile ilgili
+aşağıdakilerden hangisi yanlıştır?
+a) Çalışma ortamındaki insan sağlığına zararlı olan veya olabilecek tüm
+biyolojik etkenlerin sınıflandırılması gereklidir.
+b) Biyolojik etkenlere çalışanın maruziyetinin türü, düzeyi ve süresi
+belirlenmelidir.
+c) Çalışanlar, işlerinin sonucu olarak ortaya çıkabilecek travmatik
+hastalıklar hakkında bilgi sahibi olmalıdır.
+d) Risk değerlendirmesi düzenli aralıklarla yenilenmelidir.
+e) Çalışanlar, işlerinin sonucu olarak ortaya çıkabilecek enfektif
+hastalıklarla ilgili bilgi sahibi olmalıdır.
 
-4. Aşağıdakilerden hangisi aydınlatma şiddetinin ölçü birimidir?
-a) Bar
-b) Litre
-c) Fahrenayt
-d) Lüks
-e) Amper
-
-5. Aşağıdakilerden hangisi termal konfor şartlarından biri değildir?
-a) Radyant ısı
-b) Hava akım hızı
-c) Hava sıcaklığı
-d) Havanın nem yoğunluğu
-e) Havadaki ses oranı
-
-6. Aşağıdakilerden hangisi “hızlı temel parçacıklardan oluşan kozmik
-ışınlardan sonra en kısa dalga boyundaki radyasyon”dur?
-a) X-ışınları
-b) Gamma Işınları
-c) Beta ışınları
-d) Nötronlar
-e) Protonlar
+4. Enfeksiyon riskinin en fazla olduğu çalışma alanı aşağıdakilerden
+hangisidir?
+a) Tarım
+b) Gıda
+c) Madencilik
+d) Sağlık
+e) İnşaat
 
 
-Fiziksel Risk Etmenleri
 
-Atatürk Üniversitesi Açıköğretim Fakültesi 20
-7. Aşağıdakilerden hangisi basınç birimidir?
-a) Bar
-b) Litre
-c) Fahrenayt
-d) Lüks
-e) Amper
 
-8. Aşağıdakilerden hangisi ”çalışanların gürültü ile ilgili risklerden korunması
-hakkındaki yönetmeliğe” göre gürültü ile ilgili en düşük maruziyet eylem
-değeridir?
-a) 75 dB
-b) 80 dB
-c) 85 dB
-d) 87 dB
-e) 90 dB
 
-9. Hasta olmayan normal bir insan vücudunun sıcaklığı kaç ºC’dir?
-a) 35 ºC
-b) 36 ºC
-c) 37 ºC
-d) 38 ºC
-e) 39 ºC
+Biyolojik Risk Etmenleri
 
-10. Aşağıdaki hangi fiziksel risk etmeninden dolayı azot narkozu görülebilir?
-a) Basınç
-b) Gürültü
-c) Termal Konfor
-d) Aydınlatma
-e) Radyasyon
+Atatürk Üniversitesi Açıköğretim Fakültesi 16
+5. Aşağıdakilerden hangisi enfeksiyon zincirinde yer almaz ?
+a) Enfeksiyon etkeni
+b) Enfeksiyon kaynağı
+c) Enfeksiyon taşıyıcısı
+d) Enfeksiyon tedavisi
+e) Enfeksiyon konakçısı
+
+6. Aşağıdakilerden hangisi biyolojik riske karşı işverenin yapması gereken
+yükümlülüklerdendir ?
+a) Biyolojik risk etmenini tehlikeli olmayan veya daha az tehlikeli
+olanlarla değiştirir.
+b) İşveren grup 2, 3 ve 4 biyolojik etkenlerle ilk kez çalışmasından 10 gün
+önce durumu Bakanlık’ a bildirir.
+c) İşverenler tüm risk gruplarındaki biyolojik etkenlere maruz kalanların
+listesini tüm detayları ile kayıt altına alır.
+d) Biyolojik riske maruz kalan işçilerle ilgili tüm kayıtları maruziyet sona
+erdikten sonra en az 40 yıl saklar.
+e) İşveren risk değerlendirmesi sonuçlarını, hangi işlerde ne kadar
+çalışanın riske maruz kaldığını ve buna karşı alınan önlemleri gizli
+tutar.
+
+7. Aşağıdakilerden hangisi biyolojik riske karşı çalışanın yapması gereken
+yükümlülüklerden biri kesinlikle değildir?
+a) Biyolojik risk tehlikesi olan işlemler “Biyolojik Güvenlik Kabini”nde
+yapılmalıdır.
+b) Laboratuvardan çıkarken eller mutlaka yıkanmalıdır.
+c) İşlem sırasında kullanılan ve kontamine olmuş koruyucu materyali
+(gözlük, önlük vb.) evine götürerek yıkamalıdır.
+d) İğne ve enjektörleri kullanım sonrasında dar ağızlı sağlam özel kaplara
+atmalıdır.
+e) Laboratuvarlarda yiyecek, içecek, sigara vb. tüketmemelidir.
+
+8. Aşağıdakilerden hangisi Grup 4 biyolojik risk etmenlerinin özelliklerinden
+biri değildir?
+a) Topluma yayılma olasılığı yüksek olma
+b) Tedavi şansı yüksek olma
+c) Çalışanlara zarar verme ihtimali yüksek olma
+d) İnsanlara bulaşma ihtimali yüksek olma
+e) Korunma şansı düşük olma
+
+
+
+
+
+Biyolojik Risk Etmenleri
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 17
+9. Grup 4 biyolojik risk etmenleri içinde en çok aşağıdakilerden hangisi
+bulunur?
+a) Bakteriler
+b) Mantarlar
+c) Parazitler
+d) Biyoteknolojik ürünler
+e) Virüsler
+
+10. Aşağıdakilerden hangisi iş yeri hekiminin biyolojik risk faktörlerine karşı
+yapması gerekenlerden biri değildir?
+a) İş yeri hekimi çalışanların sağlık durumlarını ve biyolojik etkenlere
+maruziyet koşullarını takip eder.
+b) Çalışanların hem kişisel sağlık durumlarını değerlendirir hem de tıbbi
+ve mesleki özgeçmişleri ile ilgili kayıtları tutar.
+c) Çalışanlarda biyolojik etkenlerin oluşturduğu erken ve geri dönüşlü
+etkileri saptayıp biyolojik olarak analizini takip eder.
+d) Çalışma sırasında karşılaşabileceği risk faktörleri ve uygulanması
+gereken önlemler hakkında bilgiler güncellendikçe daha ileri testler
+yapılmasını sağlar.
+e) Biyolojik risk etmenlerini çalışanların sağlığı için tehlikeli olmayan
+veya daha az tehlikeli olanlarla değiştirir.
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1197,35 +1031,54 @@ e) Radyasyon
 
 
 Cevap Anahtarı
-1.a, 2.a, 3.c, 4.d, 5.e, 6.b, 7.a, 8.b, 9.b, 10.a
+1.b, 2.c, 3.c, 4.d, 5.d, 6.a, 7.c, 8.b, 9.e, 10.e
 
-Fiziksel Risk Etmenleri
+Biyolojik Risk Etmenleri
 
-Atatürk Üniversitesi Açıköğretim Fakültesi 21
+Atatürk Üniversitesi Açıköğretim Fakültesi 18
 YARARLANILAN KAYNAKLAR
-[1] Dedeler, H. “Bir işletmede işyeri fiziksel risk etmenlerinin çalışanların sağlığına
-olan etkilerin saptanması ve değerlendirilmesi” 01.07.2013 tarihinde
-görüldü.
-[2] “Çalışanların Gürültü ile ilgili Risklerden Korunması Hakkında Yönetmelik”
-01.08.2013 tarihinde
-http://www.resmigazete.gov.tr/main.aspx?home=http://www.resmigazete.
-gov.tr/eskiler/2013/07/20130728.htm&main=http://www.resmigazete.gov.
-tr/eskiler/2013/07/20130728.htm adresinden erişildi.
-[3] “6331 Sayılı İş Sağlığı ve Güvenliği Kanunu” 01.06.2013 tarihinde
-http://www.resmigazete.gov.tr/main.aspx?home=http://www.resmigazete.
-gov.tr/eskiler/2012/06/20120630.htm&main=http://www.resmigazete.gov.
-tr/eskiler/2012/06/20120630.htm adresinden erişildi.
-[4] “Çalışanların Titreşimle İlgili Risklerden Korunmalarına Dair Yönetmelik”
-01.09.2013 tarihinde
-http://www.resmigazete.gov.tr/main.aspx?home=http://www.resmigazete.
-gov.tr/eskiler/2013/08/20130822.htm&main=http://www.resmigazete.gov.
-tr/eskiler/2013/08/20130822.htm adresinden erişildi.
-[5] “İşyerlerinde Fiziksel Risk etmenleri” 01.07.2013 tarihinde
-http://www.pausem.com/_upload/dokuman/16_02.pdf adresinden erişildi.
+[1] Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkında Yönetmelik,
+Türkiye Cumhuriyeti Aile, Çalışma ve Sosyal Hizmetler Bakanlığı. (2013),
+28678 sayılı Resmi Gazete
+[2] Advisory Committee on Dangerous Pathogens, Infection at work: Controlling
+the risks, ACDP, ( (2003) (s. 25) 25.08.2018 tarihinde
+http://www.hse.gov.uk/pubns/infection.pdf adresinden erişildi.
+[3] Risk Assessment For Biologıcal Agents, European Agency for Safety and Health
+at Work (EU-OSHA) 24.08.2018 tarihinde
+http://osha.europa.eu
+adresinden erişildi.
 
 
 
-- **Soru Sayısı:** 10 soru
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- **İstenen Toplam Soru Sayısı:** 18 soru
 - **Zorluk Seviyesi:** mixed
 
 // ----------------------------------------------------
@@ -1234,8 +1087,8 @@ http://www.pausem.com/_upload/dokuman/16_02.pdf adresinden erişildi.
 
 **🔍 İÇERİK ANALİZ ADIMLARI:**
 1. Önce metni dikkatlice oku ve anla
-2. Ana konuları ve alt konuları belirle (konu verilmemişse içerikten çıkar)
-3. Her bir alt konu için anahtar kavramları tespit et
+2. "Konu Bilgileri" bölümündeki "AKTİF KONULAR (SORU ÜRETİLECEK)" listesindeki alt konulara odaklan
+3. Her bir aktif alt konu için anahtar kavramları tespit et
 4. Her kavram için öğrenilmesi gereken temel noktaları listele
 5. İçeriğin mantık akışını ve bölümleri arasındaki ilişkiyi kavra
 
@@ -1248,6 +1101,17 @@ http://www.pausem.com/_upload/dokuman/16_02.pdf adresinden erişildi.
 // ----------------------------------------------------
 // ------------- SORU OLUŞTURMA KURALLARI ------------
 // ----------------------------------------------------
+
+**⭐ ALT KONU DAĞILIMI VE SORU KURGULAMASI:**
+1. SADECE "Konu Bilgileri" bölümündeki "AKTİF KONULAR (SORU ÜRETİLECEK)" listesinde belirtilen alt konular için soru üret
+2. "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" listesindeki konulardan KESİNLİKLE soru ÜRETME
+3. Her aktif alt konu için tam olarak o alt konu yanında belirtilen sayıda soru üret
+   Örneğin: "Nesne Yönelimli Programlama (3 soru)" ifadesi, bu konu için tam 3 soru oluşturulmalıdır
+4. Toplam soru sayısının 18 olduğundan emin ol (Bu sayı, aktif konulardaki toplam soru sayısına eşit olmalıdır)
+5. Belirtilen aktif alt konular ve soru sayılarına MUTLAKA UYULMALIDIR
+6. Her sorunun hangi alt konuya ait olduğu JSON çıktısında "subTopicName" alanında AÇIKÇA belirtilmelidir
+7. Her soruyu üretirken, o sorunun hangi aktif alt konudan geldiğini mutlaka kontrol et
+8. Soru dağılımları dengesiz olabilir! Örneğin: "Veri Yapıları" için 5 soru, "Algoritma Analizi" için 2 soru
 
 **📊 ZORLUK SEVİYELERİ (SADECE İNGİLİZCE KULLAN):**
 - "easy" (kolay): Temel hatırlama ve anlama soruları
@@ -1305,9 +1169,45 @@ http://www.pausem.com/_upload/dokuman/16_02.pdf adresinden erişildi.
       "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
       "correctAnswer": "Seçenek B",
       "explanation": "Doğru cevabın açıklaması",
-      "subTopicName": "Alt Konu Adı",
-      "normalizedSubTopicName": "alt_konu_adi",
+      "subTopicName": "Nesne Yönelimli Programlama",
+      "normalizedSubTopicName": "nesne_yonelimli_programlama",
       "difficulty": "medium"
+    },
+    {
+      "id": "q2",
+      "questionText": "İkinci soru metni?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Doğru cevabın açıklaması",
+      "subTopicName": "Nesne Yönelimli Programlama",
+      "normalizedSubTopicName": "nesne_yonelimli_programlama",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q3",
+      "questionText": "Üçüncü soru metni?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "applying",
+      "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      "correctAnswer": "Seçenek C",
+      "explanation": "Doğru cevabın açıklaması",
+      "subTopicName": "Nesne Yönelimli Programlama",
+      "normalizedSubTopicName": "nesne_yonelimli_programlama",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q4",
+      "questionText": "Başka bir alt konudan soru?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "analyzing",
+      "options": ["Seçenek A", "Seçenek B", "Seçenek C", "Seçenek D"],
+      "correctAnswer": "Seçenek D",
+      "explanation": "Doğru cevabın açıklaması",
+      "subTopicName": "Algoritma Analizi",
+      "normalizedSubTopicName": "algoritma_analizi",
+      "difficulty": "hard"
     }
   ]
 }
@@ -1331,246 +1231,17 @@ http://www.pausem.com/_upload/dokuman/16_02.pdf adresinden erişildi.
 - JSON formatının doğruluğundan emin ol
 - Sorular farklı bilişsel düzeyleri içermeli
 - Tüm gerekli alanlar doldurulmalı
-- Oluşturulan sorular, istenen sayıda ve dağılımda olmalı
+- ALT KONU DAĞILIMI ve SORU SAYISI:
+  1. Toplam soru sayısı tam olarak 18 adet olmalı (aktif konulardaki toplam soru sayısıyla eşleşmeli)
+  2. "Konu Bilgileri" bölümündeki "AKTİF KONULAR (SORU ÜRETİLECEK)" listesindeki HER BİR alt konu için belirtilen SORU SAYISINA MUTLAKA uyulmalı
+     Örneğin: "Veri Tabanı Sistemleri (3 soru)" yazıyorsa, bu konudan tam 3 soru üretilmeli
+  3. "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" listesindeki konulardan KESİNLİKLE soru üretilmediğinden emin ol
+  4. Her sorunun "subTopicName" alanında, o sorunun geldiği alt konunun TAM ADI belirtilmeli
+     Örneğin: "Nesne Yönelimli Programlama", "Veri Yapıları" gibi konu adları aynen kullanılmalı
+- Her alt konu için soruların zorluk dağılımı dengeli olmalı
 
 // ====================================================
 // ================ PROMPT SONU ======================
 // ====================================================
 ```
-
-
-
-## AI Yanıtı:
-```json
-```json
-{
-  "questions": [
-    {
-      "id": "q1",
-      "questionText": "Aşağıdakilerden hangisi fiziksel risk etmenlerinden biri değildir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Gürültü",
-        "Titreşim",
-        "Aydınlatma",
-        "Epoksi kullanımı"
-      ],
-      "correctAnswer": "Epoksi kullanımı",
-      "explanation": "Fiziksel risk etmenleri başlıca gürültü, titreşim, aydınlatma, termal konfor, radyasyon ve basınç değişimleridir. Epoksi kullanımı kimyasal bir risk etmenidir.",
-      "subTopicName": "Fiziksel Risk Etmenleri Çeşitleri",
-      "normalizedSubTopicName": "fiziksel_risk_etmenleri_cesitleri",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q2",
-      "questionText": "İnsan kulağının ilk uyum sağladığı ses şiddeti kaç dB'dir ve bu değere ne ad verilir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "0 dB, İşitme eşiği",
-        "20 dB, Fısıltı eşiği",
-        "40 dB, Konuşma eşiği",
-        "60 dB, Ofis eşiği"
-      ],
-      "correctAnswer": "0 dB, İşitme eşiği",
-      "explanation": "İnsan kulağının ilk uyum yaptığı ses şiddeti 0 dB'dir ve bu değere işitme eşiği adı verilir. 140 dB ise acı eşiği olup kulak daha fazla ses şiddetine dayanamaz.",
-      "subTopicName": "Gürültü",
-      "normalizedSubTopicName": "gurultu",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q3",
-      "questionText": "Çalışanların Titreşimle İlgili Risklerden Korunmalarına Dair Yönetmelik'e göre, el-kol titreşimi için sekiz saatlik çalışma süresi için günlük maruziyet sınır değeri kaç m/s²'dir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "2,5 m/s²",
-        "3 m/s²",
-        "5 m/s²",
-        "1,15 m/s²"
-      ],
-      "correctAnswer": "5 m/s²",
-      "explanation": "Çalışanların Titreşimle İlgili Risklerden Korunmalarına Dair Yönetmelik'e göre el-kol titreşimi için sekiz saatlik çalışma süresi için günlük maruziyet sınır değeri 5 m/s²'dir.",
-      "subTopicName": "Titreşim",
-      "normalizedSubTopicName": "titresim",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q4",
-      "questionText": "Bir yüzeye düşen ışık miktarını ifade eden ve birimi lüks olan kavram aşağıdakilerden hangisidir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Parlaklık",
-        "Yansıma",
-        "Aydınlatma",
-        "Işık akısı"
-      ],
-      "correctAnswer": "Aydınlatma",
-      "explanation": "Bir yüzeye düşen ışık miktarına aydınlatma (illuminance) denilmektedir. Aydınlatma şiddetinin ölçü birimi “lüks”tür (lux).",
-      "subTopicName": "Aydınlatma",
-      "normalizedSubTopicName": "aydinlatma",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q5",
-      "questionText": "Aşağıdakilerden hangisi insanın ortamla ısı alışverişine etki eden faktörlerden biridir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Hava basıncı",
-        "Hava akım hızı",
-        "Ses yoğunluğu",
-        "Işık şiddeti"
-      ],
-      "correctAnswer": "Hava akım hızı",
-      "explanation": "İnsanın ortamla ısı alışverişine etki eden dört ayrı faktör vardır. Bunlar; Hava sıcaklığı, Havanın nem yoğunluğu, Hava akım hızı ve Radyant ısıdır.",
-      "subTopicName": "Termal Konfor",
-      "normalizedSubTopicName": "termal_konfor",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q6",
-      "questionText": "Aşağıdakilerden hangisi hızlı temel parçacıklardan oluşan kozmik ışınlardan sonra en kısa dalga boyundaki radyasyondur?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Alfa ışınları",
-        "Beta ışınları",
-        "Gamma ışınları",
-        "X-ışınları"
-      ],
-      "correctAnswer": "Gamma ışınları",
-      "explanation": "Hızlı temel parçacıklardan oluşan kozmik ışınlardan sonra en kısa dalga boyundaki radyasyonlar gamma ışınlarıdır.",
-      "subTopicName": "Radyasyon",
-      "normalizedSubTopicName": "radyasyon",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q7",
-      "questionText": "Birim alana yapılan kuvvete ne ad verilir ve hangi araçla ölçülür?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Basınç, Barometre",
-        "Hacim, Termometre",
-        "Yoğunluk, Hidrometre",
-        "Ağırlık, Dinamometre"
-      ],
-      "correctAnswer": "Basınç, Barometre",
-      "explanation": "Birim alana yapılan kuvvete basınç denir. Birimi Bar veya Newton/m²'dir ve barometre ile ölçülür.",
-      "subTopicName": "Basınç",
-      "normalizedSubTopicName": "basinç",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q8",
-      "questionText": "Çalışanların Gürültü ile İlgili Risklerden Korunması Hakkındaki Yönetmeliğe göre, gürültü ile ilgili en düşük maruziyet eylem değeri kaç dB'dir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "70 dB",
-        "75 dB",
-        "80 dB",
-        "85 dB"
-      ],
-      "correctAnswer": "80 dB",
-      "explanation": "Çalışanların Gürültü ile İlgili Risklerden Korunması Hakkındaki Yönetmeliğe göre en düşük maruziyet eylem değeri 80 dB'dir.",
-      "subTopicName": "Gürültüden Korunma Yolları",
-      "normalizedSubTopicName": "gurultuden_korunma_yollari",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q9",
-      "questionText": "Hasta olmayan normal bir insan vücudunun sıcaklığı ortalama kaç santigrat derecedir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "35.5-36 °C",
-        "36.5-37 °C",
-        "37.5-38 °C",
-        "38.5-39 °C"
-      ],
-      "correctAnswer": "36.5-37 °C",
-      "explanation": "İnsan vücudunun sıcaklığı 36,5-37 °C arasında değişmezlik gösterir. Bu durum vücut ile çevre arasındaki ısı alışverişi ile sağlanır.",
-      "subTopicName": "Termal Konfor",
-      "normalizedSubTopicName": "termal_konfor",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q10",
-      "questionText": "Aşağıdaki durumlardan hangisinde azot narkozu riski bulunmaktadır?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Yüksek
-```
-
-
-
-## İşlenen Sorular Analizi:
-
-- Toplam Soru Sayısı: 9
-- Alt Konu Dağılımı:
-
-  - Termal Konfor: 2 soru
-  - Fiziksel Risk Etmenleri Çeşitleri: 1 soru
-  - Gürültü: 1 soru
-  - Titreşim: 1 soru
-  - Aydınlatma: 1 soru
-  - Radyasyon: 1 soru
-  - Basınç: 1 soru
-  - Gürültüden Korunma Yolları: 1 soru
-
-
-### Soru Örnekleri (Her Alt Konudan 1 Adet):
-
-#### Fiziksel Risk Etmenleri Çeşitleri:
-- Soru: Aşağıdakilerden hangisi fiziksel risk etmenlerinden biri değildir?
-- Seçenekler: Gürültü | Titreşim | Aydınlatma | Epoksi kullanımı
-- Doğru Cevap: Epoksi kullanımı
-- Zorluk: easy
-
-#### Gürültü:
-- Soru: İnsan kulağının ilk uyum sağladığı ses şiddeti kaç dB'dir ve bu değere ne ad verilir?
-- Seçenekler: 0 dB, İşitme eşiği | 20 dB, Fısıltı eşiği | 40 dB, Konuşma eşiği | 60 dB, Ofis eşiği
-- Doğru Cevap: 0 dB, İşitme eşiği
-- Zorluk: easy
-
-#### Titreşim:
-- Soru: Çalışanların Titreşimle İlgili Risklerden Korunmalarına Dair Yönetmelik'e göre, el-kol titreşimi için sekiz saatlik çalışma süresi için günlük maruziyet sınır değeri kaç m/s²'dir?
-- Seçenekler: 2,5 m/s² | 3 m/s² | 5 m/s² | 1,15 m/s²
-- Doğru Cevap: 5 m/s²
-- Zorluk: easy
-
-#### Aydınlatma:
-- Soru: Bir yüzeye düşen ışık miktarını ifade eden ve birimi lüks olan kavram aşağıdakilerden hangisidir?
-- Seçenekler: Parlaklık | Yansıma | Aydınlatma | Işık akısı
-- Doğru Cevap: Aydınlatma
-- Zorluk: easy
-
-#### Termal Konfor:
-- Soru: Aşağıdakilerden hangisi insanın ortamla ısı alışverişine etki eden faktörlerden biridir?
-- Seçenekler: Hava basıncı | Hava akım hızı | Ses yoğunluğu | Işık şiddeti
-- Doğru Cevap: Hava akım hızı
-- Zorluk: easy
-
-#### Radyasyon:
-- Soru: Aşağıdakilerden hangisi hızlı temel parçacıklardan oluşan kozmik ışınlardan sonra en kısa dalga boyundaki radyasyondur?
-- Seçenekler: Alfa ışınları | Beta ışınları | Gamma ışınları | X-ışınları
-- Doğru Cevap: Gamma ışınları
-- Zorluk: easy
-
-#### Basınç:
-- Soru: Birim alana yapılan kuvvete ne ad verilir ve hangi araçla ölçülür?
-- Seçenekler: Basınç, Barometre | Hacim, Termometre | Yoğunluk, Hidrometre | Ağırlık, Dinamometre
-- Doğru Cevap: Basınç, Barometre
-- Zorluk: easy
-
-#### Gürültüden Korunma Yolları:
-- Soru: Çalışanların Gürültü ile İlgili Risklerden Korunması Hakkındaki Yönetmeliğe göre, gürültü ile ilgili en düşük maruziyet eylem değeri kaç dB'dir?
-- Seçenekler: 70 dB | 75 dB | 80 dB | 85 dB
-- Doğru Cevap: 80 dB
-- Zorluk: easy
 
