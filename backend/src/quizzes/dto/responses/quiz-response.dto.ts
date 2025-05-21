@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Type } from 'class-transformer';
-import { QuestionResponseDto } from '../../../questions/dto/responses/question-response.dto';
+import { QuestionResponseDto } from '../question-response.dto';
 
 /**
  * Quiz içindeki soruları gösteren DTO

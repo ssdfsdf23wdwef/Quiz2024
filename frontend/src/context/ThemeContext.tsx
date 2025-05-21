@@ -21,9 +21,9 @@ const trackThemeStep = (message: string, context: string, metadata?: Record<stri
   logger.debug(
     message,
     context,
-    'ThemeContext.tsx',
-    undefined,
-    metadata
+    undefined, // error
+    undefined, // stack
+    { filename: 'ThemeContext.tsx', ...(metadata || {}) }
   );
   
   // Development modunda konsola yazdır
@@ -94,8 +94,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     logger.info(
       'Theme Provider başlatıldı',
       'ThemeContext',
-      'ThemeContext.tsx',
-      40
+      undefined, // error
+      undefined, // stack
+      { filename: 'ThemeContext.tsx', lineNumber: 40 }
     );
     
     return () => {
@@ -103,8 +104,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       logger.debug(
         'Theme Provider kaldırıldı',
         'ThemeContext',
-        'ThemeContext.tsx',
-        48
+        undefined, // error
+        undefined, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 48 }
       );
     };
   }, []);
@@ -125,9 +127,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         logger.debug(
           'Kaydedilmiş tema tercihleri yüklendi',
           'ThemeContext.loadPreferences',
-          'ThemeContext.tsx',
-          65,
-          { theme: parsedTheme }
+          undefined, // error
+          undefined, // stack
+          { filename: 'ThemeContext.tsx', lineNumber: 65, theme: parsedTheme }
         );
         
         trackThemeStep('Tema tercihleri yüklendi', 'ThemeContext');
@@ -136,9 +138,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       logger.warn(
         'Tema tercihleri yüklenirken hata oluştu',
         'ThemeContext.loadPreferences',
-        'ThemeContext.tsx',
-        77,
-        { error }
+        error as Error, // error
+        (error as Error).stack, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 77 }
       );
     }
   }, []);
@@ -159,9 +161,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         logger.debug(
           `Sistem teması kullanılıyor: ${isDark ? "dark" : "light"}`,
           'ThemeContext.updateActualMode',
-          'ThemeContext.tsx',
-          94,
-          { systemPreference: isDark ? "dark" : "light" }
+          undefined, // error
+          undefined, // stack
+          { filename: 'ThemeContext.tsx', lineNumber: 94, systemPreference: isDark ? "dark" : "light" }
         );
       } else {
         // Kullanıcı teması
@@ -199,8 +201,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     logger.debug(
       `Tema modu değiştiriliyor: ${mode}`,
       'ThemeContext.setThemeMode',
-      'ThemeContext.tsx',
-      136
+      undefined, // error
+      undefined, // stack
+      { filename: 'ThemeContext.tsx', lineNumber: 136 }
     );
     
     trackThemeStep('Tema modu değiştiriliyor', 'ThemeContext', { mode });
@@ -215,9 +218,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       logger.warn(
         'Tema tercihleri kaydedilirken hata oluştu',
         'ThemeContext.setThemeMode',
-        'ThemeContext.tsx',
-        150,
-        { error }
+        error as Error, // error
+        (error as Error).stack, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 150 }
       );
     }
   }, [theme]);
@@ -227,8 +230,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     logger.debug(
       `Font boyutu değiştiriliyor: ${fontSize}`,
       'ThemeContext.setFontSize',
-      'ThemeContext.tsx',
-      161
+      undefined, // error
+      undefined, // stack
+      { filename: 'ThemeContext.tsx', lineNumber: 161 }
     );
     
     trackThemeStep('Font boyutu değiştiriliyor', 'ThemeContext', { fontSize });
@@ -254,9 +258,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       logger.warn(
         'Font boyutu ayarlanırken hata oluştu',
         'ThemeContext.setFontSize',
-        'ThemeContext.tsx',
-        184,
-        { error }
+        error as Error, // error
+        (error as Error).stack, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 184 }
       );
     }
   }, [theme]);
@@ -266,8 +270,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     logger.debug(
       `Azaltılmış hareket değiştiriliyor: ${!theme.reducedMotion}`,
       'ThemeContext.toggleReducedMotion',
-      'ThemeContext.tsx',
-      195
+      undefined, // error
+      undefined, // stack
+      { filename: 'ThemeContext.tsx', lineNumber: 195 }
     );
     
     trackThemeStep('Azaltılmış hareket değiştiriliyor', 'ThemeContext', { reducedMotion: !theme.reducedMotion });
@@ -296,9 +301,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       logger.warn(
         'Azaltılmış hareket ayarlanırken hata oluştu',
         'ThemeContext.toggleReducedMotion',
-        'ThemeContext.tsx',
-        226,
-        { error }
+        error as Error, // error
+        (error as Error).stack, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 226 }
       );
     }
   }, [theme]);
@@ -308,8 +313,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     logger.debug(
       `Yüksek kontrast değiştiriliyor: ${!theme.highContrast}`,
       'ThemeContext.toggleHighContrast',
-      'ThemeContext.tsx',
-      237
+      undefined, // error
+      undefined, // stack
+      { filename: 'ThemeContext.tsx', lineNumber: 237 }
     );
     
     trackThemeStep('Yüksek kontrast değiştiriliyor', 'ThemeContext', { highContrast: !theme.highContrast });
@@ -338,9 +344,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       logger.warn(
         'Yüksek kontrast ayarlanırken hata oluştu',
         'ThemeContext.toggleHighContrast',
-        'ThemeContext.tsx',
-        268,
-        { error }
+        error as Error, // error
+        (error as Error).stack, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 268 }
       );
     }
   }, [theme]);
@@ -350,8 +356,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     logger.info(
       'Tema tercihleri sıfırlanıyor',
       'ThemeContext.resetTheme',
-      'ThemeContext.tsx',
-      279
+      undefined, // error
+      undefined, // stack
+      { filename: 'ThemeContext.tsx', lineNumber: 279 }
     );
     
     trackThemeStep('Tema sıfırlanıyor', 'ThemeContext');
@@ -377,16 +384,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       logger.debug(
         'Tema tercihleri sıfırlandı',
         'ThemeContext.resetTheme',
-        'ThemeContext.tsx',
-        301
+        undefined, // error
+        undefined, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 301 }
       );
     } catch (error) {
       logger.warn(
         'Tema tercihleri sıfırlanırken hata oluştu',
         'ThemeContext.resetTheme',
-        'ThemeContext.tsx',
-        307,
-        { error }
+        error as Error, // error
+        (error as Error).stack, // stack
+        { filename: 'ThemeContext.tsx', lineNumber: 307 }
       );
     }
   }, []);
@@ -435,10 +443,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     logger.debug(
       'Tema DOM\'a uygulandı',
       'ThemeContext.applyTheme',
-      'ThemeContext.tsx',
-      356,
-      { 
-        mode: currentMode, 
+      undefined, // error
+      undefined, // stack
+      {
+        filename: 'ThemeContext.tsx',
+        lineNumber: 356,
+        mode: currentMode,
         isDarkMode,
         fontSize: theme.fontSize,
         reducedMotion: theme.reducedMotion,
@@ -478,9 +488,9 @@ export function useTheme() {
     logger.error(
       'useTheme hook ThemeProvider dışında kullanıldı',
       'useTheme',
-      'ThemeContext.tsx',
-      399,
-      { stack: error.stack }
+      error, // error
+      error.stack, // stack
+      { filename: 'ThemeContext.tsx', lineNumber: 399 }
     );
     
     throw error;
