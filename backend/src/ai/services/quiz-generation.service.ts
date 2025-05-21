@@ -548,8 +548,42 @@ export class QuizGenerationService {
       try {
         const fs = require('fs');
         const path = require('path');
-        const debugFilePath = path.join(process.cwd(), 'sınav.md');
 
+        // AI yanıtını cikti.md dosyasına kaydet (her seferinde dosyayı yenile)
+        const outputFilePath = path.join(process.cwd(), 'cikti.md');
+        let responseText = result.text;
+
+        // Yanıtın uzunluğunu kontrol et
+        console.log(
+          `[CIKTI_DEBUG] AI yanıtı uzunluğu: ${responseText.length} karakter`,
+        );
+
+        // Yanıt için maksimum izin verilen boyut (50MB, oldukça büyük bir değer)
+        const maxOutputSize = 50 * 1024 * 1024;
+
+        // Eğer yanıt çok büyükse, kes ve not ekle
+        if (responseText.length > maxOutputSize) {
+          responseText = responseText.substring(0, maxOutputSize);
+          responseText += '\n\n... [Yanıt çok büyük olduğu için kesildi] ...';
+          console.warn(
+            `[CIKTI_DEBUG] AI yanıtı çok büyük, ${maxOutputSize} karaktere kısaltıldı.`,
+          );
+        }
+
+        const outputContent = `# AI Model Yanıtı\n\nTarih: ${new Date().toISOString()}\nTrace ID: ${traceId}\nYanıt Uzunluğu: ${result.text.length} karakter\n\n## Ham Çıktı:\n\`\`\`json\n${responseText}\n\`\`\`\n`;
+
+        // Büyük boyuttaki dosyalar için buffer ayarı kullanarak kaydet
+        fs.writeFileSync(outputFilePath, outputContent, {
+          encoding: 'utf8',
+          flag: 'w', // Dosyayı yoksa oluştur, varsa üzerine yaz
+        });
+
+        this.logger.info(
+          `[${traceId}] AI yanıtı cikti.md dosyasına kaydedildi (${responseText.length} karakter)`,
+          'QuizGenerationService.generateAIContent',
+        );
+
+        const debugFilePath = path.join(process.cwd(), 'sınav.md');
         if (fs.existsSync(debugFilePath)) {
           let appendContent = `\n\n## AI Yanıtı:\n\`\`\`json\n${result.text}\n\`\`\`\n\n`;
 

@@ -38,7 +38,7 @@ export class AIProviderService {
         apiKey: 'AIzaSyCIYYYDSYB_QN00OgoRPQgXR2cUUWCzRmw', // Varsayılan demo anahtar
         model: 'gemini-2.0-flash',
         temperature: 0.5,
-        maxTokens: 2048,
+        maxTokens: 30048,
       };
     } else {
       this.config = llmConfig as AIProviderConfig;

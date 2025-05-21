@@ -48,7 +48,7 @@ export class GeminiProviderService implements AIProvider {
       safetySettings: defaultSafetySettings,
       generationConfig: {
         temperature: config.temperature || 0.7,
-        maxOutputTokens: config.maxTokens || 1024,
+        maxOutputTokens: config.maxTokens || 30000,
       },
     });
 
@@ -118,7 +118,7 @@ export class GeminiProviderService implements AIProvider {
         temperature:
           requestParams.temperature || this.config.temperature || 0.5,
         maxOutputTokens:
-          requestParams.maxTokens || this.config.maxTokens || 2048,
+          requestParams.maxTokens || this.config.maxTokens || 30048,
         topK: requestParams.topK || 40,
         topP: requestParams.topP || 0.95,
       };

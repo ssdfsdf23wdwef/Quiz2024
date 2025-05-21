@@ -92,7 +92,7 @@ export class AiService {
         apiKey: 'AIzaSyCIYYYDSYB_QN00OgoRPQgXR2cUUWCzRmw', // Varsayılan demo anahtar
         model: 'gemini-2.0-flash',
         temperature: 0.7,
-        maxTokens: 1024,
+        maxTokens: 30024,
       };
     }
 
