@@ -25,7 +25,7 @@ const gradientVariants = {
     transition: {
       repeat: Infinity,
       repeatType: "mirror" as const,
-      duration: 20,
+      duration: 30,
       ease: "linear",
     },
   },
@@ -45,10 +45,12 @@ const fadeInUp = {
 };
 
 const buttonHover = {
-  rest: { scale: 1 },
+  rest: { scale: 1, y: 0 },
   hover: {
-    scale: 1.05,
-    boxShadow: "0 10px 25px -5px rgba(79, 70, 229, 0.4)",
+    scale: 1.03,
+    y: -2,
+    boxShadow: "0 10px 25px -5px rgba(88, 28, 235, 0.5)",
+    transition: { duration: 0.2, ease: "easeOut" }
   },
 };
 
@@ -157,7 +159,7 @@ export default function Home() {
           <>
             {/* Hero Section with Enhanced Gradient Background */}
             <motion.div
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 dark:from-indigo-700 dark:via-purple-700 dark:to-blue-700 shadow-xl shadow-indigo-500/20"
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-500 to-violet-600 dark:from-indigo-700 dark:via-purple-600 dark:to-violet-700 shadow-2xl"
               variants={gradientVariants}
               initial="hidden"
               animate="visible"
@@ -166,16 +168,19 @@ export default function Home() {
               }}
             >
               {/* Decorative Elements */}
-              <div className="absolute inset-0 bg-grid-white/[0.06] bg-[length:30px_30px]"></div>
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+              <div className="absolute inset-0 bg-grid-white/[0.07] bg-[length:30px_30px]"></div>
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
               
               {/* Glass overlay */}
               <div className="absolute inset-0 backdrop-blur-[1px] bg-gradient-to-b from-transparent to-black/10"></div>
 
-              {/* Floating circles */}
+              {/* Enhanced lighting effect */}
+              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white/10 to-transparent"></div>
+
+              {/* Floating circles with better depth */}
               <motion.div
-                className="absolute w-72 h-72 rounded-full bg-white/10 blur-3xl"
+                className="absolute w-72 h-72 rounded-full bg-white/15 blur-3xl"
                 animate={{
                   x: [0, 40, 0],
                   y: [0, -40, 0],
@@ -190,7 +195,7 @@ export default function Home() {
               />
 
               <motion.div
-                className="absolute w-56 h-56 rounded-full bg-purple-500/20 blur-3xl"
+                className="absolute w-56 h-56 rounded-full bg-purple-400/20 blur-3xl"
                 animate={{
                   x: [0, -50, 0],
                   y: [0, 30, 0],
@@ -205,7 +210,7 @@ export default function Home() {
               />
               
               <motion.div
-                className="absolute w-48 h-48 rounded-full bg-blue-500/15 blur-3xl"
+                className="absolute w-48 h-48 rounded-full bg-indigo-500/15 blur-3xl"
                 animate={{
                   x: [0, 60, 0],
                   y: [0, 60, 0],
@@ -229,7 +234,7 @@ export default function Home() {
                       animate="visible" 
                       className="mb-3 inline-block"
                     >
-                      <span className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium">
+                      <span className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-lg text-white text-sm font-medium border border-white/10 shadow-lg shadow-purple-900/20">
                         Yapay Zeka Destekli Quiz Platformu
                       </span>
                     </motion.div>
@@ -239,7 +244,7 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="text-3xl md:text-5xl font-bold mb-4 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.2)] tracking-tight leading-tight"
+                      className="text-3xl md:text-5xl font-bold mb-4 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.3)] tracking-tight leading-tight"
                     >
                       Kişiselleştirilmiş Quiz Platformu
                     </motion.h1>
@@ -249,7 +254,7 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="text-lg md:text-xl text-indigo-100/90 mb-6 max-w-2xl mx-auto font-light leading-relaxed"
+                      className="text-lg md:text-xl text-indigo-100 mb-6 max-w-2xl mx-auto font-light leading-relaxed"
                     >
                       Bilgi seviyenizi ölçün, eksiklerinizi tespit edin ve öğrenme sürecinizi
                       kişiselleştirilmiş bir deneyimle optimize edin.
@@ -261,20 +266,20 @@ export default function Home() {
                       variants={fadeInUp}
                       initial="hidden"
                       animate="visible"
-                      className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto"
+                      className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto"
                     >
                       {/* Hızlı Sınav Kartı */}
-                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all group">
+                      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group transform perspective-1000">
                         <div className="flex justify-between items-start mb-3">
-                          <div className="bg-blue-500/20 p-2.5 rounded-lg">
+                          <div className="bg-blue-500/20 p-3 rounded-lg shadow-lg shadow-blue-500/10 border border-blue-500/10">
                             <FiClock className="text-white text-lg" />
                           </div>
-                          <span className="text-xs text-indigo-100/70 px-2 py-1 bg-white/10 rounded-full">
+                          <span className="text-xs text-indigo-100/90 px-2.5 py-1 bg-white/10 rounded-full border border-white/10 shadow-sm">
                             Üyelik Gerektirmez
                           </span>
                         </div>
-                        <h3 className="text-white text-lg font-medium mb-2">Hızlı Sınav</h3>
-                        <p className="text-indigo-100/80 mb-3 text-sm">
+                        <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-sm">Hızlı Sınav</h3>
+                        <p className="text-indigo-100/90 mb-4 text-sm">
                           Üyelik gerektirmeden istediğiniz konuda bilgi seviyenizi hemen test edin. 
                           Seçtiğiniz alanda temel bilgilerinizi ölçmek için ideal.
                         </p>
@@ -284,7 +289,7 @@ export default function Home() {
                           initial="rest"
                           whileHover="hover"
                           whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center justify-center gap-2 bg-blue-600/80 hover:bg-blue-600 text-white font-medium rounded-xl px-5 py-2.5 text-base transition-all duration-300"
+                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300 shadow-lg shadow-blue-600/30"
                         >
                           <FiPlay className="text-lg" />
                           <span>Hızlı Sınav Başlat</span>
@@ -292,17 +297,17 @@ export default function Home() {
                       </div>
 
                       {/* Kişiselleştirilmiş Sınav Kartı */}
-                      <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 border border-white/10 hover:bg-white/15 transition-all group">
+                      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group transform perspective-1000">
                         <div className="flex justify-between items-start mb-3">
-                          <div className="bg-purple-500/20 p-2.5 rounded-lg">
+                          <div className="bg-purple-500/20 p-3 rounded-lg shadow-lg shadow-purple-500/10 border border-purple-500/10">
                             <FiUser className="text-white text-lg" />
                           </div>
-                          <span className="text-xs text-indigo-100/70 px-2 py-1 bg-white/10 rounded-full">
+                          <span className="text-xs text-indigo-100/90 px-2.5 py-1 bg-white/10 rounded-full border border-white/10 shadow-sm">
                             {isAuthenticated ? "Premium Özellik" : "Giriş Gerektirir"}
                           </span>
                         </div>
-                        <h3 className="text-white text-lg font-medium mb-2">Kişiselleştirilmiş Sınav</h3>
-                        <p className="text-indigo-100/80 mb-3 text-sm">
+                        <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-sm">Kişiselleştirilmiş Sınav</h3>
+                        <p className="text-indigo-100/90 mb-4 text-sm">
                           Öğrenme geçmişiniz, performansınız ve hedeflerinize göre tamamen size özel 
                           sınavlar oluşturun ve ilerlemenizi takip edin.
                         </p>
@@ -312,7 +317,7 @@ export default function Home() {
                           initial="rest"
                           whileHover="hover"
                           whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-xl px-5 py-2.5 text-base transition-all duration-300"
+                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300 shadow-lg shadow-purple-600/30"
                         >
                           <FiTarget className="text-lg" />
                           <span>{isAuthenticated ? "Kişiselleştirilmiş Sınav Oluştur" : "Giriş Yap ve Başla"}</span>
