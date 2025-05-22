@@ -173,18 +173,49 @@ export interface ApiQuizGenerationOptionsDto {
   };
 }
 
+// AH: Added helper DTOs for quiz submission payload, matching backend structure
+
+interface SubmitQuestionDto {
+  id: string;
+  questionText: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+  subTopic: string;
+  normalizedSubTopic: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
+interface SubmitDocumentSourceDto {
+  fileName: string;
+  storagePath: string;
+  documentId?: string;
+}
+
+interface SubmitTopicDto {
+  subTopic: string;
+  normalizedSubTopic: string;
+  count?: number;
+}
+
+// END AH: Added helper DTOs
+
 export interface ApiQuizSubmissionPayloadDto {
-  quizId: string;
+  // quizId: string; // REMOVED - Not expected by backend at the root
   userAnswers: Record<string, string>;
   elapsedTime?: number | null;
-  quizType: "quick" | "personalized";
-  preferences: {
+  quizType: "quick" | "personalized" | "review"; // UPDATED - Added 'review'
+  personalizedQuizType?: "weakTopicFocused" | "newTopicFocused" | "comprehensive" | null; // ADDED
+  courseId?: string | null; // ADDED
+  sourceDocument?: SubmitDocumentSourceDto | null; // ADDED
+  selectedSubTopics?: SubmitTopicDto[] | null; // ADDED
+  preferences: { // Structure matches backend's QuizPreferencesDto
     questionCount: number;
     difficulty: "easy" | "medium" | "hard" | "mixed";
     timeLimit?: number | null;
     prioritizeWeakAndMediumTopics?: boolean | null;
   };
-  questions: ApiQuestion[];
+  questions: SubmitQuestionDto[]; // CHANGED from ApiQuestion[] to SubmitQuestionDto[]
 }
 
 
@@ -529,39 +560,69 @@ class AdapterService {
    * AH: Modified to accept the full Quiz object along with answers and time.
    */
   public fromQuizSubmissionPayload(
-    // payload: QuizSubmissionPayload, // AH: Original signature
-    quiz: Quiz, // AH: Pass the full quiz object
+    quiz: Quiz,
     userAnswers: Record<string, string>,
     elapsedTime?: number | null
   ): ApiQuizSubmissionPayloadDto {
+    let backendQuizType: "quick" | "personalized" | "review";
+    switch (quiz.quizType) {
+      case "personalized":
+        backendQuizType = "personalized";
+        break;
+      case "review":
+      case "failed_questions": // Assuming 'failed_questions' quiz type maps to 'review' for submission
+        backendQuizType = "review";
+        break;
+      case "general":
+      case "topic_specific":
+      default:
+        backendQuizType = "quick";
+        break;
+    }
+
+    let backendPersonalizedQuizType: "weakTopicFocused" | "newTopicFocused" | "comprehensive" | null | undefined = null;
+    if (quiz.quizType === "personalized" && quiz.personalizedQuizType) {
+      if (["weakTopicFocused", "newTopicFocused", "comprehensive"].includes(quiz.personalizedQuizType)) {
+        backendPersonalizedQuizType = quiz.personalizedQuizType as "weakTopicFocused" | "newTopicFocused" | "comprehensive";
+      }
+    }
+
     return {
-      // quizId: payload.quizId, // AH: From original payload
-      // userAnswers: payload.userAnswers, // AH: From original payload
-      // elapsedTime: payload.elapsedTime ?? null, // AH: From original payload
-      quizId: quiz.id, // AH: Get from Quiz object
-      userAnswers: userAnswers, // AH: Pass directly
+      userAnswers: userAnswers,
       elapsedTime: elapsedTime ?? null,
-      quizType: quiz.quizType === "personalized" ? "personalized" : "quick", // Map QuizType to backend DTO type
+      quizType: backendQuizType,
+      personalizedQuizType: backendPersonalizedQuizType,
+      courseId: quiz.courseId ?? null,
+      sourceDocument: quiz.sourceDocument
+        ? {
+            fileName: quiz.sourceDocument.fileName,
+            storagePath: quiz.sourceDocument.storagePath,
+            // documentId is not in frontend Quiz.sourceDocument, so it remains undefined
+          }
+        : null,
+      selectedSubTopics: quiz.selectedSubTopics
+        ? quiz.selectedSubTopics.map((stName) => ({
+            subTopic: stName,
+            normalizedSubTopic: stName.toLowerCase().trim().replace(/[^a-z0-9-\\s_]/g, '').replace(/\\s+/g, '_'), // Basic normalization
+            // count is optional and not available directly from Quiz.selectedSubTopics (string[])
+          }))
+        : null,
       preferences: {
         questionCount: quiz.preferences.questionCount,
         difficulty: quiz.preferences.difficulty,
         timeLimit: quiz.preferences.timeLimit ?? null,
-        prioritizeWeakAndMediumTopics: quiz.preferences.prioritizeWeakAndMediumTopics ?? true,
+        prioritizeWeakAndMediumTopics: quiz.preferences.prioritizeWeakAndMediumTopics ?? null,
       },
-      questions: quiz.questions.map(q => ({
+      questions: quiz.questions.map((q) => ({
         id: q.id,
         questionText: q.questionText,
         options: q.options,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation || "",
-        // subTopic: q.subTopic, // AH: Use subTopicName for ApiQuestion
-        // normalizedSubTopic: q.normalizedSubTopic, // AH: Use normalizedSubTopicName for ApiQuestion
-        subTopicName: q.subTopicName || q.subTopic, 
-        normalizedSubTopicName: q.normalizedSubTopicName || q.normalizedSubTopic, 
-        difficulty: q.difficulty,
-        questionType: q.questionType,
-        status: q.status
-      }))
+        subTopic: q.subTopicName || q.subTopic, // Ensure these are populated in the Question object
+        normalizedSubTopic: q.normalizedSubTopicName || q.normalizedSubTopic, // Ensure these are populated
+        difficulty: q.difficulty as 'easy' | 'medium' | 'hard', // Assuming q.difficulty is not 'mixed' for individual questions
+      })),
     };
   }
 
