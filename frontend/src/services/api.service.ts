@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosInstance } from "axios";
 import { auth } from "@/app/firebase/config";
 import { ErrorService } from "./error.service";
-import { LoggerService } from "./logger.service";
-import { FlowTrackerService, FlowCategory } from "./flow-tracker.service";
+// import { LoggerService } from "./logger.service"; // LoggerService is not directly used, getLogger is used
+import { FlowCategory } from "./flow-tracker.service"; // Correctly import FlowCategory
 import { getLogger, getFlowTracker } from "../lib/logger.utils";
 
 /**
@@ -41,7 +41,7 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: false, // CORS sorunlarını engellemek için false'a çevirildi
+  withCredentials: true, // Cookie gönderimi için true yapın
   timeout: DEFAULT_TIMEOUT,
 });
 
@@ -57,7 +57,7 @@ export const checkApiAvailability = async (
   const logger = getLogger();
   const flowTracker = getFlowTracker();
   
-  flowTracker.trackStep(FlowCategory.API, 'API erişilebilirlik kontrolü başladı', 'checkApiAvailability');
+  flowTracker.trackStep(FlowCategory.API, 'API erişilebilirlik kontrolü başladı', 'checkApiAvailability'); // Use FlowCategory
   
   const initialRetryDelay = 100; 
   const maxRetries = 8; 
@@ -80,7 +80,7 @@ export const checkApiAvailability = async (
         logger.info(
           `Önceki başarılı API port\'u kullanıldı: ${lastSuccessPort}`,
           'checkApiAvailability',
-          __filename,
+          // __filename, // Removed __filename
         );
         API_URL = lastSuccessAPI;
         axiosInstance.defaults.baseURL = lastSuccessAPI;
@@ -96,7 +96,7 @@ export const checkApiAvailability = async (
       logger.info(
         `API deneniyor: ${currentAPI} (deneme ${attempt + 1}/${maxRetries})`,
         'checkApiAvailability',
-        __filename,
+        // __filename, // Removed __filename
       );
       try {
         const startTime = performance.now();
@@ -109,7 +109,7 @@ export const checkApiAvailability = async (
           logger.info(
             `API bağlantısı başarılı: ${currentAPI}, ${Math.round(endTime - startTime)}ms`,
             'checkApiAvailability',
-            __filename,
+            // __filename, // Removed __filename
           );
           API_URL = currentAPI;
           axiosInstance.defaults.baseURL = currentAPI;
@@ -120,14 +120,14 @@ export const checkApiAvailability = async (
           logger.warn(
             `API yanıt verdi fakat durum kodu: ${response.status}`,
             'checkApiAvailability',
-            __filename,
+            // __filename, // Removed __filename
           );
         }
       } catch (error) {
         logger.warn(
           `Deneme ${attempt+1}/${maxRetries}: API bağlantı hatası: ${currentAPI}, ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
           'checkApiAvailability',
-          __filename,
+          // __filename, // Removed __filename
         );
       }
     }
@@ -141,7 +141,7 @@ export const checkApiAvailability = async (
     logger.info(
       `Alternatif portlar deneniyor: ${portsToTry.map(p => p.port).join(', ')}`,
       'checkApiAvailability',
-      __filename,
+      // __filename, // Removed __filename
     );
     for (const successfulPort of portsToTry) {
         if (successfulPort.testUrl === API_URL) continue; 
@@ -151,7 +151,7 @@ export const checkApiAvailability = async (
                 logger.info(
                     `Çalışan API URL\'i bulundu: ${successfulPort.testUrl}`,
                     'checkApiAvailability',
-                    __filename,
+                    // __filename, // Removed __filename
                 );
                 API_URL = successfulPort.testUrl;
                 axiosInstance.defaults.baseURL = API_URL;
@@ -166,9 +166,13 @@ export const checkApiAvailability = async (
 
   const errorMsg = "API sunucusuna erişilemiyor. Lütfen backend servisinin çalıştığından emin olun.";
   ErrorService.showToast(errorMsg, "error");
-  logger.error(new Error(errorMsg), 'checkApiAvailability', __filename);
-  flowTracker.trackStep(FlowCategory.API, 'Hiçbir API portu aktif değil!', 'checkApiAvailability');
+  logger.error(errorMsg, 'checkApiAvailability', new Error(errorMsg)); // Pass an Error object
+  flowTracker.trackStep(FlowCategory.API, 'Hiçbir API portu aktif değil!', 'checkApiAvailability'); // Use FlowCategory
   
+  // This function must return a string as per its signature.
+  // If no API is available after all checks, returning the initial/default API_URL 
+  // or a specific error indicator URL might be appropriate.
+  // For now, let's ensure it returns API_URL as it did before the error.
   return API_URL; 
 };
 

@@ -1,20 +1,20 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-22T13:02:33.535Z
+## Tarih: 2025-05-22T14:41:00.441Z
 
-## Trace ID: quiz-1747918953501-xwrij
+## Trace ID: quiz-1747924860173-cd4io
 
-## Alt Konular (10 adet):
+## Alt Konular (8 adet):
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **S Perbilgisayar S Ralama Listeleri** (2 soru)
-2. **Top500 S Ralamas** (2 soru)
-3. **Hpcğis Ralamas** (2 soru)
-4. **Green500 S Ralamas** (2 soru)
-5. **Linpack Testi** (2 soru)
+1. **Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar** (2 soru)
+2. **Donan M Karma Kl Ve Y Netimi** (2 soru)
+3. **Veri Hareketi Y Netiminin Nemi** (2 soru)
+4. **Y Ksek D Zeyde Paralellik Ve Kontrol** (2 soru)
+5. **Donan M Bazl Ğirev Da L M Stratejileri** (2 soru)
 
 **Toplam Aktif: 5 alt konu, 10 soru**
 
@@ -22,11 +22,9 @@
 
 **Aşağıdaki konulardan soru üretilmeyecektir:**
 
-1. Flops Floatinğipoint İ Lemleri
-2. Konjugat Gradyan Y Ntemi
-3. Bellek Ve Veri Transfer Performans
-4. Flops Watt Oran
-5. Enerji Verimlili İ
+1. Bellek Hiyerar İsinde Veri Yerle İmi
+2. Ğirev Ba Ml L Kontrol
+3. İ Y K Dengeleme Teknikleri
 
 ```
 
@@ -52,11 +50,11 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **S Perbilgisayar S Ralama Listeleri** (2 soru)
-2. **Top500 S Ralamas** (2 soru)
-3. **Hpcğis Ralamas** (2 soru)
-4. **Green500 S Ralamas** (2 soru)
-5. **Linpack Testi** (2 soru)
+1. **Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar** (2 soru)
+2. **Donan M Karma Kl Ve Y Netimi** (2 soru)
+3. **Veri Hareketi Y Netiminin Nemi** (2 soru)
+4. **Y Ksek D Zeyde Paralellik Ve Kontrol** (2 soru)
+5. **Donan M Bazl Ğirev Da L M Stratejileri** (2 soru)
 
 **Toplam Aktif: 5 alt konu, 10 soru**
 
@@ -64,11 +62,9 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **Aşağıdaki konulardan soru üretilmeyecektir:**
 
-1. Flops Floatinğipoint İ Lemleri
-2. Konjugat Gradyan Y Ntemi
-3. Bellek Ve Veri Transfer Performans
-4. Flops Watt Oran
-5. Enerji Verimlili İ
+1. Bellek Hiyerar İsinde Veri Yerle İmi
+2. Ğirev Ba Ml L Kontrol
+3. İ Y K Dengeleme Teknikleri
 
   *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
 - **Eğitim İçeriği:** 
@@ -76,86 +72,165 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 Bilgisayar Mühendisliği Bölümü
 Bahar –2025(ÖÖ.,İÖ.)
 MBM7-452 -Eksaskala Bilgisayar Sistemleri
-(Sunu 6)
+(Sunu 7)
 Dr. Öğr. Üyesi Esra Çelik
 
-Süperbilgisayar Dünyasında Sıralama
-•Süperbilgisayarlar, yüksek hesaplama gücüyle bilimsel
-araştırmalardan yapay zekaya kadar pek çok alanda kullanılır.
-•Bu sistemlerin hızını, verimliliğini ve gerçek performansını
-değerlendiren üç temel liste vardır:
-•TOP500
-•HPCG (High Performance Conjugate Gradient)
-•Green500
+Günün Sorusu
+Eksaskala bilgisayar sistemlerinde
+uygulama geliştirme neden zor olabilir?
 
-TOP500
-•TOP500,
-•dünyanın en hızlı 500 süperbilgisayarını hesaplama gücüne göre
-sıralar.
-•1993’ten bu yana yılda iki kez (Haziran ve Kasım aylarında)
-yayımlanmaktadır.
-•Performansodaklıdır.
-•En yüksek hesaplama gücü kimde?sorusunun cevabını verir.
+Uygulama Geliştirmenin Zorlukları -1
+•Donanım karmaşıklığı vardır ve kontrol gerektirir:
+•Çünkü, milyonlarca çekirdek, heterojen mimariler (CPU, GPU,
+TPU vb.) ve farklı bellek türleri kullanılır.
 
-TOP500
-•Sıralama ölçütü olarak LINPACK testi kullanılır.
-•Bu test:
-•Süperbilgisayarın ne kadar hızlı işlem yapabildiğini yanisistemin
-floating-point işlemleri (FLOPS) performansını ölçer.
-•Matris çözümlemeye dayalıdır.
-•Bellek kullanımı, veri aktarımı veya gerçek dünya uygulamalarındaki
-performansı tam olarak yansıtmaz.
+Donanım Karmaşıklığı
+Örneğin, İklim Simülasyonuyapan bir uygulama geliştirmek isteniliyor.
+Sistemde:
+1.Yürütülecek görevler/işlemler neler olabilir?
+2.Görev dağılımı nasıl yapılmalı, hangi işlemler hangi donanımda
+daha verilmli çalışır?
+3.Hangi veriler hangi belleklere yerleştirilmeli?
 
-TOP500
-•Kasım 2024 TOP500 listesinde ElCapiton ilk sırada yer alır.
+Donanım Karmaşıklığı
+1.Sistemde yürütülecek görevler/işlemler neler olabilir?
+•Ana kontrol işlemleri ve seri görevler
+•Atmosfer modellemesinde yüksek paralellik gerektiren işlemler
+•Öğrenen modellerle iklim değişkenlerini tahmin etme işlemleri
+**Bu görevler/işlemler hangi donanım(lar) üzerinde yürütülmeli?
 
-HPCG
-•HPCG,
-•bellek, iletişim ve veri akış performansını test eder.
-•Gerçek dünya uygulamalarına odaklanır.
-•TOP500’ün eksik kaldığı noktaları tamamlamak için alternatif olarak
-geliştirilmiştir.
-•Gerçek dünya uygulamalarına (mühendislik hesaplamaları vb.) daha
-yakındır.
+Donanım Karmaşıklığı
+2. Görev dağılımı nasıl yapılmalı, hangi işlemler hangi donanımda
+daha verilmli çalışır?
+•Ana kontrol işlemleri ve seri görevleriçin CPU
+•Atmosfer modellemesinde yüksek paralellik gerektiren işlemler için GPU
+•Öğrenen modellerle iklim değişkenlerini tahmin etme işlemleri için TPU
+**Bu görevler/işlemler için kullanılacak veriler hangi belleklere
+kaydedilmeli?
 
-HPCG
-•Sıralama ölçütü olarak HPCG testi kullanılır.
-•Bu test:
-•İteratif bir doğrusal denklem çözme yöntemi olan Konjugat
-Gradyanyöntemini kullanılır.
-•Bellek erişimi, iletişim yeteneği ve veri transfer performansını test
-eder
+Donanım Karmaşıklığı
+3. Hangi veriler hangi belleklere yerleştirilmeli?
+•Büyük ve nadir erişim gerektiren ham sensör verileri için CPU
+belleği / RAM / SSD
+•Paralel işleme için hızlı erişim gerektiren hesaplama verileri için GPU
+belleği
+•Makine öğrenmesi için optimize donanım gerektiren model
+parameteleri için TPU belleği
 
-HPCG
-•Kasım 2024 HPCG listesinde Fugaku ilk sırada yer alır.
+Donanım Karmaşıklığı
+Eksaskalabilgisayarsistemlerindemimari,bellekvb.yapıların
+çeşitlenmesineveartışınabağlıolaraksistemdegörülentemel
+zorluklar:
+•Donanımkarmaşıklığı
+•Görev/işlemdağılımıbazlıplanlamazorlukları
+•Veridağılımıbazlıplanlamazorlukları
 
-Green500
-•Green500,
-•enerji verimliliğini temel alarak süperbilgisayarları sıralayan
-listedir.
-•Çevreci yaklaşıma odaklanır.
-•Verimli, sürdürülebilir HPC sistemlerini teşvik eder.
-•Sıralama ölçütü olarak FLOPS/Wattoranına bakar.
-•Yani, 1 watt enerji başına ne kadar işlem yapıldığı değerlendirilir.
+Uygulama Geliştirmenin Zorlukları -2
+•Veri hareketi yönetimi planlı olmalıdır:
+•Çünkü, bellekten işlemciye veri taşıma maliyeti yüksektir.
 
-Green500
-•Kasım 2024 Green500 listesinde JEDI ilk sırada yer alır.
+Veri Hareketi Yönetimi
+Örneğin, İklim Simülasyonuyapan uygulama için,
+Sistemde:
+1. Veri hareketi yönetimi neden önemli?
+•Veriye erişim süresi, işlem süresinden daha fazla maliyet
+oluşturabilir.
+•Bellekten GPU’ya veri taşımak CPU işleminden daha pahalıya
+mal olabilir.
+•Yanlış yerleştirilmiş veri, işlemcinin beklemesine yani performans
+kaybına neden olur.
 
-Listelerin Karşılaştırılması
-ListeOdak NoktasıTest (Benchmark)Amaç
-TOP500Ham hesaplama gücü
-(FLOPS)
-LINPACKEn hızlı
-süperbilgisayarları
-belirlemek
-HPCGBellek, iletişim ve
-gerçekçi yük
-HPCGGerçek
-uygulamalardaki
-performansı ölçmek
-Green500Enerji verimliliğiFLOPS/WattEn verimli
-süperbilgisayarları
-sıralamak
+Veri Hareketi Yönetimi
+Eksaskalabilgisayarsistemlerindeverihareketiyönetimindetemel
+zorluk,sistemdekiverimiktarınınartışınabağlıolarak
+•Verilerinuygunişlemcibelleklerineyerleştirilmesindeki
+karmaşıklığınartmasıdır.
+
+Uygulama Geliştirmenin Zorlukları -3
+•Yüksek düzeyde paralellik için kontrol gerektirir:
+•Çünkü, görev bağımlılığı ve doğru yük dengelemesi kontrolü
+yapmamak hatalı sonuçlara sebep olur ve performansı büyük
+ölçüde düşürür.
+
+Yüksek Düzeyde Paralellik
+Örneğin,herbirifarklısürelerdeçalışan6farklıgörevinparalel
+çalıştırılmasıgereken2çekirdeklibirsistemileilgilibilgileraşağıdayer
+alır:
+1.Görev A: Veritabanından veri çekme (5 saniye)
+2.Görev B:Veritabanı verilerini işleme (10 saniye)
+3.Görev C:İşlenen veriyi raporlama (8saniye)
+4.Görev D:Hata kontrolü ve sonuçları değerlendirme (2 saniye)
+5.Görev E:Sistemin izlenmesi (35 saniye)
+6.Görev F:Arka plan işlemleri (10 saniye)
+** Bu sistemde ne tür zorluklarla karşılaşılabilir?
+
+Yüksek Düzeyde Paralellik
+Busistemdegörülebilecekentemelzorluklar:
+•görevbağımlılığıkontrolüve
+•işyüküdengelemedir.
+
+Yüksek Düzeyde Paralellik
+Görevbağımlılığıkontrolüyapıldığında:
+•GörevB'yiçalıştırmakiçinGörevA'nınverileriçekmesigeretiği
+•GörevC'yiçalıştırmakiçinGörevB'ninverileriişlemesigerektiği
+•GörevD'yiçalıştırmakiçinGörevC'ninraporlamaişleminiyapması
+gerektiği
+•GörevEveF’ninherhangibirgörevileparalelçalıştırılabilirolduğu
+görülür.
+**DolayısıylaGörevEveFdışındakalangörevlerfarklıişlemcilerdeparalel
+olarakyürütülemezler.
+
+Yüksek Düzeyde Paralellik
+Görevbağımlılığıkontrolüyapılmazsa
+•GörevBeksikveyahatalıverileredayanarakçalışabilir.
+•GörevChatalıişlenmişverilerikullanır.
+•GörevDyanlışbirraporilehatalıbirdeğerlendirmeyapar.
+**Sonuçolaraktümgörevlerarasındabağımlılıkkontrolüyapılması
+zorunludur.
+
+Yüksek Düzeyde Paralellik
+Eksaskalabilgisayarsistemlerindegörevbağımlılığıkontrolündeki
+temelzorluk,sistemdekigörevsayısınınartışınabağlıolarakşunları
+içerir:
+•Görevbağımlılıklarınkarmaşıklaşması
+•Görevlerinzamanlanmasıvesenkronizasyonsorunları
+
+Yüksek Düzeyde Paralellik
+İşyüküdengelemeyapılmazsa:
+•Çekirdek1:GörevA(5saniye)+GörevB(10saniye)+GörevC(8saniye)+GörevD(2saniye)
+•Çekirdek1,toplam25saniyeçalışır.
+•Çekirdek2:GörevE(35saniye)+GörevF(10saniye)
+•Çekirdek2,toplam45saniyeçalışır.
+**Budağılımda,Çekirdek1çokdahaazbirsüreçalışırkenÇekirdek2daha
+uzunsüreçalışacaktır.Budaişyüküaçısındandengesizbirdağılımoluşturur.
+
+Yüksek Düzeyde Paralellik
+İşyüküdengelemeyapılırsa:
+•Çekirdek1:GörevA(5saniye)+GörevB(10saniye)+GörevC(8saniye)+GörevD(2saniye)+Görev
+F(10saniye)
+•Çekirdek1,toplam35saniyeçalışır.
+•Çekirdek2:GörevE(35saniye)
+•Çekirdek2,toplam35saniyeçalışır.
+**Buşekildedengelidağılımparalelişlemeyidahaverimlihalegetirir.
+
+Yüksek Düzeyde Paralellik
+Eksaskalabilgisayarsistemlerindeişyüküdengelemedetemelzorluk,
+sistemdekigörevsayısınınveçekirdeksayısınınartışınabağlıolarak
+•Görevveçekirdekeşleşmesininkarmaşıklığınınartmasıdır.
+
+Uygulama Geliştirmenin Zorlukları -4
+•Eksaskala bilgisayar sistemlerinde programlama modelleri,
+kütüphaneler ve araçları bakımından temel zorluk:
+•Bu modeller, kütüphaneler ve araçların çeşitliliği arttıkça
+kullanımları için karmaşık ve platforma özel bilgi
+gerektiriyor olmasıdır.
+
+Uygulama Geliştirmenin Zorlukları -5
+•Eksaskala bilgisayar sistemlerinin öğrenilmesinin güç olmasıyla
+ilgili temel zorluk:
+•Uygulama geliştiriciler için eksaskala sistemleri öğrenmek
+zaman alıcı olması ve hem teorik bilgi hem de pratik beceri
+gerektiriyor olmasıdır.
 - **İstenen Toplam Soru Sayısı:** 10 soru
 - **Zorluk Seviyesi:** mixed
 
@@ -322,4 +397,232 @@ sıralamak
 // ================ PROMPT SONU ======================
 // ====================================================
 ```
+
+
+
+## AI Yanıtı:
+```json
+```json
+{
+  "questions": [
+    {
+      "id": "q1",
+      "questionText": "Eksaskala bilgisayar sistemlerinde uygulama geliştirmenin zorluklarından biri olan donanım karmaşıklığı, hangi temel faktörlerle ilişkilidir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Sadece CPU çekirdeklerinin sayısının artmasıyla",
+        "Yalnızca GPU ve TPU gibi heterojen mimarilerin kullanımının azalmasıyla",
+        "Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla",
+        "Sadece bellek türlerinin sayısının azalmasıyla"
+      ],
+      "correctAnswer": "Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla",
+      "explanation": "Eksaskala sistemlerdeki donanım karmaşıklığı, çok sayıda çekirdek, farklı mimariler ve çeşitli bellek türlerinin bir arada kullanılmasından kaynaklanır. Bu durum, uygulama geliştirme sürecini zorlaştırır. Diğer seçenekler bu karmaşıklığı tam olarak yansıtmamaktadır.",
+      "subTopicName": "Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar",
+      "normalizedSubTopicName": "eksaskala_sistemlerde_uygulama_geli_tirme_zorluklar",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q2",
+      "questionText": "İklim simülasyonu yapan bir uygulamada, öğrenen modellerle iklim değişkenlerini tahmin etme işlemleri için en uygun donanım hangisidir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "applying",
+      "options": [
+        "CPU",
+        "GPU",
+        "TPU",
+        "SSD"
+      ],
+      "correctAnswer": "TPU",
+      "explanation": "TPU'lar (Tensor İşlem Birimleri), makine öğrenmesi iş yükleri için optimize edilmişlerdir ve öğrenen modellerle iklim değişkenlerini tahmin etme gibi işlemler için en uygun donanımı oluştururlar. CPU'lar genel amaçlı işlemler için, GPU'lar ise yüksek paralellik gerektiren işlemler için daha uygundur.",
+      "subTopicName": "Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar",
+      "normalizedSubTopicName": "eksaskala_sistemlerde_uygulama_geli_tirme_zorluklar",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q3",
+      "questionText": "Eksaskala sistemlerde donanım karmaşıklığı bağlamında, görev dağılımı yapılırken hangi husus dikkate alınmalıdır?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "analyzing",
+      "options": [
+        "Tüm görevlerin aynı donanım üzerinde çalıştırılması",
+        "Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi",
+        "Sadece CPU kullanımının optimize edilmesi",
+        "Sadece GPU kullanımının optimize edilmesi"
+      ],
+      "correctAnswer": "Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi",
+      "explanation": "Donanım karmaşıklığı dikkate alındığında, görev dağılımı yapılırken her görevin hangi donanım üzerinde daha verimli çalıştığının belirlenmesi önemlidir. Bu, performansı artırır ve kaynakların etkin kullanımını sağlar. Diğer seçenekler, sistemin potansiyelini tam olarak kullanmamıza engel olur.",
+      "subTopicName": "Donan M Karma Kl Ve Y Netimi",
+      "normalizedSubTopicName": "donan_m_karma_kl_ve_y_netimi",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q4",
+      "questionText": "Eksaskala bilgisayar sistemlerinde, mimari ve bellek yapılarının çeşitlenmesi ve artmasıyla ortaya çıkan temel zorluklardan biri aşağıdakilerden hangisidir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Donanım karmaşıklığı",
+        "Yazılım basitliği",
+        "Enerji verimliliği",
+        "Maliyet düşüklüğü"
+      ],
+      "correctAnswer": "Donanım karmaşıklığı",
+      "explanation": "Eksaskala sistemlerde mimari ve bellek yapılarının çeşitlenmesi ve artması, donanım karmaşıklığını artırır. Bu durum, sistemlerin yönetimi ve optimizasyonu açısından zorluklar yaratır. Diğer seçenekler genellikle hedeflenen özellikler olsa da, bu sistemlerin doğasında var olan zorlukları yansıtmaz.",
+      "subTopicName": "Donan M Karma Kl Ve Y Netimi",
+      "normalizedSubTopicName": "donan_m_karma_kl_ve_y_netimi",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q5",
+      "questionText": "Eksaskala bilgisayar sistemlerinde veri hareketi yönetiminin önemi nedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Veri hareketi maliyetinin düşük olması",
+        "Veriye erişim süresinin işlem süresinden daha az maliyet oluşturması",
+        "Bellekten işlemciye veri taşıma maliyetinin yüksek olması",
+        "Yanlış yerleştirilmiş verinin performansı artırması"
+      ],
+      "correctAnswer": "Bellekten işlemciye veri taşıma maliyetinin yüksek olması",
+      "explanation": "Veri hareketi yönetimi, eksaskala sistemlerde önemlidir çünkü bellekten işlemciye veri taşıma maliyeti yüksektir. Veriye erişim süresi, işlem süresinden daha fazla maliyet oluşturabilir ve yanlış yerleştirilmiş veri performans kaybına neden olabilir.",
+      "subTopicName": "Veri Hareketi Y Netiminin Nemi",
+      "normalizedSubTopicName": "veri_hareketi_y_netiminin_nemi",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q6",
+      "questionText": "Eksaskala bilgisayar sistemlerinde veri hareketi yönetimindeki temel zorluk nedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Veri miktarının azalması",
+        "Verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklığın artması",
+        "Veri erişim hızının artması",
+        "Bellek teknolojilerinin basitleşmesi"
+      ],
+      "correctAnswer": "Verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklığın artması",
+      "explanation": "Eksaskala sistemlerde veri miktarının artmasıyla birlikte, verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklık artar. Bu durum, veri hareketi yönetimini zorlaştırır ve performans optimizasyonu gerektirir.",
+      "subTopicName": "Veri Hareketi Y Netiminin Nemi",
+      "normalizedSubTopicName": "veri_hareketi_y_netiminin_nemi",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q7",
+      "questionText": "Eksaskala bilgisayar sistemlerinde yüksek düzeyde paralellik için kontrolün gerekliliği neden önemlidir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür.",
+        "Paralel işlemlerde kontrol ihtiyacının azalması",
+        "Görev bağımlılığının önemsiz hale gelmesi",
+        "Yük dengelemesinin otomatik olarak sağlanması"
+      ],
+      "correctAnswer": "Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür.",
+      "explanation": "Yüksek düzeyde paralellik için kontrol gereklidir çünkü görev bağımlılığı ve doğru yük dengelemesi kontrolü yapılmadığında hatalı sonuçlar ortaya çıkar ve performans düşer. Bu nedenle, görevler arasındaki ilişkilerin ve iş yükünün dengeli dağılımının kontrol edilmesi önemlidir.",
+      "subTopicName": "Y Ksek D Zeyde Paralellik Ve Kontrol",
+      "normalizedSubTopicName": "y_ksek_d_zeyde_paralellik_ve_kontrol",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q8",
+      "questionText": "Eksaskala bilgisayar sistemlerinde görev bağımlılığı kontrolündeki temel zorluk nedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Görev sayısının azalması",
+        "Görev bağımlılıklarının karmaşıklaşması",
+        "Görevlerin basitleşmesi",
+        "Görevlerin eş zamanlı çalıştırılmasının kolaylaşması"
+      ],
+      "correctAnswer": "Görev bağımlılıklarının karmaşıklaşması",
+      "explanation": "Eksaskala sistemlerde görev sayısının artmasıyla birlikte görev bağımlılıkları karmaşıklaşır. Bu durum, görevlerin doğru sırada ve zamanda yürütülmesini zorlaştırır, bu da hatalı sonuçlara ve performans sorunlarına yol açabilir.",
+      "subTopicName": "Y Ksek D Zeyde Paralellik Ve Kontrol",
+      "normalizedSubTopicName": "y_ksek_d_zeyde_paralellik_ve_kontrol",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q9",
+      "questionText": "Donanım bazlı görev dağılımı stratejilerinde, bir görevin hangi donanımda daha verimli çalışacağını belirlemek için hangi faktörler göz önünde bulundurulmalıdır?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "analyzing",
+      "options": [
+        "Sadece görevin karmaşıklığı",
+        "Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri",
+        "Sadece donanımın maliyeti",
+        "Sadece görevin önceliği"
+      ],
+      "correctAnswer": "Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri",
+      "explanation": "Donanım bazlı görev dağılımı stratejilerinde, görevin türü (örneğin, hesaplama yoğun, veri yoğun), veri erişim gereksinimleri (hızlı bellek erişimi, büyük veri setleri) ve donanımın özellikleri (CPU, GPU, TPU) dikkate alınmalıdır. Bu faktörler, görevin hangi donanımda daha verimli çalışacağını belirlemede kritik öneme sahiptir.",
+      "subTopicName": "Donan M Bazl Ğirev Da L M Stratejileri",
+      "normalizedSubTopicName": "donan_m_bazl_girev_da_l_m_stratejileri",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q10",
+      "questionText": "Eksaskala sistemlerde donanım bazlı görev dağılımı stratejileri uygulanırken, hangi temel amaç güdülmelidir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Sadece maliyeti düşürmek",
+        "Sadece enerji tüketimini azaltmak",
+        "Görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmak",
+        "Sadece belirli bir donanım türünü kullanmak"
+      ],
+      "correctAnswer": "Görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmak",
+      "explanation": "Donanım bazlı görev dağılımı stratejilerinin temel amacı, görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmaktır. Bu, sistem kaynaklarının verimli kullanılmasını ve uygulamaların daha hızlı çalışmasını sağlar.",
+      "subTopicName": "Donan M Bazl Ğirev Da L M Stratejileri",
+      "normalizedSubTopicName": "donan_m_bazl_girev_da_l_m_stratejileri",
+      "difficulty": "medium"
+    }
+  ]
+}
+```
+```
+
+
+
+## İşlenen Sorular Analizi:
+
+- Toplam Soru Sayısı: 10
+- Alt Konu Dağılımı:
+
+  - Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar: 2 soru
+  - Donan M Karma Kl Ve Y Netimi: 2 soru
+  - Veri Hareketi Y Netiminin Nemi: 2 soru
+  - Y Ksek D Zeyde Paralellik Ve Kontrol: 2 soru
+  - Donan M Bazl Ğirev Da L M Stratejileri: 2 soru
+
+
+### Soru Örnekleri (Her Alt Konudan 1 Adet):
+
+#### Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar:
+- Soru: Eksaskala bilgisayar sistemlerinde uygulama geliştirmenin zorluklarından biri olan donanım karmaşıklığı, hangi temel faktörlerle ilişkilidir?
+- Seçenekler: Sadece CPU çekirdeklerinin sayısının artmasıyla | Yalnızca GPU ve TPU gibi heterojen mimarilerin kullanımının azalmasıyla | Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla | Sadece bellek türlerinin sayısının azalmasıyla
+- Doğru Cevap: Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla
+- Zorluk: medium
+
+#### Donan M Karma Kl Ve Y Netimi:
+- Soru: Eksaskala sistemlerde donanım karmaşıklığı bağlamında, görev dağılımı yapılırken hangi husus dikkate alınmalıdır?
+- Seçenekler: Tüm görevlerin aynı donanım üzerinde çalıştırılması | Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi | Sadece CPU kullanımının optimize edilmesi | Sadece GPU kullanımının optimize edilmesi
+- Doğru Cevap: Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi
+- Zorluk: medium
+
+#### Veri Hareketi Y Netiminin Nemi:
+- Soru: Eksaskala bilgisayar sistemlerinde veri hareketi yönetiminin önemi nedir?
+- Seçenekler: Veri hareketi maliyetinin düşük olması | Veriye erişim süresinin işlem süresinden daha az maliyet oluşturması | Bellekten işlemciye veri taşıma maliyetinin yüksek olması | Yanlış yerleştirilmiş verinin performansı artırması
+- Doğru Cevap: Bellekten işlemciye veri taşıma maliyetinin yüksek olması
+- Zorluk: medium
+
+#### Y Ksek D Zeyde Paralellik Ve Kontrol:
+- Soru: Eksaskala bilgisayar sistemlerinde yüksek düzeyde paralellik için kontrolün gerekliliği neden önemlidir?
+- Seçenekler: Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür. | Paralel işlemlerde kontrol ihtiyacının azalması | Görev bağımlılığının önemsiz hale gelmesi | Yük dengelemesinin otomatik olarak sağlanması
+- Doğru Cevap: Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür.
+- Zorluk: medium
+
+#### Donan M Bazl Ğirev Da L M Stratejileri:
+- Soru: Donanım bazlı görev dağılımı stratejilerinde, bir görevin hangi donanımda daha verimli çalışacağını belirlemek için hangi faktörler göz önünde bulundurulmalıdır?
+- Seçenekler: Sadece görevin karmaşıklığı | Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri | Sadece donanımın maliyeti | Sadece görevin önceliği
+- Doğru Cevap: Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri
+- Zorluk: medium
 

@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-22T12:25:29.653Z
-Trace ID: quiz-1747916715005-8urwa
-Yanıt Uzunluğu: 9710 karakter
+Tarih: 2025-05-22T14:41:18.780Z
+Trace ID: quiz-1747924860173-cd4io
+Yanıt Uzunluğu: 10489 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,173 +11,173 @@ Yanıt Uzunluğu: 9710 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Eksaskala sistemlerin yüksek hesaplama gücünü kullanabilmeleri için tasarımcılara köprü görevi gören temel unsur aşağıdakilerden hangisidir?",
+      "questionText": "Eksaskala bilgisayar sistemlerinde uygulama geliştirmenin zorluklarından biri olan donanım karmaşıklığı, hangi temel faktörlerle ilişkilidir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Donanım optimizasyonları",
-        "Programlama modelleri ve araçları",
-        "Veri depolama çözümleri",
-        "Ağ iletişim protokolleri"
+        "Sadece CPU çekirdeklerinin sayısının artmasıyla",
+        "Yalnızca GPU ve TPU gibi heterojen mimarilerin kullanımının azalmasıyla",
+        "Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla",
+        "Sadece bellek türlerinin sayısının azalmasıyla"
       ],
-      "correctAnswer": "Programlama modelleri ve araçları",
-      "explanation": "Programlama modelleri ve araçları, tasarımcılara eksaskala sistemlerin yüksek hesaplama gücünü kullanabilmeleri için bir köprü görevi görür ve eksaskala bilgisayar sistemleri için kritik bir rol oynar. (Sunu 3, Programlama Modelleri ve Araçları)",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
+      "correctAnswer": "Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla",
+      "explanation": "Eksaskala sistemlerdeki donanım karmaşıklığı, çok sayıda çekirdek, farklı mimariler ve çeşitli bellek türlerinin bir arada kullanılmasından kaynaklanır. Bu durum, uygulama geliştirme sürecini zorlaştırır. Diğer seçenekler bu karmaşıklığı tam olarak yansıtmamaktadır.",
+      "subTopicName": "Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar",
+      "normalizedSubTopicName": "eksaskala_sistemlerde_uygulama_geli_tirme_zorluklar",
       "difficulty": "medium"
     },
     {
       "id": "q2",
-      "questionText": "Aşağıdakilerden hangisi eksaskala sistemlerde programlamada kullanılan en temel modellerden ve araçlardan biri değildir?",
+      "questionText": "İklim simülasyonu yapan bir uygulamada, öğrenen modellerle iklim değişkenlerini tahmin etme işlemleri için en uygun donanım hangisidir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "applying",
       "options": [
-        "Paralel Programlama Paradigmaları",
-        "Derleyici Optimizasyonları",
-        "Performans Profilleme ve Hata Ayıklama",
-        "Veri şifreleme teknikleri"
+        "CPU",
+        "GPU",
+        "TPU",
+        "SSD"
       ],
-      "correctAnswer": "Veri şifreleme teknikleri",
-      "explanation": "Paralel Programlama Paradigmaları, Derleyici Optimizasyonları ve Performans Profilleme ve Hata Ayıklama, eksaskala sistemlerde programlamada kullanılan en temel modeller ve araçlardır. Veri şifreleme teknikleri bu kapsamda yer almaz. (Sunu 3, Programlama Modelleri ve Araçları)",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
-      "difficulty": "easy"
+      "correctAnswer": "TPU",
+      "explanation": "TPU'lar (Tensor İşlem Birimleri), makine öğrenmesi iş yükleri için optimize edilmişlerdir ve öğrenen modellerle iklim değişkenlerini tahmin etme gibi işlemler için en uygun donanımı oluştururlar. CPU'lar genel amaçlı işlemler için, GPU'lar ise yüksek paralellik gerektiren işlemler için daha uygundur.",
+      "subTopicName": "Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar",
+      "normalizedSubTopicName": "eksaskala_sistemlerde_uygulama_geli_tirme_zorluklar",
+      "difficulty": "medium"
     },
     {
       "id": "q3",
-      "questionText": "Aşağıdakilerden hangisi paralel programlama paradigmasının temel amacıdır?",
+      "questionText": "Eksaskala sistemlerde donanım karmaşıklığı bağlamında, görev dağılımı yapılırken hangi husus dikkate alınmalıdır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "analyzing",
       "options": [
-        "İşlemleri sıralı bir şekilde yürütmek",
-        "Bir işlemi küçük parçalara bölerek aynı anda birden fazla işlemcide yürütmek",
-        "Bellek kullanımını en aza indirmek",
-        "Enerji tüketimini artırmak"
+        "Tüm görevlerin aynı donanım üzerinde çalıştırılması",
+        "Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi",
+        "Sadece CPU kullanımının optimize edilmesi",
+        "Sadece GPU kullanımının optimize edilmesi"
       ],
-      "correctAnswer": "Bir işlemi küçük parçalara bölerek aynı anda birden fazla işlemcide yürütmek",
-      "explanation": "Paralel programlama paradigması, bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır. Bu, büyük ölçekli hesaplamalarda performansı maksimize etmek için kritik bir bileşendir. (Sunu 3, Paralel Programlama Paradigmaları)",
-      "subTopicName": "Paralel Programlama Paradigmalar",
-      "normalizedSubTopicName": "paralel_programlama_paradigmalar",
+      "correctAnswer": "Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi",
+      "explanation": "Donanım karmaşıklığı dikkate alındığında, görev dağılımı yapılırken her görevin hangi donanım üzerinde daha verimli çalıştığının belirlenmesi önemlidir. Bu, performansı artırır ve kaynakların etkin kullanımını sağlar. Diğer seçenekler, sistemin potansiyelini tam olarak kullanmamıza engel olur.",
+      "subTopicName": "Donan M Karma Kl Ve Y Netimi",
+      "normalizedSubTopicName": "donan_m_karma_kl_ve_y_netimi",
       "difficulty": "medium"
     },
     {
       "id": "q4",
-      "questionText": "Eksaskala sistemlerde kullanılan başlıca paralel programlama paradigmaları arasında aşağıdakilerden hangisi yer almaz?",
+      "questionText": "Eksaskala bilgisayar sistemlerinde, mimari ve bellek yapılarının çeşitlenmesi ve artmasıyla ortaya çıkan temel zorluklardan biri aşağıdakilerden hangisidir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "Paylaşımlı Bellek Paradigması",
-        "Dağıtık Bellek Paradigması",
-        "Hibrit Paralel Programlama",
-        "Nesne Yönelimli Programlama"
+        "Donanım karmaşıklığı",
+        "Yazılım basitliği",
+        "Enerji verimliliği",
+        "Maliyet düşüklüğü"
       ],
-      "correctAnswer": "Nesne Yönelimli Programlama",
-      "explanation": "Eksaskala sistemlerde kullanılan başlıca paralel programlama paradigmaları şunlardır: Paylaşımlı Bellek Paradigması, Dağıtık Bellek Paradigması ve Hibrit Paralel Programlama. (Sunu 3, Paralel Programlama Paradigmaları)",
-      "subTopicName": "Paralel Programlama Paradigmalar",
-      "normalizedSubTopicName": "paralel_programlama_paradigmalar",
+      "correctAnswer": "Donanım karmaşıklığı",
+      "explanation": "Eksaskala sistemlerde mimari ve bellek yapılarının çeşitlenmesi ve artması, donanım karmaşıklığını artırır. Bu durum, sistemlerin yönetimi ve optimizasyonu açısından zorluklar yaratır. Diğer seçenekler genellikle hedeflenen özellikler olsa da, bu sistemlerin doğasında var olan zorlukları yansıtmaz.",
+      "subTopicName": "Donan M Karma Kl Ve Y Netimi",
+      "normalizedSubTopicName": "donan_m_karma_kl_ve_y_netimi",
       "difficulty": "easy"
     },
     {
       "id": "q5",
-      "questionText": "Derleyici optimizasyonlarının temel amacı nedir?",
+      "questionText": "Eksaskala bilgisayar sistemlerinde veri hareketi yönetiminin önemi nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Kaynak kodu daha okunabilir hale getirmek",
-        "Kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecini iyileştirmek",
-        "Hataları ayıklama sürecini kolaylaştırmak",
-        "Bellek kullanımını artırmak"
+        "Veri hareketi maliyetinin düşük olması",
+        "Veriye erişim süresinin işlem süresinden daha az maliyet oluşturması",
+        "Bellekten işlemciye veri taşıma maliyetinin yüksek olması",
+        "Yanlış yerleştirilmiş verinin performansı artırması"
       ],
-      "correctAnswer": "Kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecini iyileştirmek",
-      "explanation": "Derleyici optimizasyonları, kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecidir. Eksaskala sistemlerde amaç, hesaplama verimliliğini artırmak ve bellek erişim gecikmesini azaltmaktır. (Sunu 3, Derleyici Optimizasyonları)",
-      "subTopicName": "Derleyici Optimizasyonlar",
-      "normalizedSubTopicName": "derleyici_optimizasyonlar",
+      "correctAnswer": "Bellekten işlemciye veri taşıma maliyetinin yüksek olması",
+      "explanation": "Veri hareketi yönetimi, eksaskala sistemlerde önemlidir çünkü bellekten işlemciye veri taşıma maliyeti yüksektir. Veriye erişim süresi, işlem süresinden daha fazla maliyet oluşturabilir ve yanlış yerleştirilmiş veri performans kaybına neden olabilir.",
+      "subTopicName": "Veri Hareketi Y Netiminin Nemi",
+      "normalizedSubTopicName": "veri_hareketi_y_netiminin_nemi",
       "difficulty": "medium"
     },
     {
       "id": "q6",
-      "questionText": "Aşağıdakilerden hangisi derleyici optimizasyonu ile performans iyileştirmesinde kullanılan tekniklerden biri değildir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Döngü açma (Loop Unrolling)",
-        "Döngü birleştirme (Loop Fusion)",
-        "Döngü vektörleştirme (Loop Vectorization)",
-        "Veri şifreleme (Data Encryption)"
-      ],
-      "correctAnswer": "Veri şifreleme (Data Encryption)",
-      "explanation": "Döngü açma, döngü birleştirme ve döngü vektörleştirme teknikleri, derleyici optimizasyonu ile performans iyileştirmesinde kullanılan tekniklerdir. Veri şifreleme bu kapsamda yer almaz. (Sunu 3, Derleyici Optimizasyonları)",
-      "subTopicName": "Derleyici Optimizasyonlar",
-      "normalizedSubTopicName": "derleyici_optimizasyonlar",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q7",
-      "questionText": "Eksaskala sistemlerde performans profilinin temel amacı nedir?",
+      "questionText": "Eksaskala bilgisayar sistemlerinde veri hareketi yönetimindeki temel zorluk nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Programın kaynak kodunu değiştirmek",
-        "Programın çalışma zamanı davranışını analiz etmek ve darboğazları tespit etmek",
-        "Hata ayıklama sürecini karmaşıklaştırmak",
-        "Bellek kullanımını azaltmak"
+        "Veri miktarının azalması",
+        "Verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklığın artması",
+        "Veri erişim hızının artması",
+        "Bellek teknolojilerinin basitleşmesi"
       ],
-      "correctAnswer": "Programın çalışma zamanı davranışını analiz etmek ve darboğazları tespit etmek",
-      "explanation": "Profilleme, programın çalışma zamanı davranışını analiz etmeye ve darboğazları tespit etmeye yardımcı olur. Bu, eksaskala sistemlerde kod verimliliğini optimize etmek için kullanılır. (Sunu 3, Performans Profilleme ve Hata Ayıklama)",
-      "subTopicName": "Performans Profilleme Ve Hata Ay Klama",
-      "normalizedSubTopicName": "performans_profilleme_ve_hata_ay_klama",
+      "correctAnswer": "Verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklığın artması",
+      "explanation": "Eksaskala sistemlerde veri miktarının artmasıyla birlikte, verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklık artar. Bu durum, veri hareketi yönetimini zorlaştırır ve performans optimizasyonu gerektirir.",
+      "subTopicName": "Veri Hareketi Y Netiminin Nemi",
+      "normalizedSubTopicName": "veri_hareketi_y_netiminin_nemi",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q7",
+      "questionText": "Eksaskala bilgisayar sistemlerinde yüksek düzeyde paralellik için kontrolün gerekliliği neden önemlidir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür.",
+        "Paralel işlemlerde kontrol ihtiyacının azalması",
+        "Görev bağımlılığının önemsiz hale gelmesi",
+        "Yük dengelemesinin otomatik olarak sağlanması"
+      ],
+      "correctAnswer": "Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür.",
+      "explanation": "Yüksek düzeyde paralellik için kontrol gereklidir çünkü görev bağımlılığı ve doğru yük dengelemesi kontrolü yapılmadığında hatalı sonuçlar ortaya çıkar ve performans düşer. Bu nedenle, görevler arasındaki ilişkilerin ve iş yükünün dengeli dağılımının kontrol edilmesi önemlidir.",
+      "subTopicName": "Y Ksek D Zeyde Paralellik Ve Kontrol",
+      "normalizedSubTopicName": "y_ksek_d_zeyde_paralellik_ve_kontrol",
       "difficulty": "medium"
     },
     {
       "id": "q8",
-      "questionText": "Aşağıdakilerden hangisi eksaskala sistemlerde en sık kullanılan profilleme araçlarından biri değildir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Intel VTune Amplifier",
-        "Cray Pat",
-        "TAU (Tuning and Analysis Utilities)",
-        "Wireshark"
-      ],
-      "correctAnswer": "Wireshark",
-      "explanation": "Intel VTune Amplifier, Cray Pat ve TAU (Tuning and Analysis Utilities), eksaskala sistemlerde en sık kullanılan profilleme araçlarındandır. Wireshark bir ağ protokolü analiz aracıdır ve bu kapsamda yer almaz. (Sunu 3, Performans Profilleme ve Hata Ayıklama)",
-      "subTopicName": "Performans Profilleme Ve Hata Ay Klama",
-      "normalizedSubTopicName": "performans_profilleme_ve_hata_ay_klama",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q9",
-      "questionText": "Paylaşımlı bellek paradigması hangi tür işlemciler için idealdir ve bu paradigmada tüm işlemciler neye erişir?",
+      "questionText": "Eksaskala bilgisayar sistemlerinde görev bağımlılığı kontrolündeki temel zorluk nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Tek çekirdekli işlemciler; özel belleğe",
-        "Çok çekirdekli işlemciler; ortak belleğe",
-        "GPU'lar; ayrılmış belleğe",
-        "FPGA'lar; dağıtık belleğe"
+        "Görev sayısının azalması",
+        "Görev bağımlılıklarının karmaşıklaşması",
+        "Görevlerin basitleşmesi",
+        "Görevlerin eş zamanlı çalıştırılmasının kolaylaşması"
       ],
-      "correctAnswer": "Çok çekirdekli işlemciler; ortak belleğe",
-      "explanation": "Paylaşımlı bellek paradigması, çok çekirdekli işlemciler için idealdir; tüm işlemciler ortak belleğe erişir. Bu paradigmada OpenMP, mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırır ve düşük iletişim gecikmesi avantajdır. (Sunu 3, Paralel Programlama Paradigmaları)",
-      "subTopicName": "Payla Ml Bellek Paradigmas",
-      "normalizedSubTopicName": "payla_ml_bellek_paradigmas",
+      "correctAnswer": "Görev bağımlılıklarının karmaşıklaşması",
+      "explanation": "Eksaskala sistemlerde görev sayısının artmasıyla birlikte görev bağımlılıkları karmaşıklaşır. Bu durum, görevlerin doğru sırada ve zamanda yürütülmesini zorlaştırır, bu da hatalı sonuçlara ve performans sorunlarına yol açabilir.",
+      "subTopicName": "Y Ksek D Zeyde Paralellik Ve Kontrol",
+      "normalizedSubTopicName": "y_ksek_d_zeyde_paralellik_ve_kontrol",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q9",
+      "questionText": "Donanım bazlı görev dağılımı stratejilerinde, bir görevin hangi donanımda daha verimli çalışacağını belirlemek için hangi faktörler göz önünde bulundurulmalıdır?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "analyzing",
+      "options": [
+        "Sadece görevin karmaşıklığı",
+        "Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri",
+        "Sadece donanımın maliyeti",
+        "Sadece görevin önceliği"
+      ],
+      "correctAnswer": "Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri",
+      "explanation": "Donanım bazlı görev dağılımı stratejilerinde, görevin türü (örneğin, hesaplama yoğun, veri yoğun), veri erişim gereksinimleri (hızlı bellek erişimi, büyük veri setleri) ve donanımın özellikleri (CPU, GPU, TPU) dikkate alınmalıdır. Bu faktörler, görevin hangi donanımda daha verimli çalışacağını belirlemede kritik öneme sahiptir.",
+      "subTopicName": "Donan M Bazl Ğirev Da L M Stratejileri",
+      "normalizedSubTopicName": "donan_m_bazl_girev_da_l_m_stratejileri",
       "difficulty": "medium"
     },
     {
       "id": "q10",
-      "questionText": "OpenMP'nin temel işlevi nedir ve hangi tür mimarilerde paralel uygulamalar geliştirmek için kullanılır?",
+      "questionText": "Eksaskala sistemlerde donanım bazlı görev dağılımı stratejileri uygulanırken, hangi temel amaç güdülmelidir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Dağıtık bellekli ortamlarda veri alışverişi sağlamak; tek çekirdekli işlemcilerde",
-        "Çok çekirdekli işlemciler ve paylaşımlı bellek mimarilerinde paralel uygulamalar geliştirmek; derleyici direktifleri kullanmak",
-        "Bellek hatalarını ayıklamak; GPU'larda",
-        "Ağ iletişimini optimize etmek; FPGA'larda"
+        "Sadece maliyeti düşürmek",
+        "Sadece enerji tüketimini azaltmak",
+        "Görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmak",
+        "Sadece belirli bir donanım türünü kullanmak"
       ],
-      "correctAnswer": "Çok çekirdekli işlemciler ve paylaşımlı bellek mimarilerinde paralel uygulamalar geliştirmek; derleyici direktifleri kullanmak",
-      "explanation": "OpenMP (Open Multi-Processing), çok çekirdekli işlemciler ve paylaşımlı bellek mimarileri ile paralel uygulamalar geliştirmek için kullanılır. Paralellik sağlamak için derleyici direktifleri kullanılır. (Sunu 3, Paralel Programlama Paradigmaları)",
-      "subTopicName": "Payla Ml Bellek Paradigmas",
-      "normalizedSubTopicName": "payla_ml_bellek_paradigmas",
-      "difficulty": "easy"
+      "correctAnswer": "Görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmak",
+      "explanation": "Donanım bazlı görev dağılımı stratejilerinin temel amacı, görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmaktır. Bu, sistem kaynaklarının verimli kullanılmasını ve uygulamaların daha hızlı çalışmasını sağlar.",
+      "subTopicName": "Donan M Bazl Ğirev Da L M Stratejileri",
+      "normalizedSubTopicName": "donan_m_bazl_girev_da_l_m_stratejileri",
+      "difficulty": "medium"
     }
   ]
 }

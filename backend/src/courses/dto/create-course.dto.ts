@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCourseDto {
@@ -11,16 +11,4 @@ export class CreateCourseDto {
   @IsNotEmpty({ message: 'Ders adı zorunludur' })
   @MaxLength(100, { message: 'Ders adı en fazla 100 karakter olabilir' })
   name: string;
-
-  @ApiProperty({
-    description: 'Ders açıklaması',
-    example:
-      'Algoritma analizi, veri yapıları ve temel algoritma tasarım teknikleri',
-    required: false,
-    maxLength: 500,
-  })
-  @IsString({ message: 'Ders açıklaması metin formatında olmalıdır' })
-  @IsOptional()
-  @MaxLength(500, { message: 'Ders açıklaması en fazla 500 karakter olabilir' })
-  description?: string;
 }

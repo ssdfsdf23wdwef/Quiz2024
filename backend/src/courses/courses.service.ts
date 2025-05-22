@@ -261,7 +261,6 @@ export class CoursesService {
       const courseData: Omit<Course, 'id' | 'createdAt' | 'updatedAt'> = {
         userId,
         name: createCourseDto.name,
-        description: createCourseDto.description ?? '',
       };
 
       const course = (await this.firebaseService.create<

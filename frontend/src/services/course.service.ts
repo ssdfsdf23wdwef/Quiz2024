@@ -1,5 +1,5 @@
 import apiService from "@/services/api.service";
-import { Course, CourseStats, CourseDashboard } from "@/types/course";
+import { Course, CourseStats, CourseDashboard, CourseRelatedItems } from "@/types/course";
 import { Document } from "@/types/document";
 import { LearningTarget } from "@/types/learningTarget";
 import { Quiz } from "@/types/quiz";
@@ -112,7 +112,35 @@ class CourseService {
    */
   @LogMethod('CourseService', FlowCategory.API)
   async getCourseStats(id: string): Promise<CourseStats> {
-    return apiService.get<CourseStats>(`/courses/${id}/stats`);
+    const flow = startAppFlow(FlowCategory.API, "CourseService.getCourseStats");
+    try {
+      trackFlow(
+        `Fetching course stats for ID: ${id}`,
+        "CourseService.getCourseStats",
+        FlowCategory.API
+      );
+      const stats = await apiService.get<CourseStats>(`/courses/${id}/stats`);
+      const duration = flowTracker.markEnd(`getCourseStats_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      logger.debug(
+        `Kurs istatistikleri getirildi: ${id}`,
+        'CourseService.getCourseStats',
+        __filename, 
+        0, // Placeholder, will be updated by IDE
+        { id, duration }
+      );
+      flow.end("Successfully fetched course stats");
+      return stats;
+    } catch (error) {
+      flowTracker.markEnd(`getCourseStats_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      trackFlow(
+        `Error fetching course stats for ID ${id}: ${(error as Error).message}`,
+        "CourseService.getCourseStats",
+        FlowCategory.API,
+        { error }
+      );
+      flow.end(`Error fetching course stats: ${(error as Error).message}`);
+      throw error;
+    }
   }
 
   /**
@@ -122,7 +150,35 @@ class CourseService {
    */
   @LogMethod('CourseService', FlowCategory.API)
   async getCourseDashboard(id: string): Promise<CourseDashboard> {
-    return apiService.get<CourseDashboard>(`/courses/${id}/dashboard`);
+    const flow = startAppFlow(FlowCategory.API, "CourseService.getCourseDashboard");
+    try {
+      trackFlow(
+        `Fetching course dashboard for ID: ${id}`,
+        "CourseService.getCourseDashboard",
+        FlowCategory.API
+      );
+      const dashboardData = await apiService.get<CourseDashboard>(`/courses/${id}/dashboard`);
+      const duration = flowTracker.markEnd(`getCourseDashboard_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      logger.debug(
+        `Kurs dashboard bilgileri getirildi: ${id}`,
+        'CourseService.getCourseDashboard',
+        __filename, 
+        0, // Placeholder, will be updated by IDE
+        { id, duration }
+      );
+      flow.end("Successfully fetched course dashboard");
+      return dashboardData;
+    } catch (error) {
+      flowTracker.markEnd(`getCourseDashboard_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      trackFlow(
+        `Error fetching course dashboard for ID ${id}: ${(error as Error).message}`,
+        "CourseService.getCourseDashboard",
+        FlowCategory.API,
+        { error }
+      );
+      flow.end(`Error fetching course dashboard: ${(error as Error).message}`);
+      throw error;
+    }
   }
 
   /**
@@ -131,29 +187,36 @@ class CourseService {
    * @returns İlişkili öğe sayıları
    */
   @LogMethod('CourseService', FlowCategory.API)
-  async getRelatedItemsCount(id: string): Promise<RelatedItemsCountResponse> {
-    return apiService.get<RelatedItemsCountResponse>(`/courses/${id}/related-items`);
-  }
-
-  /**
-   * Derse ait tüm ilişkili öğeleri (belgeler, hedefler, sınavlar) getir
-   * Bu metot birden fazla API çağrısı yaparak ilişkili öğeleri toplar
-   * @param id Kurs ID
-   * @returns İlişkili öğeler
-   */
-  @LogMethod('CourseService', FlowCategory.API)
-  async getCourseRelatedItems(id: string): Promise<CourseRelatedItems> {
-    const [documents, learningTargets, quizzes] = await Promise.all([
-      apiService.get<Document[]>(`/documents?courseId=${id}`),
-      apiService.get<LearningTarget[]>(`/learning-targets?courseId=${id}`),
-      apiService.get<Quiz[]>(`/quizzes?courseId=${id}`),
-    ]);
-
-    return {
-      documents,
-      learningTargets,
-      quizzes,
-    };
+  async getRelatedItemsCount(id: string): Promise<RelatedItemsCountResponse> { // Type remains as is, if backend sends this specific structure
+    const flow = startAppFlow(FlowCategory.API, "CourseService.getRelatedItemsCount");
+    try {
+      trackFlow(
+        `Fetching related items count for ID: ${id}`,
+        "CourseService.getRelatedItemsCount",
+        FlowCategory.API
+      );
+      const counts = await apiService.get<RelatedItemsCountResponse>(`/courses/${id}/related-items`);
+      const duration = flowTracker.markEnd(`getRelatedItemsCount_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      logger.debug(
+        `İlişkili öğe sayıları getirildi: ${id}`,
+        'CourseService.getRelatedItemsCount',
+        __filename, 
+        0, // Placeholder, will be updated by IDE
+        { id, duration }
+      );
+      flow.end("Successfully fetched related items count");
+      return counts;
+    } catch (error) {
+      flowTracker.markEnd(`getRelatedItemsCount_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      trackFlow(
+        `Error fetching related items count for ID ${id}: ${(error as Error).message}`,
+        "CourseService.getRelatedItemsCount",
+        FlowCategory.API,
+        { error }
+      );
+      flow.end(`Error fetching related items count: ${(error as Error).message}`);
+      throw error;
+    }
   }
 
   /**
@@ -315,12 +378,13 @@ class CourseService {
 
 /**
  * Backend'in döndürdüğü ilişkili öğe sayısı yanıtı
+ * Bu arayüz backend yanıtına göre tanımlanmıştır ve frontend türlerinden farklı olabilir.
  */
 interface RelatedItemsCountResponse {
   courseId: string;
   learningTargets: number;
   quizzes: number;
-  failedQuestions: number;
+  failedQuestions: number; // Bu alan frontend CourseStats'da yok, backend'e özgü olabilir
   documents: number;
   total: number;
 }

@@ -407,3 +407,44 @@ Details: {"reason":"[object Event]"}
 ------------------------------------------------------------
 [2025-05-22T12:57:37.754Z] [info] [LogSetup] Frontend log sistemi başlatıldı
 ------------------------------------------------------------
+[2025-05-22T14:18:19.712Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:18:19.705Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:20:56.785Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:20:56.875Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:23:00.173Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:23:00.165Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:23:44.706Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:23:44.712Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:30:15.135Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:30:15.139Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:34:12.693Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:34:12.687Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:35:56.210Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:35:56.220Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:36:52.647Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:36:52.653Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-22T14:39:07.475Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:448:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:154:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:447:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-22T14:39:38.113Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"ReferenceError: TrackerFlowCategory is not defined\n    at checkApiAvailability (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:62:27)\n    at eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:172:5)\n    at (app-pages-browser)/./src/services/api.service.ts (http://localhost:3000/_next/static/webpack/app/courses/page.4d8fd28306004587.hot-update.js:18:1)\n    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:712:31)\n    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:37:33)\n    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:369:21)\n    at eval (webpack-internal:///(app-pages-browser)/./src/services/document.service.ts:7:79)\n    at (app-pages-browser)/./src/services/document.service.ts (http://localhost:3000/_next/static/chunks/app/page.js:5219:1)\n    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:712:31)\n    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:37:33)\n    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:369:21)\n    at eval (webpack-internal:///(app-pages-browser)/./src/components/document/DocumentUploader.tsx:11:84)\n    at (app-pages-browser)/./src/components/document/DocumentUploader.tsx (http://localhost:3000/_next/static/chunks/app/page.js:4999:1)\n    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:712:31)\n    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:37:33)\n    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:369:21)\n    at eval (webpack-internal:///(app-pages-browser)/./src/components/document/index.ts:8:75)\n    at (app-pages-browser)/./src/components/document/index.ts (http://localhost:3000/_next/static/chunks/app/page.js:5021:1)\n    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:712:31)\n    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:37:33)\n    at fn (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:369:21)\n    at eval (webpack-internal:///(app-pages-browser)/./src/components/home/ExamCreationWizard.tsx:11:67)\n    at (app-pages-browser)/./src/components/home/ExamCreationWizard.tsx (http://localhost:3000/_next/static/chunks/app/page.js:5054:1)\n    at options.factory (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:712:31)\n    at __webpack_require__ (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:37:33)\n    at Object._requireSelf [as require] (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:409:15)\n    at Object.apply (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:1272:22)\n    at http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:649:36\n    at Array.forEach (<anonymous>)\n    at internalApply (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:647:21)\n    at Object.hotApply [as apply] (http://localhost:3000/_next/static/chunks/webpack.js?v=1747924609352:606:20)\n    at eval (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:177:27)"}
+------------------------------------------------------------
+[2025-05-22T14:40:07.069Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:448:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:154:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:447:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
