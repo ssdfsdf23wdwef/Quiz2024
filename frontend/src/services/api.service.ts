@@ -538,8 +538,8 @@ class ApiService {
    * Axios istemcisi
    */
   private readonly client: AxiosInstance;
-  private logger: LoggerService;
-  private flowTracker: FlowTrackerService;
+  private readonly logger: LoggerService;
+  private readonly flowTracker: FlowTrackerService;
 
   constructor(client: AxiosInstance) {
     this.client = client;
@@ -554,6 +554,11 @@ class ApiService {
     );
     
     this.flowTracker.trackStep(FlowCategory.API, 'ApiService başlatıldı', 'ApiService.constructor');
+  }
+
+  // Yardımcı metot: String mesajları Error nesnesine çevirir
+  private createLogError(message: string): Error {
+    return new Error(message);
   }
 
   /**
@@ -1048,6 +1053,40 @@ class ApiService {
         difficulty: "medium"
       }
     ];
+  }
+
+  // API bağlantı kontrolü ve otomatik geri dönüş mekanizması
+  async isServerAvailable(): Promise<boolean> {
+    try {
+      await this.client.get('/health', { timeout: 2000 });
+      return true;
+    } catch (error) {
+      console.warn('API sunucusuna bağlanılamadı, çevrimdışı moda geçiliyor');
+      return false;
+    }
+  }
+
+  // API isteği için sarmalayıcı - bağlantı hatalarını yönetir
+  async safeRequest<T>(
+    requestFn: () => Promise<T>,
+    fallbackFn: () => T | Promise<T>,
+    options: { skipAvailabilityCheck?: boolean } = {}
+  ): Promise<T> {
+    try {
+      // Sunucu kontrolü yap (isteğe bağlı geçilebilir)
+      if (!options.skipAvailabilityCheck) {
+        const serverAvailable = await this.isServerAvailable();
+        if (!serverAvailable) {
+          console.warn('API sunucusu kullanılamıyor, alternatif veriler kullanılıyor');
+          return await fallbackFn();
+        }
+      }
+      
+      return await requestFn();
+    } catch (error) {
+      console.warn('API isteği başarısız, alternatif veriler kullanılıyor', error);
+      return await fallbackFn();
+    }
   }
 }
 

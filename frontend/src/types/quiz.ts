@@ -2,21 +2,29 @@
  * Sınav (Quiz) modelini temsil eden interface
  * @see PRD 7.4
  */
-export type QuizType = "quick" | "personalized";
-export type PersonalizedQuizType =
-  | "weakTopicFocused"
-  | "learningObjectiveFocused"
-  | "newTopicFocused"
-  | "comprehensive";
+export type QuizType = "general" | "personalized" | "topic_specific"; // Updated to include "general" and "topic_specific"
+export type PersonalizedQuizFocus = "weaknesses" | "strengths" | "new_topics" | "comprehensive";
 export type DifficultyLevel = "easy" | "medium" | "hard" | "mixed";
 
 export type QuestionType = "multiple_choice" | "true_false" | "short_answer";
 export type QuestionStatus = "active" | "inactive" | "draft";
 
-export interface SubTopicItem {
-  subTopic: string;
-  normalizedSubTopic: string;
-  count?: number;
+export interface SubTopic {
+  id?: string; // Optional ID, if available from backend
+  name: string;
+}
+
+export interface MainTopic {
+  id?: string; // Optional ID
+  name: string;
+  subTopics?: SubTopic[];
+}
+
+export type Topics = Record<string, MainTopic>;
+
+export interface DocumentTopics {
+  topics: Topics;
+  source: "documentId" | "file" | "text" | "course"; // Added course
 }
 
 export interface Quiz {
@@ -70,8 +78,15 @@ export interface Question {
   options: string[];
   correctAnswer: string;
   explanation?: string;
+  
+  // Alt konu bilgileri - AI yanıtından gelen alanlar
   subTopic: string;
   normalizedSubTopic: string;
+  
+  // AI yanıtında bu alanlar gelebilir, bunları da tanımlayalım
+  subTopicName?: string;       // AI çıktısında gelen alt konu adı
+  normalizedSubTopicName?: string;  // AI çıktısında normalize edilmiş alt konu adı
+  
   difficulty: DifficultyLevel;
   questionType: QuestionType;
   status: QuestionStatus;
@@ -144,7 +159,7 @@ export interface QuizGenerationOptions {
     fileName: string;
     storagePath: string;
   } | null;
-  selectedSubTopics?: string[] | SubTopicItem[] | null;
+  selectedSubTopics?: string[] | SubTopic[] | null;
   preferences: {
     questionCount: number;
     difficulty: DifficultyLevel;

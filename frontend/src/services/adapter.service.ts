@@ -15,9 +15,13 @@ import {
   AnalysisResult,
   FailedQuestion,
   DifficultyLevel,
-  SubTopicItem,
   QuizGenerationOptions,
-  QuizSubmissionPayload,
+  QuizSubmissionPayload, 
+  QuestionType,
+  QuestionStatus,
+  QuizType,
+  PersonalizedQuizFocus, // AH: Added PersonalizedQuizFocus import
+  SubTopic 
 } from "../types/quiz";
 import { LearningTarget } from "../types/learningTarget";
 
@@ -28,8 +32,9 @@ import { LearningTarget } from "../types/learningTarget";
 export interface ApiQuiz {
   id: string;
   userId: string;
-  quizType: string;
-  personalizedQuizType: string | null;
+  title?: string;
+  quizType: string; // Keep as string, will be cast to QuizType with validation if possible
+  personalizedQuizType: string | null; // Keep as string, will be cast with validation
   courseId: string | null;
   sourceDocument: {
     fileName: string;
@@ -64,10 +69,14 @@ interface ApiQuestion {
   options: string[];
   correctAnswer: string;
   explanation: string;
-  subTopic: string;
-  normalizedSubTopic: string;
+  // subTopic: string; // AH: Original field, backend sends subTopicName
+  // normalizedSubTopic: string; // AH: Original field, backend sends normalizedSubTopicName
+  subTopicName?: string; // AH: Corrected to match backend
+  normalizedSubTopicName?: string; // AH: Corrected to match backend
   difficulty: string;
-  // Backend'den gelen ek alanlar
+  questionType?: string;
+  status?: string;
+  topic?: string; // AH: Keep for fallback if subTopicName is missing
   [key: string]: unknown;
 }
 
@@ -151,7 +160,7 @@ export interface ApiQuizGenerationOptionsDto {
     fileName: string;
     storagePath: string;
   } | null;
-  selectedSubTopics?: SubTopicItem[] | null;
+  selectedSubTopics?: SubTopic[] | null; // AH: Changed from SubTopicItem[] to SubTopic[]
   documentText?: string | null;
   subTopics?: string[] | null;
   questionCount?: number;
@@ -168,10 +177,10 @@ export interface ApiQuizSubmissionPayloadDto {
   quizId: string;
   userAnswers: Record<string, string>;
   elapsedTime?: number | null;
-  quizType: string;
+  quizType: "quick" | "personalized";
   preferences: {
     questionCount: number;
-    difficulty: string;
+    difficulty: "easy" | "medium" | "hard" | "mixed";
     timeLimit?: number | null;
     prioritizeWeakAndMediumTopics?: boolean | null;
   };
@@ -201,25 +210,22 @@ class AdapterService {
    * API'den gelen Quiz'i frontend Quiz tipine dönüştürür
    */
   public toQuiz(apiQuiz: ApiQuiz): Quiz {
-    // Tip güvenliği için eksik değerleri varsayılan değerlerle doldur
     const quiz: Quiz = {
       id: apiQuiz.id,
       userId: apiQuiz.userId,
-      quizType: apiQuiz.quizType as "quick" | "personalized",
-      personalizedQuizType:
-        apiQuiz.personalizedQuizType as "weakTopicFocused" | "newTopicFocused" | "comprehensive" | null,
+      title: apiQuiz.title || `Quiz ${apiQuiz.id}`,
+      quizType: apiQuiz.quizType as QuizType, 
+      personalizedQuizType: apiQuiz.personalizedQuizType as PersonalizedQuizFocus | null, // AH: Should now work
       courseId: apiQuiz.courseId,
       sourceDocument: apiQuiz.sourceDocument,
-      // API'den gelen kompleks yapıyı string dizisine dönüştür
       selectedSubTopics: apiQuiz.selectedSubTopics 
-        ? apiQuiz.selectedSubTopics.map(item => item.subTopic)
+        ? apiQuiz.selectedSubTopics.map(item => item.subTopic) // AH: Corrected to map to string[] as per Quiz type in quiz.ts
         : null,
       preferences: {
         questionCount: apiQuiz.preferences.questionCount,
         difficulty: apiQuiz.preferences.difficulty as DifficultyLevel,
         timeLimit: apiQuiz.preferences.timeLimit ?? undefined,
-        prioritizeWeakAndMediumTopics:
-          apiQuiz.preferences.prioritizeWeakAndMediumTopics ?? undefined,
+        prioritizeWeakAndMediumTopics: apiQuiz.preferences.prioritizeWeakAndMediumTopics ?? undefined,
       },
       questions: apiQuiz.questions.map((q) => this.toQuestion(q)),
       userAnswers: apiQuiz.userAnswers,
@@ -240,16 +246,90 @@ class AdapterService {
    * API'den gelen Question'ı frontend Question tipine dönüştürür
    */
   public toQuestion(apiQuestion: ApiQuestion): Question {
-    return {
+    console.log('[DEBUG] adapter.service.ts - toQuestion - Received apiQuestion:', JSON.stringify(apiQuestion, null, 2)); // AH: Log added
+    // let finalSubTopic = apiQuestion.subTopic; // AH: Old logic
+    // let finalNormalizedSubTopic = apiQuestion.normalizedSubTopic; // AH: Old logic
+
+    // AH: New logic: Prioritize subTopicName and normalizedSubTopicName
+    let finalSubTopic = apiQuestion.subTopicName;
+    let finalNormalizedSubTopic = apiQuestion.normalizedSubTopicName;
+
+    // Helper to check if a string is null, undefined, or empty/whitespace
+    const isEffectivelyEmpty = (str: string | null | undefined): boolean => {
+      return str === null || str === undefined || str.trim() === '';
+    };
+
+    // 1. Fallback to apiQuestion.subTopic (original field name) if subTopicName is empty
+    if (isEffectivelyEmpty(finalSubTopic) && !isEffectivelyEmpty(apiQuestion.subTopic as string | null | undefined)) { // AH: Cast to string
+      finalSubTopic = apiQuestion.subTopic as string; // AH: Cast to string
+    }
+    // 2. Fallback to apiQuestion.normalizedSubTopic (original field name) if normalizedSubTopicName is empty
+    if (isEffectivelyEmpty(finalNormalizedSubTopic) && !isEffectivelyEmpty(apiQuestion.normalizedSubTopic as string | null | undefined)) { // AH: Cast to string
+      finalNormalizedSubTopic = apiQuestion.normalizedSubTopic as string; // AH: Cast to string
+    }
+    
+    // 3. Further fallback to apiQuestion.topic if finalSubTopic is still empty.
+    if (isEffectivelyEmpty(finalSubTopic)) {
+      const topicFallback = apiQuestion.topic; // Direct access, assuming it might exist
+      if (!isEffectivelyEmpty(topicFallback)) {
+        finalSubTopic = topicFallback;
+      }
+    }
+
+    // At this point, finalSubTopic is from apiQuestion.subTopicName, apiQuestion.subTopic, apiQuestion.topic, or still effectively empty.
+    // finalNormalizedSubTopic is from apiQuestion.normalizedSubTopicName or apiQuestion.normalizedSubTopic.
+
+    const subTopicIsEmpty = isEffectivelyEmpty(finalSubTopic);
+    const normalizedSubTopicIsEmpty = isEffectivelyEmpty(finalNormalizedSubTopic);
+
+    if (subTopicIsEmpty && normalizedSubTopicIsEmpty) {
+      // Case A: Both are genuinely missing or empty. Default to "Genel".
+      finalSubTopic = "Genel";
+      finalNormalizedSubTopic = "genel";
+    } else if (subTopicIsEmpty && !normalizedSubTopicIsEmpty) {
+      // Case B: subTopic is missing/empty, but normalizedSubTopic is present. Derive subTopic.
+      finalSubTopic = finalNormalizedSubTopic!
+        .split(/[-_]/) // Split by hyphen or underscore
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      // And standardize the existing normalizedSubTopic (e.g., to hyphens and lowercase)
+      finalNormalizedSubTopic = finalNormalizedSubTopic!.toLowerCase().trim().replace(/_/g, '-').replace(/\\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    } else if (!subTopicIsEmpty && normalizedSubTopicIsEmpty) {
+      // Case C: subTopic is present, but normalizedSubTopic is missing/empty. Derive normalizedSubTopic.
+      finalNormalizedSubTopic = finalSubTopic!
+        .toLowerCase().trim().replace(/\\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    } else if (!subTopicIsEmpty && !normalizedSubTopicIsEmpty) {
+      // Case D: Both subTopic and normalizedSubTopic are present (and not empty).
+      // Standardize normalizedSubTopic based on the (potentially more reliable) subTopic.
+      const expectedNormalized = finalSubTopic!
+        .toLowerCase().trim().replace(/\\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      // Standardize the incoming finalNormalizedSubTopic before comparison/assignment
+      const currentNormalizedStandardized = finalNormalizedSubTopic!.toLowerCase().trim().replace(/_/g, '-').replace(/\\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+      if (currentNormalizedStandardized !== expectedNormalized) {
+        // console.warn(`[Adapter] Aligning normalizedSubTopic. From: "${finalNormalizedSubTopic}", To: "${expectedNormalized}" (derived from subTopic: "${finalSubTopic}")`);
+        finalNormalizedSubTopic = expectedNormalized;
+      } else {
+        // If they are already aligned, ensure the final version is the standardized 'expectedNormalized' format.
+        finalNormalizedSubTopic = expectedNormalized;
+      }
+    }
+    
+    const question: Question = {
       id: apiQuestion.id,
       questionText: apiQuestion.questionText,
       options: apiQuestion.options,
       correctAnswer: apiQuestion.correctAnswer,
       explanation: apiQuestion.explanation,
-      subTopic: apiQuestion.subTopic,
-      normalizedSubTopic: apiQuestion.normalizedSubTopic,
+      subTopic: finalSubTopic!, 
+      normalizedSubTopic: finalNormalizedSubTopic!,
       difficulty: apiQuestion.difficulty as DifficultyLevel,
+      questionType: (apiQuestion.questionType || 'multiple_choice') as QuestionType,
+      status: (apiQuestion.status || 'active') as QuestionStatus
     };
+    
+    return question;
   }
 
   /**
@@ -372,10 +452,10 @@ class AdapterService {
   ): ApiQuizGenerationOptionsDto {
     // Eğer subTopics seçilmişse dönüştür
     const subTopics: string[] = options.selectedSubTopics?.map(item => {
-      if (typeof item === 'string') {
-        return item;
-      } else if (typeof item === 'object' && item && 'subTopicName' in item) {
-        return item.subTopicName;
+      if (typeof item === 'string') { // This case should ideally not happen if selectedSubTopics is SubTopic[]
+        return item; 
+      } else if (typeof item === 'object' && item && 'name' in item) { // item is SubTopic
+        return item.name;
       }
       return '';
     }).filter(Boolean) as string[] || [];
@@ -387,25 +467,34 @@ class AdapterService {
     }
 
     // Backend API DTO formatına dönüştür ve undefined değerleri null'a dönüştür
-    if (options.quizType === 'quick') {
+    // Map frontend QuizType to backend ApiQuizGenerationOptionsDto quizType
+    let backendQuizType: "quick" | "personalized";
+    if (options.quizType === "personalized") {
+      backendQuizType = "personalized";
+    } else {
+      // "general" and "topic_specific" map to "quick"
+      backendQuizType = "quick"; 
+    }
+
+    if (backendQuizType === 'quick') {
       return {
-        quizType: options.quizType,
-        documentText,  // Backend tarafında zorunlu
-        subTopics: subTopics.length > 0 ? subTopics : ['Genel Konu'],  // Backend tarafında zorunlu 
+        quizType: backendQuizType,
+        documentText, 
+        subTopics: subTopics.length > 0 ? subTopics : ['Genel Konu'], 
         questionCount: options.preferences.questionCount,
         difficulty: options.preferences.difficulty,
         preferences: {
           questionCount: options.preferences.questionCount,
           difficulty: options.preferences.difficulty,
-          timeLimit: options.preferences.timeLimit ?? null, // undefined ise null kullan
-          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, // undefined ise true kullan
+          timeLimit: options.preferences.timeLimit ?? null, 
+          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, 
         },
       };
-    } else if (options.quizType === 'personalized') {
+    } else if (backendQuizType === 'personalized') {
       return {
-        quizType: options.quizType,
-        personalizedQuizType: options.personalizedQuizType as "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive" | null | undefined,
-        courseId: options.courseId,  // Backend tarafında zorunlu 
+        quizType: backendQuizType,
+        personalizedQuizType: options.personalizedQuizType as "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive" | null | undefined, // Cast from PersonalizedQuizFocus
+        courseId: options.courseId, 
         documentText: documentText,
         subTopics: subTopics.length > 0 ? subTopics : ['Genel Konu'],
         questionCount: options.preferences.questionCount,
@@ -413,12 +502,12 @@ class AdapterService {
         preferences: {
           questionCount: options.preferences.questionCount,
           difficulty: options.preferences.difficulty,
-          timeLimit: options.preferences.timeLimit ?? null, // undefined ise null kullan
-          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, // undefined ise true kullan
+          timeLimit: options.preferences.timeLimit ?? null, 
+          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, 
         },
       };
     } else {
-      // Varsayılan durumda kişiselleştirilmiş olmayan duruma düş
+      // Fallback, though theoretically unreachable if logic is correct
       return {
         quizType: "quick",
         documentText,
@@ -428,8 +517,8 @@ class AdapterService {
         preferences: {
           questionCount: options.preferences.questionCount,
           difficulty: options.preferences.difficulty,
-          timeLimit: options.preferences.timeLimit ?? null, // undefined ise null kullan
-          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, // undefined ise true kullan
+          timeLimit: options.preferences.timeLimit ?? null, 
+          prioritizeWeakAndMediumTopics: options.preferences.prioritizeWeakAndMediumTopics ?? true, 
         },
       };
     }
@@ -437,20 +526,42 @@ class AdapterService {
 
   /**
    * Frontend QuizSubmissionPayload'ı API DTO formatına dönüştürür
+   * AH: Modified to accept the full Quiz object along with answers and time.
    */
   public fromQuizSubmissionPayload(
-    payload: QuizSubmissionPayload,
+    // payload: QuizSubmissionPayload, // AH: Original signature
+    quiz: Quiz, // AH: Pass the full quiz object
+    userAnswers: Record<string, string>,
+    elapsedTime?: number | null
   ): ApiQuizSubmissionPayloadDto {
     return {
-      quizId: payload.quizId,
-      userAnswers: payload.userAnswers,
-      elapsedTime: payload.elapsedTime ?? null,
-      quizType: payload.quizType || 'quick',
-      preferences: payload.preferences || {
-        questionCount: 10,
-        difficulty: 'mixed'
+      // quizId: payload.quizId, // AH: From original payload
+      // userAnswers: payload.userAnswers, // AH: From original payload
+      // elapsedTime: payload.elapsedTime ?? null, // AH: From original payload
+      quizId: quiz.id, // AH: Get from Quiz object
+      userAnswers: userAnswers, // AH: Pass directly
+      elapsedTime: elapsedTime ?? null,
+      quizType: quiz.quizType === "personalized" ? "personalized" : "quick", // Map QuizType to backend DTO type
+      preferences: {
+        questionCount: quiz.preferences.questionCount,
+        difficulty: quiz.preferences.difficulty,
+        timeLimit: quiz.preferences.timeLimit ?? null,
+        prioritizeWeakAndMediumTopics: quiz.preferences.prioritizeWeakAndMediumTopics ?? true,
       },
-      questions: payload.questions || []
+      questions: quiz.questions.map(q => ({
+        id: q.id,
+        questionText: q.questionText,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation || "",
+        // subTopic: q.subTopic, // AH: Use subTopicName for ApiQuestion
+        // normalizedSubTopic: q.normalizedSubTopic, // AH: Use normalizedSubTopicName for ApiQuestion
+        subTopicName: q.subTopicName || q.subTopic, 
+        normalizedSubTopicName: q.normalizedSubTopicName || q.normalizedSubTopic, 
+        difficulty: q.difficulty,
+        questionType: q.questionType,
+        status: q.status
+      }))
     };
   }
 

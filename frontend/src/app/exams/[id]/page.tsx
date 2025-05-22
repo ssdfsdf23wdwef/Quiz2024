@@ -6,9 +6,11 @@ import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { FiArrowLeft, FiCheck, FiClock, FiX } from "react-icons/fi";
-import { Quiz, Question, QuizType, AnalysisResult, DifficultyLevel } from "@/types/quiz";
+import { Quiz, Question, QuizType, AnalysisResult, DifficultyLevel, QuizSubmissionPayload } from "@/types/quiz";
 import quizService from "@/services/quiz.service";
 import { ErrorService } from "@/services/error.service";
+import { Button, Card, CardBody, Chip, Progress, Tooltip } from "@nextui-org/react";
+import { Flag, ChevronRight, ChevronLeft, Info } from "lucide-react";
 
 // Sonuçları localStorage'a kaydetmek için fonksiyon
 const storeQuizResultsInStorage = (quizId: string, resultsToStore: Quiz) => {
@@ -38,11 +40,11 @@ export default function ExamPage() {
       try {
         setLoading(true);
         const quizId = Array.isArray(params.id) ? params.id[0] : params.id;
-        console.log(`🔄 Sınav verileri yükleniyor: ID=${quizId}`);
+        console.log(`[DEBUG] 🔄 Sınav verileri yükleniyor: ID=${quizId}`);
         
         // Hata ile çakışma ihtimali olan ID kontrolü
         if (quizId.startsWith('error_fallback') || quizId.startsWith('fallback') || quizId.startsWith('parsed_fallback')) {
-          console.error(`❌ Geçersiz sınav ID formatı: ${quizId}`);
+          console.error(`[DEBUG] ❌ Geçersiz sınav ID formatı: ${quizId}`);
           ErrorService.showToast("Geçersiz sınav formatı. Ana sayfaya yönlendiriliyorsunuz.", "error", "Sınav Hatası");
           setTimeout(() => {
             router.push('/');
@@ -51,12 +53,25 @@ export default function ExamPage() {
         }
         
         const quizData = await quizService.getQuizById(quizId);
+        console.log("[DEBUG] quizService.getQuizById'den gelen quizData:", JSON.stringify(quizData, null, 2));
         
         if (!quizData || !quizData.id) {
           throw new Error('Sınav verileri eksik veya boş');
         }
         
-        console.log(`✅ Sınav verileri yüklendi:`, quizData);
+        console.log("[DEBUG] ✅ Sınav verileri yüklendi (işlenmeden önce):", JSON.stringify(quizData, null, 2));
+        
+        // Her bir soruyu ensureQuestionSubTopics ile işle
+        if (quizData.questions && Array.isArray(quizData.questions)) {
+          quizData.questions = quizData.questions.map(q => {
+            const processedQ = ensureQuestionSubTopics(q);
+            // console.log(`[DEBUG] Soru işlendi: ${q.id} -> subTopic: ${processedQ.subTopic}, normalized: ${processedQ.normalizedSubTopic}`);
+            return processedQ;
+          });
+          console.log(`[DEBUG] ✅ Soru alt konu bilgileri kontrol edildi ve tamamlandı. İşlenmiş sorular:`, JSON.stringify(quizData.questions, null, 2));
+        } else {
+          console.warn("[DEBUG] quizData.questions bulunamadı veya dizi değil:", quizData.questions);
+        }
         
         setQuiz({
           ...quizData,
@@ -68,7 +83,7 @@ export default function ExamPage() {
           setRemainingTime(quizData.preferences.timeLimit * 60); // Dakika -> Saniye
         }
       } catch (error) {
-        console.error(`❌ Sınav verileri yüklenemedi:`, error);
+        console.error(`[DEBUG] ❌ Sınav verileri yüklenemedi:`, error);
         ErrorService.showToast("Sınav bulunamadı veya erişim hatası oluştu.", "error", "Sınav Yükleme");
       } finally {
         setLoading(false);
@@ -76,7 +91,20 @@ export default function ExamPage() {
     }
 
     loadQuiz();
-  }, [params.id]);
+  }, [params.id]); // ensureQuestionSubTopics bağımlılıklardan çıkarıldı, çünkü sayfa içinde tanımlı ve değişmiyor.
+
+  // Quiz state değiştiğinde logla
+  useEffect(() => {
+    if (quiz) {
+      console.log("[DEBUG] Quiz state güncellendi:", JSON.stringify(quiz, null, 2));
+      // Özellikle soruları ve alt konularını kontrol edelim
+      if (quiz.questions) {
+        quiz.questions.forEach((q, index) => {
+          console.log(`[DEBUG] Quiz state - Soru ${index + 1} (${q.id}): subTopic='${q.subTopic}', normalizedSubTopic='${q.normalizedSubTopic}'`);
+        });
+      }
+    }
+  }, [quiz]);
 
   // Timer
   useEffect(() => {
@@ -113,174 +141,278 @@ export default function ExamPage() {
     return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleSubmit = async () => {
-    if (!quiz) return;
+  /**
+   * Sorunun alt konu bilgilerini kontrol eder ve eksikse tamamlar
+   * Bu fonksiyon, backend'den gelen eksik verileri tamamlar
+   */
+  const ensureQuestionSubTopics = (question: Question): Question => {
+    // Derin kopya oluştur (orijinal nesneyi değiştirmemek için)
+    const updatedQuestion = JSON.parse(JSON.stringify(question)) as Question;
     
+    // Alt konu bilgilerinin tam kontrolü
+    // Her türlü durum için kontrol yapıyor (null, undefined, boş string)
+    const hasValidSubTopic = !!updatedQuestion.subTopic && updatedQuestion.subTopic.trim() !== '';
+    const hasValidNormalizedSubTopic = !!updatedQuestion.normalizedSubTopic && updatedQuestion.normalizedSubTopic.trim() !== '';
+    
+    console.log(`[DEBUG] ensureQuestionSubTopics - ID: ${updatedQuestion.id} - Gelen: subTopic='${question.subTopic}', normSubTopic='${question.normalizedSubTopic}' -> hasValidSubTopic: ${hasValidSubTopic}, hasValidNormalizedSubTopic: ${hasValidNormalizedSubTopic}`);
+    
+    // Alt konu kontrolü ve düzeltme
+    if (!hasValidSubTopic && !hasValidNormalizedSubTopic) {
+      // Her ikisi de geçersizse, varsayılan değerleri ata
+      console.log(`[DEBUG] ensureQuestionSubTopics - ID: ${updatedQuestion.id} - Her iki alan da eksik veya boş, varsayılan değer atanıyor`);
+      updatedQuestion.subTopic = "Genel Konu";
+      updatedQuestion.normalizedSubTopic = "genel-konu";
+    } else if (hasValidSubTopic && !hasValidNormalizedSubTopic) {
+      // subTopic var ama normalizedSubTopic yoksa, normalizedSubTopic oluştur
+      console.log(`[DEBUG] ensureQuestionSubTopics - ID: ${updatedQuestion.id} - normalizedSubTopic eksik, subTopic'ten oluşturuluyor: "${updatedQuestion.subTopic}"`);
+      updatedQuestion.normalizedSubTopic = updatedQuestion.subTopic
+        .toLowerCase()
+        .trim() // Ensure trimming before normalization
+        .replace(/\\s+/g, '-')
+        .replace(/[^a-z0-9\\-]/g, '');
+    } else if (!hasValidSubTopic && hasValidNormalizedSubTopic) {
+      // normalizedSubTopic var ama subTopic yoksa, subTopic oluştur
+      console.log(`[DEBUG] ensureQuestionSubTopics - ID: ${updatedQuestion.id} - subTopic eksik, normalizedSubTopic'ten oluşturuluyor: "${updatedQuestion.normalizedSubTopic}"`);
+      updatedQuestion.subTopic = updatedQuestion.normalizedSubTopic
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    } else {
+      // Her ikisi de var, normalizedSubTopic'in doğru format olduğundan emin ol
+      console.log(`[DEBUG] ensureQuestionSubTopics - ID: ${updatedQuestion.id} - Her iki alan da var, format kontrolü yapılıyor`);
+      const expectedNormalizedSubTopic = updatedQuestion.subTopic
+        .toLowerCase()
+        .trim() // Ensure trimming before normalization
+        .replace(/\\s+/g, '-')
+        .replace(/[^a-z0-9\\-]/g, '');
+      
+      // Eğer normalizedSubTopic beklenen formatla uyuşmuyorsa veya boşsa düzelt
+      if (updatedQuestion.normalizedSubTopic !== expectedNormalizedSubTopic || !updatedQuestion.normalizedSubTopic.trim()) {
+        console.log(`[DEBUG] ensureQuestionSubTopics - ID: ${updatedQuestion.id} - normalizedSubTopic yeniden formatlanıyor veya boş olduğu için düzeltiliyor`);
+        console.log(`[DEBUG] Mevcut: "${updatedQuestion.normalizedSubTopic}", Beklenen: "${expectedNormalizedSubTopic}"`);
+        updatedQuestion.normalizedSubTopic = expectedNormalizedSubTopic || "genel-konu"; // Fallback if expected is empty
+      }
+    }
+
+    // Zorluk seviyesi kontrolü - varsayılan olarak 'medium' kullan
+    if (!updatedQuestion.difficulty) {
+      updatedQuestion.difficulty = 'medium';
+    }
+    
+    // Question type kontrolü
+    if (!updatedQuestion.questionType) {
+      updatedQuestion.questionType = 'multiple_choice';
+    }
+    
+    // Status kontrolü
+    if (!updatedQuestion.status) {
+      updatedQuestion.status = 'active';
+    }
+    
+    console.log(`[DEBUG] ensureQuestionSubTopics - Sonuç - ID: ${updatedQuestion.id}, subTopic: "${updatedQuestion.subTopic}", normalizedSubTopic: "${updatedQuestion.normalizedSubTopic}"`);
+    return updatedQuestion;
+  };
+
+  const handleSubmit = async () => {
+    if (!quiz || isSubmitting) return;
+    
+    try {
     setIsSubmitting(true);
     setIsCompleted(true);
 
-    try {
-      // Önce sonuçları lokal olarak hesapla ve sakla (API hatası bile olsa sonuç gösterebilmek için)
-      const quizResult = calculateAndStoreResults();
-      
-      // API'ye yanıtları gönder
-      const payload = {
-        quizId: quiz.id,
-        userAnswers: userAnswers,
-        elapsedTime: quiz.preferences.timeLimit ? (quiz.preferences.timeLimit * 60) - (remainingTime || 0) : undefined,
-        // Backend DTO gereksinimlerini karşılamak için eklenen alanlar
-        quizType: quiz.quizType || 'quick', // quizType alanı eklendi
-        preferences: quiz.preferences || { // preferences nesnesi eklendi
-          questionCount: quiz.questions.length,
-          difficulty: 'mixed'
-        },
-        questions: quiz.questions || [] // questions dizisi eklendi
+      // Soruların alt konu bilgilerini kontrol et ve eksikse doldur
+      const preparedQuestions = quiz.questions.map(ensureQuestionSubTopics);
+
+      // Sorular düzeltilmiş olarak quizi güncelle
+      const preparedQuiz = {
+        ...quiz,
+        questions: preparedQuestions
       };
+
+      // Quiz ID kontrol et
+      if (!preparedQuiz.id || preparedQuiz.id === 'undefined') {
+        console.error("❌ Quiz ID tanımsız! Submitting işlemi yapılamıyor.");
+        ErrorService.showToast("Sınav kimliği bulunamadı. Lütfen ana sayfaya dönün.", "error");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Önce sonuçları lokal olarak hesapla ve sakla
+      const quizResult = calculateAndStoreResults(preparedQuiz);
+      
+      try {
+      // API'ye yanıtları gönder
+        const payload: QuizSubmissionPayload = {
+          quizId: preparedQuiz.id,
+          quiz: preparedQuiz,
+          userAnswers: userAnswers,
+          // elapsedTime'ı basit bir sayı olarak gönder, null/undefined olmamasını sağla
+          elapsedTime: preparedQuiz.preferences?.timeLimit 
+            ? (preparedQuiz.preferences.timeLimit * 60) - (remainingTime || 0) 
+            : 0
+        };
       
       console.log(`🔄 Sınav yanıtları gönderiliyor:`, payload);
       
-      try {
         // API bağlantı hatalarında bile ilerleyebilmek için try/catch içine alındı
         const result = await quizService.submitQuiz(payload);
         console.log(`✅ Sınav yanıtları gönderildi:`, result);
-        
-        // Sunucu analiz sonuçlarını da kullanabiliriz, ama şimdilik lokal hesaplama yeterli
       } catch (apiError) {
         console.error("⚠️ API yanıt hatası (sonuçlar yine de gösterilecek):", apiError);
         ErrorService.showToast("Sınav sonuçları sunucuya kaydedilemedi, ancak sonuçlarınızı görebilirsiniz.", "warning");
         // API hatası olsa da devam ediyoruz - lokalde hesaplanmış sonuçlarla
       }
 
-      // Sonuç sayfasına yönlendir - sonuçları zaten localStorage'a kaydettik
-      router.push(`/quizzes/${quiz.id}/results`);
+      // Sonuç sayfasına yönlendir - DÜZELTME: Doğru URL formatını kullanıyoruz
+      router.push(`/exams/${preparedQuiz.id}/results`);
     } catch (error) {
-      console.error("❌ Sınav işleme hatası:", error);
-      ErrorService.showToast("Sınav sonuçları işlenirken bir hata oluştu. Sonuçları göstermeye çalışıyoruz.", "error");
-      
-      // Genel bir hata oluştu, lokal sonuçları göstermeyi deneyelim
-      try {
-        // Eğer calculateAndStoreResults daha önce çağrılmadıysa şimdi çağır
-        calculateAndStoreResults();
-        router.push(`/quizzes/${quiz.id}/results`);
-      } catch (resultError) {
-        console.error("❌❌ Sonuç hesaplama hatası:", resultError);
-        // Son çare olarak mevcut sayfada sonuçları göster
-        setShowResults(true);
-        ErrorService.showToast("Sonuçları göstermede sorun oluştu. Sayfayı yenileyip tekrar deneyebilirsiniz.", "error");
-      }
-    } finally {
       setIsSubmitting(false);
+      setIsCompleted(false);
+      console.error("❌ Sınav tamamlanırken hata:", error);
+      ErrorService.showToast("Sınav tamamlanırken bir hata oluştu. Lütfen tekrar deneyin.", "error");
     }
   };
-  
-  // Sınav sonuçlarını hesapla ve localStorage'a kaydet
-  const calculateAndStoreResults = () => {
-    if (!quiz) return;
+
+  const calculateAndStoreResults = (quizToProcess = quiz) => {
+    if (!quizToProcess) return null;
     
-    let correctCount = 0;
-    const subTopicStats: Record<string, { total: number, correct: number }> = {};
-
-    quiz.questions.forEach(q => {
-      const userAnswer = userAnswers[q.id];
-      const isCorrect = userAnswer !== undefined && userAnswer === q.correctAnswer;
-
-      if (isCorrect) {
-        correctCount++;
-      }
-
-      const subTopicKey = q.normalizedSubTopic || q.subTopic || "Genel";
-      if (!subTopicStats[subTopicKey]) {
-        subTopicStats[subTopicKey] = { total: 0, correct: 0 };
-      }
-      subTopicStats[subTopicKey].total++;
-      if (isCorrect) {
-        subTopicStats[subTopicKey].correct++;
-      }
-    });
-
-    const totalQuestions = quiz.questions.length;
-    const overallScore = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
-
-    const performanceBySubTopic: AnalysisResult['performanceBySubTopic'] = {};
-    const performanceCategorization: AnalysisResult['performanceCategorization'] = {
-      failed: [],
-      medium: [],
-      mastered: [],
+    // Doğru cevapları say
+    const correctCount = Object.entries(userAnswers).reduce(
+      (count, [questionId, answer]) => {
+        const question = quizToProcess.questions.find(q => q.id === questionId);
+        return question && question.correctAnswer === answer ? count + 1 : count;
+      }, 0);
+    
+    const totalQuestions = quizToProcess.questions.length;
+    const scorePercent = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+    
+    // Alt konuları grupla ve performans analiz et
+    const subTopicPerformance: Record<string, { correct: number, total: number, score: number }> = {};
+    const difficultyPerformance: Record<string, { correct: number, total: number, score: number }> = {
+      easy: { correct: 0, total: 0, score: 0 },
+      medium: { correct: 0, total: 0, score: 0 },
+      hard: { correct: 0, total: 0, score: 0 },
+      mixed: { correct: 0, total: 0, score: 0 }
     };
-
-    Object.entries(subTopicStats).forEach(([name, stats]) => {
-      const scorePercent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
-      const status: "pending" | "failed" | "medium" | "mastered" = scorePercent >= 75 ? "mastered" : scorePercent >= 50 ? "medium" : "failed";
-
-      performanceBySubTopic[name] = {
-        scorePercent,
-        status,
-        questionCount: stats.total,
-        correctCount: stats.correct,
-      };
+    
+    quizToProcess.questions.forEach(q => {
+      // Soruların alt konu bilgilerini kontrol et ve düzelt
+      const subTopic = q.subTopic || "Genel";
+      const normalizedSubTopic = q.normalizedSubTopic || subTopic.toLowerCase().replace(/\s+/g, '-');
       
-      if (status === "failed") performanceCategorization.failed.push(name);
-      else if (status === "medium") performanceCategorization.medium.push(name);
-      else if (status === "mastered") performanceCategorization.mastered.push(name);
+      // Eksik alanları tamamla
+      if (!q.subTopic) q.subTopic = subTopic;
+      if (!q.normalizedSubTopic) q.normalizedSubTopic = normalizedSubTopic;
+      
+      const difficulty = q.difficulty || "mixed";
+      const isCorrect = userAnswers[q.id] === q.correctAnswer;
+      
+      // Alt konu performansı
+      if (!subTopicPerformance[subTopic]) {
+        subTopicPerformance[subTopic] = { correct: 0, total: 0, score: 0 };
+      }
+      subTopicPerformance[subTopic].total++;
+      if (isCorrect) {
+        subTopicPerformance[subTopic].correct++;
+      }
+      
+      // Zorluk seviyesi performansı
+      difficultyPerformance[difficulty].total++;
+      if (isCorrect) {
+        difficultyPerformance[difficulty].correct++;
+      }
     });
     
-    const performanceByDifficulty: AnalysisResult['performanceByDifficulty'] = {
-      easy: { count: 0, correct: 0, score: 0},
-      medium: { count: 0, correct: 0, score: 0},
-      hard: { count: 0, correct: 0, score: 0},
-      mixed: { count: 0, correct: 0, score: 0},
+    // Alt konu ve zorluk seviyesi skorlarını hesapla
+    Object.values(subTopicPerformance).forEach(perf => {
+      perf.score = perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0;
+    });
+    Object.values(difficultyPerformance).forEach(perf => {
+      perf.score = perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0;
+    });
+    
+    // Analiz sonucunu hazırla
+    const performanceBySubTopic: Record<string, {
+      scorePercent: number;
+      status: "mastered" | "medium" | "failed";
+      questionCount: number;
+      correctCount: number;
+    }> = {};
+    
+    Object.entries(subTopicPerformance).forEach(([topic, perf]) => {
+      let status: "mastered" | "medium" | "failed" = "failed";
+      if (perf.score >= 75) status = "mastered";
+      else if (perf.score >= 50) status = "medium";
+      
+      performanceBySubTopic[topic] = {
+        scorePercent: perf.score,
+        status,
+        questionCount: perf.total,
+        correctCount: perf.correct
+      };
+    });
+    
+    const performanceByDifficulty: Record<string, {
+      count: number;
+      correct: number;
+      score: number;
+    }> = {};
+    
+    Object.entries(difficultyPerformance).forEach(([difficulty, perf]) => {
+      if (perf.total > 0) {
+        performanceByDifficulty[difficulty] = {
+          count: perf.total,
+          correct: perf.correct,
+          score: perf.score
+        };
+      }
+    });
+    
+    // Kategorizasyon
+    const performanceCategorization = {
+      mastered: [] as string[],
+      medium: [] as string[],
+      failed: [] as string[]
     };
-
-    quiz.questions.forEach(q => {
-      const difficultyKey = q.difficulty || 'mixed';
-      performanceByDifficulty[difficultyKey].count++;
-      if (userAnswers[q.id] === q.correctAnswer) {
-        performanceByDifficulty[difficultyKey].correct++;
-      }
+    
+    Object.entries(performanceBySubTopic).forEach(([topic, data]) => {
+      if (data.status === 'mastered') performanceCategorization.mastered.push(topic);
+      else if (data.status === 'medium') performanceCategorization.medium.push(topic);
+      else performanceCategorization.failed.push(topic);
     });
-
-    (Object.keys(performanceByDifficulty) as DifficultyLevel[]).forEach(key => {
-      const stats = performanceByDifficulty[key];
-      if (stats.count > 0) {
-        stats.score = Math.round((stats.correct / stats.count) * 100);
-      }
-    });
-
-    // Açıklayıcı öneriler ekle
-    const recommendations = [];
-    if (performanceCategorization.failed.length > 0) {
-      recommendations.push(`${performanceCategorization.failed.join(', ')} konularını tekrar etmeniz önerilir.`);
-    }
-    if (performanceCategorization.medium.length > 0) {
-      recommendations.push(`${performanceCategorization.medium.join(', ')} konularında daha fazla pratik yapmanız faydalı olabilir.`);
-    }
-
-    const analysisResultData: AnalysisResult & { scorePercent?: number } = {
-      overallScore,
+    
+    // Sonuçları oluştur
+    const quizResult = {
+      ...quizToProcess,
+      userAnswers,
+      correctCount,
+      totalQuestions,
+      score: scorePercent,
+      elapsedTime: quizToProcess.preferences?.timeLimit 
+        ? (quizToProcess.preferences.timeLimit * 60) - (remainingTime || 0) 
+        : 0,
+      timestamp: new Date().toISOString(),
+      analysisResult: {
+        overallScore: scorePercent,
       performanceBySubTopic,
       performanceCategorization,
       performanceByDifficulty,
-      recommendations: recommendations.length > 0 ? recommendations : undefined,
-      scorePercent: overallScore, // Backend API'nin beklediği formatta eşleştirme
+        recommendations: []
+      }
     };
-
-    // Sonuçlar için Quiz nesnesini oluştur
-    const quizResultData: Quiz = {
-      ...quiz,
-      score: overallScore,
-      correctCount: correctCount,
-      totalQuestions: totalQuestions,
-      elapsedTime: quiz.preferences.timeLimit ? (quiz.preferences.timeLimit * 60) - (remainingTime || 0) : undefined,
-      analysisResult: analysisResultData,
-      timestamp: new Date().toISOString(),
-      userAnswers: userAnswers, // Kullanıcı cevaplarını da saklayalım
-    };
-
-    // Sonuçları localStorage'a kaydet
-    storeQuizResultsInStorage(quiz.id, quizResultData);
-    console.log("✅ Sınav sonuçları localStorage'a kaydedildi:", quizResultData);
     
-    return quizResultData; // Sonuçları döndür, böylece başka yerde de kullanabiliriz
+    // LocalStorage'a kaydet - eksiksiz veri aktarımı için
+    if (window && window.localStorage) {
+      console.log("✅ Sınav sonuçları hesaplandı ve kaydedilecek:", quizResult);
+      try {
+        storeQuizResultsInStorage(quizToProcess.id, quizResult);
+        console.log("✅ Sınav sonuçları localStorage'a kaydedildi");
+      } catch (error) {
+        console.error("❌ LocalStorage'a kayıt sırasında hata:", error);
+      }
+    }
+    
+    return quizResult;
   };
 
   const calculateScore = () => {
@@ -325,32 +457,120 @@ export default function ExamPage() {
   }
 
   const renderQuestionNavigation = () => {
+    // Alt konuları grupla ve renklendir
+    const subTopicColors: Record<string, string> = {};
+    const subTopicMap: Record<string, {count: number; displayName: string; normalizedName: string}> = {};
+    
+    console.log("[DEBUG] renderQuestionNavigation - Alt konu bilgileri işleniyor...");
+    
+    // Renk seçenekleri
+    const colorOptions = [
+      "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 ring-indigo-300",
+      "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 ring-blue-300",
+      "bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 ring-teal-300",
+      "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 ring-green-300",
+      "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 ring-amber-300",
+      "bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 ring-rose-300",
+      "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 ring-purple-300",
+      "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 ring-cyan-300",
+    ];
+    
+    // Alt konulara göre renk ataması yapma
+    if (quiz.questions && quiz.questions.length > 0) {
+      // Her soru için alt konu bilgilerini topla
+      quiz.questions.forEach((q, index) => {
+        const subTopic = q.subTopic || "Genel Konu";
+        const normalizedSubTopic = q.normalizedSubTopic || "genel-konu";
+        
+        // Alt konu istatistiklerini topla
+        if (!subTopicMap[subTopic]) {
+          // İlk kez karşılaşılan alt konu
+          subTopicMap[subTopic] = {
+            count: 1,
+            displayName: subTopic,
+            normalizedName: normalizedSubTopic
+          };
+        } else {
+          // Mevcut alt konuya ait soru sayısını artır
+          subTopicMap[subTopic].count++;
+        }
+      });
+      
+      // Toplanan alt konulara renk ata
+      const uniqueSubTopics = Object.keys(subTopicMap);
+      console.log(`[DEBUG] renderQuestionNavigation - Benzersiz alt konular (${uniqueSubTopics.length}): ${uniqueSubTopics.join(', ')}`);
+      
+      // Her benzersiz alt konuya bir renk ata
+      uniqueSubTopics.forEach((subTopic, index) => {
+        subTopicColors[subTopic] = colorOptions[index % colorOptions.length];
+      });
+    }
+    
+    // Alt konu bilgisini gösterme fonksiyonu
+    const getSubTopicInfo = (question: Question) => {
+      // subTopic yoksa veya boş string ise "Genel Konu" göster
+      const subTopic = question.subTopic || "Genel Konu";
+      const color = subTopicColors[subTopic] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200";
+      
+      return {
+        name: subTopic,
+        normalizedName: question.normalizedSubTopic || "genel-konu",
+        color
+      };
+    };
+
     return (
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
-        <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">Sorular</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-800 dark:text-white">Sorular</h3>
+          <Tooltip content="Renkler farklı alt konuları gösterir">
+            <div className="cursor-help">
+              <Info size={16} className="text-gray-500 dark:text-gray-400" />
+            </div>
+          </Tooltip>
+        </div>
         <div className="grid grid-cols-5 gap-2">
           {quiz.questions &&
             quiz.questions.map((question: Question, index: number) => {
               const isAnswered = userAnswers[question.id] !== undefined;
               const isCurrent = currentQuestionIndex === index;
               const isFlagged = flaggedQuestions.has(index);
+              const subTopicInfo = getSubTopicInfo(question);
+              console.log(`[DEBUG] Nav - Soru ${index + 1}: subTopic='${question.subTopic}', infoName='${subTopicInfo.name}', infoColor='${subTopicInfo.color}'`);
 
               return (
                 <button
                   key={question.id}
-                  className={`w-10 h-10 rounded-md flex items-center justify-center text-sm font-medium
+                  className={`w-10 h-10 rounded-md flex items-center justify-center text-sm font-medium relative
                   ${isCurrent ? "bg-indigo-600 text-white" : ""}
-                  ${isAnswered && !isCurrent ? "bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200" : ""}
-                  ${!isAnswered && !isCurrent ? "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200" : ""}
+                  ${!isCurrent && isAnswered ? subTopicInfo.color : ""}
+                  ${!isCurrent && !isAnswered ? "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200" : ""}
                   ${isFlagged ? "ring-2 ring-amber-500" : ""}
                   hover:bg-indigo-500 hover:text-white transition-colors
                 `}
                   onClick={() => setCurrentQuestionIndex(index)}
+                  title={`Alt Konu: ${subTopicInfo.name}`}
                 >
                   {index + 1}
                 </button>
               );
             })}
+        </div>
+        
+        {/* Alt konu lejantı */}
+        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Alt Konular:</p>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(subTopicMap).map(([subTopic, info]) => (
+              <span 
+                key={info.normalizedName} 
+                className={`text-xs px-2 py-1 rounded-full ${subTopicColors[subTopic]} flex items-center gap-1`}
+              >
+                <span>{info.displayName}</span>
+                <span className="bg-white/30 dark:bg-black/20 rounded-full px-1 text-[10px]">{info.count}</span>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -461,40 +681,78 @@ export default function ExamPage() {
   const renderQuestion = () => {
     if (!currentQuestion) return null;
 
+    // Soru nesnesini güvenli bir şekilde işle ve alt konu bilgilerini doğru şekilde çıkar
+    const processedQuestion = ensureQuestionSubTopics(currentQuestion);
+    console.log("[DEBUG] renderQuestion - İşlenmiş soru:", processedQuestion);
+
+    // Alt konu bilgisini düzenle - varsa kullan, yoksa varsayılan göster
+    const subTopicName = processedQuestion.subTopic;
+    const normalizedSubTopicName = processedQuestion.normalizedSubTopic;
+    
+    // Alt konu adını düzgün formatlama (ilk harfler büyük)
+    const formattedSubTopic = subTopicName
+      .split(/[-_\s]/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
             Soru {currentQuestionIndex + 1}/{quiz.questions.length}
           </h2>
-          <p className="text-gray-700 dark:text-gray-200">{currentQuestion.questionText}</p>
+            <div className="mt-2 sm:mt-0">
+              <span className="px-3 py-1 text-sm rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium">
+                Alt Konu: {formattedSubTopic}
+              </span>
+            </div>
+          </div>
+          
+          <p className="text-gray-700 dark:text-gray-200">{processedQuestion.questionText}</p>
+          
+          {/* Zorluk seviyesi gösterimi */}
+          {processedQuestion.difficulty && (
+            <div className="mt-2 flex items-center">
+              <span className={`text-xs px-2 py-1 rounded-md ${
+                processedQuestion.difficulty === 'easy' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
+                processedQuestion.difficulty === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
+                processedQuestion.difficulty === 'hard' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+              }`}>
+                {processedQuestion.difficulty === 'easy' ? 'Kolay' :
+                 processedQuestion.difficulty === 'medium' ? 'Orta' :
+                 processedQuestion.difficulty === 'hard' ? 'Zor' : 'Karışık'}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">
-          {currentQuestion.options.map((option, index) => (
+          {processedQuestion.options.map((option, index) => (
             <div
               key={index}
               className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                userAnswers[currentQuestion.id] === option
+                userAnswers[processedQuestion.id] === option
                   ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 dark:text-white"
                   : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-gray-700 dark:text-gray-200"
               }`}
               onClick={() => {
                 setUserAnswers({
                   ...userAnswers,
-                  [currentQuestion.id]: option,
+                  [processedQuestion.id]: option,
                 });
               }}
             >
               <div className="flex items-center">
                 <div
                   className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
-                    userAnswers[currentQuestion.id] === option
+                    userAnswers[processedQuestion.id] === option
                       ? "bg-indigo-500 text-white"
                       : "border border-gray-300 dark:border-gray-600"
                   }`}
                 >
-                  {userAnswers[currentQuestion.id] === option && (
+                  {userAnswers[processedQuestion.id] === option && (
                     <FiCheck size={12} />
                   )}
                 </div>
