@@ -163,11 +163,10 @@ export default function QuizResultPage() {
   }, [id]);
 
   useEffect(() => {
-    // This effect synchronizes API analysis data into resultData
-    // It should primarily react to changes in apiAnalysisData and isAnalysisLoading
-    if (apiAnalysisData) {
-      console.log("[DEBUG] API'dan analiz verisi geldi, resultData ile birleştirilecek (useEffect for apiAnalysisData):");
+    if (resultData && apiAnalysisData) {
+      console.log("[DEBUG] API'dan analiz verisi geldi, resultData ile birleştiriliyor:", apiAnalysisData);
       
+      // Gelen API analiz verisini types/quiz.ts içindeki AnalysisResult'a uygun hale getir.
       const processedApiAnalysis: AnalysisResult = {
         overallScore: apiAnalysisData.overallScore || 0,
         performanceBySubTopic: {},
@@ -185,12 +184,12 @@ export default function QuizResultPage() {
 
       if (apiAnalysisData.performanceBySubTopic) {
         Object.entries(apiAnalysisData.performanceBySubTopic as PerformanceBySubTopic).forEach(([key, value]) => {
-          let status: PerformanceStatus = "failed";
+          let status: PerformanceStatus = "failed"; // Varsayılan
           if (value.status) {
             if (['mastered', 'medium', 'failed'].includes(value.status)) {
               status = value.status as PerformanceStatus;
-            } else if (value.status === 'pending') {
-              status = 'medium'; 
+            } else if (value.status === 'pending') { // 'pending' durumunu ele al
+              status = 'medium'; // Veya 'failed', iş mantığına göre
             }
           } else if (typeof value.scorePercent === 'number') {
             if (value.scorePercent >= 75) status = "mastered";
@@ -206,45 +205,21 @@ export default function QuizResultPage() {
         });
       }
       
-      // Update resultData with the new analysis. This will trigger a re-render.
-      // The console.log that was here previously caused confusion due to when it logged.
-      setResultData(prevResultData => {
-        if (prevResultData) {
-          // Avoid unnecessary updates if the analysis data hasn't changed meaningfully
-          // This is a shallow check; a deep check might be too expensive or complex here.
-          // The main goal is to set it once apiAnalysisData is available.
-          if (JSON.stringify(prevResultData.analysisResult) !== JSON.stringify(processedApiAnalysis)) {
-            console.log("[DEBUG] Updating resultData with new API analysis.");
-            return { ...prevResultData, analysisResult: processedApiAnalysis };
-          }
-        }
-        return prevResultData; // No change if prevResultData is null or analysis is the same
-      });
+      setResultData(prev => prev ? { ...prev, analysisResult: processedApiAnalysis } : null);
+       console.log("[DEBUG] API analizi ile güncellenmiş resultData:", resultData);
     }
 
-    // This part handles loading state and warnings, should depend on isAnalysisLoading and related states.
-    if(!isAnalysisLoading) { 
-        // Check if resultData exists before trying to access its properties
-        // This part of the logic might need to be re-evaluated if resultData is not yet available
-        // when isAnalysisLoading becomes false.
-        setIsLoading(false); // Overall loading state can be set to false now
-
-        // Access resultData within a check or ensure it's handled if null
-        // The original logic for warnings is kept but might need adjustment based on when resultData is populated.
-        if (analysisApiError) {
-            setResultData(prev => {
-                if (prev && prev.quizType === "quick" && !checkIfQuizSavedToServer(prev.id) && !prev.analysisResult) {
-                    setWarning("Sınav sonuçları sunucudan yüklenemedi. Sonuçlar yerel olarak hesaplandı. İsterseniz kaydedebilirsiniz.");
-                } else if (prev && !prev.analysisResult) {
-                    setWarning("Sınav analizleri sunucudan yüklenirken bir sorun oluştu. Gösterilen analizler yerel olarak hesaplanmış olabilir.");
-                }
-                return prev;
-            });
+    // Yükleme durumunu kontrol et
+    if(!isAnalysisLoading && resultData) { // Hem temel data hem de analiz datası (veya denemesi) tamamlandıysa
+        setIsLoading(false);
+        if (analysisApiError && resultData.quizType === "quick" && !isQuizSaved && !resultData.analysisResult) {
+             setWarning("Sınav sonuçları sunucudan yüklenemedi. Sonuçlar yerel olarak hesaplandı. İsterseniz kaydedebilirsiniz.");
+        } else if (analysisApiError && !resultData.analysisResult) {
+             setWarning("Sınav analizleri sunucudan yüklenirken bir sorun oluştu. Gösterilen analizler yerel olarak hesaplanmış olabilir.");
         }
     }
-  // Dependencies: primarily apiAnalysisData and isAnalysisLoading.
-  // resultData was removed to break the loop. Other dependencies like analysisApiError and isQuizSaved are fine.
-  }, [apiAnalysisData, isAnalysisLoading, analysisApiError, id]); // id is added as checkIfQuizSavedToServer uses it.
+
+  }, [apiAnalysisData, resultData, isAnalysisLoading, analysisApiError, isQuizSaved]);
 
 
   // Fallback: resultData yüklendi ama analysisResult hala yoksa (ne localStorage'dan ne de API'den)

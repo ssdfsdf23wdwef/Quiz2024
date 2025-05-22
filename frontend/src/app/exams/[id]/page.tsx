@@ -5,17 +5,30 @@ import { useState, useEffect, Key, SetStateAction } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { FiArrowLeft, FiCheck, FiClock, FiX } from "react-icons/fi";
+import { Clock, Flag, CheckCircle, XCircle, Info, ChevronLeft, ChevronRight, Award, ListChecks, BarChart3 } from "lucide-react";
 import { Quiz, Question, QuizType, AnalysisResult, DifficultyLevel, QuizSubmissionPayload } from "@/types/quiz";
 import quizService from "@/services/quiz.service";
 import { ErrorService } from "@/services/error.service";
 import { Button, Card, CardBody, Chip, Progress, Tooltip } from "@nextui-org/react";
-import { Flag, ChevronRight, ChevronLeft, Info } from "lucide-react";
 
 // Sonuçları localStorage'a kaydetmek için fonksiyon
 const storeQuizResultsInStorage = (quizId: string, resultsToStore: Quiz) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(`quizResult_${quizId}`, JSON.stringify(resultsToStore));
+    // Quiz arayüzüne uymayan alanları çıkararak sadece Quiz tipinde olanları sakla
+    const { userAnswers, correctCount, totalQuestions, score, elapsedTime, timestamp, analysisResult, ...quizDataToStore } = resultsToStore;
+    localStorage.setItem(`quizResult_${quizId}`, JSON.stringify(quizDataToStore));
+    // Analiz sonuçlarını ayrı bir anahtarda sakla
+    if (analysisResult) {
+      localStorage.setItem(`quizAnalysis_${quizId}`, JSON.stringify({
+        userAnswers,
+        correctCount,
+        totalQuestions,
+        score,
+        elapsedTime,
+        timestamp,
+        analysisResult
+      }));
+    }
   }
 };
 
@@ -85,6 +98,10 @@ export default function ExamPage() {
       } catch (error) {
         console.error(`[DEBUG] ❌ Sınav verileri yüklenemedi:`, error);
         ErrorService.showToast("Sınav bulunamadı veya erişim hatası oluştu.", "error", "Sınav Yükleme");
+        // Kullanıcıyı ana sayfaya veya sınav listesine yönlendir
+        setTimeout(() => {
+          router.push('/exams');
+        }, 3000);
       } finally {
         setLoading(false);
       }
@@ -244,7 +261,7 @@ export default function ExamPage() {
       // API'ye yanıtları gönder
         const payload: QuizSubmissionPayload = {
           quizId: preparedQuiz.id,
-          quiz: preparedQuiz,
+          // quiz: preparedQuiz, // Bu satır QuizSubmissionPayload tipine uymadığı için kaldırıldı veya yorumlandı
           userAnswers: userAnswers,
           // elapsedTime'ı basit bir sayı olarak gönder, null/undefined olmamasını sağla
           elapsedTime: preparedQuiz.preferences?.timeLimit 
@@ -431,10 +448,11 @@ export default function ExamPage() {
   // Yükleme durumu
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4">
         <div className="text-center">
-          <div className="w-16 h-16 border-t-4 border-indigo-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Sınav yükleniyor...</p>
+          <div className="w-20 h-20 border-t-4 border-b-4 border-indigo-600 dark:border-indigo-400 rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-2xl font-semibold mb-2">Sınav Yükleniyor...</h2>
+          <p className="text-gray-600 dark:text-gray-400">Lütfen bekleyin, sınavınız hazırlanıyor.</p>
         </div>
       </div>
     );
@@ -443,233 +461,262 @@ export default function ExamPage() {
   // Sınav bulunamadı
   if (!quiz) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Sınav Bulunamadı</h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">Aradığınız sınav bulunamadı veya erişim izniniz yok.</p>
-        <Link
-          href="/exams"
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-        >
-          Sınavlarım
-        </Link>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4">
+        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md">
+          <XCircle className="w-16 h-16 text-red-500 dark:text-red-400 mx-auto mb-6" />
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">Sınav Bulunamadı</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            Aradığınız sınav mevcut değil veya erişim yetkiniz bulunmuyor. Lütfen sınav listesine geri dönün.
+          </p>
+          <Link
+            href="/exams"
+            className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-150 shadow-md hover:shadow-lg"
+          >
+            <ChevronLeft size={20} className="mr-2" />
+            Sınav Listesine Dön
+          </Link>
+        </div>
       </div>
     );
   }
 
   const renderQuestionNavigation = () => {
     // Alt konuları grupla ve renklendir
-    const subTopicColors: Record<string, string> = {};
+    const subTopicColors: Record<string, { bg: string; text: string; ring: string; }> = {};
     const subTopicMap: Record<string, {count: number; displayName: string; normalizedName: string}> = {};
     
     console.log("[DEBUG] renderQuestionNavigation - Alt konu bilgileri işleniyor...");
     
-    // Renk seçenekleri
+    // Renk seçenekleri (daha canlı ve erişilebilir renkler)
     const colorOptions = [
-      "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 ring-indigo-300",
-      "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 ring-blue-300",
-      "bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 ring-teal-300",
-      "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 ring-green-300",
-      "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 ring-amber-300",
-      "bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 ring-rose-300",
-      "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 ring-purple-300",
-      "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 ring-cyan-300",
+      { bg: "bg-sky-100 dark:bg-sky-800/40", text: "text-sky-700 dark:text-sky-300", ring: "ring-sky-400 dark:ring-sky-500" },
+      { bg: "bg-emerald-100 dark:bg-emerald-800/40", text: "text-emerald-700 dark:text-emerald-300", ring: "ring-emerald-400 dark:ring-emerald-500" },
+      { bg: "bg-amber-100 dark:bg-amber-800/40", text: "text-amber-700 dark:text-amber-300", ring: "ring-amber-400 dark:ring-amber-500" },
+      { bg: "bg-rose-100 dark:bg-rose-800/40", text: "text-rose-700 dark:text-rose-300", ring: "ring-rose-400 dark:ring-rose-500" },
+      { bg: "bg-violet-100 dark:bg-violet-800/40", text: "text-violet-700 dark:text-violet-300", ring: "ring-violet-400 dark:ring-violet-500" },
+      { bg: "bg-cyan-100 dark:bg-cyan-800/40", text: "text-cyan-700 dark:text-cyan-300", ring: "ring-cyan-400 dark:ring-cyan-500" },
+      { bg: "bg-pink-100 dark:bg-pink-800/40", text: "text-pink-700 dark:text-pink-300", ring: "ring-pink-400 dark:ring-pink-500" },
+      { bg: "bg-lime-100 dark:bg-lime-800/40", text: "text-lime-700 dark:text-lime-300", ring: "ring-lime-400 dark:ring-lime-500" },
     ];
     
     // Alt konulara göre renk ataması yapma
     if (quiz.questions && quiz.questions.length > 0) {
-      // Her soru için alt konu bilgilerini topla
-      quiz.questions.forEach((q, index) => {
+      quiz.questions.forEach((q) => {
         const subTopic = q.subTopic || "Genel Konu";
         const normalizedSubTopic = q.normalizedSubTopic || "genel-konu";
         
-        // Alt konu istatistiklerini topla
         if (!subTopicMap[subTopic]) {
-          // İlk kez karşılaşılan alt konu
           subTopicMap[subTopic] = {
             count: 1,
             displayName: subTopic,
             normalizedName: normalizedSubTopic
           };
         } else {
-          // Mevcut alt konuya ait soru sayısını artır
           subTopicMap[subTopic].count++;
         }
       });
       
-      // Toplanan alt konulara renk ata
       const uniqueSubTopics = Object.keys(subTopicMap);
-      console.log(`[DEBUG] renderQuestionNavigation - Benzersiz alt konular (${uniqueSubTopics.length}): ${uniqueSubTopics.join(', ')}`);
-      
-      // Her benzersiz alt konuya bir renk ata
       uniqueSubTopics.forEach((subTopic, index) => {
         subTopicColors[subTopic] = colorOptions[index % colorOptions.length];
       });
     }
     
-    // Alt konu bilgisini gösterme fonksiyonu
     const getSubTopicInfo = (question: Question) => {
-      // subTopic yoksa veya boş string ise "Genel Konu" göster
       const subTopic = question.subTopic || "Genel Konu";
-      const color = subTopicColors[subTopic] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200";
+      const colorSet = subTopicColors[subTopic] || { bg: "bg-gray-200 dark:bg-gray-700", text: "text-gray-800 dark:text-gray-200", ring: "ring-gray-400" };
       
       return {
         name: subTopic,
         normalizedName: question.normalizedSubTopic || "genel-konu",
-        color
+        colorSet
       };
     };
 
     return (
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+      <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-lg sticky top-24">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-800 dark:text-white">Sorular</h3>
-          <Tooltip content="Renkler farklı alt konuları gösterir">
-            <div className="cursor-help">
-              <Info size={16} className="text-gray-500 dark:text-gray-400" />
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Soru Navigasyonu</h3>
+          <Tooltip content="Renkler farklı alt konuları gösterir. İşaretli sorular bayrak ile belirtilir.">
+            <div className="cursor-help p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+              <Info size={18} className="text-gray-500 dark:text-gray-400" />
             </div>
           </Tooltip>
         </div>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-5 gap-2 mb-4">
           {quiz.questions &&
             quiz.questions.map((question: Question, index: number) => {
               const isAnswered = userAnswers[question.id] !== undefined;
               const isCurrent = currentQuestionIndex === index;
               const isFlagged = flaggedQuestions.has(index);
               const subTopicInfo = getSubTopicInfo(question);
-              console.log(`[DEBUG] Nav - Soru ${index + 1}: subTopic='${question.subTopic}', infoName='${subTopicInfo.name}', infoColor='${subTopicInfo.color}'`);
 
               return (
-                <button
-                  key={question.id}
-                  className={`w-10 h-10 rounded-md flex items-center justify-center text-sm font-medium relative
-                  ${isCurrent ? "bg-indigo-600 text-white" : ""}
-                  ${!isCurrent && isAnswered ? subTopicInfo.color : ""}
-                  ${!isCurrent && !isAnswered ? "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200" : ""}
-                  ${isFlagged ? "ring-2 ring-amber-500" : ""}
-                  hover:bg-indigo-500 hover:text-white transition-colors
-                `}
-                  onClick={() => setCurrentQuestionIndex(index)}
-                  title={`Alt Konu: ${subTopicInfo.name}`}
-                >
-                  {index + 1}
-                </button>
+                <Tooltip key={question.id} content={`${index + 1}. Soru ${isFlagged ? '(İşaretli)' : ''} - ${subTopicInfo.name}`}>
+                  <button
+                    onClick={() => setCurrentQuestionIndex(index)}
+                    className={`w-full h-10 rounded-md flex items-center justify-center text-sm font-medium transition-all duration-150 ease-in-out
+                               focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800
+                               ${
+                                isCurrent 
+                                  ? `${subTopicInfo.colorSet.bg} ${subTopicInfo.colorSet.text} ring-2 ${subTopicInfo.colorSet.ring} shadow-md scale-105` 
+                                  : isAnswered 
+                                    ? `${subTopicInfo.colorSet.bg} ${subTopicInfo.colorSet.text} opacity-70 hover:opacity-100` 
+                                    : `bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600`
+                               }
+                               relative`}
+                  >
+                    {index + 1}
+                    {isFlagged && (
+                      <Flag size={12} className="absolute top-1 right-1 text-red-500 dark:text-red-400" />
+                    )}
+                  </button>
+                </Tooltip>
               );
             })}
         </div>
         
-        {/* Alt konu lejantı */}
-        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Alt Konular:</p>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(subTopicMap).map(([subTopic, info]) => (
-              <span 
-                key={info.normalizedName} 
-                className={`text-xs px-2 py-1 rounded-full ${subTopicColors[subTopic]} flex items-center gap-1`}
-              >
-                <span>{info.displayName}</span>
-                <span className="bg-white/30 dark:bg-black/20 rounded-full px-1 text-[10px]">{info.count}</span>
-              </span>
-            ))}
+        {Object.keys(subTopicMap).length > 0 && (
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Alt Konu Lejantı:</p>
+            <div className="flex flex-wrap gap-x-3 gap-y-2">
+              {Object.entries(subTopicMap).map(([subTopic, info]) => {
+                const colorSet = subTopicColors[subTopic] || { bg: 'bg-gray-300', text: 'text-gray-600 dark:text-gray-400' }; // Fallback colorSet
+                return (
+                  <div key={subTopic} className="flex items-center">
+                    <span className={`w-3 h-3 rounded-sm mr-2 ${colorSet.bg}`}></span>
+                    <span className={`text-xs ${colorSet.text}`}>
+                      {info.displayName} ({info.count})
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   };
 
   const renderResults = () => {
     const score = calculateScore();
+    // Analiz sonuçlarını localStorage'dan al
+    const quizAnalysisData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(`quizAnalysis_${quiz.id}`) || '{}') : {};
+    const analysis = quizAnalysisData.analysisResult || {};
+    const userAnswersFromStorage = quizAnalysisData.userAnswers || userAnswers; // API hatası durumunda local userAnswers kullanılır
 
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl max-w-3xl mx-auto"
       >
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-300">{score}%</span>
-          </div>
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
+        <div className="text-center mb-10">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 120 }}
+            className="w-28 h-28 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-400 dark:to-purple-500 rounded-full flex flex-col items-center justify-center shadow-lg mb-6"
+          >
+            <Award size={40} className="text-white mb-1" />
+            <span className="text-3xl font-bold text-white">{score}%</span>
+          </motion.div>
+          <h2 className="text-4xl font-bold text-gray-800 dark:text-white mb-3">
             Sınav Tamamlandı!
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Toplam puanınız: <span className="font-semibold text-gray-800 dark:text-white">{score}%</span> (
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            Toplam puanınız: <span className="font-bold text-gray-900 dark:text-white">{score}%</span> (
             {
               quiz.questions.filter(
-                (q) => userAnswers[q.id] === q.correctAnswer,
+                (q) => userAnswersFromStorage[q.id] === q.correctAnswer, // userAnswersFromStorage kullanıldı
               ).length
             }
             /{quiz.questions.length} doğru)
           </p>
         </div>
 
-        <div className="space-y-6 mb-8">
+        {/* Detaylı Sonuçlar ve Analiz */}
+        {analysis.performanceBySubTopic && (
+          <div className="mb-8 p-6 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Konu Bazlı Performans</h3>
+            <div className="space-y-3">
+              {Object.entries(analysis.performanceBySubTopic).map(([topic, data]: [string, any]) => (
+                <div key={topic} className="p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-medium text-gray-700 dark:text-gray-200">{topic}</span>
+                    <span className={`font-semibold ${data.scorePercent >= 75 ? 'text-green-600 dark:text-green-400' : data.scorePercent >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                      %{data.scorePercent}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                    <div
+                      className={`h-2.5 rounded-full ${data.scorePercent >= 75 ? 'bg-green-500' : data.scorePercent >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                      style={{ width: `${data.scorePercent}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{data.correctCount}/{data.questionCount} doğru</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-6 mb-10">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Yanıtlarınızın İncelenmesi</h3>
           {quiz.questions.map((question, index) => {
-            const isCorrect =
-              userAnswers[question.id] === question.correctAnswer;
+            const userAnswer = userAnswersFromStorage[question.id]; // userAnswersFromStorage kullanıldı
+            const isCorrect = userAnswer === question.correctAnswer;
+            const questionData = ensureQuestionSubTopics(question); // Ensure subtopics are present
 
             return (
-              <div
-                key={question.id}
-                className={`p-4 rounded-md border ${
-                  isCorrect
-                    ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30"
-                    : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30"
-                }`}
-              >
-                <div className="flex items-start mb-3">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
-                      isCorrect
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
-                    }`}
-                  >
-                    {isCorrect ? <FiCheck size={14} /> : <FiX size={14} />}
-                  </div>
-                  <h3 className="text-gray-800 dark:text-gray-100 font-medium">
-                    Soru {index + 1}: {question.questionText}
-                  </h3>
+              <div key={question.id} className={`p-5 rounded-lg shadow-md ${isCorrect ? 'bg-green-50 dark:bg-green-800/30 border-l-4 border-green-500' : 'bg-red-50 dark:bg-red-800/30 border-l-4 border-red-500'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-white">
+                    Soru {index + 1}: <span className="text-sm text-gray-600 dark:text-gray-400">({questionData.subTopic || "Genel Konu"})</span>
+                  </h4>
+                  {isCorrect ? (
+                    <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" />
+                  )}
                 </div>
-
-                <div className="ml-8 space-y-2">
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
-                    <span className="font-medium text-gray-800 dark:text-gray-200">Sizin cevabınız:</span>{" "}
-                    {userAnswers[question.id] || "Cevap verilmedi"}
-                  </div>
-
+                <p className="text-gray-700 dark:text-gray-200 mb-3">{question.questionText}</p>
+                <div className="space-y-2 text-sm">
+                  <p className={`font-medium ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+                    Sizin Cevabınız: <span className="font-normal">{userAnswer || "Boş bırakıldı"}</span>
+                  </p>
                   {!isCorrect && (
-                    <div className="text-sm text-gray-700 dark:text-gray-300">
-                      <span className="font-medium text-gray-800 dark:text-gray-200">Doğru cevap:</span>{" "}
-                      {question.correctAnswer}
-                    </div>
-                  )}
-
-                  {question.explanation && (
-                    <div className="text-sm mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">
-                      <span className="font-medium text-gray-800 dark:text-gray-200">Açıklama:</span>{" "}
-                      {question.explanation}
-                    </div>
+                    <p className="text-green-700 dark:text-green-300 font-medium">
+                      Doğru Cevap: <span className="font-normal">{question.correctAnswer}</span>
+                    </p>
                   )}
                 </div>
+                {question.explanation && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Açıklama:</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-300">{question.explanation}</p>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        <div className="flex gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/exams"
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            className="flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-150 shadow-sm hover:shadow-md"
           >
-            Sınavlarım
+            <ListChecks size={18} className="mr-2" />
+            Sınav Listesi
           </Link>
           <Link
-            href="/performance"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            href={`/performance/quiz/${quiz.id}`} // Dinamik performans sayfasına yönlendirme
+            className="flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-150 shadow-md hover:shadow-lg"
           >
-            Performans Analizi
+            <BarChart3 size={18} className="mr-2" />
+            Detaylı Performans Analizi
           </Link>
         </div>
       </motion.div>
@@ -681,88 +728,88 @@ export default function ExamPage() {
   const renderQuestion = () => {
     if (!currentQuestion) return null;
 
-    // Soru nesnesini güvenli bir şekilde işle ve alt konu bilgilerini doğru şekilde çıkar
     const processedQuestion = ensureQuestionSubTopics(currentQuestion);
-    console.log("[DEBUG] renderQuestion - İşlenmiş soru:", processedQuestion);
+    const subTopicName = processedQuestion.subTopic || "Belirtilmemiş";
+    const difficultyMap = {
+      easy: { text: "Kolay", color: "text-green-600 dark:text-green-400", bg: "bg-green-100 dark:bg-green-700/30" },
+      medium: { text: "Orta", color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-100 dark:bg-yellow-700/30" },
+      hard: { text: "Zor", color: "text-red-600 dark:text-red-400", bg: "bg-red-100 dark:bg-red-700/30" },
+      mixed: { text: "Karma", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-700/30" },
+    };
+    const difficultyInfo = difficultyMap[processedQuestion.difficulty || 'medium'] || difficultyMap.medium;
 
-    // Alt konu bilgisini düzenle - varsa kullan, yoksa varsayılan göster
-    const subTopicName = processedQuestion.subTopic;
-    const normalizedSubTopicName = processedQuestion.normalizedSubTopic;
-    
-    // Alt konu adını düzgün formatlama (ilk harfler büyük)
-    const formattedSubTopic = subTopicName
-      .split(/[-_\s]/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
 
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div className="mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8">
+        <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-            Soru {currentQuestionIndex + 1}/{quiz.questions.length}
-          </h2>
-            <div className="mt-2 sm:mt-0">
-              <span className="px-3 py-1 text-sm rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium">
-                Alt Konu: {formattedSubTopic}
+            <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 dark:text-indigo-400">
+              Soru {currentQuestionIndex + 1} <span className="text-gray-500 dark:text-gray-400 font-normal text-xl">/ {quiz.questions.length}</span>
+            </h2>
+            <div className="mt-2 sm:mt-0 flex items-center space-x-3">
+              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${difficultyInfo.bg} ${difficultyInfo.color}`}>
+                {difficultyInfo.text}
               </span>
+              <Tooltip content={flaggedQuestions.has(currentQuestionIndex) ? "İşareti Kaldır" : "Bu Soruyu İşaretle"}>
+                <button
+                  onClick={() => {
+                    const newFlagged = new Set(flaggedQuestions);
+                    if (newFlagged.has(currentQuestionIndex)) {
+                      newFlagged.delete(currentQuestionIndex);
+                    } else {
+                      newFlagged.add(currentQuestionIndex);
+                    }
+                    setFlaggedQuestions(newFlagged);
+                  }}
+                  className={`p-2 rounded-full transition-colors ${
+                    flaggedQuestions.has(currentQuestionIndex)
+                      ? "bg-red-100 dark:bg-red-700/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-700/50"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  }`}
+                >
+                  <Flag size={18} />
+                </button>
+              </Tooltip>
             </div>
           </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Alt Konu: <span className="font-medium text-gray-700 dark:text-gray-300">{subTopicName}</span>
+          </p>
           
-          <p className="text-gray-700 dark:text-gray-200">{processedQuestion.questionText}</p>
+          <p className="mt-4 text-lg text-gray-800 dark:text-gray-100 leading-relaxed">{processedQuestion.questionText}</p>
           
-          {/* Zorluk seviyesi gösterimi */}
-          {processedQuestion.difficulty && (
-            <div className="mt-2 flex items-center">
-              <span className={`text-xs px-2 py-1 rounded-md ${
-                processedQuestion.difficulty === 'easy' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
-                processedQuestion.difficulty === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
-                processedQuestion.difficulty === 'hard' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
-                'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-              }`}>
-                {processedQuestion.difficulty === 'easy' ? 'Kolay' :
-                 processedQuestion.difficulty === 'medium' ? 'Orta' :
-                 processedQuestion.difficulty === 'hard' ? 'Zor' : 'Karışık'}
-              </span>
-            </div>
-          )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {processedQuestion.options.map((option, index) => (
             <div
               key={index}
-              className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                userAnswers[processedQuestion.id] === option
-                  ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 dark:text-white"
-                  : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 text-gray-700 dark:text-gray-200"
-              }`}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-150 ease-in-out transform hover:scale-[1.02]
+                          flex items-center group
+                          ${
+                            userAnswers[processedQuestion.id] === option
+                              ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-700/30 dark:border-indigo-500 shadow-lg"
+                              : "border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-400 bg-gray-50 dark:bg-gray-700/30 hover:bg-white dark:hover:bg-gray-700"
+                          }`}
               onClick={() => {
-                setUserAnswers({
-                  ...userAnswers,
+                setUserAnswers((prev) => ({
+                  ...prev,
                   [processedQuestion.id]: option,
-                });
+                }));
               }}
             >
-              <div className="flex items-center">
-                <div
-                  className={`w-5 h-5 rounded-full mr-3 flex items-center justify-center ${
-                    userAnswers[processedQuestion.id] === option
-                      ? "bg-indigo-500 text-white"
-                      : "border border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  {userAnswers[processedQuestion.id] === option && (
-                    <FiCheck size={12} />
-                  )}
-                </div>
-                <span>{option}</span>
-              </div>
+              <span className={`mr-3 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
+                              ${userAnswers[processedQuestion.id] === option ? 'border-indigo-600 bg-indigo-600' : 'border-gray-400 dark:border-gray-500 group-hover:border-indigo-500'}`}>
+                {userAnswers[processedQuestion.id] === option && <CheckCircle size={14} className="text-white" />}
+              </span>
+              <span className={`text-md ${userAnswers[processedQuestion.id] === option ? 'text-indigo-800 dark:text-indigo-100 font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-300'}`}>
+                {option}
+              </span>
             </div>
           ))}
         </div>
 
-        <div className="flex justify-between mt-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => {
               if (currentQuestionIndex > 0) {
@@ -770,29 +817,29 @@ export default function ExamPage() {
               }
             }}
             disabled={currentQuestionIndex === 0}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-150 shadow-sm hover:shadow-md mb-3 sm:mb-0"
           >
+            <ChevronLeft size={20} className="mr-2" />
             Önceki Soru
           </button>
 
           <button
             onClick={() => {
               const isLast = currentQuestionIndex === quiz.questions.length - 1;
-
               if (isLast) {
-                // Kullanıcıya onay sor
-                if (window.confirm("Sınavı tamamlamak istiyor musunuz?")) {
-                  handleSubmit();
-                }
+                // Son soruysa ve tamamla butonuna basıldıysa, handleSubmit çağır
+                handleSubmit();
               } else {
                 setCurrentQuestionIndex(currentQuestionIndex + 1);
               }
             }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            className="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-150 shadow-md hover:shadow-lg disabled:bg-indigo-400 dark:disabled:bg-indigo-700"
+            disabled={isSubmitting}
           >
             {currentQuestionIndex === quiz.questions.length - 1
-              ? "Sınavı Tamamla"
+              ? (isSubmitting ? "Gönderiliyor..." : "Sınavı Tamamla")
               : "Sonraki Soru"}
+            {currentQuestionIndex !== quiz.questions.length - 1 && <ChevronRight size={20} className="ml-2" />}
           </button>
         </div>
       </div>
@@ -800,146 +847,41 @@ export default function ExamPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
-      {!showResults ? (
-        <>
-          <div className="mb-6 flex justify-between items-center">
-            <div>
-              <Link
-                href="/exams"
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center mb-2"
-              >
-                <FiArrowLeft className="mr-2" />
-                Sınavlarım
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                {quiz.quizType === "quick"
-                  ? "Hızlı Sınav"
-                  : "Kişiselleştirilmiş Sınav"}
-              </h1>
-            </div>
-
-            {remainingTime !== null && (
-            <div
-              className={`flex items-center py-2 px-4 rounded-full ${
-                remainingTime < 60
-                    ? "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300"
-                    : remainingTime < 300
-                    ? "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
-              }`}
-            >
-              <FiClock className="mr-2" />
-                <span>{formatTime(remainingTime)}</span>
-            </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-1">
-              {renderQuestionNavigation()}
-
-              <div className="sticky top-8">
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                  <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">
-                    İlerleme
-                </h3>
-                  <div className="space-y-2">
-                    <div>
-                      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        <span>Tamamlanan</span>
-                        <span>
-                          {
-                            Object.keys(userAnswers).length
-                          }/{quiz.questions.length}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-indigo-600 h-2 rounded-full"
-                          style={{
-                            width: `${
-                              (Object.keys(userAnswers).length /
-                                quiz.questions.length) *
-                              100
-                            }%`,
-                          }}
-                        ></div>
-                      </div>
-                  </div>
-
-                    <div>
-                      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        <span>İşaretlenen</span>
-                        <span>
-                          {flaggedQuestions.size}/{quiz.questions.length}
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-indigo-100 dark:from-gray-900 dark:to-indigo-900/50 text-gray-800 dark:text-gray-200 selection:bg-indigo-500 selection:text-white">
+      <div className="container mx-auto px-4 py-8">
+        {!showResults ? (
+          <>
+            {/* Header: Sınav Adı ve Zamanlayıcı */}
+            <header className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-center">
+                <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700 dark:text-indigo-400 mb-3 sm:mb-0 truncate max-w-xl" title={quiz.title}>
+                  {quiz.title}
+                </h1>
+                {remainingTime !== null && !isCompleted && (
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-700/30 rounded-lg shadow-inner">
+                    <Clock size={20} className="text-indigo-600 dark:text-indigo-300" />
+                    <span className="text-lg font-semibold text-indigo-700 dark:text-indigo-200">
+                      {formatTime(remainingTime)}
                     </span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-amber-500 h-2 rounded-full"
-                          style={{
-                            width: `${
-                              (flaggedQuestions.size / quiz.questions.length) *
-                              100
-                            }%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
                   </div>
-
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      onClick={() => {
-                        const currFlag = flaggedQuestions.has(
-                          currentQuestionIndex,
-                        );
-
-                        if (currFlag) {
-                          const newFlags = new Set(flaggedQuestions);
-                          newFlags.delete(currentQuestionIndex);
-                          setFlaggedQuestions(newFlags);
-                        } else {
-                          const newFlags = new Set(flaggedQuestions);
-                          newFlags.add(currentQuestionIndex);
-                          setFlaggedQuestions(newFlags);
-                        }
-                      }}
-                      className={`px-4 py-2 border rounded-md ${
-                        flaggedQuestions.has(currentQuestionIndex)
-                          ? "bg-amber-500 text-white border-amber-500"
-                          : "border-amber-500 text-amber-500 dark:text-amber-400 dark:border-amber-400"
-                      }`}
-                    >
-                      {flaggedQuestions.has(currentQuestionIndex)
-                        ? "İşareti Kaldır"
-                        : "Soruyu İşaretle"}
-                    </button>
-                  </div>
-
-                  <div className="mt-8">
-                    <button
-                      onClick={() => {
-                        if (window.confirm("Sınavı tamamlamak istiyor musunuz?")) {
-                          handleSubmit();
-                        }
-                      }}
-                      className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                    >
-                      Sınavı Tamamla
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
-            </div>
+            </header>
 
-            <div className="md:col-span-3">{renderQuestion()}</div>
-          </div>
-        </>
-      ) : (
-        renderResults()
-      )}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <aside className="lg:col-span-4 xl:col-span-3">
+                {renderQuestionNavigation()}
+              </aside>
+
+              <main className="lg:col-span-8 xl:col-span-9">
+                {renderQuestion()}
+              </main>
+            </div>
+          </>
+        ) : (
+          renderResults()
+        )}
+      </div>
     </div>
   );
 }
