@@ -27,7 +27,7 @@ import {
 } from "@/types";
 import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
-import { SubTopicItem } from "@/types/quiz";
+import { SubTopicItem } from "@/types/quiz"; // Reverted to SubTopicItem
 import { LearningTarget } from "@/types/learningTarget";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/services/error.service"; 
@@ -103,7 +103,7 @@ export default function ExamCreationWizard({
   const [uploadedDocumentId, setUploadedDocumentId] = useState<string>(initialDocumentId || "");
   
   // Seçilen konular (alt konu olarak)
-  const [selectedTopics, setSelectedTopics] = useState<SubTopicItem[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<SubTopic[]>([]);
 
   // Kişiselleştirilmiş sınav alt türü - sadece personalized modda kullanılıyor
   const [personalizedQuizType, setPersonalizedQuizType] = useState<
@@ -161,7 +161,7 @@ export default function ExamCreationWizard({
             setSelectedTopicIds([defaultTopicId]);
             setSelectedSubTopicIds([defaultTopicId]);
             
-            const subTopicItem: SubTopicItem = {
+            const subTopicItem: SubTopic = {
               subTopic: "Belge İçeriği",
               normalizedSubTopic: defaultTopicId
             };
@@ -183,7 +183,7 @@ export default function ExamCreationWizard({
       setSelectedSubTopicIds(initialTopics);
       
       // Konu adları bilinmediğinden varsayılan isimleri kullan
-      const subTopicItems: SubTopicItem[] = initialTopics.map((topicId, index) => ({
+      const subTopicItems: SubTopic[] = initialTopics.map((topicId, index) => ({
         subTopic: `Konu ${index + 1}`,
         normalizedSubTopic: topicId
       }));
@@ -315,7 +315,7 @@ export default function ExamCreationWizard({
       console.log('[ECW handleTopicsDetected] setSelectedTopicIds called with:', JSON.stringify(selectedTopics));
       
       // Alt konular oluştur ve güncelle
-      const subTopicItems: SubTopicItem[] = selectedTopics.map(topicId => {
+      const subTopicItems: SubTopic[] = selectedTopics.map(topicId => {
         const topic = detectedTopics.find(t => t.id === topicId);
         if (!topic) {
           console.warn(`[ECW handleTopicsDetected] UYARI: ${topicId} ID'li konu bulunamadı!`);
@@ -360,7 +360,7 @@ export default function ExamCreationWizard({
         setSelectedSubTopicIds(defaultTopics);
         
         // Görüntülenecek alt konu nesnesi oluştur
-        const subTopicItem: SubTopicItem = {
+        const subTopicItem: SubTopic = {
           subTopic: fileName,
           normalizedSubTopic: defaultTopicId
         };
@@ -412,7 +412,7 @@ export default function ExamCreationWizard({
     setSelectedTopicsList(selectedTopicIds);
     
     // Konu listesini güncelle
-    const updatedTopics: SubTopicItem[] = selectedTopicIds.map(topicId => {
+    const updatedTopics: SubTopic[] = selectedTopicIds.map(topicId => {
       const topic = detectedTopics.find(t => t.id === topicId);
       return {
         subTopic: topic ? topic.subTopicName : topicId,
@@ -927,7 +927,7 @@ export default function ExamCreationWizard({
             setSelectedSubTopicIds([defaultTopicId]);
             
             // Alt konu olarak da ekle
-            const subTopicItem: SubTopicItem = {
+            const subTopicItem: SubTopic = {
               subTopic: defaultTopicName,
               normalizedSubTopic: defaultTopicId // Değiştirildi: ID'yi kullan, daha tutarlı olması için
             };
@@ -1028,7 +1028,7 @@ export default function ExamCreationWizard({
       const defaultTopicId = `belge-${uploadedDocumentId.substring(0, 8)}`;
       
       // Alt konu olarak ekle
-      const subTopicItem: SubTopicItem = {
+      const subTopicItem: SubTopic = {
         subTopic: `${fileName} İçeriği`,
         normalizedSubTopic: defaultTopicId
       };
@@ -1104,7 +1104,6 @@ export default function ExamCreationWizard({
         
         if (uploadedDocumentId || selectedFile) {
           console.log("[ECW handleFinalSubmit] Belge var, varsayılan bir konu ekleniyor");
-          const fileName = selectedFile?.name || 'Belge';
           mappedSubTopics.push({
             subTopic: `${fileName.replace(/\.[^/.]+$/, "")} İçeriği`,
             normalizedSubTopic: `belge-${uploadedDocumentId || Date.now()}`
@@ -1133,11 +1132,12 @@ export default function ExamCreationWizard({
       
     // Sınav oluşturma seçenekleri
       const quizOptions: QuizGenerationOptions = {
-      quizType: quizType,
+      quizType: quizType === "quick" ? "general" : quizType,
       courseId: selectedCourseId || undefined,
       personalizedQuizType:
         quizType === "personalized" ? personalizedQuizType : undefined,
-        selectedSubTopics: mappedSubTopics,
+        selectedSubTopics: mappedSubTopics, // Reverted, will fix based on type definition
+        selectedSubTopics: mappedSubTopics.map(topic => topic.normalizedSubTopic),
       documentId: uploadedDocumentId || undefined,
       preferences: {
         questionCount: preferences.questionCount,
@@ -1603,7 +1603,7 @@ export default function ExamCreationWizard({
                           <FiTarget />
                         </div>
                         <div>
-                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                                                   <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
                             Öğrenme Hedefi Odaklı
                           </h5>
                           <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">

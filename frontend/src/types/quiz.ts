@@ -20,6 +20,11 @@ export interface MainTopic {
   subTopics?: SubTopic[];
 }
 
+export interface SubTopicItem {
+  subTopic: string;
+  normalizedSubTopic: string;
+}
+
 export type Topics = Record<string, MainTopic>;
 
 export interface DocumentTopics {
@@ -32,7 +37,7 @@ export interface Quiz {
   title: string;
   userId: string;
   quizType: QuizType;
-  personalizedQuizType?: PersonalizedQuizType | null;
+  personalizedQuizType?: PersonalizedQuizFocus | null; // Changed PersonalizedQuizType to PersonalizedQuizFocus
   courseId: string | null;
   sourceDocument?: {
     fileName: string;
@@ -152,11 +157,11 @@ export interface QuizGenerationOptions {
   description?: string;
   userId?: string;
   courseId?: string;
-  personalizedQuizType?: PersonalizedQuizType | null;
+  personalizedQuizType?: string | null;
   documentText?: string;
   documentId?: string;
   sourceDocument?: {
-    fileName: string;
+    fileName: string; 
     storagePath: string;
   } | null;
   selectedSubTopics?: string[] | SubTopic[] | null;
