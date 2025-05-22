@@ -10,12 +10,12 @@ import {
   FiAlertTriangle,
   FiPlus,
 } from "react-icons/fi";
-import { LearningTargetStatusLiteral } from "@/types/learningTarget";
+import { LearningTargetStatusLiteral } from "@/types/learningTarget.type";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 
 // TopicData arayüzünü de import et
-import type { DetectedSubTopic as TopicData } from "@/types/learningTarget";
+import type { DetectedSubTopic as TopicData } from "@/types/learningTarget.type";
 
 interface StatusStyle {
   color: string;

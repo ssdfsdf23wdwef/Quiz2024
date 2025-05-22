@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FiPlus, FiSearch, FiBook, FiAlertCircle, FiBookOpen } from "react-icons/fi";
 import CourseCard from "@/components/ui/CourseCard";
 import EmptyState from "@/components/ui/EmptyState";
-import type { Course } from "@/types/course";
+import type { Course } from "@/types/course.type";
 
 // Türler için daha genel yaklaşım
 interface CourseListProps {

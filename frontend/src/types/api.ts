@@ -3,11 +3,11 @@
  * Backend yanıtları için merkezi tip tanımları
  */
 
-import { User } from "./user";
-import { Course } from "./course";
-import { LearningTarget } from "./learningTarget";
-import { Document } from "./document";
-import { Quiz } from "./quiz";
+import { User } from "./user.type";
+import { Course } from "./course.type";
+import { LearningTarget } from "./learningTarget.type";
+import { Document } from "./document.type";
+import { Quiz } from "./quiz.type";
 
 /**
  * Standart API yanıt formatı

@@ -2,7 +2,7 @@
 
 import { type StateCreator, create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { User } from "@/types/user";
+import type { User } from "@/types/user.type";
 import { User as FirebaseUser } from "firebase/auth";
 import { getLogger, getFlowTracker } from "../lib/logger.utils";
 import { FlowCategory } from "../services/flow-tracker.service";

@@ -1,4 +1,3 @@
-
 export type QuizType = "general" | "personalized" | "topic_specific";
 export type PersonalizedQuizFocus = "weaknesses" | "strengths" | "new_topics" | "comprehensive";
 export type DifficultyLevel = "easy" | "medium" | "hard" | "mixed";
@@ -180,4 +179,17 @@ export interface QuizSubmissionPayload {
   quizId: string;
   userAnswers: Record<string, string>;
   elapsedTime?: number;
+}
+
+export interface QuizResponseDto {
+  id: string;
+  title: string;
+  description?: string;
+  quizType: QuizType; // string yerine QuizType kullanıldı
+  questions: Question[];
+  courseId?: string;
+  documentId?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Diğer backend yanıt alanları
 }

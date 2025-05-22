@@ -12,7 +12,7 @@ import { QuizType } from "@/types";
 import {
   QuizGenerationOptions,
   SubTopicItem,
-} from "@/types/quiz";
+} from "@/types/quiz.type";
 import { ErrorService } from "@/services/error.service";
 import ExamCreationWizard from "@/components/home/ExamCreationWizard";
 import { toast } from "react-hot-toast";
@@ -24,18 +24,6 @@ import { redirect } from "next/navigation";
 // export type CreatePage_QuizCreationResult = any; // Geçici çözüm
 // export type CreatePage_CreateQuizFormData = any; // Geçici çözüm
 
-interface ExamCreationResultInternal {
-  file: File | null;
-  quizType: QuizType;
-  personalizedQuizType?: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive" | null;
-  preferences: GlobalQuizPreferences & { courseId?: string; topicIds?: string[]; subTopicIds?: string[]; personalizedQuizType?: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive" | null; };
-  topicNameMap: Record<string, string>;
-  error?: ApiError;
-  quizId?: string;
-  quiz?: Quiz;
-  status?: 'success' | 'error';
-  documentId?: string;
-}
 
 // formData için daha spesifik bir tip, CreatePage_CreateQuizFormData yerine
 interface CreateQuizFormDataTypeInternal {

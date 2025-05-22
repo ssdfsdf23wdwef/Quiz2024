@@ -21,7 +21,7 @@ import PageTransition from "@/components/transitions/PageTransition";
 import { useTheme } from "next-themes";
 import type { LearningTarget, LearningTargetStatus } from "@/app/types";
 import quizService from "@/services/quiz.service";
-import type { Quiz } from "@/types/quiz";
+import type { Quiz } from "@/types/quiz.type";
 import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
 import { Course } from "@/app/types";

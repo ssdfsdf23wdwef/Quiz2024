@@ -22,8 +22,8 @@ import {
   QuizType,
   PersonalizedQuizFocus, // AH: Added PersonalizedQuizFocus import
   SubTopic 
-} from "../types/quiz";
-import { LearningTarget } from "../types/learningTarget";
+} from "../types/quiz.type";
+import { LearningTarget } from "../types/learningTarget.type";
 
 /**
  * DTO (Data Transfer Object) tipleri

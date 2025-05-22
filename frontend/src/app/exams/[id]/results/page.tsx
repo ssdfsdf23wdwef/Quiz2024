@@ -11,7 +11,7 @@ import {
   CheckCircle, XCircle, ListChecks, Target, Info, BarChart2, ChevronLeft, Medal,
   Award, BookOpen, AlertTriangle, Save, TrendingUp, TrendingDown, HelpCircle, Layers
 } from 'lucide-react';
-import type { Quiz, DifficultyLevel, AnalysisResult } from '../../../../types/quiz';
+import type { Quiz, DifficultyLevel, AnalysisResult } from '../../../../types/quiz.type';
 
 // Tip tanımlamaları
 type PerformanceStatus = 'mastered' | 'medium' | 'failed';

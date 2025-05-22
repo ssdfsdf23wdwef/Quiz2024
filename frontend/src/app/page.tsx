@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { QuizPreferences } from "@/types/quiz";
+import { QuizPreferences } from "@/types/quiz.type";
 import { Quiz } from "@/types";
 import {
   FiPlay,

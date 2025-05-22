@@ -11,7 +11,7 @@ import {
   QuizSubmissionPayload,
   AnalysisResult,
   FailedQuestion,
-} from "../types/quiz";
+} from "../types/quiz.type";
 import quizService from "../services/quiz.service";
 import adapterService from "../services/adapter.service";
 import {

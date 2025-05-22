@@ -3,18 +3,18 @@
  */
 
 // Kullanıcı
-export * from "./user";
+export * from "./user.type";
 // Kurs
-export * from "./course";
+export * from "./course.type";
 // Öğrenme Hedefi
-export * from "./learningTarget";
+export * from "./learningTarget.type";
 // Belge
-export * from "./document";
+export * from "./document.type";
 // Sınav
-export * from "./quiz";
+export * from "./quiz.type";
 // Durum
-export * from "./status";
+export * from "./status.type";
 // Navigasyon
-export * from "./navigation";
+export * from "./navigation.type";
 // API Yanıt Tipleri
 export * from "./api";

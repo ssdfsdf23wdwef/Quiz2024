@@ -1,5 +1,8 @@
 import { LucideIcon } from "lucide-react";
-import { LearningTargetStatus } from "./learningTarget";
+import { LearningTargetStatus } from "./learningTarget.type";
+import React from 'react'; // Eklendi
+
+export type CourseStatus = "başarılı" | "orta" | "başarısız" | "beklemede"; // Eklendi
 
 /**
  * Öğrenme Hedefi durumlarına karşılık gelen stil ve görsel bilgileri
@@ -10,6 +13,16 @@ export interface StatusInfo {
   bgColor: string;
   borderColor: string;
   icon: LucideIcon;
+}
+
+// Eklendi
+export interface CourseStatusInfo {
+  label: CourseStatus;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  icon: React.ReactNode;
+  description: string;
 }
 
 /**

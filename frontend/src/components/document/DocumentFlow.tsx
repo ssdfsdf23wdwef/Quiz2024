@@ -19,7 +19,7 @@ import { TopicDetector } from "./index";
 import documentService from "@/services/document.service";
 import { useRouter } from "next/navigation";
 import ErrorService from "@/services/error.service";
-import { DetectedSubTopic } from "@/types/learningTarget";
+import { DetectedSubTopic } from "@/types/learningTarget.type";
 import { trackFlow, prettyLogError, logInfo, logDebug } from "@/lib/logger.utils";
 import { FlowCategory } from "@/constants/logging.constants";
 

@@ -5,7 +5,7 @@ import {
   TopicDetectionRequest,
   BatchCreateLearningTargetsRequest,
   LearningTargetStatusLiteral,
-} from "@/types/learningTarget";
+} from "@/types/learningTarget.type";
 
 // Api endpoint'leri
 const API_ENDPOINTS = {

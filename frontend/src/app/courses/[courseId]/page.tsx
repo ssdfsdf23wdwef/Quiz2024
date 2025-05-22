@@ -4,8 +4,8 @@ import Link from "next/link";
 import { FiFileText, FiUpload, FiList } from "react-icons/fi";
 import { useQuery } from "@tanstack/react-query";
 import courseService from "@/services/course.service";
-import type { Course } from "@/types/course";
-import { LearningTarget } from "@/types/learningTarget";
+import type { Course } from "@/types/course.type";
+import { LearningTarget } from "@/types/learningTarget.type";
 import Spinner from "@/components/ui/Spinner";
 
 interface CourseDetailProps {

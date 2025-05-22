@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "@/components/ui/Card";
-import type { Course } from "@/types/course";
+import type { Course } from "@/types/course.type";
 
 interface CourseCardProps {
   course: Pick<Course, "id" | "name">; // Only need id and name

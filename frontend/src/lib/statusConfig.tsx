@@ -5,24 +5,12 @@ import {
   FiClock,
   FiTarget,
 } from "react-icons/fi";
-import { LearningTargetStatus } from "../types/learningTarget";
+import { LearningTargetStatus } from "../types/learningTarget.type";
 import { CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
-
-// Durum tipi doğrudan tanımla
-export type CourseStatus = "başarılı" | "orta" | "başarısız" | "beklemede";
-
-// Durum bilgileri için model tanımı
-export interface StatusInfo {
-  label: CourseStatus;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  icon: React.ReactNode;
-  description: string;
-}
+import { CourseStatus, CourseStatusInfo } from "../types/status.type"; // Güncellendi
 
 // Durum bilgileri için sabit tanımlamalar
-export const STATUS_INFO: Record<CourseStatus, StatusInfo> = {
+export const STATUS_INFO: Record<CourseStatus, CourseStatusInfo> = {
   başarılı: {
     label: "başarılı",
     color: "text-emerald-700",
@@ -77,9 +65,9 @@ export const getStatusProgressColor = (
  * Öğrenme Hedefi durumlarına karşılık gelen stil ve görsel bilgileri
  * @see PRD 4.5.2 ve 4.7.1
  */
-export const statusConfig: Record<LearningTargetStatus, StatusInfo> = {
+export const statusConfig: Record<LearningTargetStatus, CourseStatusInfo> = { // StatusInfo -> CourseStatusInfo olarak güncellendi
   pending: {
-    label: "beklemede",
+    label: "beklemede" as CourseStatus, // Tip uyumu için eklendi
     color: "text-gray-500",
     bgColor: "bg-gray-100",
     borderColor: "border-gray-300",
@@ -87,7 +75,7 @@ export const statusConfig: Record<LearningTargetStatus, StatusInfo> = {
     description: "",
   },
   failed: {
-    label: "başarısız",
+    label: "başarısız" as CourseStatus, // Tip uyumu için eklendi
     color: "text-red-600",
     bgColor: "bg-red-50",
     borderColor: "border-red-200",
@@ -95,7 +83,7 @@ export const statusConfig: Record<LearningTargetStatus, StatusInfo> = {
     description: "",
   },
   medium: {
-    label: "orta",
+    label: "orta" as CourseStatus, // Tip uyumu için eklendi
     color: "text-yellow-600",
     bgColor: "bg-yellow-50",
     borderColor: "border-yellow-200",
@@ -103,7 +91,7 @@ export const statusConfig: Record<LearningTargetStatus, StatusInfo> = {
     description: "",
   },
   mastered: {
-    label: "başarılı",
+    label: "başarılı" as CourseStatus, // Tip uyumu için eklendi
     color: "text-green-600",
     bgColor: "bg-green-50",
     borderColor: "border-green-200",
@@ -115,6 +103,6 @@ export const statusConfig: Record<LearningTargetStatus, StatusInfo> = {
 /**
  * Durum değerine göre stil bilgilerini döndüren yardımcı fonksiyon
  */
-export function getStatusStyle(status: LearningTargetStatus): StatusInfo {
+export function getStatusStyle(status: LearningTargetStatus): CourseStatusInfo { // StatusInfo -> CourseStatusInfo olarak güncellendi
   return statusConfig[status];
 }

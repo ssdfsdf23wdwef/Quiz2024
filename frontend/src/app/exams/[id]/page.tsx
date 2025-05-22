@@ -6,7 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Clock, Flag, CheckCircle, XCircle, Info, ChevronLeft, ChevronRight, Award, ListChecks, BarChart3 } from "lucide-react";
-import { Quiz, Question, QuizType, AnalysisResult, DifficultyLevel, QuizSubmissionPayload } from "@/types/quiz";
+import { Quiz, Question, QuizType, AnalysisResult, DifficultyLevel, QuizSubmissionPayload } from "@/types/quiz.type";
 import quizService from "@/services/quiz.service";
 import { ErrorService } from "@/services/error.service";
 import { Button, Card, CardBody, Chip, Progress, Tooltip } from "@nextui-org/react";

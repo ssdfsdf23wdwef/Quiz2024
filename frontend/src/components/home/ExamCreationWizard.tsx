@@ -27,8 +27,8 @@ import {
 } from "@/types";
 import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
-import { SubTopicItem } from "@/types/quiz"; // Reverted to SubTopicItem
-import { LearningTarget } from "@/types/learningTarget";
+import { SubTopicItem } from "@/types/quiz.type"; // Reverted to SubTopicItem
+import { LearningTarget } from "@/types/learningTarget.type";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/services/error.service"; 
 import { Quiz } from "@/types";

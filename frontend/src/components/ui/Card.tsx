@@ -1,43 +1,10 @@
 "use client";
 
-import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef } from "react";
 import { twMerge } from "tailwind-merge";
+import type { CardProps } from "@/types/components/Card.type";
+import { cardVariants } from "@/types/components/Card.type";
 
-const cardVariants = cva("rounded-lg overflow-hidden transition-all", {
-  variants: {
-    variant: {
-      default:
-        "bg-white dark:bg-dark-bg-secondary border border-gray-200 dark:border-gray-700 shadow-soft",
-      flat: "bg-white dark:bg-dark-bg-secondary",
-      outline: "bg-transparent border border-gray-200 dark:border-gray-700",
-      elevated: "bg-white dark:bg-dark-bg-secondary shadow-md",
-    },
-    padding: {
-      none: "",
-      sm: "p-3",
-      md: "p-4",
-      lg: "p-6",
-    },
-    hover: {
-      true: "hover:shadow-md hover:-translate-y-1",
-      false: "",
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-    padding: "md",
-    hover: false,
-  },
-});
-
-export interface CardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
-
-/**
- * Yeniden kullanılabilir kart bileşeni
- */
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant, padding, hover, children, ...props }, ref) => {
     return (

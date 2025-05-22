@@ -1,6 +1,6 @@
-import { LearningTarget } from "./learningTarget";
-import { DocumentType } from "./document";
-import { Quiz } from "./quiz";
+import { LearningTarget } from "./learningTarget.type";
+import { DocumentType } from "./document.type";
+import { Quiz } from "./quiz.type";
 
 /**
  * Ders (Course) temel modeli

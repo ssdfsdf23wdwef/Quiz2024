@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-22T14:41:18.780Z
-Trace ID: quiz-1747924860173-cd4io
-Yanıt Uzunluğu: 10489 karakter
+Tarih: 2025-05-22T20:50:54.998Z
+Trace ID: quiz-1747947042138-no3lz
+Yanıt Uzunluğu: 7722 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,173 +11,173 @@ Yanıt Uzunluğu: 10489 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Eksaskala bilgisayar sistemlerinde uygulama geliştirmenin zorluklarından biri olan donanım karmaşıklığı, hangi temel faktörlerle ilişkilidir?",
+      "questionText": "Süperbilgisayarların kullanım alanları düşünüldüğünde, aşağıdakilerden hangisi bu sistemlerin yaygın olarak kullanıldığı bir alan değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Sadece CPU çekirdeklerinin sayısının artmasıyla",
-        "Yalnızca GPU ve TPU gibi heterojen mimarilerin kullanımının azalmasıyla",
-        "Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla",
-        "Sadece bellek türlerinin sayısının azalmasıyla"
+        "Bilimsel araştırmalar",
+        "Yapay zeka",
+        "Finansal modelleme",
+        "Ev kullanımı"
       ],
-      "correctAnswer": "Milyonlarca çekirdek, heterojen mimariler (CPU, GPU, TPU vb.) ve farklı bellek türlerinin kullanılmasıyla",
-      "explanation": "Eksaskala sistemlerdeki donanım karmaşıklığı, çok sayıda çekirdek, farklı mimariler ve çeşitli bellek türlerinin bir arada kullanılmasından kaynaklanır. Bu durum, uygulama geliştirme sürecini zorlaştırır. Diğer seçenekler bu karmaşıklığı tam olarak yansıtmamaktadır.",
-      "subTopicName": "Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar",
-      "normalizedSubTopicName": "eksaskala_sistemlerde_uygulama_geli_tirme_zorluklar",
-      "difficulty": "medium"
+      "correctAnswer": "Ev kullanımı",
+      "explanation": "Süperbilgisayarlar yüksek hesaplama gücü gerektiren bilimsel araştırmalar, yapay zeka ve finansal modelleme gibi alanlarda kullanılırken, ev kullanımı için uygun değildir. Metinde süperbilgisayarların bilimsel araştırmalardan yapay zekaya kadar pek çok alanda kullanıldığı belirtilmiştir.",
+      "subTopicName": "S Perbilgisayar S Ralama Listeleri",
+      "normalizedSubTopicName": "s_perbilgisayar_s_ralama_listeleri",
+      "difficulty": "easy"
     },
     {
       "id": "q2",
-      "questionText": "İklim simülasyonu yapan bir uygulamada, öğrenen modellerle iklim değişkenlerini tahmin etme işlemleri için en uygun donanım hangisidir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "applying",
-      "options": [
-        "CPU",
-        "GPU",
-        "TPU",
-        "SSD"
-      ],
-      "correctAnswer": "TPU",
-      "explanation": "TPU'lar (Tensor İşlem Birimleri), makine öğrenmesi iş yükleri için optimize edilmişlerdir ve öğrenen modellerle iklim değişkenlerini tahmin etme gibi işlemler için en uygun donanımı oluştururlar. CPU'lar genel amaçlı işlemler için, GPU'lar ise yüksek paralellik gerektiren işlemler için daha uygundur.",
-      "subTopicName": "Eksaskala Sistemlerde Uygulama Geli Tirme Zorluklar",
-      "normalizedSubTopicName": "eksaskala_sistemlerde_uygulama_geli_tirme_zorluklar",
-      "difficulty": "medium"
-    },
-    {
-      "id": "q3",
-      "questionText": "Eksaskala sistemlerde donanım karmaşıklığı bağlamında, görev dağılımı yapılırken hangi husus dikkate alınmalıdır?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "analyzing",
-      "options": [
-        "Tüm görevlerin aynı donanım üzerinde çalıştırılması",
-        "Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi",
-        "Sadece CPU kullanımının optimize edilmesi",
-        "Sadece GPU kullanımının optimize edilmesi"
-      ],
-      "correctAnswer": "Görevlerin hangi donanımda daha verimli çalıştığının belirlenmesi",
-      "explanation": "Donanım karmaşıklığı dikkate alındığında, görev dağılımı yapılırken her görevin hangi donanım üzerinde daha verimli çalıştığının belirlenmesi önemlidir. Bu, performansı artırır ve kaynakların etkin kullanımını sağlar. Diğer seçenekler, sistemin potansiyelini tam olarak kullanmamıza engel olur.",
-      "subTopicName": "Donan M Karma Kl Ve Y Netimi",
-      "normalizedSubTopicName": "donan_m_karma_kl_ve_y_netimi",
-      "difficulty": "medium"
-    },
-    {
-      "id": "q4",
-      "questionText": "Eksaskala bilgisayar sistemlerinde, mimari ve bellek yapılarının çeşitlenmesi ve artmasıyla ortaya çıkan temel zorluklardan biri aşağıdakilerden hangisidir?",
+      "questionText": "Aşağıdakilerden hangisi süperbilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren temel listelerden biridir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "Donanım karmaşıklığı",
-        "Yazılım basitliği",
-        "Enerji verimliliği",
-        "Maliyet düşüklüğü"
+        "CPU-Z",
+        "TOP500",
+        "Geekbench",
+        "3DMark"
       ],
-      "correctAnswer": "Donanım karmaşıklığı",
-      "explanation": "Eksaskala sistemlerde mimari ve bellek yapılarının çeşitlenmesi ve artması, donanım karmaşıklığını artırır. Bu durum, sistemlerin yönetimi ve optimizasyonu açısından zorluklar yaratır. Diğer seçenekler genellikle hedeflenen özellikler olsa da, bu sistemlerin doğasında var olan zorlukları yansıtmaz.",
-      "subTopicName": "Donan M Karma Kl Ve Y Netimi",
-      "normalizedSubTopicName": "donan_m_karma_kl_ve_y_netimi",
+      "correctAnswer": "TOP500",
+      "explanation": "TOP500, HPCG ve Green500 süperbilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren temel listelerdir. Metinde bu üç listenin adı açıkça belirtilmiştir.",
+      "subTopicName": "S Perbilgisayar S Ralama Listeleri",
+      "normalizedSubTopicName": "s_perbilgisayar_s_ralama_listeleri",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q3",
+      "questionText": "TOP500 listesi hangi özelliği temel alarak dünyanın en hızlı 500 süperbilgisayarını sıralar?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Enerji verimliliği",
+        "Bellek kapasitesi",
+        "Hesaplama gücü",
+        "Veri depolama alanı"
+      ],
+      "correctAnswer": "Hesaplama gücü",
+      "explanation": "TOP500 listesi, süperbilgisayarları hesaplama gücüne göre sıralar. Metinde TOP500'ün en hızlı süperbilgisayarları hesaplama gücüne göre sıraladığı belirtilmiştir.",
+      "subTopicName": "Top500 Tan M Ve Amac",
+      "normalizedSubTopicName": "top500_tan_m_ve_amac",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q4",
+      "questionText": "TOP500 listesi ilk olarak ne zaman yayınlanmıştır ve hangi aralıklarla güncellenmektedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "1990'dan beri yılda bir kez",
+        "1993'ten beri yılda iki kez",
+        "2000'den beri her çeyrekte",
+        "2005'ten beri yılda bir kez"
+      ],
+      "correctAnswer": "1993'ten beri yılda iki kez",
+      "explanation": "TOP500 listesi 1993'ten beri yılda iki kez (Haziran ve Kasım aylarında) yayımlanmaktadır. Metinde bu bilgi açıkça belirtilmiştir.",
+      "subTopicName": "Top500 Tan M Ve Amac",
+      "normalizedSubTopicName": "top500_tan_m_ve_amac",
       "difficulty": "easy"
     },
     {
       "id": "q5",
-      "questionText": "Eksaskala bilgisayar sistemlerinde veri hareketi yönetiminin önemi nedir?",
+      "questionText": "HPCG'nin (High Performance Conjugate Gradient) temel amacı nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Veri hareketi maliyetinin düşük olması",
-        "Veriye erişim süresinin işlem süresinden daha az maliyet oluşturması",
-        "Bellekten işlemciye veri taşıma maliyetinin yüksek olması",
-        "Yanlış yerleştirilmiş verinin performansı artırması"
+        "Enerji tüketimini en aza indirmek",
+        "Bellek, iletişim ve veri akış performansını test etmek",
+        "Sadece işlemci hızını ölçmek",
+        "Grafik işleme yeteneklerini değerlendirmek"
       ],
-      "correctAnswer": "Bellekten işlemciye veri taşıma maliyetinin yüksek olması",
-      "explanation": "Veri hareketi yönetimi, eksaskala sistemlerde önemlidir çünkü bellekten işlemciye veri taşıma maliyeti yüksektir. Veriye erişim süresi, işlem süresinden daha fazla maliyet oluşturabilir ve yanlış yerleştirilmiş veri performans kaybına neden olabilir.",
-      "subTopicName": "Veri Hareketi Y Netiminin Nemi",
-      "normalizedSubTopicName": "veri_hareketi_y_netiminin_nemi",
+      "correctAnswer": "Bellek, iletişim ve veri akış performansını test etmek",
+      "explanation": "HPCG, bellek, iletişim ve veri akış performansını test etmeyi amaçlar. Metinde HPCG'nin bellek, iletişim ve veri akış performansını test ettiği belirtilmiştir.",
+      "subTopicName": "Hpcğitan M Ve Amac",
+      "normalizedSubTopicName": "hpcğitan_m_ve_amac",
       "difficulty": "medium"
     },
     {
       "id": "q6",
-      "questionText": "Eksaskala bilgisayar sistemlerinde veri hareketi yönetimindeki temel zorluk nedir?",
+      "questionText": "HPCG, TOP500 listesinin hangi eksikliğini gidermek için geliştirilmiştir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Veri miktarının azalması",
-        "Verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklığın artması",
-        "Veri erişim hızının artması",
-        "Bellek teknolojilerinin basitleşmesi"
+        "Enerji verimliliği ölçümü",
+        "Gerçek dünya uygulamalarına odaklanmama",
+        "Daha fazla süperbilgisayarı sıralayamama",
+        "Donanım maliyetini dikkate almama"
       ],
-      "correctAnswer": "Verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklığın artması",
-      "explanation": "Eksaskala sistemlerde veri miktarının artmasıyla birlikte, verilerin uygun işlemci belleklerine yerleştirilmesindeki karmaşıklık artar. Bu durum, veri hareketi yönetimini zorlaştırır ve performans optimizasyonu gerektirir.",
-      "subTopicName": "Veri Hareketi Y Netiminin Nemi",
-      "normalizedSubTopicName": "veri_hareketi_y_netiminin_nemi",
+      "correctAnswer": "Gerçek dünya uygulamalarına odaklanmama",
+      "explanation": "HPCG, TOP500’ün eksik kaldığı noktaları tamamlamak için alternatif olarak geliştirilmiştir ve gerçek dünya uygulamalarına daha yakındır. Metinde bu durum açıkça ifade edilmiştir.",
+      "subTopicName": "Hpcğitan M Ve Amac",
+      "normalizedSubTopicName": "hpcğitan_m_ve_amac",
       "difficulty": "medium"
     },
     {
       "id": "q7",
-      "questionText": "Eksaskala bilgisayar sistemlerinde yüksek düzeyde paralellik için kontrolün gerekliliği neden önemlidir?",
+      "questionText": "Green500 listesi süperbilgisayarları hangi kritere göre sıralar?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür.",
-        "Paralel işlemlerde kontrol ihtiyacının azalması",
-        "Görev bağımlılığının önemsiz hale gelmesi",
-        "Yük dengelemesinin otomatik olarak sağlanması"
+        "İşlemci çekirdek sayısı",
+        "Enerji verimliliği",
+        "Bellek miktarı",
+        "Depolama kapasitesi"
       ],
-      "correctAnswer": "Görev bağımlılığı ve doğru yük dengelemesi kontrolü yapmamak hatalı sonuçlara sebep olur ve performansı büyük ölçüde düşürür.",
-      "explanation": "Yüksek düzeyde paralellik için kontrol gereklidir çünkü görev bağımlılığı ve doğru yük dengelemesi kontrolü yapılmadığında hatalı sonuçlar ortaya çıkar ve performans düşer. Bu nedenle, görevler arasındaki ilişkilerin ve iş yükünün dengeli dağılımının kontrol edilmesi önemlidir.",
-      "subTopicName": "Y Ksek D Zeyde Paralellik Ve Kontrol",
-      "normalizedSubTopicName": "y_ksek_d_zeyde_paralellik_ve_kontrol",
-      "difficulty": "medium"
+      "correctAnswer": "Enerji verimliliği",
+      "explanation": "Green500, enerji verimliliğini temel alarak süperbilgisayarları sıralar. Metinde Green500'ün enerji verimliliğine odaklandığı belirtilmiştir.",
+      "subTopicName": "Green500 Tan M Ve Amac",
+      "normalizedSubTopicName": "green500_tan_m_ve_amac",
+      "difficulty": "easy"
     },
     {
       "id": "q8",
-      "questionText": "Eksaskala bilgisayar sistemlerinde görev bağımlılığı kontrolündeki temel zorluk nedir?",
+      "questionText": "Green500 listesinde sıralama ölçütü olarak kullanılan metrik nedir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Görev sayısının azalması",
-        "Görev bağımlılıklarının karmaşıklaşması",
-        "Görevlerin basitleşmesi",
-        "Görevlerin eş zamanlı çalıştırılmasının kolaylaşması"
+        "FLOPS",
+        "Watt başına düşen işlem sayısı (FLOPS/Watt)",
+        "CPU kullanım oranı",
+        "Bellek bant genişliği"
       ],
-      "correctAnswer": "Görev bağımlılıklarının karmaşıklaşması",
-      "explanation": "Eksaskala sistemlerde görev sayısının artmasıyla birlikte görev bağımlılıkları karmaşıklaşır. Bu durum, görevlerin doğru sırada ve zamanda yürütülmesini zorlaştırır, bu da hatalı sonuçlara ve performans sorunlarına yol açabilir.",
-      "subTopicName": "Y Ksek D Zeyde Paralellik Ve Kontrol",
-      "normalizedSubTopicName": "y_ksek_d_zeyde_paralellik_ve_kontrol",
-      "difficulty": "medium"
+      "correctAnswer": "Watt başına düşen işlem sayısı (FLOPS/Watt)",
+      "explanation": "Green500 listesinde sıralama ölçütü olarak FLOPS/Watt oranına bakılır. Yani, 1 watt enerji başına ne kadar işlem yapıldığı değerlendirilir. Metinde bu bilgi açıkça belirtilmiştir.",
+      "subTopicName": "Green500 Tan M Ve Amac",
+      "normalizedSubTopicName": "green500_tan_m_ve_amac",
+      "difficulty": "easy"
     },
     {
       "id": "q9",
-      "questionText": "Donanım bazlı görev dağılımı stratejilerinde, bir görevin hangi donanımda daha verimli çalışacağını belirlemek için hangi faktörler göz önünde bulundurulmalıdır?",
+      "questionText": "LINPACK testi, süperbilgisayarların hangi performansını ölçmek için kullanılır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "analyzing",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Sadece görevin karmaşıklığı",
-        "Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri",
-        "Sadece donanımın maliyeti",
-        "Sadece görevin önceliği"
+        "Enerji tüketimi",
+        "Bellek erişim hızı",
+        "Floating-point işlemleri (FLOPS)",
+        "Veri depolama kapasitesi"
       ],
-      "correctAnswer": "Görevin türü, veri erişim gereksinimleri ve donanımın özellikleri",
-      "explanation": "Donanım bazlı görev dağılımı stratejilerinde, görevin türü (örneğin, hesaplama yoğun, veri yoğun), veri erişim gereksinimleri (hızlı bellek erişimi, büyük veri setleri) ve donanımın özellikleri (CPU, GPU, TPU) dikkate alınmalıdır. Bu faktörler, görevin hangi donanımda daha verimli çalışacağını belirlemede kritik öneme sahiptir.",
-      "subTopicName": "Donan M Bazl Ğirev Da L M Stratejileri",
-      "normalizedSubTopicName": "donan_m_bazl_girev_da_l_m_stratejileri",
+      "correctAnswer": "Floating-point işlemleri (FLOPS)",
+      "explanation": "LINPACK testi, süperbilgisayarın ne kadar hızlı işlem yapabildiğini, yani sistemin floating-point işlemleri (FLOPS) performansını ölçer. Metinde bu bilgi açıkça belirtilmiştir.",
+      "subTopicName": "Linpack Testi Ve Flops",
+      "normalizedSubTopicName": "linpack_testi_ve_flops",
       "difficulty": "medium"
     },
     {
       "id": "q10",
-      "questionText": "Eksaskala sistemlerde donanım bazlı görev dağılımı stratejileri uygulanırken, hangi temel amaç güdülmelidir?",
+      "questionText": "LINPACK testinin temelinde hangi matematiksel işlem yatar?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Sadece maliyeti düşürmek",
-        "Sadece enerji tüketimini azaltmak",
-        "Görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmak",
-        "Sadece belirli bir donanım türünü kullanmak"
+        "İstatistiksel analiz",
+        "Matris çözümleme",
+        "Veri sıkıştırma",
+        "Kriptografik şifreleme"
       ],
-      "correctAnswer": "Görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmak",
-      "explanation": "Donanım bazlı görev dağılımı stratejilerinin temel amacı, görevleri en uygun donanım kaynaklarına atayarak performansı en üst düzeye çıkarmaktır. Bu, sistem kaynaklarının verimli kullanılmasını ve uygulamaların daha hızlı çalışmasını sağlar.",
-      "subTopicName": "Donan M Bazl Ğirev Da L M Stratejileri",
-      "normalizedSubTopicName": "donan_m_bazl_girev_da_l_m_stratejileri",
-      "difficulty": "medium"
+      "correctAnswer": "Matris çözümleme",
+      "explanation": "LINPACK testi matris çözümlemeye dayalıdır. Metinde bu bilgi açıkça belirtilmiştir.",
+      "subTopicName": "Linpack Testi Ve Flops",
+      "normalizedSubTopicName": "linpack_testi_ve_flops",
+      "difficulty": "easy"
     }
   ]
 }

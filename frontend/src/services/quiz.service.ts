@@ -6,19 +6,21 @@ import apiService from './api.service';
 import { ErrorService, ApiError } from "./error.service";
 import adapterService from "./adapter.service";
 import type {
-  Quiz, 
-  QuizType, 
-  Question, 
-  QuizGenerationOptions, 
-  QuizSubmissionPayload, 
+  Quiz,
+  QuizType,
+  Question,
+  QuizGenerationOptions,
+  QuizSubmissionPayload,
   QuizSubmissionResponse,
   QuizAnalysisResponse,
-  DifficultyLevel, 
-  QuestionType, 
+  DifficultyLevel,
+  QuestionType,
   QuestionStatus,
-  SubTopic, // Ensure SubTopic is imported
-  PersonalizedQuizType // Assuming this is also in quiz.ts, if not, it needs to be handled
-} from "../types/quiz";
+  SubTopic,
+  PersonalizedQuizType,
+  QuizResponseDto, // Eklendi
+} from "../types/quiz.type";
+import type { BaseApiResponse } from "../types/api.type"; // Eklendi
 import { getLogger, getFlowTracker } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory, FlowTrackerService } from "./flow-tracker.service";
@@ -39,25 +41,6 @@ const API_ENDPOINTS = {
   GENERATE_PERSONALIZED_QUIZ: "/quizzes/personalized",
   SAVE_QUICK_QUIZ: "/quizzes/save-quick-quiz",
 };
-
-interface BaseApiResponse {
-  status: number;
-  data: unknown;
-}
-
-// Quiz yanıt tipi tanımı
-interface QuizResponseDto {
-  id: string;
-  title: string;
-  description?: string;
-  quizType: string;
-  questions: Question[]; // Question tipini kullan
-  courseId?: string;
-  documentId?: string;
-  createdAt: string;
-  updatedAt: string;
-  // Diğer backend yanıt alanları
-}
 
 /**
  * Quiz API Servisi

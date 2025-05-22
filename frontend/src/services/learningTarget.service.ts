@@ -3,7 +3,7 @@ import {
   LearningTarget, 
   TopicDetectionResult, 
   LearningTargetStatusLiteral 
-} from "@/types/learningTarget";
+} from "@/types/learningTarget.type";
 import { getLogger, getFlowTracker, trackFlow, mapToTrackerCategory } from "@/lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory } from "@/constants/logging.constants";

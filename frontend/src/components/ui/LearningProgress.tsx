@@ -1,6 +1,6 @@
 import React from "react";
 import { FiTarget, FiCheckCircle, FiTrendingUp } from "react-icons/fi";
-import type { WeakTopic } from "@/types/learningTarget";
+import type { WeakTopic } from "@/types/learningTarget.type";
 
 interface LearningProgressProps {
   weakTopics: Record<string, WeakTopic>;

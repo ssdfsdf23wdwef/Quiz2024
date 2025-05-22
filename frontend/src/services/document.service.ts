@@ -3,7 +3,7 @@ import {
   DocumentType,
   DocumentDeleteResponse,
   DOCUMENT_UPLOAD_CONSTRAINTS,
-} from "@/types/document";
+} from "@/types/document.type";
 import { getLogger, getFlowTracker, trackFlow, startFlow as startAppFlow } from "../lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory } from "@/constants/logging.constants";

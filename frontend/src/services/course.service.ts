@@ -1,8 +1,8 @@
 import apiService from "@/services/api.service";
-import { Course, CourseStats, CourseDashboard, CourseRelatedItems } from "@/types/course";
-import { Document } from "@/types/document";
-import { LearningTarget } from "@/types/learningTarget";
-import { Quiz } from "@/types/quiz";
+import { Course, CourseStats, CourseDashboard, CourseRelatedItems } from "@/types/course.type";
+import { Document } from "@/types/document.type";
+import { LearningTarget } from "@/types/learningTarget.type";
+import { Quiz } from "@/types/quiz.type";
 import { getLogger, getFlowTracker } from "../lib/logger.utils";
 import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory } from "@/constants/logging.constants";

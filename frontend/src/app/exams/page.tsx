@@ -15,7 +15,7 @@ import {
   FiEye,
 } from "react-icons/fi";
 import { useQuizzes } from "@/hooks/api/useQuizzes";
-import type { Quiz } from "../../types/quiz";
+import type { Quiz } from "../../types/quiz.type";
 import { Spinner } from "@nextui-org/react";
 
 // Sınav türü için güzel etiketler

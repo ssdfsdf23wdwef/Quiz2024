@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import courseService from "@/services/course.service";
 import CourseList from "@/components/ui/CourseList";
-import { Course } from "@/types/course";
+import { Course } from "@/types/course.type";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuthStore } from "@/store/auth.store";
 import { getLogger, startFlow } from "@/lib/logger.utils";

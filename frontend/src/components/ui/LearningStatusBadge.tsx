@@ -1,7 +1,7 @@
 "use client";
 
 import { FC } from "react";
-import { LearningTargetStatus } from "@/types/learningTarget";
+import { LearningTargetStatus } from "@/types/learningTarget.type";
 import { motion } from "framer-motion";
 import { getStatusStyle } from "@/lib/statusConfig";
 

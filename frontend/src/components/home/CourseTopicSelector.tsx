@@ -1,6 +1,6 @@
 import React from "react";
-import type { Course } from "@/types/course";
-import type { DetectedSubTopic } from "@/types/learningTarget";
+import type { Course } from "@/types/course.type";
+import type { DetectedSubTopic } from "@/types/learningTarget.type";
 import { FiTarget, FiCheck, FiLoader, FiAlertTriangle } from "react-icons/fi";
 
 interface CourseTopicSelectorProps {
