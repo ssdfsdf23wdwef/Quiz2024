@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiPlusSquare, FiBookOpen } from "react-icons/fi"; // Added FiBookOpen
+import { FiArrowLeft, FiPlusSquare, FiBookOpen } from "react-icons/fi";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import courseService from "@/services/course.service"; // Import courseService
+import courseService from "@/services/course.service";
+import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 
 export default function CreateCoursePage() {
   const router = useRouter();
+  const queryClient = useQueryClient(); // Get queryClient instance
   const [courseName, setCourseName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{
@@ -38,10 +40,11 @@ export default function CreateCoursePage() {
     setIsSubmitting(true);
 
     try {
-      // Call the courseService to create the course
       await courseService.createCourse({ name: courseName });
 
-      // Başarılı kayıt sonrası courses sayfasına yönlendir
+      // Invalidate the courses query to refetch the list on the courses page
+      await queryClient.invalidateQueries({ queryKey: ['courses'] });
+
       router.push("/courses");
     } catch (error) {
       console.error("Ders oluşturma hatası:", error);
