@@ -1,8 +1,5 @@
-/**
- * Sınav (Quiz) modelini temsil eden interface
- * @see PRD 7.4
- */
-export type QuizType = "general" | "personalized" | "topic_specific"; // Updated to include "general" and "topic_specific"
+
+export type QuizType = "general" | "personalized" | "topic_specific";
 export type PersonalizedQuizFocus = "weaknesses" | "strengths" | "new_topics" | "comprehensive";
 export type DifficultyLevel = "easy" | "medium" | "hard" | "mixed";
 
@@ -10,7 +7,7 @@ export type QuestionType = "multiple_choice" | "true_false" | "short_answer";
 export type QuestionStatus = "active" | "inactive" | "draft";
 
 export interface SubTopic {
-  id?: string; // Optional ID, if available from backend
+  id?: string; 
   name: string;
 }
 
@@ -37,7 +34,7 @@ export interface Quiz {
   title: string;
   userId: string;
   quizType: QuizType;
-  personalizedQuizType?: PersonalizedQuizFocus | null; // Changed PersonalizedQuizType to PersonalizedQuizFocus
+  personalizedQuizType?: PersonalizedQuizFocus | null;
   courseId: string | null;
   sourceDocument?: {
     fileName: string;
@@ -73,10 +70,6 @@ export interface QuizPreferences {
   personalizedQuizType?: 'weakTopicFocused' | 'learningObjectiveFocused' | 'newTopicFocused' | 'comprehensive';
 }
 
-/**
- * Soru (Question) modelini temsil eden interface
- * @see PRD 7.5
- */
 export interface Question {
   id: string;
   questionText: string;
@@ -128,10 +121,7 @@ export interface AnalysisResult {
   recommendations?: string[] | null;
 }
 
-/**
- * Başarısız Soru (FailedQuestion) modelini temsil eden interface
- * @see PRD 7.7
- */
+
 export interface FailedQuestion {
   id: string;
   userId: string;

@@ -153,6 +153,113 @@ export class UserQuizProgressDto {
 }
 
 /**
+ * Öğrenme hedefleri özeti DTO
+ */
+export class LearningGoalsSummaryDto {
+  @ApiProperty({
+    description: 'Aktif öğrenme hedefi sayısı',
+    example: 3,
+    required: false,
+  })
+  activeGoalsCount?: number;
+
+  @ApiProperty({
+    description: 'Tamamlanmış öğrenme hedefi sayısı',
+    example: 5,
+    required: false,
+  })
+  completedGoalsCount?: number;
+
+  constructor(partial: Partial<LearningGoalsSummaryDto>) {
+    Object.assign(this, partial);
+  }
+}
+
+/**
+ * Kullanıcının tek bir öğrenme hedefi için DTO
+ */
+export class UserLearningObjectiveItemDto {
+  @ApiProperty({
+    description: 'Öğrenme hedefi ID',
+    example: 'uloid_123',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'Öğrenme hedefi açıklaması',
+    example: 'NestJS Guards konusundaki temel kavramları anlamak',
+  })
+  description: string;
+
+  @ApiProperty({
+    description: 'Hedefin durumu',
+    example: 'active',
+    enum: ['active', 'achieved', 'on_hold', 'abandoned'],
+  })
+  status: string;
+
+  @ApiProperty({
+    description: 'Hedefe ulaşma ilerlemesi (0-100)',
+    example: 75,
+  })
+  progress: number;
+
+  @ApiProperty({
+    description: 'Hedeflenen tamamlanma tarihi (ISO formatında)',
+    example: '2023-02-01T00:00:00Z',
+    required: false,
+  })
+  targetDate?: string;
+
+  @ApiProperty({
+    description: 'İlişkili ders ID\'si',
+    example: 'course_abc',
+    required: false,
+  })
+  courseId?: string;
+
+  @ApiProperty({
+    description: 'İlişkili konu ID\'leri',
+    example: ['topic_1', 'topic_2'],
+    required: false,
+    type: [String],
+  })
+  topicIds?: string[];
+
+  @ApiProperty({
+    description: 'Oluşturulma tarihi (ISO formatında)',
+    example: '2023-01-01T00:00:00Z',
+    required: false,
+  })
+  createdAt?: string;
+
+  @ApiProperty({
+    description: 'Tamamlanma tarihi (ISO formatında)',
+    example: '2023-01-15T00:00:00Z',
+    required: false,
+  })
+  achievedAt?: string;
+
+  constructor(partial: Partial<UserLearningObjectiveItemDto>) {
+    Object.assign(this, partial);
+
+    function isDate(value: any): value is Date {
+      return value instanceof Date && !isNaN(value.getTime());
+    }
+
+    if (partial.targetDate && isDate(partial.targetDate)) {
+      this.targetDate = partial.targetDate.toISOString();
+    }
+    if (partial.createdAt && isDate(partial.createdAt)) {
+      this.createdAt = partial.createdAt.toISOString();
+    }
+    if (partial.achievedAt && isDate(partial.achievedAt)) {
+      this.achievedAt = partial.achievedAt.toISOString();
+    }
+  }
+}
+
+/**
  * Kullanıcı ilerleme durumu DTO
  */
 export class UserProgressResponseDto {
@@ -222,6 +329,14 @@ export class UserProgressResponseDto {
   quizProgress: UserQuizProgressDto;
 
   @ApiProperty({
+    description: 'Öğrenme hedefleri özeti',
+    type: LearningGoalsSummaryDto,
+    required: false,
+  })
+  @Type(() => LearningGoalsSummaryDto)
+  learningGoalsSummary?: LearningGoalsSummaryDto;
+
+  @ApiProperty({
     description: 'Çalışma önerileri',
     example: [
       'NestJS Middleware konusunu daha fazla çalışmanız önerilir.',
@@ -233,30 +348,37 @@ export class UserProgressResponseDto {
 
   @ApiProperty({
     description: 'Öğrenme hedefleri',
+    type: [UserLearningObjectiveItemDto],
     example: [
       {
-        topic: 'NestJS Guards',
+        id: 'uloid_123',
+        description: 'NestJS Guards konusundaki temel kavramları anlamak',
+        status: 'active',
+        progress: 75,
         targetDate: '2023-02-01T00:00:00Z',
-        progress: 0.4,
-        completed: false,
+        courseId: 'course_abc',
+        topicIds: ['topic_1', 'topic_2'],
+        createdAt: '2023-01-01T00:00:00Z',
+        achievedAt: null,
       },
       {
-        topic: 'JWT Authentication',
+        id: 'uloid_124',
+        description: 'JWT Authentication mekanizmasını tam olarak kavramak',
+        status: 'achieved',
+        progress: 100,
         targetDate: '2023-01-15T00:00:00Z',
-        progress: 1.0,
-        completed: true,
+        courseId: 'course_def',
+        topicIds: ['topic_3'],
+        createdAt: '2022-12-01T00:00:00Z',
+        achievedAt: '2023-01-14T00:00:00Z',
       },
     ],
     required: false,
     nullable: true,
   })
+  @Type(() => UserLearningObjectiveItemDto)
   learningGoals?:
-    | {
-        topic: string;
-        targetDate: string;
-        progress: number;
-        completed: boolean;
-      }[]
+    | UserLearningObjectiveItemDto[]
     | null;
 
   @ApiProperty({
@@ -310,15 +432,13 @@ export class UserProgressResponseDto {
       this.quizProgress = new UserQuizProgressDto(partial.quizProgress);
     }
 
-    // Öğrenme hedefleri için de tarihleri formatla
+    if (partial.learningGoalsSummary) {
+      this.learningGoalsSummary = new LearningGoalsSummaryDto(partial.learningGoalsSummary);
+    }
+
+    // Öğrenme hedefleri için de tarihleri formatla ve UserLearningObjectiveItemDto örneği oluştur
     if (partial.learningGoals && Array.isArray(partial.learningGoals)) {
-      this.learningGoals = partial.learningGoals.map((goal) => {
-        const newGoal = { ...goal };
-        if (goal.targetDate && isDate(goal.targetDate)) {
-          newGoal.targetDate = goal.targetDate.toISOString();
-        }
-        return newGoal;
-      });
+      this.learningGoals = partial.learningGoals.map((goal) => new UserLearningObjectiveItemDto(goal));
     }
   }
 }
