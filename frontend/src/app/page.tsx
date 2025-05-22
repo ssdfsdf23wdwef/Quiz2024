@@ -94,21 +94,17 @@ export default function Home() {
     status?: 'success' | 'error';
   }) => {
     try {
-      // URL'e quiz türünü ve dosya adını ekle
       const params = new URLSearchParams();
       params.set("type", result.quizType);
       
-      // Personalized quiz tipi varsa onu da ekle
       if (result.personalizedQuizType) {
         params.set("personalizedType", result.personalizedQuizType);
       }
       
-      // Dosya adını ekle (varsa)
       if (result.file) {
         params.set("fileName", encodeURIComponent(result.file.name));
       }
 
-      // Eğer quiz ID ve belge ID varsa ekle
       if (result.quizId) {
         params.set("quizId", result.quizId);
       }
@@ -119,19 +115,16 @@ export default function Home() {
       
       console.log("Ana sayfada ExamCreationWizard tamamlandı, doğrudan quiz oluşturma API çağrısı yapılacak");
       
-      // Quiz ID varsa doğrudan sınav sayfasına yönlendir
       if (result.quizId) {
         console.log(`Quiz ID mevcut (${result.quizId}), doğrudan sınav sayfasına yönlendiriliyor`);
         router.push(`/exams/${result.quizId}?mode=attempt`);
         return;
       }
       
-      // Quiz oluşturma sayfasına yönlendir
       const url = `/exams/create?${params.toString()}&startQuiz=true`;
       router.push(url);
     } catch (error) {
       console.error("ExamCreationWizard tamamlama hatası:", error);
-      // Basit hata durumunda da quiz oluşturma sayfasına yönlendir
       const url = `/exams/create?type=${result.quizType}`;
       router.push(url);
     }
@@ -139,7 +132,7 @@ export default function Home() {
   
   if (isAuthInitializing) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 to-sky-100 dark:from-slate-900 dark:to-sky-900">
         <Spinner size="lg" />
       </div>
     );
@@ -147,201 +140,196 @@ export default function Home() {
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-4 py-4">
-        {showExamCreationWizard ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Suspense
-              fallback={
-                <div className="flex justify-center my-6">
-                  <Spinner size="lg" />
-                </div>
-              }
-            >
-              <ExamCreationWizard 
-                quizType={currentQuizType} 
-                onComplete={handleExamCreationComplete} 
-              />
-            </Suspense>
-          </motion.div>
-        ) : (
-          <>
-            {/* Hero Section with Enhanced Gradient Background */}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-100 dark:from-slate-900 dark:to-sky-900 p-4 sm:p-6 lg:p-8">
+        <div className="container mx-auto">
+          {showExamCreationWizard ? (
             <motion.div
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-500 to-violet-600 dark:from-indigo-700 dark:via-purple-600 dark:to-violet-700 shadow-2xl"
-              variants={gradientVariants}
-              initial="hidden"
-              animate="visible"
-              style={{
-                backgroundSize: "300% 300%",
-              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 sm:p-8 md:p-10"
             >
-              {/* Decorative Elements */}
-              <div className="absolute inset-0 bg-grid-white/[0.07] bg-[length:30px_30px]"></div>
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-              
-              {/* Glass overlay */}
-              <div className="absolute inset-0 backdrop-blur-[1px] bg-gradient-to-b from-transparent to-black/10"></div>
-
-              {/* Enhanced lighting effect */}
-              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white/10 to-transparent"></div>
-
-              {/* Floating circles with better depth */}
+              <Suspense
+                fallback={
+                  <div className="flex justify-center my-6">
+                    <Spinner size="lg" />
+                  </div>
+                }
+              >
+                <ExamCreationWizard 
+                  quizType={currentQuizType} 
+                  onComplete={handleExamCreationComplete} 
+                />
+              </Suspense>
+            </motion.div>
+          ) : (
+            <>
               <motion.div
-                className="absolute w-72 h-72 rounded-full bg-white/15 blur-3xl"
-                animate={{
-                  x: [0, 40, 0],
-                  y: [0, -40, 0],
-                  opacity: [0.5, 0.6, 0.5],
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-600 dark:from-sky-600 dark:via-indigo-600 dark:to-violet-700 shadow-2xl"
+                variants={gradientVariants}
+                initial="hidden"
+                animate="visible"
+                style={{
+                  backgroundSize: "300% 300%",
                 }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                style={{ top: "-15%", left: "10%" }}
-              />
+              >
+                <div className="absolute inset-0 bg-grid-white/[0.07] bg-[length:30px_30px]"></div>
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                
+                <div className="absolute inset-0 backdrop-blur-[1px] bg-gradient-to-b from-transparent to-black/10"></div>
 
-              <motion.div
-                className="absolute w-56 h-56 rounded-full bg-purple-400/20 blur-3xl"
-                animate={{
-                  x: [0, -50, 0],
-                  y: [0, 30, 0],
-                  opacity: [0.3, 0.5, 0.3],
-                }}
-                transition={{
-                  duration: 13,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                style={{ bottom: "5%", right: "15%" }}
-              />
-              
-              <motion.div
-                className="absolute w-48 h-48 rounded-full bg-indigo-500/15 blur-3xl"
-                animate={{
-                  x: [0, 60, 0],
-                  y: [0, 60, 0],
-                  opacity: [0.2, 0.4, 0.2],
-                }}
-                transition={{
-                  duration: 15,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                style={{ bottom: "20%", left: "25%" }}
-              />
+                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-white/10 to-transparent"></div>
 
-              <div className="relative py-14 md:py-20 px-6 md:px-8">
-                <div className="max-w-4xl mx-auto">
-                  <div className="text-center">
-                    <motion.div
-                      custom={0.5}
-                      variants={fadeInUp}
-                      initial="hidden"
-                      animate="visible" 
-                      className="mb-3 inline-block"
-                    >
-                      <span className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-lg text-white text-sm font-medium border border-white/10 shadow-lg shadow-purple-900/20">
-                        Yapay Zeka Destekli Quiz Platformu
-                      </span>
-                    </motion.div>
+                <motion.div
+                  className="absolute w-72 h-72 rounded-full bg-white/15 blur-3xl"
+                  animate={{
+                    x: [0, 40, 0],
+                    y: [0, -40, 0],
+                    opacity: [0.5, 0.6, 0.5],
+                  }}
+                  transition={{
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  style={{ top: "-15%", left: "10%" }}
+                />
 
-                    <motion.h1
-                      custom={1}
-                      variants={fadeInUp}
-                      initial="hidden"
-                      animate="visible"
-                      className="text-3xl md:text-5xl font-bold mb-4 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.3)] tracking-tight leading-tight"
-                    >
-                      Kişiselleştirilmiş Quiz Platformu
-                    </motion.h1>
+                <motion.div
+                  className="absolute w-56 h-56 rounded-full bg-sky-400/20 blur-3xl"
+                  animate={{
+                    x: [0, -50, 0],
+                    y: [0, 30, 0],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{
+                    duration: 13,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  style={{ bottom: "5%", right: "15%" }}
+                />
+                
+                <motion.div
+                  className="absolute w-48 h-48 rounded-full bg-indigo-500/15 blur-3xl"
+                  animate={{
+                    x: [0, 60, 0],
+                    y: [0, 60, 0],
+                    opacity: [0.2, 0.4, 0.2],
+                  }}
+                  transition={{
+                    duration: 15,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  style={{ bottom: "20%", left: "25%" }}
+                />
 
-                    <motion.p
-                      custom={2}
-                      variants={fadeInUp}
-                      initial="hidden"
-                      animate="visible"
-                      className="text-lg md:text-xl text-indigo-100 mb-6 max-w-2xl mx-auto font-light leading-relaxed"
-                    >
-                      Bilgi seviyenizi ölçün, eksiklerinizi tespit edin ve öğrenme sürecinizi
-                      kişiselleştirilmiş bir deneyimle optimize edin.
-                    </motion.p>
+                <div className="relative py-14 md:py-20 px-6 md:px-8">
+                  <div className="max-w-4xl mx-auto">
+                    <div className="text-center">
+                      <motion.div
+                        custom={0.5}
+                        variants={fadeInUp}
+                        initial="hidden"
+                        animate="visible" 
+                        className="mb-3 inline-block"
+                      >
+                        <span className="px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-lg text-white text-sm font-medium border border-white/10 shadow-lg shadow-indigo-900/20">
+                          Yapay Zeka Destekli Quiz Platformu
+                        </span>
+                      </motion.div>
 
-                    {/* Quiz Türü Seçimi */}
-                    <motion.div
-                      custom={3}
-                      variants={fadeInUp}
-                      initial="hidden"
-                      animate="visible"
-                      className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto"
-                    >
-                      {/* Hızlı Sınav Kartı */}
-                      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group transform perspective-1000">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="bg-blue-500/20 p-3 rounded-lg shadow-lg shadow-blue-500/10 border border-blue-500/10">
-                            <FiClock className="text-white text-lg" />
+                      <motion.h1
+                        custom={1}
+                        variants={fadeInUp}
+                        initial="hidden"
+                        animate="visible"
+                        className="text-3xl md:text-5xl font-bold mb-4 text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.3)] tracking-tight leading-tight"
+                      >
+                        Kişiselleştirilmiş Quiz Platformu
+                      </motion.h1>
+
+                      <motion.p
+                        custom={2}
+                        variants={fadeInUp}
+                        initial="hidden"
+                        animate="visible"
+                        className="text-lg md:text-xl text-sky-100 dark:text-sky-200 mb-6 max-w-2xl mx-auto font-light leading-relaxed"
+                      >
+                        Bilgi seviyenizi ölçün, eksiklerinizi tespit edin ve öğrenme sürecinizi
+                        kişiselleştirilmiş bir deneyimle optimize edin.
+                      </motion.p>
+
+                      <motion.div
+                        custom={3}
+                        variants={fadeInUp}
+                        initial="hidden"
+                        animate="visible"
+                        className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto"
+                      >
+                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group transform perspective-1000">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="bg-sky-500/20 p-3 rounded-lg shadow-lg shadow-sky-500/10 border border-sky-500/10">
+                              <FiClock className="text-white text-lg" />
+                            </div>
+                            <span className="text-xs text-sky-100/90 dark:text-sky-200/90 px-2.5 py-1 bg-white/10 rounded-full border border-white/10 shadow-sm">
+                              Üyelik Gerektirmez
+                            </span>
                           </div>
-                          <span className="text-xs text-indigo-100/90 px-2.5 py-1 bg-white/10 rounded-full border border-white/10 shadow-sm">
-                            Üyelik Gerektirmez
-                          </span>
+                          <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-sm">Hızlı Sınav</h3>
+                          <p className="text-sky-100/90 dark:text-sky-200/90 mb-4 text-sm">
+                            Üyelik gerektirmeden istediğiniz konuda bilgi seviyenizi hemen test edin. 
+                            Seçtiğiniz alanda temel bilgilerinizi ölçmek için ideal.
+                          </p>
+                          <motion.button
+                            onClick={handleStartQuickQuiz}
+                            variants={buttonHover}
+                            initial="rest"
+                            whileHover="hover"
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300 shadow-lg shadow-sky-600/30 dark:shadow-sky-700/30"
+                          >
+                            <FiPlay className="text-lg" />
+                            <span>Hızlı Sınav Başlat</span>
+                          </motion.button>
                         </div>
-                        <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-sm">Hızlı Sınav</h3>
-                        <p className="text-indigo-100/90 mb-4 text-sm">
-                          Üyelik gerektirmeden istediğiniz konuda bilgi seviyenizi hemen test edin. 
-                          Seçtiğiniz alanda temel bilgilerinizi ölçmek için ideal.
-                        </p>
-                        <motion.button
-                          onClick={handleStartQuickQuiz}
-                          variants={buttonHover}
-                          initial="rest"
-                          whileHover="hover"
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300 shadow-lg shadow-blue-600/30"
-                        >
-                          <FiPlay className="text-lg" />
-                          <span>Hızlı Sınav Başlat</span>
-                        </motion.button>
-                      </div>
 
-                      {/* Kişiselleştirilmiş Sınav Kartı */}
-                      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group transform perspective-1000">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="bg-purple-500/20 p-3 rounded-lg shadow-lg shadow-purple-500/10 border border-purple-500/10">
-                            <FiUser className="text-white text-lg" />
+                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group transform perspective-1000">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="bg-indigo-500/20 p-3 rounded-lg shadow-lg shadow-indigo-500/10 border border-indigo-500/10">
+                              <FiUser className="text-white text-lg" />
+                            </div>
+                            <span className="text-xs text-sky-100/90 dark:text-sky-200/90 px-2.5 py-1 bg-white/10 rounded-full border border-white/10 shadow-sm">
+                              {isAuthenticated ? "Premium Özellik" : "Giriş Gerektirir"}
+                            </span>
                           </div>
-                          <span className="text-xs text-indigo-100/90 px-2.5 py-1 bg-white/10 rounded-full border border-white/10 shadow-sm">
-                            {isAuthenticated ? "Premium Özellik" : "Giriş Gerektirir"}
-                          </span>
+                          <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-sm">Kişiselleştirilmiş Sınav</h3>
+                          <p className="text-sky-100/90 dark:text-sky-200/90 mb-4 text-sm">
+                            Öğrenme geçmişiniz, performansınız ve hedeflerinize göre tamamen size özel 
+                            sınavlar oluşturun ve ilerlemenizi takip edin.
+                          </p>
+                          <motion.button
+                            onClick={handleStartPersonalizedQuiz}
+                            variants={buttonHover}
+                            initial="rest"
+                            whileHover="hover"
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300 shadow-lg shadow-indigo-600/30 dark:shadow-indigo-700/30"
+                          >
+                            <FiTarget className="text-lg" />
+                            <span>{isAuthenticated ? "Kişiselleştirilmiş Sınav Oluştur" : "Giriş Yap ve Başla"}</span>
+                          </motion.button>
                         </div>
-                        <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-sm">Kişiselleştirilmiş Sınav</h3>
-                        <p className="text-indigo-100/90 mb-4 text-sm">
-                          Öğrenme geçmişiniz, performansınız ve hedeflerinize göre tamamen size özel 
-                          sınavlar oluşturun ve ilerlemenizi takip edin.
-                        </p>
-                        <motion.button
-                          onClick={handleStartPersonalizedQuiz}
-                          variants={buttonHover}
-                          initial="rest"
-                          whileHover="hover"
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300 shadow-lg shadow-purple-600/30"
-                        >
-                          <FiTarget className="text-lg" />
-                          <span>{isAuthenticated ? "Kişiselleştirilmiş Sınav Oluştur" : "Giriş Yap ve Başla"}</span>
-                        </motion.button>
-                      </div>
-                    </motion.div>
+                      </motion.div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </>
-        )}
+              </motion.div>
+            </>
+          )}
+        </div>
       </div>
     </PageTransition>
   );

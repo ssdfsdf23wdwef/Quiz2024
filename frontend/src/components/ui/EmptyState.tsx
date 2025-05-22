@@ -1,13 +1,14 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { FiAlertTriangle } from "react-icons/fi"; // Default icon if none provided
 
 interface EmptyStateProps {
   title: string;
   description?: string;
   actionText?: string;
   actionLink?: string;
-  imageSrc?: string;
+  onActionClick?: () => void;
+  icon?: React.ReactNode;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
@@ -15,39 +16,42 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   actionText,
   actionLink,
-  imageSrc = "/images/empty-state.svg", // Varsayılan görsel
+  onActionClick,
+  icon = <FiAlertTriangle className="text-slate-500 text-5xl" />, // Default icon
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-6 min-h-[60vh] bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
-      <div className="w-full max-w-md text-center">
-        {imageSrc && (
-          <div className="mx-auto w-24 h-24 mb-6 relative opacity-80">
-            <Image
-              src={imageSrc}
-              alt="Boş durum görseli"
-              fill
-              className="object-contain"
-            />
-          </div>
-        )}
-
-        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
-          {title}
-        </h3>
-
-        {description && (
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{description}</p>
-        )}
-
-        {actionText && actionLink && (
+    <div className="text-center py-10 sm:py-16 px-6 flex flex-col items-center">
+      {icon && (
+        <div className="inline-flex items-center justify-center p-4 bg-gradient-to-tr from-sky-100 to-indigo-100 dark:from-sky-800/50 dark:to-indigo-800/50 rounded-full shadow-lg mb-6">
+          {icon}
+        </div>
+      )}
+      <h3 className="text-2xl font-semibold text-slate-800 dark:text-white mb-3">
+        {title}
+      </h3>
+      {description && (
+        <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto">
+          {description}
+        </p>
+      )}
+      {actionText && (actionLink || onActionClick) && (
+        actionLink ? (
           <Link
             href={actionLink}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
+            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-lg font-semibold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transform hover:scale-105"
           >
             {actionText}
           </Link>
-        )}
-      </div>
+        ) : (
+          <button
+            onClick={onActionClick}
+            type="button" // Explicitly set button type
+            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-lg font-semibold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transform hover:scale-105"
+          >
+            {actionText}
+          </button>
+        )
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiPlusSquare } from "react-icons/fi"; // Added FiPlusSquare
+import { FiArrowLeft, FiPlusSquare, FiBookOpen } from "react-icons/fi"; // Added FiBookOpen
 import Link from "next/link";
 import { motion } from "framer-motion";
 import courseService from "@/services/course.service"; // Import courseService
@@ -61,28 +61,33 @@ export default function CreateCoursePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-100 dark:from-slate-900 dark:to-sky-900 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-lg"
+        initial={{ opacity: 0, y: -30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-xl"
       >
         <div className="mb-8 text-center">
-          <FiPlusSquare className="mx-auto text-5xl text-indigo-600 mb-3" />
-          <h1 className="text-4xl font-bold text-gray-800">Yeni Ders Oluştur</h1>
-          <p className="text-gray-600 mt-2">
-            Yeni bir ders oluşturmak için lütfen ders adını girin.
+          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-tr from-sky-500 to-indigo-600 rounded-full shadow-lg mb-4">
+            <FiBookOpen className="text-white text-4xl" />
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-slate-800 dark:text-white">
+            Yeni Ders Oluştur
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-3 text-lg">
+            Oluşturacağınız dersin adını girerek başlayın.
           </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-2xl p-8">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 sm:p-8 md:p-10">
+          <div className="mb-8">
             <Link
               href="/courses"
-              className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center transition-colors duration-300"
+              className="inline-flex items-center text-sm text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300 transition-colors duration-300 group"
             >
-              <FiArrowLeft className="mr-2 h-5 w-5" /> Kurs Listesine Geri Dön
+              <FiArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform duration-300" />{" "}
+              Kurs Listesine Geri Dön
             </Link>
           </div>
 
@@ -90,40 +95,45 @@ export default function CreateCoursePage() {
             <div>
               <label
                 htmlFor="courseName"
-                className="block text-lg font-semibold text-gray-700 mb-2"
+                className="block text-lg font-semibold text-slate-700 dark:text-slate-200 mb-2.5"
               >
                 Ders Adı
               </label>
-              <input
-                type="text"
-                id="courseName"
-                className={`w-full px-5 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-300 shadow-sm hover:shadow-md ${
-                  errors.courseName
-                    ? "border-red-400 ring-red-300"
-                    : "border-gray-300"
-                }`}
-                placeholder="Örn: İleri Seviye Matematik"
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
-              />
+              <div className="relative">
+                <FiPlusSquare className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xl" />
+                <input
+                  type="text"
+                  id="courseName"
+                  className={`w-full pl-12 pr-5 py-3.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-sky-400 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-300 shadow-sm hover:shadow-md text-slate-700 dark:text-slate-100 bg-slate-50 dark:bg-slate-700/50 placeholder-slate-400 dark:placeholder-slate-500 ${
+                    errors.courseName
+                      ? "border-red-400 dark:border-red-500 ring-red-300 dark:ring-red-500/50"
+                      : "border-slate-300 dark:border-slate-600"
+                  }`}
+                  placeholder="Örn: İleri Seviye Matematik"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  aria-describedby={
+                    errors.courseName ? "courseName-error" : undefined
+                  }
+                />
+              </div>
               {errors.courseName && (
-                <p className="mt-2 text-sm text-red-600 font-medium">
+                <p
+                  id="courseName-error"
+                  className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium"
+                >
                   {errors.courseName}
                 </p>
               )}
             </div>
 
-            <div className="mt-10 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
-              <Link
-                href="/courses"
-                className="w-full sm:w-auto px-6 py-3 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors duration-300 text-center font-medium shadow-sm hover:shadow-md"
-              >
-                İptal
-              </Link>
+            <div className="mt-10 flex flex-col sm:flex-row-reverse justify-start gap-3 sm:gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
               <button
                 type="submit"
-                className={`w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium transition-all duration-300 ease-in-out shadow-md hover:shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                  isSubmitting ? "opacity-60 cursor-not-allowed" : ""
+                className={`w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-lg font-semibold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
+                  isSubmitting
+                    ? "opacity-70 cursor-not-allowed"
+                    : "transform hover:scale-105"
                 }`}
                 disabled={isSubmitting}
               >
@@ -155,12 +165,17 @@ export default function CreateCoursePage() {
                   "Dersi Oluştur"
                 )}
               </button>
+              <Link
+                href="/courses"
+                className="w-full sm:w-auto px-8 py-3 border border-slate-400 dark:border-slate-500 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-300 text-center font-semibold text-base shadow-sm hover:shadow-md transform hover:scale-105"
+              >
+                İptal
+              </Link>
             </div>
           </form>
         </div>
-        <p className="mt-8 text-center text-sm text-gray-500">
-          Bitirme Projesi - Course Management System &copy;{" "}
-          {new Date().getFullYear()}
+        <p className="mt-10 text-center text-sm text-slate-500 dark:text-slate-400">
+          qQuiz Platformu &copy; {new Date().getFullYear()}
         </p>
       </motion.div>
     </div>
