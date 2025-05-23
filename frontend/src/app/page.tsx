@@ -6,15 +6,20 @@ import { useRouter } from "next/navigation";
 import { QuizPreferences } from "@/types/quiz.type";
 import { Quiz } from "@/types";
 import {
-  FiPlay,
   FiTarget,
+  FiPlay,
+  FiAward,
+  FiArrowLeft,
+  FiArrowRight,
   FiUser,
-  FiClock
+  FiClock,
+  FiZap
 } from "react-icons/fi";
 import PageTransition from "@/components/transitions/PageTransition";
 import Spinner from "@/components/ui/Spinner";
 import { useAuth } from "@/context/AuthContext";
-import ExamCreationWizard from "@/components/home/ExamCreationWizard";
+import QuickQuizWizard from "@/components/home/ExamCreationWizard.quick-quiz";
+import PersonalizedQuizWizard from "@/components/home/ExamCreationWizard.personalized-quiz";
 
 const gradientVariants = {
   hidden: {
@@ -58,7 +63,7 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated, isInitializing: isAuthInitializing } = useAuth();
   const [showExamCreationWizard, setShowExamCreationWizard] = useState(false);
-  const [currentQuizType, setCurrentQuizType] = useState<"quick" | "personalized">("personalized");
+  const [currentQuizType, setCurrentQuizType] = useState<'quick' | 'personalized'>('quick');
 
   const handleStartQuickQuiz = () => {
     if (!isAuthenticated && !isAuthInitializing) {
@@ -66,8 +71,8 @@ export default function Home() {
       return;
     }
     if (isAuthenticated && !isAuthInitializing) {
+      setCurrentQuizType('quick');
       setShowExamCreationWizard(true);
-      setCurrentQuizType("quick");
     }
   };
 
@@ -156,10 +161,17 @@ export default function Home() {
                   </div>
                 }
               >
-                <ExamCreationWizard 
-                  quizType={currentQuizType} 
-                  onComplete={handleExamCreationComplete} 
-                />
+                {currentQuizType === 'quick' ? (
+                  <QuickQuizWizard 
+                    quizType={currentQuizType} 
+                    onComplete={handleExamCreationComplete} 
+                  />
+                ) : (
+                  <PersonalizedQuizWizard 
+                    quizType={currentQuizType} 
+                    onComplete={handleExamCreationComplete} 
+                  />
+                )}
               </Suspense>
             </motion.div>
           ) : (
@@ -284,16 +296,20 @@ export default function Home() {
                             Seçtiğiniz alanda temel bilgilerinizi ölçmek için ideal.
                           </p>
                           <motion.button
-                            onClick={handleStartQuickQuiz}
+                            onClick={() => {
+                              setCurrentQuizType('quick');
+                              setShowExamCreationWizard(true);
+                            }}
                             variants={buttonHover}
-                            initial="rest"
                             whileHover="hover"
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white font-medium rounded-xl px-5 py-3 text-base transition-all duration-300 shadow-lg shadow-sky-600/30 dark:shadow-sky-700/30"
+                            whileTap="rest"
+                            className="inline-flex items-center justify-center px-8 py-3 sm:px-10 sm:py-4 rounded-full bg-white/10 backdrop-blur-lg text-white font-medium text-lg sm:text-xl hover:bg-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/50 mb-4"
                           >
-                            <FiPlay className="text-lg" />
-                            <span>Hızlı Sınav Başlat</span>
+                            <FiZap className="w-6 h-6 mr-2" />
+                            Hızlı Sınav Oluştur
                           </motion.button>
+
+
                         </div>
 
                         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/10 hover:bg-white/15 transition-all group transform perspective-1000">

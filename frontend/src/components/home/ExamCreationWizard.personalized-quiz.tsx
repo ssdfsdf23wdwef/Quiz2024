@@ -27,11 +27,35 @@ import {
 } from "@/types";
 import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
-import { SubTopicItem } from "@/types/quiz.type"; // Reverted to SubTopicItem
+import { SubTopicItem as SubTopic } from "@/types/quiz.type"; // Updated import
 import { LearningTarget } from "@/types/learningTarget.type";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/services/error.service"; 
 import { Quiz } from "@/types";
+
+// Kişiselleştirilmiş sınav türü seçenekleri
+const PERSONALIZED_QUIZ_TYPE_OPTIONS = {
+  weakTopicFocused: {
+    label: "Zayıf Konular",
+    description: "Geçmiş performansınıza göre zayıf olduğunuz konulardan soru oluştur",
+    icon: "FiTarget",
+  },
+  learningObjectiveFocused: {
+    label: "Öğrenme Hedefi",
+    description: "Belirli öğrenme hedeflerinize odaklanarak soru oluştur",
+    icon: "FiAward",
+  },
+  newTopicFocused: {
+    label: "Yeni Konular",
+    description: "Daha önce çalışmadığınız yeni konulardan soru oluştur",
+    icon: "FiZap",
+  },
+  comprehensive: {
+    label: "Kapsamlı",
+    description: "Tüm konulardan dengeli bir şekilde soru oluştur",
+    icon: "FiTarget",
+  },
+} as const;
 
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü

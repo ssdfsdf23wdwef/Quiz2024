@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-22T20:50:54.998Z
-Trace ID: quiz-1747947042138-no3lz
-Yanıt Uzunluğu: 7722 karakter
+Tarih: 2025-05-23T04:47:39.534Z
+Trace ID: quiz-1747975641921-41zdv
+Yanıt Uzunluğu: 11574 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,173 +11,173 @@ Yanıt Uzunluğu: 7722 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Süperbilgisayarların kullanım alanları düşünüldüğünde, aşağıdakilerden hangisi bu sistemlerin yaygın olarak kullanıldığı bir alan değildir?",
+      "questionText": "Geleneksel sistem tasarımında, donanım ve yazılım geliştirme süreçleri genellikle nasıl ilerler?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Bilimsel araştırmalar",
-        "Yapay zeka",
-        "Finansal modelleme",
-        "Ev kullanımı"
+        "Donanım ve yazılım eş zamanlı olarak geliştirilir ve entegre edilir.",
+        "Önce yazılım geliştirilir, ardından donanım yazılıma uyumlu hale getirilir.",
+        "Donanım ve yazılım ayrı ayrı geliştirilir ve son aşamada entegre edilir.",
+        "Donanım ve yazılım geliştirme süreçleri arasında herhangi bir ilişki yoktur."
       ],
-      "correctAnswer": "Ev kullanımı",
-      "explanation": "Süperbilgisayarlar yüksek hesaplama gücü gerektiren bilimsel araştırmalar, yapay zeka ve finansal modelleme gibi alanlarda kullanılırken, ev kullanımı için uygun değildir. Metinde süperbilgisayarların bilimsel araştırmalardan yapay zekaya kadar pek çok alanda kullanıldığı belirtilmiştir.",
-      "subTopicName": "S Perbilgisayar S Ralama Listeleri",
-      "normalizedSubTopicName": "s_perbilgisayar_s_ralama_listeleri",
-      "difficulty": "easy"
+      "correctAnswer": "Donanım ve yazılım ayrı ayrı geliştirilir ve son aşamada entegre edilir.",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım ayrı ayrı geliştirilir ve entegrasyon süreci son aşamada gerçekleştirilir. Bu yaklaşım, her iki bileşenin bağımsız çalışmasını sağlar ancak iletişim optimizasyonu ve değişiklik yönetimi zorlukları yaratır.",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
+      "difficulty": "medium"
     },
     {
       "id": "q2",
-      "questionText": "Aşağıdakilerden hangisi süperbilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren temel listelerden biridir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "CPU-Z",
-        "TOP500",
-        "Geekbench",
-        "3DMark"
-      ],
-      "correctAnswer": "TOP500",
-      "explanation": "TOP500, HPCG ve Green500 süperbilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren temel listelerdir. Metinde bu üç listenin adı açıkça belirtilmiştir.",
-      "subTopicName": "S Perbilgisayar S Ralama Listeleri",
-      "normalizedSubTopicName": "s_perbilgisayar_s_ralama_listeleri",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q3",
-      "questionText": "TOP500 listesi hangi özelliği temel alarak dünyanın en hızlı 500 süperbilgisayarını sıralar?",
+      "questionText": "Aşağıdakilerden hangisi geleneksel sistem tasarımının temel dezavantajlarından biridir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Enerji verimliliği",
-        "Bellek kapasitesi",
-        "Hesaplama gücü",
-        "Veri depolama alanı"
+        "Donanım ve yazılım arasında yüksek uyumluluk sağlanması.",
+        "Yeni teknolojilere hızlı adaptasyon yeteneği.",
+        "Entegrasyon sürecinin kısa ve maliyetinin düşük olması.",
+        "Donanım ve yazılımın ayrı ayrı optimize edilmesi nedeniyle sistem genelinde verimlilik kaybı yaşanması."
       ],
-      "correctAnswer": "Hesaplama gücü",
-      "explanation": "TOP500 listesi, süperbilgisayarları hesaplama gücüne göre sıralar. Metinde TOP500'ün en hızlı süperbilgisayarları hesaplama gücüne göre sıraladığı belirtilmiştir.",
-      "subTopicName": "Top500 Tan M Ve Amac",
-      "normalizedSubTopicName": "top500_tan_m_ve_amac",
+      "correctAnswer": "Donanım ve yazılımın ayrı ayrı optimize edilmesi nedeniyle sistem genelinde verimlilik kaybı yaşanması.",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım ayrı ayrı geliştirildiği için, her bir bileşen kendi içinde optimize edilir. Ancak bu durum, sistem genelinde verimlilik kaybına neden olabilir çünkü donanım ve yazılım arasındaki etkileşim tam olarak optimize edilmez.",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q3",
+      "questionText": "Geleneksel sistem tasarımında, gereksinimler ve özellikler belirlenirken hangi yaklaşım izlenir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Donanım ve yazılım gereksinimleri birlikte ve eş zamanlı belirlenir.",
+        "Sadece donanım gereksinimleri belirlenir, yazılım gereksinimleri donanıma göre şekillenir.",
+        "Donanım ve yazılım gereksinimleri ayrı ayrı ve önceden belirlenir.",
+        "Gereksinimler ve özellikler, entegrasyon aşamasında ortaya çıkan sorunlara göre belirlenir."
+      ],
+      "correctAnswer": "Donanım ve yazılım gereksinimleri ayrı ayrı ve önceden belirlenir.",
+      "explanation": "Geleneksel sistem tasarımında, donanım ve yazılım gereksinimleri birbirinden bağımsız olarak ve tasarım sürecinin başında belirlenir. Bu yaklaşım, her iki bileşenin ayrı ayrı geliştirilmesini ve sonradan entegre edilmesini öngörür.",
+      "subTopicName": "Gereksinimler Ve Zelliklerin Belirlenmesi",
+      "normalizedSubTopicName": "gereksinimler_ve_zelliklerin_belirlenmesi",
       "difficulty": "easy"
     },
     {
       "id": "q4",
-      "questionText": "TOP500 listesi ilk olarak ne zaman yayınlanmıştır ve hangi aralıklarla güncellenmektedir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "1990'dan beri yılda bir kez",
-        "1993'ten beri yılda iki kez",
-        "2000'den beri her çeyrekte",
-        "2005'ten beri yılda bir kez"
-      ],
-      "correctAnswer": "1993'ten beri yılda iki kez",
-      "explanation": "TOP500 listesi 1993'ten beri yılda iki kez (Haziran ve Kasım aylarında) yayımlanmaktadır. Metinde bu bilgi açıkça belirtilmiştir.",
-      "subTopicName": "Top500 Tan M Ve Amac",
-      "normalizedSubTopicName": "top500_tan_m_ve_amac",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q5",
-      "questionText": "HPCG'nin (High Performance Conjugate Gradient) temel amacı nedir?",
+      "questionText": "Geleneksel sistem tasarım sürecinde, gereksinimlerin belirlenmesi aşamasının temel amacı nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Enerji tüketimini en aza indirmek",
-        "Bellek, iletişim ve veri akış performansını test etmek",
-        "Sadece işlemci hızını ölçmek",
-        "Grafik işleme yeteneklerini değerlendirmek"
+        "Donanım ve yazılım ekiplerinin birlikte çalışmasını sağlamak.",
+        "Sistemin donanım ve yazılım bileşenlerinin ihtiyaçlarını ayrı ayrı tanımlamak ve önceliklendirmek.",
+        "Entegrasyon sürecini mümkün olduğunca kısaltmak.",
+        "Sistem maliyetini en aza indirmek."
       ],
-      "correctAnswer": "Bellek, iletişim ve veri akış performansını test etmek",
-      "explanation": "HPCG, bellek, iletişim ve veri akış performansını test etmeyi amaçlar. Metinde HPCG'nin bellek, iletişim ve veri akış performansını test ettiği belirtilmiştir.",
-      "subTopicName": "Hpcğitan M Ve Amac",
-      "normalizedSubTopicName": "hpcğitan_m_ve_amac",
+      "correctAnswer": "Sistemin donanım ve yazılım bileşenlerinin ihtiyaçlarını ayrı ayrı tanımlamak ve önceliklendirmek.",
+      "explanation": "Geleneksel tasarımda gereksinim belirleme aşamasının amacı, donanım ve yazılım için ayrı ayrı ihtiyaçları net bir şekilde tanımlamaktır. Bu, her iki tarafın bağımsız olarak çalışmasını ve kendi alanlarında en iyi çözümleri geliştirmesini hedefler.",
+      "subTopicName": "Gereksinimler Ve Zelliklerin Belirlenmesi",
+      "normalizedSubTopicName": "gereksinimler_ve_zelliklerin_belirlenmesi",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q5",
+      "questionText": "Geleneksel sistem tasarımında donanım ve yazılım tasarım aşamalarının temel hedefleri nelerdir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Donanım ve yazılımın birbiriyle uyumlu çalışmasını sağlamak ve sistem performansını en üst düzeye çıkarmak.",
+        "Donanımın maliyetini düşürmek ve yazılımın geliştirme süresini kısaltmak.",
+        "Donanım ve yazılımı ayrı ayrı optimize ederek, her birinin kendi içinde en iyi performansı göstermesini sağlamak.",
+        "Entegrasyon sürecini kolaylaştırmak ve olası uyumsuzlukları en aza indirmek."
+      ],
+      "correctAnswer": "Donanım ve yazılımı ayrı ayrı optimize ederek, her birinin kendi içinde en iyi performansı göstermesini sağlamak.",
+      "explanation": "Geleneksel tasarımda, donanım ve yazılım ekipleri bağımsız olarak çalışır ve kendi bileşenlerini optimize etmeye odaklanır. Bu yaklaşım, her bir bileşenin en iyi performansı göstermesini hedefler ancak sistem genelinde uyumsuzluklara yol açabilir.",
+      "subTopicName": "Donan M Ve Yaz L M Tasar M A Amalar",
+      "normalizedSubTopicName": "donan_m_ve_yaz_l_m_tasar_m_a_amalar",
       "difficulty": "medium"
     },
     {
       "id": "q6",
-      "questionText": "HPCG, TOP500 listesinin hangi eksikliğini gidermek için geliştirilmiştir?",
+      "questionText": "Geleneksel sistem tasarımında, donanım ve yazılım tasarım hedeflerine ulaşmak için hangi adımlar izlenir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Enerji verimliliği ölçümü",
-        "Gerçek dünya uygulamalarına odaklanmama",
-        "Daha fazla süperbilgisayarı sıralayamama",
-        "Donanım maliyetini dikkate almama"
+        "Donanım ve yazılım ekipleri sürekli iletişim halinde kalarak, tasarım kararlarını birlikte verirler.",
+        "Donanım ve yazılım tasarım süreçleri paralel yürütülür ve düzenli olarak senkronize edilir.",
+        "Önce donanım tasarımı tamamlanır, ardından yazılım donanıma uygun olarak tasarlanır.",
+        "Donanım ve yazılım tasarım süreçleri tamamen bağımsız olarak yürütülür ve entegrasyon aşamasında bir araya getirilir."
       ],
-      "correctAnswer": "Gerçek dünya uygulamalarına odaklanmama",
-      "explanation": "HPCG, TOP500’ün eksik kaldığı noktaları tamamlamak için alternatif olarak geliştirilmiştir ve gerçek dünya uygulamalarına daha yakındır. Metinde bu durum açıkça ifade edilmiştir.",
-      "subTopicName": "Hpcğitan M Ve Amac",
-      "normalizedSubTopicName": "hpcğitan_m_ve_amac",
+      "correctAnswer": "Donanım ve yazılım tasarım süreçleri tamamen bağımsız olarak yürütülür ve entegrasyon aşamasında bir araya getirilir.",
+      "explanation": "Geleneksel tasarımda, donanım ve yazılım ekipleri genellikle bağımsız olarak çalışır ve tasarım süreçlerini ayrı ayrı yürütürler. Bu yaklaşım, entegrasyon aşamasında uyumsuzluk sorunlarına yol açabilir.",
+      "subTopicName": "Donan M Ve Yaz L M Tasar M A Amalar",
+      "normalizedSubTopicName": "donan_m_ve_yaz_l_m_tasar_m_a_amalar",
       "difficulty": "medium"
     },
     {
       "id": "q7",
-      "questionText": "Green500 listesi süperbilgisayarları hangi kritere göre sıralar?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "İşlemci çekirdek sayısı",
-        "Enerji verimliliği",
-        "Bellek miktarı",
-        "Depolama kapasitesi"
-      ],
-      "correctAnswer": "Enerji verimliliği",
-      "explanation": "Green500, enerji verimliliğini temel alarak süperbilgisayarları sıralar. Metinde Green500'ün enerji verimliliğine odaklandığı belirtilmiştir.",
-      "subTopicName": "Green500 Tan M Ve Amac",
-      "normalizedSubTopicName": "green500_tan_m_ve_amac",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q8",
-      "questionText": "Green500 listesinde sıralama ölçütü olarak kullanılan metrik nedir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "FLOPS",
-        "Watt başına düşen işlem sayısı (FLOPS/Watt)",
-        "CPU kullanım oranı",
-        "Bellek bant genişliği"
-      ],
-      "correctAnswer": "Watt başına düşen işlem sayısı (FLOPS/Watt)",
-      "explanation": "Green500 listesinde sıralama ölçütü olarak FLOPS/Watt oranına bakılır. Yani, 1 watt enerji başına ne kadar işlem yapıldığı değerlendirilir. Metinde bu bilgi açıkça belirtilmiştir.",
-      "subTopicName": "Green500 Tan M Ve Amac",
-      "normalizedSubTopicName": "green500_tan_m_ve_amac",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q9",
-      "questionText": "LINPACK testi, süperbilgisayarların hangi performansını ölçmek için kullanılır?",
+      "questionText": "Geleneksel sistem tasarımında entegrasyon sürecinde karşılaşılan temel zorluklar nelerdir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Enerji tüketimi",
-        "Bellek erişim hızı",
-        "Floating-point işlemleri (FLOPS)",
-        "Veri depolama kapasitesi"
+        "Donanım ve yazılımın eş zamanlı olarak geliştirilmesi nedeniyle kaynakların yetersiz kalması.",
+        "Donanım ve yazılım arasındaki iletişim protokollerinin standart olmaması ve uyumsuzlukların ortaya çıkması.",
+        "Yazılımın donanım üzerinde test edilmesinin mümkün olmaması.",
+        "Donanım ve yazılım ekiplerinin aynı hedeflere sahip olmaması."
       ],
-      "correctAnswer": "Floating-point işlemleri (FLOPS)",
-      "explanation": "LINPACK testi, süperbilgisayarın ne kadar hızlı işlem yapabildiğini, yani sistemin floating-point işlemleri (FLOPS) performansını ölçer. Metinde bu bilgi açıkça belirtilmiştir.",
-      "subTopicName": "Linpack Testi Ve Flops",
-      "normalizedSubTopicName": "linpack_testi_ve_flops",
+      "correctAnswer": "Donanım ve yazılım arasındaki iletişim protokollerinin standart olmaması ve uyumsuzlukların ortaya çıkması.",
+      "explanation": "Geleneksel tasarımda, donanım ve yazılım ayrı ayrı geliştirildiği için, entegrasyon aşamasında iletişim protokollerindeki uyumsuzluklar önemli sorunlara yol açabilir. Bu durum, ek çaba ve maliyet gerektirebilir.",
+      "subTopicName": "Entegrasyon S Reci Zorluklar",
+      "normalizedSubTopicName": "entegrasyon_s_reci_zorluklar",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q8",
+      "questionText": "Geleneksel sistem tasarımında entegrasyon sürecini iyileştirmek için hangi yaklaşımlar benimsenebilir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Donanım ve yazılım ekiplerinin entegrasyon aşamasında daha sık bir araya gelmesi ve iletişim kanallarını açık tutması.",
+        "Donanım ve yazılım tasarım süreçlerinin başlangıcından itibaren standart iletişim protokollerinin belirlenmesi ve kullanılması.",
+        "Entegrasyon sürecinin tamamen otomatikleştirilmesi.",
+        "Donanım ve yazılım ekiplerinin farklı projelerde çalıştırılması."
+      ],
+      "correctAnswer": "Donanım ve yazılım tasarım süreçlerinin başlangıcından itibaren standart iletişim protokollerinin belirlenmesi ve kullanılması.",
+      "explanation": "Entegrasyon sürecini iyileştirmek için, tasarımın başından itibaren standart iletişim protokolleri belirlenmeli ve kullanılmalıdır. Bu, uyumsuzluk riskini azaltır ve entegrasyon sürecini daha verimli hale getirir.",
+      "subTopicName": "Entegrasyon S Reci Zorluklar",
+      "normalizedSubTopicName": "entegrasyon_s_reci_zorluklar",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q9",
+      "questionText": "Ortak tasarım (Co-Design) yaklaşımında, gereksinimler nasıl belirlenir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Donanım gereksinimleri öncelikli olarak belirlenir, yazılım gereksinimleri donanıma göre ayarlanır.",
+        "Yazılım gereksinimleri öncelikli olarak belirlenir, donanım gereksinimleri yazılıma göre ayarlanır.",
+        "Donanım ve yazılım gereksinimleri ayrı ayrı ve bağımsız olarak belirlenir.",
+        "Donanım ve yazılım gereksinimleri birlikte ve eş zamanlı olarak belirlenir."
+      ],
+      "correctAnswer": "Donanım ve yazılım gereksinimleri birlikte ve eş zamanlı olarak belirlenir.",
+      "explanation": "Co-Design yaklaşımında, donanım ve yazılım gereksinimleri eş zamanlı olarak belirlenir. Bu, her iki bileşenin ihtiyaçlarının başından itibaren senkronize edilmesini sağlar ve daha uyumlu bir sistem tasarımına olanak tanır.",
+      "subTopicName": "E Zamanl Gereksinim Belirleme",
+      "normalizedSubTopicName": "e_zamanl_gereksinim_belirleme",
       "difficulty": "medium"
     },
     {
       "id": "q10",
-      "questionText": "LINPACK testinin temelinde hangi matematiksel işlem yatar?",
+      "questionText": "Ortak tasarım (Co-Design) yaklaşımının temel avantajı nedir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "İstatistiksel analiz",
-        "Matris çözümleme",
-        "Veri sıkıştırma",
-        "Kriptografik şifreleme"
+        "Donanım ve yazılım geliştirme süreçlerinin tamamen ayrılması.",
+        "Entegrasyon sürecinin ortadan kalkması.",
+        "Donanım ve yazılım uyumsuzluğunun en aza indirilmesi ve sistem genelinde verimliliğin artırılması.",
+        "Sadece donanım maliyetlerinin düşürülmesi."
       ],
-      "correctAnswer": "Matris çözümleme",
-      "explanation": "LINPACK testi matris çözümlemeye dayalıdır. Metinde bu bilgi açıkça belirtilmiştir.",
-      "subTopicName": "Linpack Testi Ve Flops",
-      "normalizedSubTopicName": "linpack_testi_ve_flops",
-      "difficulty": "easy"
+      "correctAnswer": "Donanım ve yazılım uyumsuzluğunun en aza indirilmesi ve sistem genelinde verimliliğin artırılması.",
+      "explanation": "Co-Design yaklaşımının temel avantajı, donanım ve yazılım uyumsuzluğunu en aza indirerek sistem genelinde verimliliği artırmasıdır. Bu yaklaşım, her iki bileşenin eş zamanlı olarak tasarlanmasını ve optimize edilmesini sağlar.",
+      "subTopicName": "E Zamanl Gereksinim Belirleme",
+      "normalizedSubTopicName": "e_zamanl_gereksinim_belirleme",
+      "difficulty": "medium"
     }
   ]
 }
