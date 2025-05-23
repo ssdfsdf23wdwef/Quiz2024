@@ -100,8 +100,7 @@ export default function ExamCreationWizard({
 
   // Adım yönetimi
   const [currentStep, setCurrentStep] = useState(1);
-  // Kişiselleştirilmiş sınav için 5 adım, hızlı sınav için 3 adım
-  const totalSteps = quizType === "personalized" ? 5 : 3;
+  const totalSteps = 3; // Sınav türü seçimi kaldırıldığı için 4'ten 3'e düşürüldü
 
   // Dosya yükleme durumu
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -150,9 +149,6 @@ export default function ExamCreationWizard({
 
   // Kurslar ve konu/alt konu state'leri
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
-  const [newCourseName, setNewCourseName] = useState<string>(""); // Yeni ders adı için state
-  const [creatingCourse, setCreatingCourse] = useState<boolean>(false); // Ders oluşturma durumu için state
-  const [showNewCourseForm, setShowNewCourseForm] = useState<boolean>(false); // Yeni ders formu gösterme state'i
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseTopics, setCourseTopics] = useState<DetectedSubTopic[]>([]);
   const [topicSubTopics, setTopicSubTopics] = useState<DetectedSubTopic[]>([]);
@@ -160,96 +156,6 @@ export default function ExamCreationWizard({
   // Tespit edilen konular
   const [detectedTopics, setDetectedTopics] = useState<DetectedSubTopic[]>([]);
 
-  // Not: prevStep, nextStep ve handlePersonalizedQuizTypeSelect fonksiyonları dosyanın başka kısımlarında zaten tanımlı
-
-  // Ders seçim işleyici fonksiyonu
-  const handleCourseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const courseId = e.target.value;
-    setSelectedCourseId(courseId);
-    
-    // Seçilen derse bağlı konuları yükle
-    if (courseId) {
-      // Örnek veri - backend entegrasyonu daha sonra yapılacak
-      // Şu anda örnek konular oluşturuyoruz
-      const mockTopics: DetectedSubTopic[] = [
-        {
-          id: `topic-${Date.now()}-1`,
-          subTopicName: "Temel Kavramlar",
-          normalizedSubTopicName: "temel-kavramlar",
-          status: "medium",
-          isSelected: false
-        },
-        {
-          id: `topic-${Date.now()}-2`,
-          subTopicName: "Uygulama Geliştirme",
-          normalizedSubTopicName: "uygulama-gelistirme",
-          status: "pending",
-          isSelected: false
-        },
-        {
-          id: `topic-${Date.now()}-3`,
-          subTopicName: "Veri Yapıları",
-          normalizedSubTopicName: "veri-yapilari",
-          status: "mastered",
-          isSelected: false
-        }
-      ];
-      
-      setCourseTopics(mockTopics);
-      console.log('[ECW handleCourseChange] Ders konuları yüklendi (örnek veri):', mockTopics.length);
-    } else {
-      setCourseTopics([]);
-      setTopicSubTopics([]);
-    }
-  };
-
-  // Yeni ders oluşturma işleyici fonksiyonu
-  const handleCreateCourse = async () => {
-    if (!newCourseName.trim()) {
-      ErrorService.showToast("Lütfen geçerli bir ders adı girin", "error");
-      return;
-    }
-    
-    // Buton durumunu yükleniyor olarak ayarla
-    setCreatingCourse(true);
-    
-    try {
-      // courseService'in createCourse metodunu kullanarak backend'e gerçek bir istek gönder
-      // Backend API'si 'description' alanını kabul etmiyor, bu yüzden sadece name alanını gönderiyoruz
-      const courseData = { name: newCourseName };
-      console.log(`📚 Yeni ders oluşturuluyor: ${newCourseName}`);
-      
-      // Backend API'sine ders oluşturma isteği gönder
-      const createdCourse = await courseService.createCourse(courseData);
-      
-      console.log(`✅ Ders başarıyla oluşturuldu! ID: ${createdCourse.id}`);
-      
-      // Yeni oluşturulan dersi kurslar listesine ekle
-      setCourses(prevCourses => [...prevCourses, createdCourse]);
-      
-      // Yeni oluşturulan dersi seç ve adı sıfırla
-      setSelectedCourseId(createdCourse.id);
-      setNewCourseName("");
-      
-      // Yeni ders oluşturma formunu gizle
-      setShowNewCourseForm(false);
-      
-      // Başarı mesajı göster
-      toast.success("Yeni ders başarıyla oluşturuldu!");
-    } catch (error) {
-      // Hata durumunda kullanıcıya bilgi ver
-      console.error("Ders oluşturma hatası:", error);
-      const errorMessage = error instanceof Error && error.message
-        ? error.message
-        : "Lütfen tekrar deneyin.";
-      
-      ErrorService.showToast(`Ders oluşturulamadı: ${errorMessage}`, "error");
-    } finally {
-      // İşlem tamamlandığında buton durumunu normale çevir
-      setCreatingCourse(false);
-    }
-  };
-  
   // URL'den belge ID ve konular alındıysa otomatik olarak işle
   useEffect(() => {
     if (initialDocumentId && initialDocumentId.trim() !== "" && currentStep === 1) {
@@ -410,14 +316,6 @@ export default function ExamCreationWizard({
     // Document ID'yi sıfırla
     setUploadedDocumentId("");
     console.log(`📂 Dosya yükleme başarılı: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
-    
-    // Kişiselleştirilmiş sınav için, dosya yüklendikten sonra hemen konuları tespit et
-    if (quizType === "personalized") {
-      console.log(`🔎 Kişiselleştirilmiş sınav için konu tespiti başlatılıyor...`);
-      setTopicDetectionStatus("loading");
-      // Konu tespiti için dosyayı gönder
-      detectTopicsFromUploadedFile(file);
-    }
   };
 
   // Dosya yükleme hatası
@@ -670,26 +568,8 @@ export default function ExamCreationWizard({
   const nextStep = () => {
     console.log(`📋 SINAV OLUŞTURMA AŞAMASI: ${currentStep}/${totalSteps} adımdan bir sonrakine geçiliyor...`);
     
-    // Adım 1 Doğrulama: Quizz Type'a göre farklı doğrulama
-    if (currentStep === 1) {
-      // Kişiselleştirilmiş sınav için Adım 1: Ders Seçimi kontrolü
-      if (quizType === "personalized") {
-        if (!selectedCourseId) {
-          console.error(`❌ HATA: Ders seçimi yapılmadı.`);
-          ErrorService.showToast("Lütfen bir ders seçin veya oluşturun.", "error");
-          return;
-        }
-      } 
-      // Hızlı sınav için Adım 1: Dosya Yükleme kontrolü
-      else if (quizType === "quick" && (!selectedFile || uploadStatus !== "success")) {
-        console.error(`❌ HATA: Dosya yükleme başarısız. Durum: ${uploadStatus}`);
-        ErrorService.showToast("Lütfen geçerli bir dosya yükleyin.", "error");
-        return;
-      }
-    }
-    
-    // Adım 3 Doğrulama: Kişiselleştirilmiş Sınav için Dosya Yükleme
-    if (currentStep === 3 && quizType === "personalized" && (!selectedFile || uploadStatus !== "success")) {
+    // Adım 1 Doğrulama: Dosya Yükleme
+    if (currentStep === 1 && (!selectedFile || uploadStatus !== "success")) {
       console.error(`❌ HATA: Dosya yükleme başarısız. Durum: ${uploadStatus}`);
       ErrorService.showToast("Lütfen geçerli bir dosya yükleyin.", "error");
       return;
@@ -712,22 +592,15 @@ export default function ExamCreationWizard({
       return;
     }
 
-    // Adım 2 Doğrulama: Kişiselleştirilmiş sınav türünün seçilip seçilmediğini kontrol et
-    if (currentStep === 2 && quizType === "personalized" && !personalizedQuizType) {
-      console.error(`❌ HATA: Kişiselleştirilmiş sınav türü seçilmedi.`);
-      ErrorService.showToast("Lütfen bir sınav türü seçin.", "error");
-      return;
-    }
-    
-    // Adım 4 Doğrulama: Konu Seçimi (Alt konuların seçildiği adım)
+    // Adım 2 Doğrulama: Konu Seçimi (Personalized ve weakTopicFocused Dışında)
     if (
-      currentStep === 4 &&
+      currentStep === 2 &&
       quizType === "personalized" &&
       personalizedQuizType !== "weakTopicFocused" &&
       selectedTopicIds.length === 0
     ) {
-      console.error(`❌ HATA: Alt konu seçimi yapılmadı. Seçilen konular: ${selectedTopicIds.length}`);
-      ErrorService.showToast("Lütfen en az bir alt konu seçin.", "error");
+      console.error(`❌ HATA: Konu seçimi yapılmadı. Seçilen konular: ${selectedTopicIds.length}`);
+      ErrorService.showToast("Lütfen en az bir konu seçin.", "error");
       return;
     }
 
@@ -869,8 +742,6 @@ export default function ExamCreationWizard({
       ];
     }
   };
-
-  // Bu bölümdeki tekrarlı tanımlar kaldırıldı
 
   // Yüklenen dosyadan konuları tespit eden fonksiyon
   const detectTopicsFromUploadedFile = async (file: File) => {
@@ -1053,18 +924,6 @@ export default function ExamCreationWizard({
               subTopicIds: allTopicIds 
             }));
             console.log(`[ECW detectTopicsFromUploadedFile] Tüm konular (${allTopicIds.length}) otomatik seçildi.`);
-            
-            // Kişiselleştirilmiş sınav için adım 4'e (alt konu seçimi) geç
-            if (quizType === "personalized") {
-              console.log(`[ECW detectTopicsFromUploadedFile] ✅ Kişiselleştirilmiş sınav için adım 4'e (alt konu seçimi) geçiliyor.`);
-              setCurrentStep(4);
-              // Başarı mesajı göster
-              ErrorService.showToast(`${processedTopics.length} alt konu tespit edildi. Şimdi istediğiniz alt konuları seçebilirsiniz.`, "success");
-            } else {
-              // Hızlı sınav için adım 2'ye geç
-              setCurrentStep(2);
-              ErrorService.showToast(`${processedTopics.length} konu tespit edildi.`, "success");
-            }
           } else { 
             console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ UYARI: Tespit edilen konu yok!`);
             ErrorService.showToast("Belgede konu tespit edilemedi. Varsayılan konular kullanılacak.", "info");
@@ -1133,140 +992,13 @@ export default function ExamCreationWizard({
                 "error"
               );
           
-          // Hata durumunda bile gerçek konu verilerini almaya çalış
-          if (quizType === "quick" || quizType === "personalized") {
-            console.log("🔍 Konu tespiti başarısız oldu. Seçili kurstan veya API'den gerçek konu verilerini almayı deniyoruz");
-            
-            try {
-              // Seçili ders varsa, bu dersten konuları al
-              if (selectedCourseId) {
-                console.log(`📚 Seçili dersten (${selectedCourseId}) konuları almaya çalışıyoruz`);
-                
-                // Örnek kurs konularını getir (backend entegrasyonu hazır olana kadar)
-                const getCourseTopics = async (courseId: string): Promise<{id: string, subTopicName: string, normalizedSubTopicName: string}[]> => {
-                  // Gerçek API entegrasyonu hazır olduğunda aşağıdaki kod kullanılabilir:
-                  // return await apiService.get<{id: string, subTopicName: string, normalizedSubTopicName: string}[]>(`/courses/${courseId}/topics`);
-                  
-                  // Örnek veri döndür
-                  console.log(`🔍 Kurs için örnek konular oluşturuluyor (kurs ID: ${courseId})`);
-                  return [
-                    { id: `${courseId}-topic1`, subTopicName: 'Temel Kavramlar', normalizedSubTopicName: 'temel-kavramlar' },
-                    { id: `${courseId}-topic2`, subTopicName: 'İleri Konular', normalizedSubTopicName: 'ileri-konular' },
-                    { id: `${courseId}-topic3`, subTopicName: 'Özel Konular', normalizedSubTopicName: 'ozel-konular' },
-                    { id: `${courseId}-topic4`, subTopicName: 'Pratik Uygulamalar', normalizedSubTopicName: 'pratik-uygulamalar' },
-                  ];
-                };
-                
-                // Konuları al
-                const courseTopics = await getCourseTopics(selectedCourseId);
-                
-                if (courseTopics && courseTopics.length > 0) {
-                  // Kurs konularını uygun formata dönüştür
-                  const mappedTopics: DetectedSubTopic[] = courseTopics.map((topic: {id: string, subTopicName: string, normalizedSubTopicName: string}) => ({
-                    id: topic.id || topic.normalizedSubTopicName || `topic-${Math.random().toString(36).substring(2, 9)}`,
-                    subTopicName: topic.subTopicName || 'Konu',
-                    normalizedSubTopicName: topic.normalizedSubTopicName || topic.id || `topic-${Math.random().toString(36).substring(2, 9)}`,
-                    isSelected: true,
-                    status: undefined,
-                    isNew: false,
-                    parentTopic: undefined
-                  }));
-                  
-                  console.log(`✅ Dersten ${mappedTopics.length} konu başarıyla alındı`);
-                  setDetectedTopics(mappedTopics);
-                  setTopicDetectionStatus("success");
-                  
-                  // Tüm konuları otomatik olarak seç
-                  const allTopicIds = mappedTopics.map(topic => topic.id);
-                  setSelectedTopicIds(allTopicIds);
-                  setSelectedSubTopicIds(allTopicIds);
-                  setPreferences(prev => ({
-                    ...prev,
-                    topicIds: allTopicIds,
-                    subTopicIds: allTopicIds
-                  }));
-                  
-                  setCurrentStep(2);
-                  return;
-                } else {
-                  console.warn('⚠️ Seçili derste konu bulunamadı');
-                }
-              }
-              
-              // Son çare olarak, belge adından bir konu oluştur ama gerçek API entegrasyonu kullan
-              console.log('🔍 Belge adından bir konu oluşturuluyor, ancak API ile');
-              
-              // Belge için varsayılan konu oluştur
-              const defaultTopicId = `doc-${documentId || uploadedDocumentId || Date.now().toString()}`;
-              const defaultTopicName = file.name.replace(/\.[^/.]+$/, "") || 'Belge İçeriği';
-              
-              // Belge adı bilgisiyle API'ye istek at
-              try {
-                const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/learning-targets/suggest-topics`;
-                const response = await axios.post(apiUrl, {
-                  documentName: file.name,
-                  documentId: documentId || uploadedDocumentId,
-                  courseId: selectedCourseId
-                });
-                
-                if (response.data && Array.isArray(response.data)) {
-                  const suggestedTopics: DetectedSubTopic[] = response.data.map((topic: any, index: number) => ({
-                    id: topic.id || `suggested-${index}`,
-                    subTopicName: topic.name || topic.subTopicName || `Önerilen Konu ${index+1}`,
-                    normalizedSubTopicName: topic.normalizedName || topic.normalizedSubTopicName || `onerilen-konu-${index+1}`,
-                    isSelected: true,
-                    status: undefined,
-                    isNew: true
-                  }));
-                  
-                  console.log(`✅ API'den ${suggestedTopics.length} önerilen konu alındı`);
-                  setDetectedTopics(suggestedTopics);
-                  
-                  // Tüm konuları otomatik olarak seç
-                  const allTopicIds = suggestedTopics.map(topic => topic.id);
-                  setSelectedTopicIds(allTopicIds);
-                  setSelectedSubTopicIds(allTopicIds);
-                  setPreferences(prev => ({
-                    ...prev,
-                    topicIds: allTopicIds,
-                    subTopicIds: allTopicIds
-                  }));
-                  
-                  setTopicDetectionStatus("success");
-                  setCurrentStep(2);
-                  return;
-                }
-              } catch (apiError) {
-                console.error('❌ Önerilen konular alınırken hata:', apiError);
-              }
-              
-              // Son çare: Tek bir varsayılan konu ile devam et
-              const singleTopic: DetectedSubTopic = {
-                id: defaultTopicId,
-                subTopicName: defaultTopicName,
-                normalizedSubTopicName: defaultTopicName.toLowerCase().replace(/\s+/g, '-'),
-                isSelected: true,
-                status: undefined,
-                isNew: true
-              };
-              
-              console.log('✅ Tek varsayılan konu oluşturuldu:', singleTopic);
-              setDetectedTopics([singleTopic]);
-              setSelectedTopicIds([defaultTopicId]);
-              setSelectedSubTopicIds([defaultTopicId]);
-              setPreferences(prev => ({
-                ...prev,
-                topicIds: [defaultTopicId],
-                subTopicIds: [defaultTopicId]
-              }));
-              
-              setTopicDetectionStatus("success");
-              setCurrentStep(2);
-            } catch (fallbackError) {
-              console.error('❌ Tüm konu alma yöntemleri başarısız oldu:', fallbackError);
-              ErrorService.showToast('Konular alınamadı. Lütfen tekrar deneyin.', 'error');
-              setTopicDetectionStatus("error");
-            }
+          // Hızlı sınav için hatasız devam et (PRD'ye göre hata toleransı yüksek olmalı)
+          if (quizType === "quick") {
+            console.log("🚀 Hızlı sınav için boş konu listesiyle devam ediliyor");
+            const defaultTopics = generateDefaultTopicsFromFileName(file.name);
+            setDetectedTopics(defaultTopics);
+            setTopicDetectionStatus("success");
+            setCurrentStep(2);
           }
         }
       } else {
@@ -1396,9 +1128,8 @@ export default function ExamCreationWizard({
         
         if (uploadedDocumentId || selectedFile) {
           console.log("[ECW handleFinalSubmit] Belge var, varsayılan bir konu ekleniyor");
-          const docFileName = selectedFile?.name || 'belge';
           mappedSubTopics.push({
-            subTopic: `${docFileName.replace(/\.[^/.]+$/, "")} İçeriği`,
+            subTopic: `${fileName.replace(/\.[^/.]+$/, "")} İçeriği`,
             normalizedSubTopic: `belge-${uploadedDocumentId || Date.now()}`
           });
           console.log("[ECW handleFinalSubmit] Varsayılan konu eklendi:", mappedSubTopics);
@@ -1425,11 +1156,11 @@ export default function ExamCreationWizard({
       
     // Sınav oluşturma seçenekleri
       const quizOptions: QuizGenerationOptions = {
-        quizType: quizType === "quick" ? "general" : quizType,
-        courseId: selectedCourseId || undefined,
-        personalizedQuizType:
-          quizType === "personalized" ? personalizedQuizType : undefined,
-        // Doğru format için sadece bir tanım kullanıyoruz
+      quizType: quizType === "quick" ? "general" : quizType,
+      courseId: selectedCourseId || undefined,
+      personalizedQuizType:
+        quizType === "personalized" ? personalizedQuizType : undefined,
+        selectedSubTopics: mappedSubTopics, // Reverted, will fix based on type definition
         selectedSubTopics: mappedSubTopics.map(topic => topic.normalizedSubTopic),
       documentId: uploadedDocumentId || undefined,
       preferences: {
@@ -1782,189 +1513,8 @@ export default function ExamCreationWizard({
         />
 
         <AnimatePresence mode="wait">
-          {/* Adım 1: Ders Seçimi (Kişiselleştirilmiş sınav için) */}
-          {currentStep === 1 && quizType === "personalized" && (
-            <motion.div
-              key="step1-course"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="w-full"
-            >
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                1. Ders Seçimi veya Oluşturma
-              </h3>
-              
-              <div className="mb-6">
-                {!showNewCourseForm ? (
-                  <>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Çalışmak istediğiniz dersi seçin
-                    </label>
-                    <div className="flex flex-col space-y-4">
-                      <select
-                        value={selectedCourseId}
-                        onChange={handleCourseChange}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value="">Ders seçin</option>
-                        {courses.map((course) => (
-                          <option key={course.id} value={course.id}>
-                            {course.name}
-                          </option>
-                        ))}
-                      </select>
-                      
-                      <button 
-                        type="button"
-                        className="w-full py-2 px-4 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-indigo-600 dark:text-indigo-400 font-medium hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        onClick={() => setShowNewCourseForm(true)}
-                      >
-                        <span className="flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                          </svg>
-                          Yeni Ders Oluştur
-                        </span>
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="p-4 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="text-md font-medium text-gray-700 dark:text-gray-300">
-                        Yeni Ders Oluştur
-                      </h4>
-                      <button 
-                        type="button" 
-                        className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
-                        onClick={() => {
-                          setShowNewCourseForm(false);
-                          setNewCourseName("");
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="flex flex-col space-y-4">
-                      <input 
-                        type="text" 
-                        placeholder="Ders adı girin" 
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        value={newCourseName}
-                        onChange={(e) => setNewCourseName(e.target.value)}
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={handleCreateCourse}
-                        disabled={!newCourseName.trim() || creatingCourse}
-                      >
-                        {creatingCourse ? (
-                          <div className="flex items-center justify-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Oluşturuluyor...
-                          </div>
-                        ) : (
-                          "Ders Oluştur"
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Adım 2: Kişiselleştirilmiş Sınav Türü Seçimi */}
-          {currentStep === 2 && quizType === "personalized" && (
-            <motion.div
-              key="step2-quiz-type"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="w-full"
-            >
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                2. Kişiselleştirilmiş Sınav Türü Seçimi
-              </h3>
-              
-              <div className="grid grid-cols-1 gap-4 mb-6">
-                {/* Zayif Konular */}
-                <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${personalizedQuizType === "weakTopicFocused" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"}`}
-                  onClick={() => setPersonalizedQuizType("weakTopicFocused")}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${personalizedQuizType === "weakTopicFocused" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}>
-                      <FiTarget className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Zayıf Konular</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Geçmiş performansınıza göre zayıf olduğunuz konulardan soru oluştur</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Öğrenme Hedefi */}
-                <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${personalizedQuizType === "learningObjectiveFocused" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"}`}
-                  onClick={() => setPersonalizedQuizType("learningObjectiveFocused")}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${personalizedQuizType === "learningObjectiveFocused" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}>
-                      <FiAward className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Öğrenme Hedefi</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Belirli öğrenme hedeflerinize odaklanarak soru oluştur</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Yeni Konular */}
-                <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${personalizedQuizType === "newTopicFocused" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"}`}
-                  onClick={() => setPersonalizedQuizType("newTopicFocused")}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${personalizedQuizType === "newTopicFocused" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}>
-                      <FiZap className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Yeni Konular</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Daha önce çalışmadığınız yeni konulardan soru oluştur</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Kapsamlı */}
-                <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${personalizedQuizType === "comprehensive" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"}`}
-                  onClick={() => setPersonalizedQuizType("comprehensive")}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${personalizedQuizType === "comprehensive" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}>
-                      <FiTarget className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Kapsamlı</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Tüm konulardan dengeli bir şekilde soru oluştur</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Adım 1: Belge Yükleme (Hızlı sınav için) veya Adım 3: Belge Yükleme (Kişiselleştirilmiş sınav için) */}
-          {((currentStep === 1 && quizType === "quick") || (currentStep === 3 && quizType === "personalized")) && (
+          {/* Adım 1: Belge Yükleme */}
+          {currentStep === 1 && (
             <motion.div
               key="step1"
               initial={{ opacity: 0, x: -20 }}
@@ -2011,7 +1561,7 @@ export default function ExamCreationWizard({
           )}
 
           {/* Adım 2: Kişiselleştirilmiş Sınav Alt Türü veya Konu Seçimi */}
-          {currentStep === 2 && quizType === "quick" && (
+          {currentStep === 2 && (
             <motion.div
               key="step2"
               initial={{ opacity: 0, x: -20 }}
@@ -2217,54 +1767,8 @@ export default function ExamCreationWizard({
             </motion.div>
           )}
 
-          {/* Adım 4: Alt Konu Seçimi (Kişiselleştirilmiş sınav için) */}
-          {currentStep === 4 && quizType === "personalized" && (
-            <motion.div
-              key="step4-subtopics"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="w-full"
-            >
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                4. Alt Konu Seçimi
-              </h3>
-
-              <div className="mb-6">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Sınavınızın içereceği alt konuları seçin. Seçilen konulara göre size özel sorular oluşturulacaktır.
-                </p>
-
-                {/* Topic Selection Screen Component */}
-                <TopicSelectionScreen
-                  detectedTopics={detectedTopics}
-                  existingTopics={courseTopics} 
-                  availableCourses={courses}
-                  selectedCourseId={selectedCourseId}
-                  quizType={quizType}
-                  personalizedQuizType={personalizedQuizType}
-                  isLoading={topicDetectionStatus === "loading"}
-                  error={undefined}
-                  onTopicsSelected={(selectedTopics, courseId) => {
-                    console.log("[ECW TopicSelectionScreen.onTopicsSelected] Seçilen konular:", JSON.stringify(selectedTopics));
-                    console.log("[ECW TopicSelectionScreen.onTopicsSelected] Seçilen kurs ID:", courseId);
-                    handleTopicSelectionChange(selectedTopics);
-                    handleTopicsDetected(selectedTopics, courseId);
-                  }}
-                  onCourseChange={handleCourseChangeForTopicSelection}
-                  onCancel={handleTopicDetectionCancel}
-                  initialSelectedTopicIds={selectedTopicIds}
-                  onTopicSelectionChange={handleTopicSelectionChange}
-                  onInitialLoad={onInitialLoad}
-                  setOnInitialLoad={setOnInitialLoad}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {/* Adım 5: Tercihler (Kişiselleştirilmiş sınav için) veya Adım 3: Tercihler (Hızlı sınav için) */}
-          {((currentStep === 5 && quizType === "personalized") || (currentStep === 3 && quizType === "quick")) && (
+          {/* Adım 3: Tercihler */}
+          {currentStep === 3 && (
             <motion.div
               key="step3"
               initial={{ opacity: 0, x: -20 }}
@@ -2295,15 +1799,9 @@ export default function ExamCreationWizard({
             onClick={nextStep}
             className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md text-sm flex items-center transition-colors shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
             disabled={
-              // Adım 1: Kişiselleştirilmiş sınav için ders seçilmemişse butonu devre dışı bırak
-              (currentStep === 1 && quizType === "personalized" && !selectedCourseId) ||
-              // Adım 3: Dosya yükleme adımında yükleme bitmemişse butonu devre dışı bırak
-              (((currentStep === 3 && quizType === "personalized") || (currentStep === 1 && quizType === "quick")) && uploadStatus !== "success") ||
-              // Adım 4: Konu seçimi adımında konu seçilmemişse ileri butonu devre dışı bırak
-              (((currentStep === 4 && quizType === "personalized") || (currentStep === 2 && quizType === "quick")) && selectedTopics.length === 0) ||
-              // İşlemler devam ederken butonu devre dışı bırak
-              topicDetectionStatus === "loading" || 
-              quizCreationLoading 
+              (currentStep === 1 && uploadStatus !== "success") || // İlk adımda yükleme bitmeden ilerlemeyi engelle
+              topicDetectionStatus === "loading" || // Konu tespiti devam ederken ilerlemeyi engelle
+              quizCreationLoading // Sınav oluşturma devam ederken butonu devre dışı bırak
             }
           >
             {currentStep === totalSteps 
