@@ -766,3 +766,56 @@ Details: {"reason":"AxiosError: Request failed with status code 404\n    at sett
 ------------------------------------------------------------
 [2025-05-23T06:11:45.852Z] [info] [ClientLogSetup] Uygulama başlatıldı
 ------------------------------------------------------------
+[2025-05-23T07:16:43.072Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:16:43.069Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:17:29.202Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:17:29.206Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:24:36.707Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:24:36.704Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:25:22.078Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:25:22.081Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:25:32.566Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:25:32.571Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:26:14.664Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:26:14.667Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:27:05.778Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:27:05.775Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:27:25.571Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:27:25.573Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:28:11.981Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:28:11.984Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:28:49.578Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:28:49.582Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:30:01.591Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:30:01.594Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-23T07:31:07.207Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-23T07:31:10.861Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-23T07:31:18.644Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------

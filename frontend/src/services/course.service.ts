@@ -1,5 +1,5 @@
 import apiService from "@/services/api.service";
-import { Course, CourseStats, CourseDashboard, CourseRelatedItems } from "@/types/course.type";
+import { Course, CourseStats, CourseDashboard } from "@/types/course.type";
 import { Document } from "@/types/document.type";
 import { LearningTarget } from "@/types/learningTarget.type";
 import { Quiz } from "@/types/quiz.type";
@@ -18,6 +18,122 @@ const flowTracker = getFlowTracker();
  */
 @LogClass('CourseService')
 class CourseService {
+  /**
+   * Yeni bir kurs oluşturur
+   * @param courseData Kurs verileri
+   * @returns Oluşturulan kurs
+   * @throws Aynı isimde bir kurs zaten varsa hata fırlatır
+   */
+  @LogMethod('CourseService', FlowCategory.API)
+  async createCourse(courseData: { name: string }): Promise<Course> {
+    const flow = startAppFlow(FlowCategory.API, "CourseService.createCourse");
+    
+    try {
+      // Önce mevcut kursları kontrol et
+      const existingCourses = await this.getCourses();
+      
+      // Aynı isimde bir kurs var mı kontrol et (büyük-küçük harf duyarsız)
+      const isDuplicate = existingCourses.some(
+        course => course.name.toLowerCase() === courseData.name.toLowerCase()
+      );
+      
+      if (isDuplicate) {
+        const errorMessage = `"${courseData.name}" adlı bir ders zaten mevcut. Lütfen farklı bir isim seçin.`;
+        logger.warn(
+          errorMessage,
+          'CourseService.createCourse',
+          __filename,
+          0,
+          { attemptedName: courseData.name }
+        );
+        
+        // Özel bir hata fırlat
+        const error = new Error(errorMessage);
+        flow.end(`Duplicate course name: ${courseData.name}`);
+        throw error;
+      }
+      
+      trackFlow(
+        `Creating new course: ${courseData.name}`,
+        "CourseService.createCourse",
+        FlowCategory.API
+      );
+      
+      const newCourse = await apiService.post<Course>('/courses', courseData);
+      
+      // Başarılı sonuç
+      const duration = flowTracker.markEnd('createCourse', mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      logger.debug(
+        `Kurs oluşturuldu: ${newCourse.name}`,
+        'CourseService.createCourse',
+        __filename,
+        0, // Placeholder, will be updated by IDE
+        { courseName: newCourse.name, courseId: newCourse.id, duration }
+      );
+      
+      flow.end("Successfully created course");
+      return newCourse;
+    } catch (error) {
+      // Hata zaten oluşturulmuşsa tekrar işleme
+      if ((error as Error).message?.includes('zaten mevcut')) {
+        throw error;
+      }
+      
+      // Diğer hatalar
+      flowTracker.markEnd('createCourse', mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      trackFlow(
+        `Error creating course: ${(error as Error).message}`,
+        "CourseService.createCourse",
+        FlowCategory.API,
+        { error }
+      );
+      flow.end(`Error creating course: ${(error as Error).message}`);
+      throw error;
+    }
+  }
+  /**
+   * Belirli bir kursu siler
+   * @param id Silinecek kursun ID'si
+   * @returns Silme işlemi başarılı olursa true, değilse false
+   */
+  @LogMethod('CourseService', FlowCategory.API)
+  async deleteCourse(id: string): Promise<boolean> {
+    const flow = startAppFlow(FlowCategory.API, "CourseService.deleteCourse");
+    
+    try {
+      trackFlow(
+        `Fetching course by ID: ${id} for deletion`,
+        "CourseService.deleteCourse",
+        FlowCategory.API
+      );
+      
+      await apiService.delete(`/courses/${id}`);
+      
+      // Başarılı sonuç
+      const duration = flowTracker.markEnd(`deleteCourse_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      logger.debug(
+        `Kurs silindi: ${id}`,
+        'CourseService.deleteCourse',
+        __filename,
+        0, // Placeholder, will be updated by IDE
+        { id, duration }
+      );
+      
+      flow.end("Successfully deleted course");
+      return true;
+    } catch (error) {
+      // Hata durumu
+      flowTracker.markEnd(`deleteCourse_${id}`, mapToTrackerCategory(FlowCategory.API), 'CourseService');
+      trackFlow(
+        `Error deleting course with ID ${id}: ${(error as Error).message}`,
+        "CourseService.deleteCourse",
+        FlowCategory.API,
+        { error }
+      );
+      flow.end(`Error deleting course: ${(error as Error).message}`);
+      throw error;
+    }
+  }
   /**
    * Tüm kursları getirir
    * @returns Kurs listesi
@@ -389,16 +505,6 @@ interface RelatedItemsCountResponse {
   total: number;
 }
 
-/**
- * Frontend'in kendi içinde oluşturduğu ilişkili öğeler interfacei
- */
-interface CourseRelatedItems {
-  documents: Document[];
-  learningTargets: LearningTarget[];
-  quizzes: Quiz[];
-}
-
-// Singleton instance oluştur
 const courseService = new CourseService();
 
 export default courseService;
