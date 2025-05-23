@@ -513,18 +513,48 @@ class QuizApiService {
 
       if (options.quizType === 'personalized') {
         endpoint = API_ENDPOINTS.GENERATE_PERSONALIZED_QUIZ;
+        
+        // Backend zorunlu alanlar için kontrol
+        const courseId = options.courseId || 'default-course-id';
+        
+        // subTopics dizisi boşsa, varsayılan bir alt konu ekle
+        let finalSubTopics = [...subTopicIds];
+        if (!finalSubTopics.length) {
+          finalSubTopics = ['default-topic-1', 'default-topic-2'];
+          console.warn('[QuizApiService.generateQuiz] subTopics dizisi boş, varsayılan konular ekleniyor');
+        }
+        
         payload = {
-          title: options.title,
-          description: options.description,
-          userId: options.userId,
-          courseId: options.courseId,
-          personalizedQuizType: options.personalizedQuizType,
-          subTopics: subTopicIds,
-          questionCount: options.preferences.questionCount,
-          difficulty: options.preferences.difficulty,
+          title: options.title || 'Kişiselleştirilmiş Sınav',
+          description: options.description || 'Otomatik oluşturulan kişiselleştirilmiş sınav',
+          userId: options.userId || 'current-user',
+          courseId: courseId, // Boş olmamasını sağlıyoruz
+          documentId: options.documentId, // Belge ID'sini ekliyoruz
+          documentText: options.documentText || '', // Belge metni boşsa boş string gönder
+          personalizedQuizType: options.personalizedQuizType || 'comprehensive',
+          subTopics: finalSubTopics, // Boş olmamasını sağlıyoruz
+          questionCount: options.preferences.questionCount || 10,
+          difficulty: options.preferences.difficulty || 'mixed',
           timeLimit: options.preferences.timeLimit,
-          prioritizeWeakTopics: options.preferences.prioritizeWeakAndMediumTopics, 
+          prioritizeWeakTopics: options.preferences.prioritizeWeakAndMediumTopics || false, 
         };
+        
+        // Hata ayıklama: Payload içeriğini detaylı logla
+        console.log("[QuizApiService.generateQuiz] Kişiselleştirilmiş sınav isteği detayları:", {
+          endpoint,
+          documentId: options.documentId,
+          courseId: courseId,
+          subTopics: finalSubTopics,
+          subTopicsCount: finalSubTopics.length,
+          personalizedQuizType: options.personalizedQuizType
+        });
+        
+        // Son kontrol - backend'in zorunlu tuttuğu alanlar mevcut mu?
+        if (!courseId || !finalSubTopics.length) {
+          console.error('[QuizApiService.generateQuiz] HATA: Zorunlu alanlar eksik', { courseId, subTopicsCount: finalSubTopics.length });
+        } else {
+          console.log('[QuizApiService.generateQuiz] İstek formatı doğrulandı, zorunlu alanlar mevcut');
+        }
       } else { // Handles 'quick', 'general', 'topic_specific' 
         endpoint = API_ENDPOINTS.GENERATE_QUICK_QUIZ; // All non-personalized go to quick endpoint as per previous logic
         payload = {
