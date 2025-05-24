@@ -62,11 +62,11 @@ export interface Quiz {
  */
 export interface QuizPreferences {
   questionCount: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'mixed';
+  difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
   timeLimit?: number;
   topicIds?: string[];
   subTopicIds?: string[];
-  personalizedQuizType?: 'weakTopicFocused' | 'learningObjectiveFocused' | 'newTopicFocused' | 'comprehensive';
+  personalizedQuizType?: 'weakTopicFocused' | 'newTopicFocused' | 'comprehensive';
 }
 
 export interface Question {

@@ -125,6 +125,15 @@ class DocumentSourceDto {
   @IsString()
   @IsOptional()
   documentId?: string;
+
+  @ApiProperty({
+    description: 'Belge metni (AI işleme için)',
+    example: 'Bu belgenin içeriği...',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  text?: string;
 }
 
 export class GenerateQuizDto {
@@ -141,18 +150,17 @@ export class GenerateQuizDto {
     description:
       'Kişiselleştirilmiş sınav tipi (sadece quizType="personalized" olduğunda gerekli)',
     example: 'weakTopicFocused',
-    enum: ['weakTopicFocused', 'newTopicFocused', 'comprehensive', 'topicFocusedQuick'],
+    enum: ['weakTopicFocused', 'newTopicFocused', 'comprehensive'],
     required: false,
     nullable: true,
   })
   @IsString()
-  @IsEnum(['weakTopicFocused', 'newTopicFocused', 'comprehensive', 'topicFocusedQuick'])
+  @IsEnum(['weakTopicFocused', 'newTopicFocused', 'comprehensive'])
   @IsOptional()
   personalizedQuizType?:
     | 'weakTopicFocused'
     | 'newTopicFocused'
     | 'comprehensive'
-    | 'topicFocusedQuick'
     | null;
 
   @ApiProperty({

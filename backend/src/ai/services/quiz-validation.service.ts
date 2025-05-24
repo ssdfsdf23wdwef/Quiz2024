@@ -54,44 +54,43 @@ export class QuizValidationService {
     const { traceId } = metadata;
 
     // DETAYLI LOGLAMA: Start of parsing
-    console.log(
-      `[QUIZ_DEBUG] [${traceId}] AI yanıtı parse işlemi başlatılıyor`,
+    this.logger.debug(
+      `[${traceId}] AI yanıtı parse işlemi başlatılıyor`,
+      'QuizValidationService.parseAIResponseToJSON',
     );
 
     // Null veya undefined kontrolü
-    if (!text) {
-      console.log(
-        `[QUIZ_DEBUG] [${traceId}] KRİTİK HATA: Boş AI yanıtı alındı!`,
-      );
+    if (!text || text.trim().length === 0) {
       this.logger.warn(
-        `[${traceId}] Boş AI yanıtı. Fallback veri kullanılacak.`,
+        `[${traceId}] Boş veya geçersiz AI yanıtı. Fallback veri kullanılacak.`,
         'QuizValidationService.parseAIResponseToJSON',
       );
       return this.createFallbackData<T>('', metadata);
     }
 
     // DETAYLI LOGLAMA: Yanıt içeriği
-    console.log(`[QUIZ_DEBUG] [${traceId}] AI yanıtı (ilk 1000 karakter):`);
-    console.log(text.substring(0, 1000) + (text.length > 1000 ? '...' : ''));
-    console.log(
-      `[QUIZ_DEBUG] [${traceId}] Tüm yanıt uzunluğu: ${text.length} karakter`,
+    this.logger.debug(
+      `[${traceId}] AI yanıtı uzunluğu: ${text.length} karakter`,
+      'QuizValidationService.parseAIResponseToJSON',
     );
 
     // Markdown kod bloklarını temizle ve dışarıdaki JSON yapısını almaya çalış
-    let processedText = text;
+    let processedText = text.trim();
 
     // Markdown kod bloğu varsa, içindeki JSON'u çıkar
     if (text.includes('```json') && text.includes('```')) {
-      console.log(
-        `[QUIZ_DEBUG] [${traceId}] Markdown kod bloğu tespit edildi, içerik çıkarılıyor`,
+      this.logger.debug(
+        `[${traceId}] Markdown kod bloğu tespit edildi, içerik çıkarılıyor`,
+        'QuizValidationService.parseAIResponseToJSON',
       );
       const jsonStartIdx = text.indexOf('```json') + '```json'.length;
       const jsonEndIdx = text.lastIndexOf('```');
 
       if (jsonStartIdx < jsonEndIdx) {
         processedText = text.substring(jsonStartIdx, jsonEndIdx).trim();
-        console.log(
-          `[QUIZ_DEBUG] [${traceId}] Markdown kod bloğundan JSON çıkarıldı. Uzunluk: ${processedText.length}`,
+        this.logger.debug(
+          `[${traceId}] Markdown kod bloğundan JSON çıkarıldı. Uzunluk: ${processedText.length}`,
+          'QuizValidationService.parseAIResponseToJSON',
         );
       }
     }
