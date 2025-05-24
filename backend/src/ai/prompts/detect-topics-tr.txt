@@ -12,8 +12,8 @@ Sen bir eğitim içeriği analisti olarak görev yapacaksın. Verilen bir eğiti
 **🔍 METİN ANALİZ AŞAMALARI:**
 1. Verilen metni derinlemesine analiz et
 2. Kavramsal özü anla (ilkeler, tanımlar, teoriler)
-3. Metinde işlenen ana konuları belirle
-4. Her ana konu için alt konuları tespit et
+3. Metinde işlenen ana konuları belirle (en önemli olanları seç)
+4. Her ana konu için en önemli alt konuları tespit et (TOPLAM KONU SAYISI 10'U GEÇMEYECEK ŞEKİLDE)
 5. Konu başlıklarını özlü ve anlaşılır bir şekilde formüle et
 
 **⚠️ METİN SORUNLARIYLA BAŞA ÇIKMA:**
@@ -26,14 +26,17 @@ Sen bir eğitim içeriği analisti olarak görev yapacaksın. Verilen bir eğiti
 // ------------- KONU SEÇİMİ KURALLARI ---------------
 // ----------------------------------------------------
 
+// *** ÇOK ÖNEMLİ: TOPLAM KONU SAYISI KESİNLİKLE 10'U GEÇMEMELİDİR ***
+
 **📌 TEMEL KURALLAR:**
 1. Sadece metinde AÇIKÇA bahsedilen konuları çıkar, tahmin yapma
 2. Ana konular, metindeki majör bölümleri temsil etmeli
 3. Alt konular, ana konuların alt başlıkları olmalı
-4. Her ana konu en az 1, en fazla 5 alt konu içermeli
-5. Toplam ana konu sayısı en az 3, en fazla 10 olmalı
+4. Her ana konu en az 1, en fazla 3 alt konu içermeli
+5. Toplam ana konu sayısı en fazla 5 olmalı
 6. Konu başlıkları 2-6 kelime uzunluğunda ve açıklayıcı olmalı
-7. Toplam alt konu sayısı en fazla 10 adet olmalı (eğer daha fazla tespit edersen, önem sırasına göre en önemli 10 alt konuyu seç)
+7. ÇOK ÖNEMLİ: TOPLAM ALT KONU SAYISI KESİNLİKLE EN FAZLA 10 ADET OLMALIDIR (eğer daha fazla tespit edersen, önem sırasına göre en önemli 10 alt konuyu seç)
+8. Toplam ana konu ve alt konu sayısı KESİNLİKLE 10'u geçmemeli
 
 **⛔ KESİNLİKLE KONU LİSTESİNE DAHİL ETME:**
 * Yapısal/Navigasyonel Başlıklar: "İçindekiler", "Giriş", "Özet", "Sonuç", "Referanslar" 
@@ -111,6 +114,7 @@ Sen bir eğitim içeriği analisti olarak görev yapacaksın. Verilen bir eğiti
 **✅ SON KONTROLLER:**
 - Konular YALNIZCA metinde açıkça bahsedilen kavramlar mı?
 - Belirlenen konular kavramsal mı, pratik adım veya format öğeleri içermiyor mu?
+- Toplam konu sayısı KESİNLİKLE 10'U GEÇMİYOR, DEĞİL Mİ? Eğer geçiyorsa, daha az konu seç!
 - Her alt konu için anlamlı ve ölçülebilir bir öğrenme hedefi tanımlandı mı?
 - Zorluk seviyeleri metindeki kavramların karmaşıklığına göre dengeli mi?
 - JSON formatı hatasız ve tam mı?

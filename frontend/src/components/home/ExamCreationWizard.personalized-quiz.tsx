@@ -507,6 +507,21 @@ export default function ExamCreationWizard({
   const handleTopicSelectionChange = (selectedTopicIds: string[]) => {
     console.log(`[ECW handleTopicSelectionChange] Konu seçimleri değişiyor: ${selectedTopicIds.length} konu seçildi`);
     
+    // Hızlı sınav yaklaşımı: Eğer hiç konu seçilmemişse, tüm konuları seç
+    if (selectedTopicIds.length === 0 && detectedTopics.length > 0) {
+      console.log(`[ECW handleTopicSelectionChange] Hiç konu seçilmedi, tüm konular otomatik seçiliyor.`);
+      selectedTopicIds = detectedTopics.map(topic => topic.id);
+    }
+    
+    // Maksimum 10 konu seçilebilir - sınırlama ekle
+    const MAX_TOPICS = 10;
+    
+    // Seçilen konu sayısı 10'dan fazla ise, sadece ilk 10'unu al
+    if (selectedTopicIds.length > MAX_TOPICS) {
+      console.warn(`[ECW handleTopicSelectionChange] Seçilen konu sayısı (${selectedTopicIds.length}) maksimum sınırı (${MAX_TOPICS}) aşıyor. İlk ${MAX_TOPICS} konu seçilecek.`);
+      selectedTopicIds = selectedTopicIds.slice(0, MAX_TOPICS);
+    }
+    
     // Seçilen konu ID'lerini güncelle
     setSelectedTopicIds(selectedTopicIds);
     
@@ -1024,7 +1039,7 @@ export default function ExamCreationWizard({
           console.log(`[ECW detectTopicsFromUploadedFile] 📊 Son işlenen konular (${processedTopics.length}):`, JSON.stringify(processedTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
           
           if (processedTopics.length > 0) {
-            // Tüm konuları seçili olarak ayarla ve "newTopicFocused" için yeni olarak işaretle
+            // Hızlı sınav yaklaşımı: Tüm konuları otomatik olarak seçili hale getir
             const selectedTopics = processedTopics.map(topic => ({
               ...topic,
               isSelected: true,
@@ -1038,16 +1053,25 @@ export default function ExamCreationWizard({
             setCurrentStep(2); 
             ErrorService.showToast(`${processedTopics.length} konu tespit edildi.`, "success");
 
-            // Tüm konuları otomatik olarak seç
+            // Hızlı sınav yaklaşımı: Tüm konuları otomatik olarak seç
             const allTopicIds = selectedTopics.map(topic => topic.id);
-            setSelectedTopicIds(allTopicIds);
-            setSelectedSubTopicIds(allTopicIds); 
+            
+            // Maksimum 10 konu sınırlaması
+            const MAX_TOPICS = 10;
+            const limitedTopicIds = allTopicIds.length > MAX_TOPICS ? allTopicIds.slice(0, MAX_TOPICS) : allTopicIds;
+            
+            if (allTopicIds.length > MAX_TOPICS) {
+              console.warn(`[ECW detectTopicsFromUploadedFile] Tespit edilen konu sayısı (${allTopicIds.length}) maksimum sınırı (${MAX_TOPICS}) aşıyor. İlk ${MAX_TOPICS} konu seçilecek.`);
+            }
+            
+            setSelectedTopicIds(limitedTopicIds);
+            setSelectedSubTopicIds(limitedTopicIds); 
             setPreferences(prev => ({ 
               ...prev, 
-              topicIds: allTopicIds,
-              subTopicIds: allTopicIds 
+              topicIds: limitedTopicIds,
+              subTopicIds: limitedTopicIds 
             }));
-            console.log(`[ECW detectTopicsFromUploadedFile] Tüm konular (${allTopicIds.length}) otomatik seçildi.`);
+            console.log(`[ECW detectTopicsFromUploadedFile] Tüm konular (${limitedTopicIds.length}) otomatik seçildi.`);
             
             // Kişiselleştirilmiş sınav için adım 4'e (alt konu seçimi) geç
             if (quizType === "personalized") {
@@ -1129,9 +1153,10 @@ export default function ExamCreationWizard({
                 "error"
               );
           
-          // Hata durumunda bile gerçek konu verilerini almaya çalış
+          // Hızlı sınav yaklaşımı: Hata durumunda bile varsayılan konularla devam et
           if (quizType === "quick" || quizType === "personalized") {
-            console.log("🔍 Konu tespiti başarısız oldu. Seçili kurstan veya API'den gerçek konu verilerini almayı deniyoruz");
+            console.log("🚀 Hızlı sınav yaklaşımı kullanılıyor: Konu tespiti başarısız olsa bile varsayılan konularla devam ediyoruz");
+            console.log("🔍 Önce seçili kurstan veya API'den gerçek konu verilerini almayı deniyoruz");
             
             try {
               // Seçili ders varsa, bu dersten konuları al
@@ -1286,8 +1311,9 @@ export default function ExamCreationWizard({
   // Final gönderim işleyicisi
   const handleFinalSubmit = async () => {
     if (isSubmitting) return;
-      setIsSubmitting(true);
-      setErrorMessage(null);
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    
     console.log(
       "[ECW handleFinalSubmit] Başlatıldı. Seçili konular:",
       JSON.stringify(selectedTopics),
@@ -1359,7 +1385,7 @@ export default function ExamCreationWizard({
       // Çalışacağımız konuların listesi - varsayılan bir konu eklememiz gerekebilir
       let topicsToUse = [...selectedTopics];
       
-      // Eğer topicsToUse boşsa ve bir belge yüklenmişse, otomatik bir konu oluştur
+      // Eğer topicsToUse boşsa ve bir belge yüklemişse, otomatik bir konu oluştur
       if (topicsToUse.length === 0 && (uploadedDocumentId || selectedFile)) {
         console.log("[ECW handleFinalSubmit] Konu seçilmedi ama belge var, otomatik konu oluşturuluyor");
         const fileName = selectedFile?.name || 'belge';
@@ -1370,9 +1396,25 @@ export default function ExamCreationWizard({
         }];
         console.log("[ECW handleFinalSubmit] Otomatik oluşturulan konu:", topicsToUse);
         
-        // State güncellemesi - gerçek bir uygulamada burada yapılmaz ama tutarlılık için ekleyelim
+        // State güncellemesi
         setSelectedTopicIds([defaultTopicId]);
         setSelectedSubTopicIds([defaultTopicId]);
+        setSelectedTopics(topicsToUse);
+      }
+      
+      // Eğer konu sayısı 2'den fazlaysa, ilk 2'ye düşür (AI model için daha iyi çalışır)
+      // Not: AI modelinin çok sayıda konuyu işlerken zorlandığını gördük, bu yüzden 5'ten 3'e ve şimdi 2'ye düşürdük
+      const MAX_TOPICS = 2; // Maksimum konu sayısını 2'ye düşürdük
+      if (topicsToUse.length > MAX_TOPICS) {
+        console.log(`[ECW handleFinalSubmit] Konu sayısı ${MAX_TOPICS}'ten fazla (${topicsToUse.length}), ilk ${MAX_TOPICS} konu alınıyor...`);
+        topicsToUse = topicsToUse.slice(0, MAX_TOPICS);
+        console.log(`[ECW handleFinalSubmit] Konu listesi ${MAX_TOPICS}'e düşürüldü:`, topicsToUse);
+        
+        // State güncellemesi
+        const limitedTopicIds = topicsToUse.map(t => t.normalizedSubTopic);
+        setSelectedTopicIds(limitedTopicIds);
+        setSelectedSubTopicIds(limitedTopicIds);
+        setSelectedTopics(topicsToUse);
       }
       
       // API için alt konu nesnelerini oluştur
@@ -1392,9 +1434,9 @@ export default function ExamCreationWizard({
         
         if (uploadedDocumentId || selectedFile) {
           console.log("[ECW handleFinalSubmit] Belge var, varsayılan bir konu ekleniyor");
-          const docFileName = selectedFile?.name || 'belge';
+          const fileName = selectedFile?.name || 'belge';
           mappedSubTopics.push({
-            subTopic: `${docFileName.replace(/\.[^/.]+$/, "")} İçeriği`,
+            subTopic: `${fileName.replace(/\.[^/.]+$/, "")} İçeriği`,
             normalizedSubTopic: `belge-${uploadedDocumentId || Date.now()}`
           });
           console.log("[ECW handleFinalSubmit] Varsayılan konu eklendi:", mappedSubTopics);
@@ -1407,38 +1449,36 @@ export default function ExamCreationWizard({
       }
       
       // preferences.subTopicIds var mı kontrol et
-      if (!preferences.subTopicIds || preferences.subTopicIds.length === 0) {
-        console.warn("[ECW handleFinalSubmit] preferences.subTopicIds boş, otomatik dolduruyoruz");
-        
-        // preferences nesnesini güncelle - doğrudan güncellemek yerine setPreferences kullanmak daha güvenli
-        const updatedPreferences = {
-          ...preferences,
-          subTopicIds: mappedSubTopics.map(topic => topic.normalizedSubTopic)
-        };
-        setPreferences(updatedPreferences);
-        console.log("[ECW handleFinalSubmit] preferences.subTopicIds güncellendi:", updatedPreferences.subTopicIds);
-      }
+      const updatedPreferences = {
+        ...preferences,
+        subTopicIds: mappedSubTopics.map(topic => topic.normalizedSubTopic)
+      };
       
-    // Sınav oluşturma seçenekleri
+      // Sınav oluşturma seçenekleri
       const quizOptions: QuizGenerationOptions = {
         quizType: quizType === "quick" ? "general" : quizType,
         courseId: selectedCourseId || undefined,
-        personalizedQuizType:
-          quizType === "personalized" ? personalizedQuizType : undefined,
+        personalizedQuizType: quizType === "personalized" ? personalizedQuizType : undefined,
         // Doğru format için sadece bir tanım kullanıyoruz
         selectedSubTopics: mappedSubTopics.map(topic => topic.normalizedSubTopic),
-      documentId: uploadedDocumentId || undefined,
-      preferences: {
-        questionCount: preferences.questionCount,
-        difficulty: preferences.difficulty as "easy" | "medium" | "hard" | "mixed",
-        timeLimit: preferences.timeLimit,
-        prioritizeWeakAndMediumTopics: true,
-      },
-    };
+        documentId: uploadedDocumentId || undefined,
+        // Belge metnini ekleyelim, ama çok uzunsa kısalt (AI'nin daha iyi çalışması için)
+        documentText: documentTextContent ? (
+          documentTextContent.length > 5000 
+            ? documentTextContent.substring(0, 5000) + "...(Kısaltıldı)"
+            : documentTextContent
+        ) : "",
+        preferences: {
+          questionCount: preferences.questionCount,
+          difficulty: preferences.difficulty as "easy" | "medium" | "hard" | "mixed",
+          timeLimit: preferences.timeLimit,
+          prioritizeWeakAndMediumTopics: true,
+        },
+      };
 
       console.log("[ECW handleFinalSubmit] quizService.generateQuiz çağrılıyor. Seçenekler:", JSON.stringify(quizOptions, null, 2));
 
-    try {
+      try {
         // Sınav oluştur
         console.log("[ECW handleFinalSubmit] Sınav oluşturma öncesi son kontroller:");
         console.log("[ECW handleFinalSubmit] quizOptions:", JSON.stringify(quizOptions, null, 2));
@@ -1448,7 +1488,73 @@ export default function ExamCreationWizard({
         
         // API çağrısını izle
         console.time("[ECW handleFinalSubmit] quizService.generateQuiz süresi");
-        const quiz = await quizService.generateQuiz(quizOptions);
+        let quiz = null;
+        
+        // Yeniden deneme mekaniği - geliştirilmiş strateji ile
+        let retryCount = 0;
+        const maxRetries = 5;
+        let lastError = null;
+        
+        while (retryCount < maxRetries) {
+          try {
+            // Konular deneme sayısı artıkça azaltılabilir, böylece başarı şansı artar
+            if (retryCount > 1 && topicsToUse.length > 1) {
+              // İlk denemeler başarısız olduysa, konu sayısını daha da azalt
+              const reducedTopicCount = Math.max(1, topicsToUse.length - retryCount + 1);
+              const reducedTopics = topicsToUse.slice(0, reducedTopicCount);
+              
+              console.log(`[ECW handleFinalSubmit] Deneme ${retryCount}/${maxRetries}: Konu sayısı ${topicsToUse.length}'den ${reducedTopics.length}'e düşürülüyor`);
+              
+              // Quiz seçeneklerini güncelle
+              quizOptions.selectedSubTopics = reducedTopics.map(topic => topic.normalizedSubTopic);
+              console.log(`[ECW handleFinalSubmit] Azaltılmış konu listesi:`, quizOptions.selectedSubTopics);
+            }
+            
+            console.log(`[ECW handleFinalSubmit] Deneme ${retryCount + 1}/${maxRetries} başlatılıyor...`);
+            quiz = await quizService.generateQuiz(quizOptions);
+            
+            // Boş soru dizisi kontrolü
+            if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+              retryCount++;
+              console.warn(`[ECW handleFinalSubmit] Quiz soru dizisi boş. Yeniden deneniyor (${retryCount}/${maxRetries})`);
+              
+              if (retryCount >= maxRetries) {
+                throw new Error("Maksimum deneme sayısına ulaşıldı. Sınav soruları oluşturulamadı.");
+              }
+              
+              // Bekleme süresi ekle - her denemede biraz daha uzun bekle
+              const waitTime = 3000 + (retryCount * 1000); // 3s, 4s, 5s, 6s, 7s
+              console.log(`[ECW handleFinalSubmit] ${waitTime/1000} saniye bekleniyor ve yeniden deneniyor...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              continue;
+            }
+            
+            // Başarılı olduysa döngüden çık
+            console.log(`[ECW handleFinalSubmit] Soru üretme başarılı! ${quiz.questions?.length || 0} soru oluşturuldu.`);
+            break;
+          } catch (error) {
+            retryCount++;
+            lastError = error;
+            console.error(`[ECW handleFinalSubmit] Sınav oluşturma hatası (${retryCount}/${maxRetries}):`, error);
+            
+            // Hata mesajını kontrol et - belirli hata durumlarında farklı davran
+            const errorMessage = error?.message || "";
+            if (errorMessage.includes("AI modeli") || errorMessage.includes("konu")) {
+              console.log(`[ECW handleFinalSubmit] AI modeli konu işleme hatası tespit edildi. Konu sayısı azaltılacak.`);
+              // Bir sonraki denemede bu otomatik olarak daha az konuyla tekrar denenecek
+            }
+            
+            if (retryCount >= maxRetries) {
+              throw error;
+            }
+            
+            // Bekleme süresi ekle - her denemede biraz daha uzun bekle
+            const waitTime = 3000 + (retryCount * 1000); // 3s, 4s, 5s, 6s, 7s
+            console.log(`[ECW handleFinalSubmit] ${waitTime/1000} saniye bekleniyor ve yeniden deneniyor...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+        }
+        
         console.timeEnd("[ECW handleFinalSubmit] quizService.generateQuiz süresi");
         
         // Detaylı sonuç kontrolü
@@ -1466,21 +1572,21 @@ export default function ExamCreationWizard({
           throw new Error("Quiz ID alınamadı");
         }
 
-      const wizardResultData = {
+        const wizardResultData = {
           file: selectedFile,
           quizType: quizType,
           personalizedQuizType,
-          preferences: preferences,
-          topicNameMap: selectedTopics.reduce((acc, item) => {
+          preferences: updatedPreferences,
+          topicNameMap: mappedSubTopics.reduce((acc, item) => {
             acc[item.normalizedSubTopic] = item.subTopic;
-          return acc;
-        }, {} as Record<string, string>),
+            return acc;
+          }, {} as Record<string, string>),
           quiz: quiz,
           quizId: quiz?.id,
-        documentId: uploadedDocumentId || undefined,
+          documentId: uploadedDocumentId || undefined,
           status: quiz?.id ? 'success' as const : 'error' as const,
           error: quiz?.id ? undefined : new ApiError("Sınav oluşturulamadı veya ID alınamadı."),
-      };
+        };
 
         console.log("[ECW handleFinalSubmit] Wizard sonuç verisi oluşturuldu:", 
           JSON.stringify({

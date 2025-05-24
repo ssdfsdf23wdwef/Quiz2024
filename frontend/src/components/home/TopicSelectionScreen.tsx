@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
@@ -157,19 +157,21 @@ export default function TopicSelectionScreen({
     onTopicSelectionChange(selectedIds);
   }, [filteredTopics, onTopicSelectionChange]);
 
-  // İlk render sırasında tüm konuları otomatik olarak seç
+  // İlk render sırasında konuların seçim durumunu kontrol et
   useEffect(() => {
-    if (filteredTopics.length > 0) {
-      // Herhangi bir isSelected=false olan konu var mı kontrol et
-      const hasUnselectedTopics = filteredTopics.some(topic => !topic.isSelected);
+    if (filteredTopics.length > 0 && initialSelectedTopicIds && initialSelectedTopicIds.length > 0 && onInitialLoad) {
+      console.log('[TopicSelectionScreen] Başlangıç seçili konuları ayarlanıyor:', initialSelectedTopicIds);
       
-      // Eğer seçilmemiş konular varsa, tümünü seç
-      if (hasUnselectedTopics) {
-        console.log('[TopicSelectionScreen] İlk render, tüm konular otomatik seçiliyor');
-        handleToggleAll(true);
-      }
+      // Başlangıçta seçilmiş konular varsa bunları işaretle
+      const updatedTopics = filteredTopics.map(topic => ({
+        ...topic,
+        isSelected: initialSelectedTopicIds.includes(topic.id)
+      }));
+      
+      setFilteredTopics(updatedTopics);
+      setOnInitialLoad(false);
     }
-  }, [filteredTopics, handleToggleAll]);
+  }, [filteredTopics, initialSelectedTopicIds, onInitialLoad, setOnInitialLoad]);
 
   // Seçilen konuları takip et
   const handleTopicToggle = useCallback((id: string) => {
@@ -378,28 +380,6 @@ export default function TopicSelectionScreen({
     );
   }
 
-  if (error) {
-    return (
-      <div className="py-8 px-6 flex flex-col items-center border rounded-lg bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800">
-        <FiAlertCircle className="w-8 h-8 text-red-600 dark:text-red-400 mb-4" />
-        <p className="text-red-700 dark:text-red-300 text-center mb-2">
-          Konular hazırlanırken bir hata oluştu
-        </p>
-        <p className="text-sm text-red-600 dark:text-red-400 text-center">
-          {error}
-        </p>
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="mt-4 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            Geri Dön
-          </button>
-        )}
-      </div>
-    );
-  }
-
   if (filteredTopics.length === 0) {
     return (
       <div className="py-8 px-6 flex flex-col items-center justify-center border rounded-lg bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
@@ -486,6 +466,12 @@ export default function TopicSelectionScreen({
             ? "Henüz çalışmadığınız yeni konulara odaklanan bir sınav oluşturulacak."
             : "Çalışma durumunuza uygun kapsamlı bir sınav oluşturulacak."}
         </p>
+        
+        {/* Maksimum konu sınırı bilgisi */}
+        <div className="mt-3 p-3 border border-blue-300 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800 text-blue-700 dark:text-blue-300 rounded-md flex items-center">
+          <FiInfo className="min-w-5 w-5 h-5 mr-2" />
+          <span className="text-sm">En fazla <strong>10 konu</strong> seçebilirsiniz. Bu sınır, AI'nin daha odaklı ve kaliteli sorular oluşturabilmesi için gereklidir.</span>
+        </div>
       </div>
 
       {availableCourses && availableCourses.length > 0 && (
