@@ -110,10 +110,17 @@ export class AIProviderService {
         `ai-req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
       // AI'ya gönderilen prompt'u iyileştirmek için yapılandırmayı ayarla
+      // Quiz generation için özel prompt template kullanılıyorsa, system instruction override etme
+      const isQuizGeneration = prompt.includes('TEST SORULARI OLUŞTURMA PROMPT') || 
+                               prompt.includes('**📋 TEMEL GÖREV:**') ||
+                               prompt.includes('{{TOPICS}}') ||
+                               metadata.subTopics;
+      
       const enhancedOptions = {
         ...options,
-        systemInstruction:
-          options?.systemInstruction ||
+        systemInstruction: isQuizGeneration 
+          ? (options?.systemInstruction || '') // Quiz generation için mevcut instruction'ı koru
+          : (options?.systemInstruction ||
           `Sen eğitim içeriği hazırlayan profesyonel bir eğitmensin. 
           Verilen konulara özel, doğru, kapsamlı ve eğitici sorular hazırla.
           
@@ -139,7 +146,7 @@ export class AIProviderService {
                 "explanation": "Neden bu cevabın doğru olduğunun açıklaması"
               }
             ]
-          }`,
+          }`),
       };
 
       this.logger.log(

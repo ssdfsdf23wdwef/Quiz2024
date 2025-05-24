@@ -1,14 +1,19 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-24T20:10:04.330Z
+## Tarih: 2025-05-24T20:08:04.258Z
 
-## Trace ID: quiz-1748117404327-4mpxf
+## Trace ID: quiz-1748117284253-evcas
 
-## Alt Konular (1 adet):
+## Alt Konular (2 adet):
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
-Soru üretilecek aktif konu bulunamadı.
+**Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
+
+1. **Geleneksel Sistem Tasar M** (5 soru)
+2. **Tasar M A Amalar** (5 soru)
+
+**Toplam Aktif: 2 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
@@ -36,14 +41,226 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 **📥 GİRDİLER:**
 - **Konu Bilgileri:** ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
-Soru üretilecek aktif konu bulunamadı.
+**Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
+
+1. **Geleneksel Sistem Tasar M** (5 soru)
+2. **Tasar M A Amalar** (5 soru)
+
+**Toplam Aktif: 2 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
 Bekleyen konu yok.
 
   *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
-- **Eğitim İçeriği:** {{DOCUMENT_TEXT}}
+- **Eğitim İçeriği:** 
+
+Bilgisayar Mühendisliği Bölümü
+Bahar –2025(ÖÖ.,İÖ.)
+MBM7-452 -Eksaskala Bilgisayar Sistemleri
+(Sunu 5)
+Dr. Öğr. Üyesi Esra Çelik
+
+Günün Sorusu
+Donanım ve yazılım arasında
+oluşabilecek işbirliği neden önemlidir?
+
+Geleneksel Sistem Tasarımı
+•Geleneksel sistemlerde tasarım,
+•donanım ve yazılımın ayrı ayrı geliştirilip entegre edilmesi
+sürecidir.
+•Donanım ve yazılım arasında net bir ayrım bulunur, bu da her iki
+bileşenin bağımsız çalışmasını sağlar.
+•Ancak, bu yaklaşımda iletişim optimize edilmez, değişiklikler zor ve
+zaman alıcı olabilir.
+•Ayrıca, entegrasyon sırasında verimlilik kayıpları yaşanabilir.
+
+Geleneksel Sistem Tasarımı Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılım
+gereksinimleri ayrı ayrıönceden
+belirlenir.
+Yazılım
+Gereksinimleri
+ve Özellikleri
+Donanım
+Gereksinimleri
+ve Özellikleri
+
+Geleneksel Sistem Tasarımı Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılım
+gereksinimleri ayrı ayrıönceden
+belirlenir.
+•Donanım Tasarım Adımları
+•Önce donanım tasarımı adım adım
+yapılır.
+Yazılım
+Gereksinimleri
+ve Özellikleri
+Donanım
+Tasarım Adımları
+...
+Donanım
+Gereksinimleri
+ve Özellikleri
+
+Geleneksel Sistem Tasarımı Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılım
+gereksinimleri ayrı ayrıönceden
+belirlenir.
+•Donanım Tasarım Adımları
+•Önce donanım tasarımı adım adım
+yapılır.
+•Yazılım Tasarım Adımları
+•Ardından yazılım tasarımı adım adım
+yapılır.
+Yazılım
+Gereksinimleri
+ve Özellikleri
+Donanım
+Tasarım Adımları
+...
+Yazılım Tasarım
+Adımları
+...
+Donanım
+Gereksinimleri
+ve Özellikleri
+
+Geleneksel Sistem Tasarımı Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılım
+gereksinimleri ayrı ayrıönceden
+belirlenir.
+•Donanım Tasarım Adımları
+•Önce donanım tasarımı adım adım
+yapılır.
+•Yazılım Tasarım Adımları
+•Ardından yazılım tasarımı adım adım
+yapılır.
+•Entegrasyon
+•Donanım ve yazılım son aşamada
+birleştirilir.
+Yazılım
+Gereksinimleri
+ve Özellikleri
+Donanım
+Tasarım Adımları
+...
+Yazılım Tasarım
+Adımları
+...
+Entegrasyon
+Donanım
+Gereksinimleri
+ve Özellikleri
+
+Geleneksel Sistem Tasarımı Eksikleri
+Donanım ve yazılım uyumsuzluğu ortaya çıkar.
+Yeni teknolojilere hızlıca uyum sağlayamaz.
+Entegrasyon süreci uzar ve maliyetiartır.
+Donanım ve yazılım ayrı ayrı optimize edilir, bu da sistem
+genelinde verimlilik kaybına yol açar.
+1
+2
+3
+4
+Geleneksel sistem tasarımında donanım ve yazılım ayrı ayrı
+geliştirildiği için:
+
+
+Ortak Tasarım (Co-Design)
+nedir?
+
+Ortak Tasarım (Co-Design)
+•Co-Design,
+•donanım ve yazılım bileşenlerinin ayrı ayrı değil, eş zamanlı ve
+birlikte tasarlanmasıyaklaşımıdır.
+•Neden Önemli?
+•Geleneksel sistemlerde donanım öncedentasarlanır, yazılım
+sonradanuyarlanır.
+•Co-design, iki tarafın ihtiyaçlarının başından itibaren senkronize
+edilmesini sağlar.
+•Özellikle eksaskala sistemler, süper bilgisayarlar gibi karmaşık
+yapılarda yüksek performans ve enerji verimliliği için zorunludur.
+
+Ortak Tasarım (Co-Design) Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılımgereksinimleri
+birlikte veeşzamanlıbelirlenir.
+Donanım ve Yazılım Gereksinimleri ve
+Özellikleri
+
+Ortak Tasarım (Co-Design) Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılımgereksinimleri
+birlikte veeşzamanlıbelirlenir.
+•Donanım ve Yazılım Co-Design Adımları
+•Donanım ve yazılımın hangi görevleri
+üstleneceği, birbirleriyle nasıl iletişim
+kuracakları planlanır.
+•Hem donanım hem yazılım mimarisi paralel
+düşünülür.
+Donanım ve Yazılım Co-DesignAdımları 1
+...
+Donanım ve Yazılım Co-DesignAdımları n
+Donanım ve Yazılım Gereksinimleri ve
+Özellikleri
+
+Ortak Tasarım (Co-Design) Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılımgereksinimleri
+birlikte veeşzamanlıbelirlenir.
+•Donanım ve Yazılım Co-Design Adımları
+•Donanım ve yazılımın hangi görevleri
+üstleneceği, birbirleriyle nasıl iletişim
+kuracakları planlanır.
+•Hem donanım hem yazılım mimarisi paralel
+düşünülür.
+•Donanım Tasarım Adımları
+•Donanım ekibi, yazılımın ihtiyaçlarını
+dikkate alarak tasarım yapar.
+•Yazılım Tasarım Adımları
+•Yazılım ekibi, donanımın özelliklerine göre
+en verimli şekilde kod yazar.
+Donanım ve Yazılım Co-DesignAdımları 1
+...
+Donanım ve Yazılım Co-DesignAdımları n
+Donanım ve Yazılım Gereksinimleri ve
+Özellikleri
+Donanım
+Tasarım Adımları
+...
+Yazılım Tasarım
+Adımları
+...
+
+Ortak Tasarım (Co-Design) Aşamaları
+•Gereksinimler ve Özellikler
+•Sistemin donanım ve yazılımgereksinimleri
+birlikte veeşzamanlıbelirlenir.
+•Donanım ve Yazılım Co-Design Adımları
+•Donanım ve yazılımın hangi görevleri
+üstleneceği, birbirleriyle nasıl iletişim
+kuracakları planlanır.
+•Hem donanım hem yazılım mimarisi paralel
+düşünülür.
+•Donanım Tasarım Adımları
+•Donanım ekibi, yazılımın ihtiyaçlarını
+dikkate alarak tasarım yapar.
+•Yazılım Tasarım Adımları
+•Yazılım ekibi, donanımın özelliklerine göre
+en verimli şekilde kod yazar.
+•Sürekli Geri Bildirim Döngüsü
+•Sistemin, anlık performans verilerine
+dayanarak dinamik bir şekilde optimizasyon
+yapar.
+Donanım ve Yazılım Co-DesignAdımları 1
+...
+Donanım ve Yazılım Co-DesignAdımları n
+Dona...(Kısaltıldı)
 - **İstenen Toplam Soru Sayısı:** 10 soru
 - **Zorluk Seviyesi:** mixed
 

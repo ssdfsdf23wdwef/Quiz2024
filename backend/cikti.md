@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-24T19:52:56.357Z
-Trace ID: quiz-1748116361981-zh14y
-Yanıt Uzunluğu: 9368 karakter
+Tarih: 2025-05-24T20:10:04.277Z
+Trace ID: quiz-1748117388126-vk5b2
+Yanıt Uzunluğu: 9911 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,172 +11,167 @@ Yanıt Uzunluğu: 9368 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Eksaskala bilgisayar sistemlerinde, tasarımcılara yüksek hesaplama gücünü kullanmaları için köprü görevi gören temel unsur aşağıdakilerden hangisidir?",
+      "questionText": "Geleneksel sistem tasarımında, donanım ve yazılım geliştirme süreçleri genellikle nasıl ilerler?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Donanım optimizasyonları",
-        "Programlama modelleri ve araçları",
-        "Veri depolama çözümleri",
-        "Ağ iletişim protokolleri"
+        "Donanım ve yazılım eş zamanlı ve birlikte geliştirilir.",
+        "Önce donanım geliştirilir, ardından yazılım donanıma uyarlanır.",
+        "Donanım ve yazılım bağımsız olarak geliştirilir ve sonra entegre edilir.",
+        "Yazılım önceden geliştirilir, donanım yazılıma göre tasarlanır."
       ],
-      "correctAnswer": "Programlama modelleri ve araçları",
-      "explanation": "Programlama modelleri ve araçları, tasarımcılara eksaskala sistemlerin yüksek hesaplama gücünü kullanabilmeleri için bir köprü görevi görür ve eksaskala bilgisayar sistemleri için kritik bir rol oynar. Bu modeller ve araçlar, karmaşık sistemlerin yönetilmesini ve optimize edilmesini sağlar.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
+      "correctAnswer": "Donanım ve yazılım bağımsız olarak geliştirilir ve sonra entegre edilir.",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım ayrı ayrı geliştirilir ve entegrasyon aşamasında bir araya getirilir. Bu yaklaşım, her iki bileşenin bağımsız çalışmasını sağlar ancak iletişim optimizasyonunu zorlaştırır. (Sunu 5, Geleneksel Sistem Tasarımı)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
       "difficulty": "medium"
     },
     {
       "id": "q2",
-      "questionText": "Aşağıdakilerden hangisi eksaskala sistemlerde kullanılan temel paralel programlama paradigmalarından biri değildir?",
+      "questionText": "Geleneksel sistem tasarımının temel özelliklerinden biri aşağıdakilerden hangisidir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "Paylaşımlı Bellek Paradigması",
-        "Dağıtık Bellek Paradigması",
-        "Hibrit Paralel Programlama",
-        "Nesne Yönelimli Programlama"
+        "Donanım ve yazılım arasında sıkı bir entegrasyonun olması",
+        "Donanım ve yazılımın eş zamanlı tasarlanması",
+        "Donanım ve yazılım arasında net bir ayrımın bulunması",
+        "Yazılımın donanımın özelliklerine göre dinamik olarak adapte olması"
       ],
-      "correctAnswer": "Nesne Yönelimli Programlama",
-      "explanation": "Paylaşımlı bellek, dağıtık bellek ve hibrit paralel programlama, eksaskala sistemlerde kullanılan temel paralel programlama paradigmalarıdır. Nesne yönelimli programlama ise bir programlama yaklaşımıdır, paralelleştirme paradigması değildir.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
+      "correctAnswer": "Donanım ve yazılım arasında net bir ayrımın bulunması",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım arasında belirgin bir ayrım vardır. Bu, her iki bileşenin bağımsız olarak geliştirilmesini sağlar. (Sunu 5, Geleneksel Sistem Tasarımı)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
       "difficulty": "easy"
     },
     {
       "id": "q3",
-      "questionText": "OpenMP hangi paralel programlama paradigması ile daha yakından ilişkilidir?",
+      "questionText": "Aşağıdakilerden hangisi geleneksel sistem tasarımının aşamalarından biri değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Dağıtık Bellek Paradigması",
-        "Paylaşımlı Bellek Paradigması",
-        "Hibrit Paralel Programlama",
-        "Veri Paralel Programlama"
+        "Gereksinimler ve Özellikler",
+        "Donanım Tasarım Adımları",
+        "Yazılım Tasarım Adımları",
+        "Sürekli Geri Bildirim Döngüsü"
       ],
-      "correctAnswer": "Paylaşımlı Bellek Paradigması",
-      "explanation": "OpenMP, çok çekirdekli işlemciler ve paylaşımlı bellek mimarileri ile paralel uygulamalar geliştirmek için kullanılır. Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırır ve düşük iletişim gecikmesi avantajı sunar.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
+      "correctAnswer": "Sürekli Geri Bildirim Döngüsü",
+      "explanation": "Geleneksel sistem tasarımının aşamaları şunlardır: Gereksinimler ve Özellikler, Donanım Tasarım Adımları, Yazılım Tasarım Adımları ve Entegrasyon. Sürekli geri bildirim döngüsü, ortak tasarım (co-design) yaklaşımının bir özelliğidir. (Sunu 5, Geleneksel Sistem Tasarımı Aşamaları)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
       "difficulty": "medium"
     },
     {
       "id": "q4",
-      "questionText": "Dağıtık bellek paradigmasında, işlemciler arası veri değişimi nasıl sağlanır?",
+      "questionText": "Geleneksel sistem tasarımında entegrasyon aşamasında hangi sorunlar ortaya çıkabilir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "analyzing",
       "options": [
-        "Ortak bellek erişimi ile",
-        "Mesajlaşma ile",
-        "Sanal bellek paylaşımı ile",
-        "Direkt bellek erişimi ile"
+        "Donanım ve yazılım uyumsuzluğu",
+        "Yeni teknolojilere hızlı adaptasyon",
+        "Maliyetlerin azalması",
+        "Sistem genelinde verimliliğin artması"
       ],
-      "correctAnswer": "Mesajlaşma ile",
-      "explanation": "Dağıtık bellek paradigmasında her işlemci kendi düğümünün belleğine erişir ve veri değişimi mesajlaşma ile sağlanır. MPI (Message Passing Interface) bu paradigmada yaygın olarak kullanılan bir araçtır.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
-      "difficulty": "easy"
+      "correctAnswer": "Donanım ve yazılım uyumsuzluğu",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım ayrı ayrı geliştirildiği için entegrasyon aşamasında uyumsuzluk sorunları ortaya çıkabilir. Bu durum, entegrasyon sürecini uzatır ve maliyeti artırır. (Sunu 5, Geleneksel Sistem Tasarımı Eksikleri)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
+      "difficulty": "medium"
     },
     {
       "id": "q5",
-      "questionText": "MPI (Message Passing Interface) ne için kullanılır?",
+      "questionText": "Geleneksel sistem tasarımının temel eksikliklerinden biri, aşağıdakilerden hangisidir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Paylaşımlı bellek ortamlarında paralel uygulamalar geliştirmek için",
-        "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için",
-        "Tek çekirdekli sistemlerde performansı artırmak için",
-        "Gömülü sistemlerde düşük güç tüketimi sağlamak için"
+        "Donanım ve yazılımın birlikte optimize edilmesi",
+        "Yeni teknolojilere hızlı uyum sağlanabilmesi",
+        "Entegrasyon sürecinin kısa ve maliyet etkin olması",
+        "Donanım ve yazılımın ayrı ayrı optimize edilmesi, sistem genelinde verimlilik kaybına yol açması"
       ],
-      "correctAnswer": "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için",
-      "explanation": "MPI, dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır. Eksaskala sistemlerde bağımsız işlemciler arasında veri alışverişi ve paralel görev koordinasyonu sağlar. MPI, işlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim mekanizmaları sunar.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
+      "correctAnswer": "Donanım ve yazılımın ayrı ayrı optimize edilmesi, sistem genelinde verimlilik kaybına yol açması",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım ayrı ayrı optimize edildiği için sistem genelinde verimlilik kaybı yaşanır. Bu, sistemin potansiyel performansının tam olarak kullanılamamasına neden olur. (Sunu 5, Geleneksel Sistem Tasarımı Eksikleri)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
       "difficulty": "medium"
     },
     {
       "id": "q6",
-      "questionText": "Eksaskala bilişimde MPI ve OpenMP'nin birlikte kullanılmasının temel amacı nedir?",
+      "questionText": "Geleneksel sistem tasarımında gereksinimler belirlenirken, donanım ve yazılım gereksinimleri nasıl ele alınır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Sadece işlemciler arası iletişimi hızlandırmak",
-        "Hem düğüm içindeki hem de tüm sistem genelindeki paralel işlemleri verimli bir şekilde yapmak",
-        "Sadece bellek kullanımını azaltmak",
-        "Sadece enerji tüketimini optimize etmek"
+        "Donanım ve yazılım gereksinimleri birlikte ve eş zamanlı belirlenir.",
+        "Donanım gereksinimleri yazılım gereksinimlerine göre belirlenir.",
+        "Yazılım gereksinimleri donanım gereksinimlerine göre belirlenir.",
+        "Donanım ve yazılım gereksinimleri ayrı ayrı ve önceden belirlenir."
       ],
-      "correctAnswer": "Hem düğüm içindeki hem de tüm sistem genelindeki paralel işlemleri verimli bir şekilde yapmak",
-      "explanation": "MPI ve OpenMP kombinasyonu, hem her bir düğümdeki paralel işlem hem de tüm sistem genelindeki paralel işlemlerin verimli bir şekilde yapılmasını sağlar. MPI, işlemler arası iletişim sağlarken, OpenMP, düğüm içindeki paralellikten faydalanarak paralelleme verimliliğini artırır.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
-      "difficulty": "medium"
+      "correctAnswer": "Donanım ve yazılım gereksinimleri ayrı ayrı ve önceden belirlenir.",
+      "explanation": "Geleneksel sistem tasarımında, sistemin donanım ve yazılım gereksinimleri ayrı ayrı ve önceden belirlenir. Bu, her iki bileşenin bağımsız olarak tasarlanmasına olanak tanır. (Sunu 5, Geleneksel Sistem Tasarımı Aşamaları)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
+      "difficulty": "easy"
     },
     {
       "id": "q7",
-      "questionText": "Aşağıdakilerden hangisi derleyici optimizasyonlarının temel amaçlarından biridir?",
+      "questionText": "Geleneksel sistem tasarımının hangi aşamasında donanım ve yazılım bir araya getirilerek test edilir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
-      "options": [
-        "Kaynak kodun daha okunabilir olmasını sağlamak",
-        "Kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecini iyileştirmek",
-        "Kaynak kodun farklı platformlarda çalışmasını sağlamak",
-        "Kaynak kodun daha az satır içermesini sağlamak"
-      ],
-      "correctAnswer": "Kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecini iyileştirmek",
-      "explanation": "Derleyici optimizasyonlarının temel amacı, kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecidir. Eksaskala sistemlerde bu, hesaplama verimliliğini artırmak ve bellek erişim gecikmesini azaltmak anlamına gelir.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
-      "difficulty": "medium"
+      "cognitiveDomain": "remembering",
+      "options": ["Gereksinimler", "Tasarım", "Entegrasyon", "Doğrulama"],
+      "correctAnswer": "Entegrasyon",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım, entegrasyon aşamasında bir araya getirilerek birlikte çalışabilirliği ve uyumluluğu test edilir. Bu aşama, sistemin genel işlevselliğini sağlamak için kritik öneme sahiptir. (Sunu 5, Geleneksel Sistem Tasarımı Aşamaları)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
+      "difficulty": "easy"
     },
     {
       "id": "q8",
-      "questionText": "Döngü açma (Loop Unrolling) tekniği ile ne amaçlanır?",
+      "questionText": "Geleneksel sistem tasarımında, bir değişiklik yapılması gerektiğinde bu durum süreci nasıl etkiler?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Döngülerin daha az bellek kullanmasını sağlamak",
-        "Döngü kontrol yapılarının yükünü azaltmak",
-        "Döngülerin daha kolay hata ayıklanmasını sağlamak",
-        "Döngülerin daha az kod satırı içermesini sağlamak"
+        "Değişiklikler kolayca ve hızlı bir şekilde uygulanabilir.",
+        "Değişiklikler sadece yazılım tarafında hızlıca yapılabilir.",
+        "Değişiklikler zor ve zaman alıcı olabilir.",
+        "Değişiklikler donanım tarafında daha hızlı uygulanır."
       ],
-      "correctAnswer": "Döngü kontrol yapılarının yükünü azaltmak",
-      "explanation": "Döngü açma, döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici optimizasyon tekniğidir. Birden fazla iterasyon tek bir döngüde açılır ve bu da işlemcinin birden fazla talimatı aynı anda çalıştırmasını mümkün kılar.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
+      "correctAnswer": "Değişiklikler zor ve zaman alıcı olabilir.",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım arasındaki ayrım nedeniyle, bir değişiklik yapılması gerektiğinde bu durum zor ve zaman alıcı olabilir. Çünkü her iki bileşenin de ayrı ayrı güncellenmesi ve yeniden entegre edilmesi gerekebilir. (Sunu 5, Geleneksel Sistem Tasarımı)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
       "difficulty": "medium"
     },
     {
       "id": "q9",
-      "questionText": "MPI_Send ve MPI_Recv fonksiyonları hangi amaçla kullanılır?",
+      "questionText": "Geleneksel sistem tasarımında, donanım ve yazılımın ayrı ayrı geliştirilmesi hangi tür sistemler için daha az uygundur?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "analyzing",
       "options": [
-        "Bellek yönetimi",
-        "İşlemler arası doğrudan veri alışverişi",
-        "Dosya okuma/yazma işlemleri",
-        "Hata ayıklama"
+        "Basit gömülü sistemler",
+        "Yüksek performans gerektirmeyen sistemler",
+        "Karmaşık ve yüksek performans gerektiren eksaskala sistemler",
+        "Küçük ölçekli veri işleme sistemleri"
       ],
-      "correctAnswer": "İşlemler arası doğrudan veri alışverişi",
-      "explanation": "MPI_Send ve MPI_Recv fonksiyonları, MPI'ın işlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim mekanizmalarındandır. Bu fonksiyonlar, dağıtık bellekli sistemlerde veri transferini sağlamak için kullanılır.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
-      "difficulty": "medium"
+      "correctAnswer": "Karmaşık ve yüksek performans gerektiren eksaskala sistemler",
+      "explanation": "Geleneksel sistem tasarımı, karmaşık ve yüksek performans gerektiren eksaskala sistemler gibi yapılar için daha az uygundur. Çünkü bu tür sistemlerde donanım ve yazılımın birlikte optimize edilmesi, daha yüksek verimlilik ve performans sağlar. (Sunu 5, Ortak Tasarım (Co-Design))",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
+      "difficulty": "hard"
     },
     {
       "id": "q10",
-      "questionText": "Aşağıdakilerden hangisi paralel programlama paradigması değildir?",
+      "questionText": "Geleneksel sistem tasarımında, donanım ve yazılım arasındaki iletişim nasıl optimize edilir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Paylaşımlı Bellek Paradigması",
-        "Dağıtık Bellek Paradigması",
-        "Fonksiyonel Programlama",
-        "Hibrit Paralel Programlama"
+        "Donanım ve yazılım arasında otomatik bir optimizasyon mekanizması bulunur.",
+        "İletişim, tasarım sürecinin başından itibaren optimize edilir.",
+        "İletişim, donanımın yazılıma uyarlanmasıyla optimize edilir.",
+        "İletişim optimize edilmez, bu durum verimlilik kayıplarına neden olabilir."
       ],
-      "correctAnswer": "Fonksiyonel Programlama",
-      "explanation": "Paylaşımlı Bellek, Dağıtık Bellek ve Hibrit Paralel Programlama, paralel programlama paradigmalarıdır. Fonksiyonel Programlama ise bir programlama stilidir ve paralellik ile doğrudan ilişkili değildir.",
-      "subTopicName": "Programlama Modelleri Ve Ara Lar",
-      "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
+      "correctAnswer": "İletişim optimize edilmez, bu durum verimlilik kayıplarına neden olabilir.",
+      "explanation": "Geleneksel sistem tasarımında donanım ve yazılım ayrı ayrı geliştirildiği için iletişim genellikle optimize edilmez. Bu durum, entegrasyon sırasında verimlilik kayıplarına yol açabilir. (Sunu 5, Geleneksel Sistem Tasarımı)",
+      "subTopicName": "Geleneksel Sistem Tasar M",
+      "normalizedSubTopicName": "geleneksel_sistem_tasar_m",
       "difficulty": "medium"
     }
   ]

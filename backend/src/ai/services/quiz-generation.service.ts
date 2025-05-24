@@ -791,16 +791,59 @@ export class QuizGenerationService {
         `[QUIZ_DEBUG] [${traceId}] ADIM 3: Soru dönüştürme ve detaylı validasyon yapılıyor...`,
       );
       console.time(`[QUIZ_DEBUG] [${traceId}] Soru dönüştürme süresi`);
-      const questions = this.quizValidation.transformAndValidateQuestions(
-        validatedData,
-        metadata,
-      );
+      
+      let questions;
+      try {
+        questions = this.quizValidation.transformAndValidateQuestions(
+          validatedData,
+          metadata,
+        );
+      } catch (error) {
+        // Eğer transformAndValidateQuestions başarısız olursa (geçersiz sorular nedeniyle),
+        // fallback mekanizmasını devreye sokuyoruz
+        console.error(
+          `[QUIZ_DEBUG] [${traceId}] Soru validasyonu başarısız: ${error.message}`,
+        );
+        this.logger.warn(
+          `[${traceId}] AI geçersiz sorular üretti, fallback soruları kullanılacak: ${error.message}`,
+          'QuizGenerationService.processAIResponse',
+        );
+        
+        // AI'ın geçersiz içerik ürettiği durumda fallback sorularını döndür
+        return this.quizValidation.createFallbackQuestions(metadata);
+      }
+      
       console.timeEnd(`[QUIZ_DEBUG] [${traceId}] Soru dönüştürme süresi`);
 
       // Dönüştürme sonucu
       console.log(
         `[QUIZ_DEBUG] [${traceId}] ADIM 3 SONUÇ: Soru dönüştürme tamamlandı, ${questions.length} adet geçerli soru`,
       );
+
+      // EKLENEN KONTROL: AI'ın anlamsız/geçersiz sorular üretip üretmediğini kontrol et
+      if (questions && questions.length > 0) {
+        const invalidQuestionPattern = /verilen metinde.*aktif konu.*bulunmadığı.*için.*soru.*oluşturulamamıştır/i;
+        const genericFailurePattern = /aktif konu yok|bekleyen konu yok|soru oluşturulamaz|konu belirtilmemiş/i;
+        
+        // İlk sorunun içeriğini kontrol et
+        const firstQuestion = questions[0];
+        if (firstQuestion && firstQuestion.questionText) {
+          const questionText = firstQuestion.questionText.toLowerCase();
+          
+          if (invalidQuestionPattern.test(questionText) || genericFailurePattern.test(questionText)) {
+            console.error(
+              `[QUIZ_DEBUG] [${traceId}] AI geçersiz/örnek sorular üretti, fallback kullanılacak`,
+            );
+            this.logger.warn(
+              `[${traceId}] AI geçersiz içerik üretti (örnek: "${firstQuestion.questionText.substring(0, 100)}..."), fallback soruları kullanılacak`,
+              'QuizGenerationService.processAIResponse',
+            );
+            
+            // AI'ın geçersiz içerik ürettiği durumda fallback sorularını döndür
+            return this.quizValidation.createFallbackQuestions(metadata);
+          }
+        }
+      }
 
       // İstenen soru sayısıyla karşılaştırma
       if (
