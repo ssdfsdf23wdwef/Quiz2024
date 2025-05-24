@@ -373,16 +373,66 @@ export class QuizzesService {
           );
 
         if (newTopics.length === 0) {
-          throw new BadRequestException(
-            'Yeni konu bulunamadı. Lütfen başka bir sınav tipi seçin.',
-          );
-        }
+          // Fall back to document-based topic detection like quick quiz
+          if (dto.sourceDocument && dto.sourceDocument.text) {
+            this.logger.logExamProcess(
+              'Yeni konu bulunamadı, belge tabanlı konu tespiti kullanılıyor',
+              {
+                courseId: dto.courseId,
+                documentTextLength: dto.sourceDocument.text.length,
+              },
+            );
 
-        selectedTopics = newTopics.map((t) => ({
-          subTopic: t.subTopicName,
-          normalizedSubTopic: t.normalizedSubTopicName,
-          status: t.status,
-        }));
+            try {
+              // Use AI service to detect topics from document text
+              const topicsResult = await this.aiService.detectTopics(
+                dto.sourceDocument.text,
+                [], // No existing topics for new topic focused
+                `newTopicFocused_${dto.courseId}_${Date.now()}`,
+              );
+
+              if (topicsResult.topics && topicsResult.topics.length > 0) {
+                selectedTopics = topicsResult.topics.map((topic) => ({
+                  subTopic: topic.subTopicName,
+                  normalizedSubTopic: topic.normalizedSubTopicName,
+                  status: 'pending', // Mark as pending since these are new topics
+                }));
+
+                this.logger.logExamProcess(
+                  `Belgeden ${selectedTopics.length} yeni konu tespit edildi`,
+                  { detectedTopics: selectedTopics.map(t => t.subTopic) },
+                );
+              } else {
+                throw new BadRequestException(
+                  'Belgeden konu tespit edilemedi. Lütfen başka bir belge yükleyin.',
+                );
+              }
+            } catch (topicDetectionError) {
+              this.logger.logError(
+                topicDetectionError,
+                'QuizzesService.generateQuiz - newTopicFocused topic detection',
+                {
+                  courseId: dto.courseId,
+                  userId,
+                  documentTextLength: dto.sourceDocument.text.length,
+                },
+              );
+              throw new BadRequestException(
+                'Belgeden konu tespit edilirken hata oluştu. Lütfen tekrar deneyin.',
+              );
+            }
+          } else {
+            throw new BadRequestException(
+              'Yeni konu bulunamadı ve belge sağlanmadı. Lütfen bir belge yükleyin veya başka bir sınav tipi seçin.',
+            );
+          }
+        } else {
+          selectedTopics = newTopics.map((t) => ({
+            subTopic: t.subTopicName,
+            normalizedSubTopic: t.normalizedSubTopicName,
+            status: t.status,
+          }));
+        }
       } else if (dto.personalizedQuizType === 'comprehensive') {
         // Get a mix of all topics in the course
         const allTopics = await this.firebaseService.firestore

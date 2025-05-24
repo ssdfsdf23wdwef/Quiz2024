@@ -1,18 +1,14 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-24T19:16:25.245Z
+## Tarih: 2025-05-24T19:43:41.400Z
 
-## Trace ID: quiz-1748114185241-tk351
+## Trace ID: quiz-1748115821396-lca46
 
 ## Alt Konular (1 adet):
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
-**Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
-
-1. **Yaz L M Testinin Nemi** (10 soru)
-
-**Toplam Aktif: 1 alt konu, 10 soru**
+Soru üretilecek aktif konu bulunamadı.
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
@@ -40,213 +36,14 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 **📥 GİRDİLER:**
 - **Konu Bilgileri:** ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
-**Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
-
-1. **Yaz L M Testinin Nemi** (10 soru)
-
-**Toplam Aktif: 1 alt konu, 10 soru**
+Soru üretilecek aktif konu bulunamadı.
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
 Bekleyen konu yok.
 
   *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
-- **Eğitim İçeriği:** 
-
-Yazılım Testine Giriş
-YazılımDoğrulamaveGeçerleme
-1
-
-Yazılımheryerde
-2
-
-Test nedengerekli?
-4
-
-YazılımTestiNedenÖnemlidir?
-•China Airlines Airbus A300
-5
-26 Nisan 1994'te biryazılımhatasınedeniyledüştüve264 masuminsanöldü
-
-YazılımTestiNedenÖnemlidir?
-•Kanada'nınTherac-25 radyasyontedavisimakinesi
-6
-1985 yılındayazılımhatasınedeniylearızalandıvehastalaraölümcülradyasyondozları
-verdi, 3 kişiöldüve3 kişide ağıryaralandı.
-
-YazılımTestiNedenÖnemlidir?
-•1,2 milyardolarlıkaskeriuydufırlatma(Titan IV-B)
-7
-Nisan 1999'da biryazılımhatasınedeniylebaşarısızoldu. Tarihinenpahalıkazası
-
-YazılımTestiNedenÖnemlidir?
-•ABD Banka Hesapları
-8
-Bir yazılımhatası, 823 müşterinin920 milyondolarkredilendirilmesinenedenoldu
-
-EkonomikEtki
-•CISQ Bilgi veYazılımKalitesiKonsorsiyumutarafındanhazırlananABD
-2020 RaporundaDüşükYazılımKalitesininMaliyeti:
-•ABD'dekiDüşükYazılımKalitesinin(CPSQ) toplammaliyeti2.08 trilyonABD
-dolarıdır.
-•Operasyonelarızalar1.56 trilyon
-•Eskisistemler520 milyar
-•Yazılımsistemleriningüvenilirolmasınıistiyoruz
-•Test, çoğudurumda, olupolmadıklarınıöğrenmeyolumuzdur.
-9
-
-YazılımTestiNedenÖnemlidir?
-•Tarihbutürörneklerledoludur.
-•Test etmekönemlidirçünküyazılımhatalarıpahalıvehatta
-tehlikeliolabilir.
-•Yazılımhatalarıpotansiyelolarakpara veinsankaybınaneden
-olabilir.
-14
-
-Programlarnedenbaşarısızoluyor?
-Tebrikler!
-•Kodunuztamamlandı. Derleniyor. Çalışıyor...
-•Ama Programınızçalışmasırasındaarızaverdi. Bu nasılolabilir?
-•Koddabirkusurvar. Kodyürütüldüğünde, kusurdahasonrabirhataolarakgörünürhale gelen
-kötüdavranışanedenolur.
-•Bir programdahataayıklanmadanönce, onutest edilebilecekşekildeayarlamalıyız-yani, arıza
-vermesiamacıylayürütülür.
-•Hataayıklamanınilk adımı, sözkonususorunuyenidenoluşturmaktır—yani, programınbelirtilen
-şekildearızavermesinenedenolanbirtest durumuoluşturmaktır.
-•İlk neden, gözlemlenebilecekşekildekontrolaltınaalmaktır.
-•İkincineden, düzeltmeninbaşarısınıdoğrulamaktır.
-15
-
-NedenTest Ediyoruz?
-•Te s t pahalıdır.
-•Başarısızlıklarda öyle!
-•Bu maliyettenne kazanıyoruz?
-•Hatalarıbulma
-•Veardından:
-•Hatalarıdüzeltme
-•Test ettiğimizprogramınveyasisteminkalitesiniyükseltmek
-16
-
-MaliyetveBaşarısızlıklarınÖdünleşimleri
-(trade-off)
-ToplamKaliteMaliyeti(CoQ) =
-UygunlukMaliyeti(CoC) +
-UygunsuzlukMaliyeti(CoNC)
-UygunlukMaliyeti
-•Önleme: kaliteplanlaması, araçlarayatırım, kaliteeğitimi
-•Değerlendirme: test etme, inspection
-UygunsuzlukMaliyeti
-•İçarızalar: düzeltme(rework)
-•Dışarızalar: sorumluluk, mal kaybı, can kaybı
-17
-
-MaliyetveBaşarısızlıklarınÖdünleşimleri
-(trade-off)
-•Test, UygunlukMaliyetinekatkıdabulunur
-•UygunsuzlukMaliyetinidoğrudanazaltmalıdır
-18
-
-Yazılımsistemleribağlamı
-•Yazılımsistemlerihayatınönemli
-birparçasıdır:
-19
-•Çoğukişi, beklendiğigibi
-çalışmayanyazılımlarlailgili
-deneyimesahiptir.
-•Yazılımsistemidoğruşekilde
-çalışmazsa, aşağıdakigibi
-sorunlarayolaçabilir:
-•Para kaybı
-•Ticariitibarkaybı
-•Yaralanmaveyaölüm
-
-Yazılımhatalarınınnedenleri
-•İnsanHatası
-•Kontroledilemeyenolaylar
-20
-
-Yazılımhatalarınınnedenleri
-•Her ikihatanedenide koddakusurlar(hatalar) üretir.
-•Kusurlar, yürütülürse, yazılımsistemininarızalanmasınanedenolabilir
-(sistemyapmasıgerekeniyapamaz).
-•Arızalar, yazılımsistemininkullanıcılarınıciddişekildeetkileyebilir,
-örneğin:
-•Frenpedalıçalışmıyor
-•Finansalyazılımsistemlerindeyanlışhesaplamalar
-21
-
-Dörttipiksenaryo
-22
-
-Onarımmaliyeti
-23
-
-Testinrolü
-•Test, biryazılımürünününyaşamdöngüsününtümaşamalarında
-önemlibirrole sahiptir:
-•Planlama
-•Geliştirme
-•Bakım
-•Işletim
-24
-
-Testinrolü
-•Çalışmasırasındaortayaçıkansorunriskiniazaltmakiçin
-•Yazılımsistemininaşağıdakilerikarşılayıpkarşılamadığınıkontrol
-etmekiçin:
-•Yasalyükümlülükler
-•Sektöreözelstandartlar
-•Yazılımsistemihakkındadahafazlabilgiedinmekiçin
-25
-
-Test etme...
-•İşlevselyönler
-•İşlevselolmayanyönler(Güvenilirlik,
-Kullanılabilirlik, Taşınabilirlik)
-Bulunankusurlaraçısından
-SW kalitesiniölçer
-•Düzgünbirşekildetest edilmişseveminimum
-kusurbulunursa
-SW kalitesinegüvenyaratır
-•Kusurlarıntemelnedenlerinianlayaraksüreçler
-iyileştirilebilir. Bu, kusurlarıntekrarlanmasını
-önleyebilir.
-Gelecektekiprojelerde
-uygulamamıziçinbize
-dersleröğretir
-26
-
-Test nedir?
-27
-
-YazılımTestiNedir?
-•Geliştirilenyazılımındoğruluğunu, eksiksizliğinivekalitesini
-belirlemekiçinkullanılansistematikbirsüreçtir. Ürünson kullanıcılara
-sunulmadanöncedüzeltilebilmesiiçinbiryazılımdakihatalarıbulmak
-amacıylayürütülenbirdizi faaliyetiiçerir
-•Basit birdeyişle: Yazılımtesti, yazılımsistemininhatasızolmasını
-amaçlayanbirfaaliyettir.
-•Manuelolarakveyaotomatikaraçlarkullanılarakyapılabilir.
-28
-
-Testintanımı
-•Tümyazılımyaşamdöngüsüfaaliyetlerinitest etmesüreci:
-•Hem statikhem de dinamik,
-•ilgi:
-•Planlama, HazırlıkveDeğerlendirme
-•nesne:
-•Yazılımürünleriveilgiliişürünleri
-•hedef:
-•belirtilengereksinimlerikarşıladıklarınıbelirlemek
-•Amacauygunolduklarınıgöstermek
-•kusurlarıtespitetmek
-29
-
-Testintanımı
-•Test sürecininamaçlarınabağlıolarak, test şunlaraodaklanabilir:
-•Yazılımsisteminingereksinimlerikarşıladığınınonayı
-•Mümkünolduğuncaazsayıdaarızayamahal vermek
-•Değişikliklersırasındahe...(Kısaltıldı)
+- **Eğitim İçeriği:** {{DOCUMENT_TEXT}}
 - **İstenen Toplam Soru Sayısı:** 10 soru
 - **Zorluk Seviyesi:** mixed
 
