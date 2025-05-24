@@ -58,11 +58,12 @@ Sen bir eğitim içeriği analisti olarak görev yapacaksın. Verilen bir eğiti
 
 **🔄 İZLENECEK ADIMLAR:**
 1. **Kavramsal Anlama:** Metni dikkatlice oku, temel KAVRAMLARI, İLKELERİ, TEORİLERİ ve TANIMLARI belirle
-2. **Ana Konuları Belirleme:** Merkezi kavramsal temaları tespit et
-3. **Alt Konuları Seçme:** Her ana konu için kriterlere uyan birinci seviye alt konuları belirle
-4. **Zorluk Derecelendirme:** Her alt konuyu "kolay", "orta" veya "zor" olarak sınıflandır
-5. **Öğrenme Hedefi Oluşturma:** Her alt konu için Bloom Taksonomisi'ne uygun ölçülebilir bir öğrenme hedefi yaz
-6. **JSON Çıktısı Hazırlama:** Belirlediğin konuları belirtilen formatta organize et
+2. **Mevcut Konuları Değerlendirme (Eğer Sağlandıysa):** Eğer sana "Existing topics" (Mevcut konular) listesi verildiyse, bu konuları DİKKATE AL. Bu listedeki konuları YENİDEN TESPİT ETME. Amacın, bu mevcut konuların DIŞINDA kalan, metindeki YENİ ve FARKLI kavramları bulmaktır.
+3. **Ana Konuları Belirleme:** Merkezi kavramsal temaları tespit et (Mevcut konuları hariç tutarak).
+4. **Alt Konuları Seçme:** Her ana konu için kriterlere uyan birinci seviye alt konuları belirle (Mevcut konuları hariç tutarak).
+5. **Zorluk Derecelendirme:** Her alt konuyu "kolay", "orta" veya "zor" olarak sınıflandır
+6. **Öğrenme Hedefi Oluşturma:** Her alt konu için Bloom Taksonomisi'ne uygun ölçülebilir bir öğrenme hedefi yaz
+7. **JSON Çıktısı Hazırlama:** Belirlediğin konuları belirtilen formatta organize et
 
 // ----------------------------------------------------
 // -------------- JSON ÇIKTI FORMATI -----------------
@@ -122,4 +123,4 @@ Sen bir eğitim içeriği analisti olarak görev yapacaksın. Verilen bir eğiti
 
 // ====================================================
 // ================== PROMPT SONU ====================
-// ==================================================== 
+// ====================================================

@@ -357,11 +357,11 @@ export class QuizzesService {
             status: t.status,
           }));
       } else if (dto.personalizedQuizType === 'newTopicFocused') {
-        const newTopics = await this.firebaseService.firestore
+        // First, get ALL existing topics for this course (not just pending ones)
+        const existingTopics = await this.firebaseService.firestore
           .collection('learningTargets')
           .where('courseId', '==', dto.courseId)
           .where('userId', '==', userId)
-          .where('status', '==', 'pending')
           .select('subTopicName', 'normalizedSubTopicName', 'status')
           .get()
           .then((snapshot) =>
@@ -372,66 +372,88 @@ export class QuizzesService {
             })),
           );
 
-        if (newTopics.length === 0) {
-          // Fall back to document-based topic detection like quick quiz
-          if (dto.sourceDocument && dto.sourceDocument.text) {
-            this.logger.logExamProcess(
-              'Yeni konu bulunamadı, belge tabanlı konu tespiti kullanılıyor',
-              {
-                courseId: dto.courseId,
-                documentTextLength: dto.sourceDocument.text.length,
-              },
-            );
+        this.logger.logExamProcess(
+          `newTopicFocused: ${existingTopics.length} mevcut konu bulundu`,
+          { 
+            courseId: dto.courseId,
+            existingTopicsCount: existingTopics.length,
+            existingTopics: existingTopics.map(t => t.subTopicName)
+          },
+        );
 
-            try {
-              // Use AI service to detect topics from document text
-              const topicsResult = await this.aiService.detectTopics(
-                dto.sourceDocument.text,
-                [], // No existing topics for new topic focused
-                `newTopicFocused_${dto.courseId}_${Date.now()}`,
+        // Check if document is provided for new topic detection
+        if (!dto.sourceDocument || !dto.sourceDocument.text) {
+          throw new BadRequestException(
+            'Yeni konu tespit etmek için bir belge yüklemeniz gerekiyor.',
+          );
+        }
+
+        this.logger.logExamProcess(
+          'newTopicFocused: Belgeden mevcut konular dışında yeni konular tespit ediliyor',
+          {
+            courseId: dto.courseId,
+            documentTextLength: dto.sourceDocument.text.length,
+            existingTopicsForAI: existingTopics.map(t => t.subTopicName)
+          },
+        );
+
+        try {
+          // Pass existing topics to AI so it can detect NEW topics that are NOT in the existing list
+          const existingTopicNames = existingTopics.map(t => t.subTopicName);
+          const topicsResult = await this.aiService.detectTopics(
+            dto.sourceDocument.text,
+            existingTopicNames, // Pass existing topics to AI
+            `newTopicFocused_${dto.courseId}_${Date.now()}`,
+          );
+
+          if (topicsResult.topics && topicsResult.topics.length > 0) {
+            // Filter out any topics that already exist (double-check)
+            const newTopics = topicsResult.topics.filter(detectedTopic => {
+              const isDuplicate = existingTopics.some(existingTopic => 
+                existingTopic.normalizedSubTopicName === detectedTopic.normalizedSubTopicName ||
+                existingTopic.subTopicName.toLowerCase() === detectedTopic.subTopicName.toLowerCase()
               );
+              return !isDuplicate;
+            });
 
-              if (topicsResult.topics && topicsResult.topics.length > 0) {
-                selectedTopics = topicsResult.topics.map((topic) => ({
-                  subTopic: topic.subTopicName,
-                  normalizedSubTopic: topic.normalizedSubTopicName,
-                  status: 'pending', // Mark as pending since these are new topics
-                }));
-
-                this.logger.logExamProcess(
-                  `Belgeden ${selectedTopics.length} yeni konu tespit edildi`,
-                  { detectedTopics: selectedTopics.map(t => t.subTopic) },
-                );
-              } else {
-                throw new BadRequestException(
-                  'Belgeden konu tespit edilemedi. Lütfen başka bir belge yükleyin.',
-                );
-              }
-            } catch (topicDetectionError) {
-              this.logger.logError(
-                topicDetectionError,
-                'QuizzesService.generateQuiz - newTopicFocused topic detection',
-                {
-                  courseId: dto.courseId,
-                  userId,
-                  documentTextLength: dto.sourceDocument.text.length,
-                },
-              );
+            if (newTopics.length === 0) {
               throw new BadRequestException(
-                'Belgeden konu tespit edilirken hata oluştu. Lütfen tekrar deneyin.',
+                'Bu belgede var olan konular dışında yeni konu tespit edilemedi. Farklı içerikli bir belge yüklemeyi deneyin.',
               );
             }
+
+            selectedTopics = newTopics.map((topic) => ({
+              subTopic: topic.subTopicName,
+              normalizedSubTopic: topic.normalizedSubTopicName,
+              status: 'pending', // Mark as pending since these are new topics
+            }));
+
+            this.logger.logExamProcess(
+              `newTopicFocused: Belgeden ${selectedTopics.length} YENİ konu tespit edildi`,
+              { 
+                detectedNewTopics: selectedTopics.map(t => t.subTopic),
+                filteredOutExisting: topicsResult.topics.length - newTopics.length
+              },
+            );
           } else {
             throw new BadRequestException(
-              'Yeni konu bulunamadı ve belge sağlanmadı. Lütfen bir belge yükleyin veya başka bir sınav tipi seçin.',
+              'Belgeden konu tespit edilemedi. Lütfen daha içerik açısından zengin bir belge yükleyin.',
             );
           }
-        } else {
-          selectedTopics = newTopics.map((t) => ({
-            subTopic: t.subTopicName,
-            normalizedSubTopic: t.normalizedSubTopicName,
-            status: t.status,
-          }));
+        } catch (topicDetectionError) {
+          this.logger.logError(
+            topicDetectionError,
+            'QuizzesService.generateQuiz - newTopicFocused topic detection',
+            {
+              courseId: dto.courseId,
+              userId,
+              documentTextLength: dto.sourceDocument.text.length,
+              existingTopicsCount: existingTopics.length,
+            },
+          );
+          throw new BadRequestException(
+            'Belgeden konu tespit edilirken hata oluştu. Lütfen tekrar deneyin.',
+          );
         }
       } else if (dto.personalizedQuizType === 'comprehensive') {
         // Get a mix of all topics in the course
@@ -2000,6 +2022,106 @@ export class QuizzesService {
         courseId: params.courseId,
       });
       throw new Error(`Sınav kaydedilemedi: ${error.message}`);
+    }
+  }
+
+  /**
+   * Kişiselleştirilmiş sınavlar için tespit edilen alt konuları öğrenme hedefleri olarak kaydet
+   */
+  @LogMethod({ trackParams: true })
+  private async saveDetectedSubTopicsAsLearningTargets(
+    courseId: string,
+    userId: string,
+    selectedTopics: TopicDto[],
+    personalizedQuizType: string
+  ): Promise<void> {
+    try {
+      this.logger.logExamProcess(
+        `${personalizedQuizType} türü kişiselleştirilmiş sınav için ${selectedTopics.length} adet alt konu öğrenme hedefi olarak kaydediliyor`,
+        {
+          courseId,
+          userId,
+          personalizedQuizType,
+          topicCount: selectedTopics.length,
+          rawSelectedTopics: selectedTopics // Debug için raw veri
+        }
+      );
+
+      // Alt konuları LearningTargetsService createBatch metodunun beklediği formata çevir
+      const topicsForLearningTargets = selectedTopics.map((topic, index) => {
+        this.logger.logExamProcess(
+          `Topic mapping debug - Index ${index}:`,
+          {
+            rawTopic: topic,
+            topicType: typeof topic,
+            isString: typeof topic === 'string',
+            hasSubTopic: topic && typeof topic === 'object' && 'subTopic' in topic,
+            hasNormalizedSubTopic: topic && typeof topic === 'object' && 'normalizedSubTopic' in topic
+          }
+        );
+
+        return {
+          subTopicName: typeof topic === 'string' ? topic : topic.subTopic,
+          normalizedSubTopicName: typeof topic === 'string' 
+            ? undefined 
+            : topic.normalizedSubTopic
+        };
+      }).filter(topic => topic.subTopicName); // Boş olanları filtrele
+
+      this.logger.logExamProcess(
+        `Mapping tamamlandı. Filtrelenmiş topic sayısı: ${topicsForLearningTargets.length}`,
+        {
+          topicsForLearningTargets,
+          originalCount: selectedTopics.length,
+          filteredCount: topicsForLearningTargets.length
+        }
+      );
+
+      if (topicsForLearningTargets.length === 0) {
+        this.logger.logExamProcess(
+          `Öğrenme hedefi olarak kaydedilecek geçerli alt konu bulunamadı`,
+          { courseId, userId, personalizedQuizType }
+        );
+        return;
+      }
+
+      // LearningTargetsService'teki createBatch metodunu kullanarak otomatik kaydet
+      this.logger.logExamProcess(
+        `LearningTargetsService.createBatch çağrılıyor`,
+        {
+          courseId,
+          userId,
+          topicsForLearningTargets
+        }
+      );
+
+      const savedTargets = await this.learningTargetsService.createBatch(
+        courseId,
+        userId,
+        topicsForLearningTargets
+      );
+
+      this.logger.logExamProcess(
+        `${savedTargets.length} adet alt konu başarıyla "pending" (beklemede) durumu ile öğrenme hedefi olarak kaydedildi`,
+        {
+          courseId,
+          userId,
+          personalizedQuizType,
+          savedCount: savedTargets.length,
+          requestedCount: topicsForLearningTargets.length,
+          savedTargets: savedTargets.map(t => ({ id: t.id, subTopicName: t.subTopicName, status: t.status }))
+        }
+      );
+
+    } catch (error) {
+      // Hata olsa bile sınav oluşturmaya devam et, sadece logla
+      this.logger.logError(error, 'QuizzesService.saveDetectedSubTopicsAsLearningTargets', {
+        courseId,
+        userId,
+        personalizedQuizType,
+        topicCount: selectedTopics.length,
+        additionalInfo: 'Alt konular öğrenme hedefi olarak kaydedilirken hata oluştu - sınav oluşturmaya devam edildi'
+      });
     }
   }
 }

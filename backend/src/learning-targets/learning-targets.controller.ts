@@ -108,7 +108,7 @@ export class LearningTargetsController {
     }
   }
 
-  @Get('course/:courseId')
+  @Get('by-course/:courseId')
   @ApiOperation({
     summary:
       'Bir derse ait tüm öğrenme hedeflerini listeler (path parametresi ile)',
@@ -298,7 +298,7 @@ export class LearningTargetsController {
           let savedTargets: LearningTargetWithQuizzes[] = [];
           if (isAuthenticated && dto.courseId) {
             this.logger.info(
-              `Tespit edilen ${result.length} konu, ${dto.courseId} ID'li ders için öğrenme hedefi olarak kaydediliyor`,
+              `✨ KONU TESPİTİ: ${result.length} konu tespit edildi, ${dto.courseId} ID'li ders için öğrenme hedefleri olarak kaydediliyor`,
               'LearningTargetsController.detectTopics',
               __filename,
             );
@@ -310,8 +310,13 @@ export class LearningTargetsController {
                 normalizedSubTopicName: topic.toLowerCase().replace(/\s+/g, '-'),
               }));
               
+              this.logger.info(
+                `🔄 KONU KAYDI: createBatch metodu çağrılıyor`,
+                'LearningTargetsController.detectTopics',
+                __filename,
+              );
+              
               // Toplu öğrenme hedefi oluştur - "pending" (beklemede) durumu ile kaydedilecek
-              // createBatch metoduna uygun parametreler ile çağrı yapıyoruz
               savedTargets = await this.learningTargetsService.createBatch(
                 dto.courseId,
                 userId,
@@ -319,21 +324,27 @@ export class LearningTargetsController {
               );
               
               this.logger.info(
-                `${savedTargets.length} adet öğrenme hedefi "pending" (beklemede) durumu ile başarıyla kaydedildi`,
+                `✅ BAŞARILI: ${savedTargets.length} adet öğrenme hedefi "pending" durumu ile veritabanına kaydedildi`,
                 'LearningTargetsController.detectTopics',
                 __filename,
               );
             } catch (saveError) {
               this.logger.error(
-                `Öğrenme hedefleri kaydedilirken hata oluştu: ${saveError.message}`,
+                `❌ HATA: Öğrenme hedefleri kaydedilirken hata oluştu: ${saveError.message}`,
                 'LearningTargetsController.detectTopics',
-                __filename
+                __filename,
               );
               // Kaydetme hatası olsa bile konuları döndürmeye devam et
             }
           } else if (dto.courseId && !isAuthenticated) {
             this.logger.info(
-              `Kullanıcı giriş yapmadığı için öğrenme hedefleri kaydedilmedi`,
+              `⚠️ UYARI: Kullanıcı giriş yapmadığı için öğrenme hedefleri kaydedilmedi`,
+              'LearningTargetsController.detectTopics',
+              __filename,
+            );
+          } else {
+            this.logger.info(
+              `ℹ️ BİLGİ: CourseId sağlanmadığı için öğrenme hedefleri kaydedilmedi`,
               'LearningTargetsController.detectTopics',
               __filename,
             );

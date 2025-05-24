@@ -1,185 +1,20 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-24T20:59:49.638Z
-Trace ID: quiz-1748120379806-oe4xz
-Yanıt Uzunluğu: 5926 karakter
+Tarih: 2025-05-24T22:09:27.428Z
+Trace ID: quiz-1748124565375-4uof6
+Yanıt Uzunluğu: 498 karakter
 
 ## Ham Çıktı:
 ```json
-```json
-{
-  "questions": [
-    {
-      "id": "q1",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q2",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q3",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q4",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q5",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q6",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q7",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q8",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q9",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q10",
-      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Seçenek A",
-        "Seçenek B",
-        "Seçenek C",
-        "Seçenek D"
-      ],
-      "correctAnswer": "Seçenek A",
-      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
-      "subTopicName": "Belirtilen Aktif Konu Yok",
-      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
-      "difficulty": "easy"
-    }
-  ]
-}
+Anlaşıldı. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu için soru üretemiyorum. Lütfen soru üretilecek aktif konuları ve her konu için istenen soru sayısını belirtin. Örneğin:
+
 ```
+## AKTİF KONULAR (SORU ÜRETİLECEK)
+- Nesne Yönelimli Programlama (3 soru)
+- Veri Yapıları (4 soru)
+- Algoritma Analizi (3 soru)
+```
+
+Bu bilgiyi sağladıktan sonra, belirtilen eğitim içeriğine ({{DOCUMENT_TEXT}}) dayanarak, istenen sayıda ve zorluk seviyesinde soruları JSON formatında oluşturabilirim.
+
 ```

@@ -1043,3 +1043,110 @@ Details: {"reason":"AxiosError: Request failed with status code 404\n    at sett
 [2025-05-24T20:58:54.136Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
 Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
 ------------------------------------------------------------
+[2025-05-24T21:10:27.684Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T21:12:23.371Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T21:12:24.121Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T21:22:30.034Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T21:42:25.610Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T21:42:31.346Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:32.595Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:34.517Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:36.020Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:37.379Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:38.927Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:40.690Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:42.767Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:44.215Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:45.759Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:47.280Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:49.488Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:51.830Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:53.304Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:54.584Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:55.578Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:56.696Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:42:58.305Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:43:00.360Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:43:01.586Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"[object Event]"}
+------------------------------------------------------------
+[2025-05-24T21:46:14.773Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-24T21:46:14.735Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-24T21:46:38.396Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T21:48:34.032Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-24T21:48:34.050Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-24T21:48:46.743Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T21:54:57.739Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-24T21:54:57.735Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-24T21:55:19.185Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 404\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T22:05:41.709Z] [error] [UnhandledPromiseRejection] Yakalanmamış Promise hatası
+Details: {"reason":"AxiosError: Request failed with status code 401\n    at settle (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/settle.js:24:12)\n    at XMLHttpRequest.onloadend (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/adapters/xhr.js:73:66)\n    at Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:57:41)\n    at async Axios.request (webpack-internal:///(app-pages-browser)/./node_modules/axios/lib/core/Axios.js:52:14)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:453:34)\n    at async retryRequest (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:159:16)\n    at async ApiService.get (webpack-internal:///(app-pages-browser)/./src/services/api.service.ts:452:20)\n    at async LearningTargetService.getLearningTargetsByCourse (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:32:29)\n    at async LearningTargetService.getLearningTargets (webpack-internal:///(app-pages-browser)/./src/services/learningTarget.service.ts:61:29)"}
+------------------------------------------------------------
+[2025-05-24T22:08:32.401Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-24T22:08:32.397Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-24T22:10:18.809Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
+[2025-05-24T22:10:18.816Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
