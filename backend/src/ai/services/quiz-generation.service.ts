@@ -82,20 +82,26 @@ export class QuizGenerationService {
     const beautifySubTopicName = (name: string): string => {
       if (!name || typeof name !== 'string') return 'Geçersiz Alt Konu Adı';
 
-      // Özel Türkçe karakter dönüşümleri
+      // Özel Türkçe karakter dönüşümleri - spesifik kalıplar önce
       const turkishReplacements = {
+        // Spesifik kelime kalıpları
         'l-k': 'lık',
-        'l-l-k': 'lülük',
-        'g-': 'ği',
-        '-': ' ',
+        'l-l-k': 'lülük', 
         'sa-l-k': 'sağlık',
         'g-venlik': 'güvenlik',
         'y-k-ml-l': 'yükümlülük',
         'de-erlendirilmesi': 'değerlendirilmesi',
-        nlemler: 'önlemler',
+        'nlemler': 'önlemler',
+        // Yaygın karakter kalıpları
+        'tasar-m-': 'tasarım',
+        'a-amalar': 'aşamaları',
+        // Tekil karakter dönüşümleri - sadece kelime sonu
+        'g-\\b': 'ği',
+        // Genel tire-boşluk dönüşümü en son
+        '-+': ' ',
       };
 
-      // Tireli ifadeleri düzelt
+      // Tireli ifadeleri düzelt - sıralı şekilde
       let processedName = name.toLowerCase();
       Object.entries(turkishReplacements).forEach(([key, value]) => {
         processedName = processedName.replace(new RegExp(key, 'g'), value);

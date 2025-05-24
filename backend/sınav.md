@@ -1,10 +1,10 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-24T20:10:04.330Z
+## Tarih: 2025-05-24T20:16:43.113Z
 
-## Trace ID: quiz-1748117404327-4mpxf
+## Trace ID: quiz-1748117803109-hsph6
 
-## Alt Konular (1 adet):
+## Alt Konular (2 adet):
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
@@ -210,4 +210,204 @@ Bekleyen konu yok.
 // ================ PROMPT SONU ======================
 // ====================================================
 ```
+
+
+
+## AI Yanıtı:
+```json
+```json
+{
+  "questions": [
+    {
+      "id": "q1",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q2",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q3",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q4",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q5",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q6",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q7",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q8",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q9",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q10",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Aktif konu belirtilmediği için soru üretilemedi.",
+        "Metinde yeterli bilgi bulunmamaktadır.",
+        "Soru üretimi için gerekli parametreler eksiktir.",
+        "Bu bir test sorusu değildir."
+      ],
+      "correctAnswer": "Aktif konu belirtilmediği için soru üretilemedi.",
+      "explanation": "Aktif konu belirtilmediği için soru üretilememiştir. Lütfen soru üretilecek aktif konuları belirtin.",
+      "subTopicName": "Belirtilmemiş",
+      "normalizedSubTopicName": "belirtilmemis",
+      "difficulty": "easy"
+    }
+  ]
+}
+```
+```
+
+
+
+## İşlenen Sorular Analizi:
+
+- Toplam Soru Sayısı: 10
+- Alt Konu Dağılımı:
+
+  - Belirtilmemiş: 10 soru
+
+
+### Soru Örnekleri (Her Alt Konudan 1 Adet):
+
+#### Belirtilmemiş:
+- Soru: Verilen metinde aktif konu bulunmadığı için soru üretilememiştir. Lütfen aktif konuları belirtin.
+- Seçenekler: Aktif konu belirtilmediği için soru üretilemedi. | Metinde yeterli bilgi bulunmamaktadır. | Soru üretimi için gerekli parametreler eksiktir. | Bu bir test sorusu değildir.
+- Doğru Cevap: Aktif konu belirtilmediği için soru üretilemedi.
+- Zorluk: easy
 

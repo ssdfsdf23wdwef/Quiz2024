@@ -141,17 +141,18 @@ export class GenerateQuizDto {
     description:
       'Kişiselleştirilmiş sınav tipi (sadece quizType="personalized" olduğunda gerekli)',
     example: 'weakTopicFocused',
-    enum: ['weakTopicFocused', 'newTopicFocused', 'comprehensive'],
+    enum: ['weakTopicFocused', 'newTopicFocused', 'comprehensive', 'topicFocusedQuick'],
     required: false,
     nullable: true,
   })
   @IsString()
-  @IsEnum(['weakTopicFocused', 'newTopicFocused', 'comprehensive'])
+  @IsEnum(['weakTopicFocused', 'newTopicFocused', 'comprehensive', 'topicFocusedQuick'])
   @IsOptional()
   personalizedQuizType?:
     | 'weakTopicFocused'
     | 'newTopicFocused'
     | 'comprehensive'
+    | 'topicFocusedQuick'
     | null;
 
   @ApiProperty({
