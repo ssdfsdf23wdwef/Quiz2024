@@ -1886,6 +1886,19 @@ export class QuizValidationService {
       : validatedData?.questions;
 
     // Soru dizisi kontrolü
+    if (!validatedData?.questions || !Array.isArray(validatedData.questions)) {
+      this.logger.error('Doğrulanmış veride soru dizisi bulunamadı', 'QuizValidationService');
+      throw new BadRequestException('Doğrulanmış veride soru dizisi bulunamadı');
+    }
+    
+    // Boş soru dizisi kontrolü
+    if (validatedData.questions.length === 0) {
+      this.logger.error('AI yanıtı boş soru dizisi döndürdü - Geçersiz yanıt', 'QuizValidationService');
+      throw new BadRequestException(
+        'AI modeli belirlenen konular için soru oluşturamadı. Bu durum geçici olabilir. Lütfen farklı alt konularla tekrar deneyin, konu sayısını azaltın veya birkaç dakika sonra tekrar deneyin.'
+      );
+    }
+
     if (
       !questionsArray ||
       !Array.isArray(questionsArray) ||

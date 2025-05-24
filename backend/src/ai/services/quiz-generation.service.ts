@@ -538,6 +538,15 @@ export class QuizGenerationService {
         );
         throw new Error("AI Provider'dan boş yanıt alındı.");
       }
+      
+      // Boş soru dizisi kontrolü ekleyelim
+      if (result.text.includes('"questions": []') || result.text.includes('"questions":[]')) {
+        this.logger.warn(
+          `[${traceId}] AI boş soru dizisi döndürdü. Yeniden denenecek.`,
+          'QuizGenerationService.generateAIContent',
+        );
+        throw new Error('AI boş soru dizisi döndürdü.');
+      }
 
       this.logger.debug(
         `[${traceId}] AI yanıtı alındı. Yanıt uzunluğu: ${result.text.length} karakter, token kullanımı: ${result.usage?.totalTokens || 'bilinmiyor'}`,

@@ -639,6 +639,15 @@ export class FirebaseService implements OnModuleInit {
   }
 
   /**
+   * Benzersiz bir ID oluşturur
+   * @returns Benzersiz ID
+   */
+  generateId(): string {
+    // Firestore'un kendi ID oluşturma metodunu kullan
+    return this.firestore.collection('_').doc().id;
+  }
+
+  /**
    * Atomik sayaç artırma/azaltma işlemi
    * @param collection Koleksiyon adı
    * @param id Belge ID'si

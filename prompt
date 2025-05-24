@@ -74,3 +74,17 @@ böyle bir şey de var. diyelim ki sistem 10 alt konu tespt edildi. ve kullanıc
 
 ========
 benim dediklerim hepsi analiz et ve anla. her şey anlamak için bunu da oku @prd.md 
+
+
+
+
+
+
+
+şimdi, (Yeni Konular) odakla. onu geliştireceğiz.
+bu alt konular göre sınav yapacak. bu alt konular yeni belgede çıkaracak. ama eski alt konular dahil olamayacak. bu da öncelikle veri tabanda seçilen derse ait alt konular getireceğiz ve prompte ekleceğiz ve diyeceğiz ki, bunlar dışında alt konular varsa getir. ve tespit edilen alt konular veri tabanda birer öğrenme hedef olarak kayıt edilecek. sonra bunlara göre "yeni konular" odaklı sınav oluşturacak. 
+
+adım adım yapalım. önce sadece tespit edilen alt konular veri tabanda birer öğrenme hedef olarak kayıt edilsin. 
+diğeri sonra devam edelim.
+
+proje anlamak @prd.md bu document bak. sonra proje yapısı analiz et. ve sonra başla ilk adıma

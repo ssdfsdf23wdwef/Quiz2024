@@ -602,6 +602,18 @@ export default function ExamCreationWizard({
     
     console.log(`✅ Quiz tercihleri güncellendi: personalizedQuizType = ${type}`);
     setPreferences(updatedPreferences);
+    
+    // Eğer "Yeni Konular" türü seçilmişse, tespit edilen konuları "yeni" olarak işaretle
+    if (type === "newTopicFocused" && detectedTopics.length > 0) {
+      // Mevcut konuları güncelle, isNew alanını true olarak ayarla
+      const updatedTopics = detectedTopics.map(topic => ({
+        ...topic,
+        isNew: true
+      }));
+      
+      console.log(`✅ Yeni Konular türü seçildi, ${updatedTopics.length} konu "yeni" olarak işaretlendi`);
+      setDetectedTopics(updatedTopics);
+    }
   };
 
   // Tercih işlemleri
@@ -974,7 +986,9 @@ export default function ExamCreationWizard({
                   subTopicName: topic, 
                   normalizedSubTopicName: normalizeStr(topic),
                   isSelected: false,
-                  status: undefined, isNew: undefined, parentTopic: undefined,
+                  status: undefined, 
+                  isNew: personalizedQuizType === "newTopicFocused" ? true : undefined, 
+                  parentTopic: undefined,
                 };
               } else if (typeof topic === 'object' && topic !== null) {
                   const t = topic as Partial<DetectedSubTopic & { name?: string }>;
@@ -984,7 +998,8 @@ export default function ExamCreationWizard({
                     normalizedSubTopicName: normalizeStr(String(t.normalizedSubTopicName || t.id || t.subTopicName)),
                     isSelected: false,
                     status: t.status, 
-                    isNew: t.isNew, 
+                    // Eğer "newTopicFocused" ise ve t.isNew tanımlı değilse, true olarak ayarla
+                    isNew: personalizedQuizType === "newTopicFocused" ? true : t.isNew, 
                     parentTopic: t.parentTopic,
                   };
               }
@@ -995,7 +1010,9 @@ export default function ExamCreationWizard({
                 subTopicName: 'Hatalı Konu Yapısı',
                 normalizedSubTopicName: 'hatali-konu-yapisi',
                 isSelected: false,
-                status: undefined, isNew: undefined, parentTopic: undefined,
+                status: undefined, 
+                isNew: personalizedQuizType === "newTopicFocused" ? true : undefined, 
+                parentTopic: undefined,
               };
             });
             console.log(`[ECW detectTopicsFromUploadedFile] ✓ ${processedTopics.length} konu işlendi (eski format - dizi)`);
@@ -1007,10 +1024,12 @@ export default function ExamCreationWizard({
           console.log(`[ECW detectTopicsFromUploadedFile] 📊 Son işlenen konular (${processedTopics.length}):`, JSON.stringify(processedTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
           
           if (processedTopics.length > 0) {
-            // Tüm konuları seçili olarak ayarla
+            // Tüm konuları seçili olarak ayarla ve "newTopicFocused" için yeni olarak işaretle
             const selectedTopics = processedTopics.map(topic => ({
               ...topic,
-              isSelected: true
+              isSelected: true,
+              // "Yeni Konular" özelliği için konuları "yeni" olarak işaretle
+              isNew: personalizedQuizType === "newTopicFocused" ? true : topic.isNew
             }));
             
             setDetectedTopics(selectedTopics);
@@ -1057,7 +1076,8 @@ export default function ExamCreationWizard({
               normalizedSubTopicName: defaultTopicName.toLowerCase().replace(/\s+/g, '-'),
               isSelected: true,
               status: undefined,
-              isNew: true
+              // "Yeni Konular" özelliği için varsayılan olarak işaretle
+              isNew: personalizedQuizType === "newTopicFocused" ? true : undefined
             };
             
             const defaultTopics = [defaultTopic];

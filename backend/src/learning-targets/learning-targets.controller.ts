@@ -239,7 +239,7 @@ export class LearningTargetsController {
 
   @Post('detect-topics')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Detect topics from document text' })
+  @ApiOperation({ summary: 'Detect topics from document text and optionally save as learning targets' })
   @ApiResponse({
     status: 200,
     description: 'Topics detected successfully',
@@ -249,6 +249,7 @@ export class LearningTargetsController {
   @SetMetadata('anonymousAllowed', true)
   async detectTopics(@Body() dto: DetectTopicsDto, @Req() req: any) {
     const userId = req.user?.uid || 'anonymous';
+    const isAuthenticated = userId !== 'anonymous';
 
     try {
       this.flowTracker.trackStep(
@@ -292,6 +293,51 @@ export class LearningTargetsController {
             'LearningTargetsController.detectTopics',
             __filename,
           );
+          
+          // Eğer kullanıcı giriş yapmış ve courseId varsa, tespit edilen konuları öğrenme hedefleri olarak kaydet
+          let savedTargets: LearningTargetWithQuizzes[] = [];
+          if (isAuthenticated && dto.courseId) {
+            this.logger.info(
+              `Tespit edilen ${result.length} konu, ${dto.courseId} ID'li ders için öğrenme hedefi olarak kaydediliyor`,
+              'LearningTargetsController.detectTopics',
+              __filename,
+            );
+            
+            try {
+              // Tespit edilen konuları öğrenme hedefi olarak oluşturmak için topic listesi hazırla
+              const topics = result.map(topic => ({
+                subTopicName: topic,
+                normalizedSubTopicName: topic.toLowerCase().replace(/\s+/g, '-'),
+              }));
+              
+              // Toplu öğrenme hedefi oluştur - "pending" (beklemede) durumu ile kaydedilecek
+              // createBatch metoduna uygun parametreler ile çağrı yapıyoruz
+              savedTargets = await this.learningTargetsService.createBatch(
+                dto.courseId,
+                userId,
+                topics
+              );
+              
+              this.logger.info(
+                `${savedTargets.length} adet öğrenme hedefi "pending" (beklemede) durumu ile başarıyla kaydedildi`,
+                'LearningTargetsController.detectTopics',
+                __filename,
+              );
+            } catch (saveError) {
+              this.logger.error(
+                `Öğrenme hedefleri kaydedilirken hata oluştu: ${saveError.message}`,
+                'LearningTargetsController.detectTopics',
+                __filename
+              );
+              // Kaydetme hatası olsa bile konuları döndürmeye devam et
+            }
+          } else if (dto.courseId && !isAuthenticated) {
+            this.logger.info(
+              `Kullanıcı giriş yapmadığı için öğrenme hedefleri kaydedilmedi`,
+              'LearningTargetsController.detectTopics',
+              __filename,
+            );
+          }
 
           // TopicDetectionResult formatında yanıt döndür
           return {
@@ -332,6 +378,51 @@ export class LearningTargetsController {
           'LearningTargetsController.detectTopics',
           __filename,
         );
+        
+        // Eğer kullanıcı giriş yapmış ve courseId varsa, tespit edilen konuları öğrenme hedefleri olarak kaydet
+        let savedTargets: LearningTargetWithQuizzes[] = [];
+        if (isAuthenticated && dto.courseId) {
+          this.logger.info(
+            `Tespit edilen ${result.length} konu, ${dto.courseId} ID'li ders için öğrenme hedefi olarak kaydediliyor`,
+            'LearningTargetsController.detectTopics',
+            __filename,
+          );
+          
+          try {
+            // Tespit edilen konuları öğrenme hedefi olarak oluşturmak için topic listesi hazırla
+            const topics = result.map(topic => ({
+              subTopicName: topic,
+              normalizedSubTopicName: topic.toLowerCase().replace(/\s+/g, '-'),
+            }));
+            
+            // Toplu öğrenme hedefi oluştur - "pending" (beklemede) durumu ile kaydedilecek
+            // createBatch metoduna uygun parametreler ile çağrı yapıyoruz
+            savedTargets = await this.learningTargetsService.createBatch(
+              dto.courseId,
+              userId,
+              topics
+            );
+            
+            this.logger.info(
+              `${savedTargets.length} adet öğrenme hedefi "pending" (beklemede) durumu ile başarıyla kaydedildi`,
+              'LearningTargetsController.detectTopics',
+              __filename,
+            );
+          } catch (saveError) {
+            this.logger.error(
+              `Öğrenme hedefleri kaydedilirken hata oluştu: ${saveError.message}`,
+              'LearningTargetsController.detectTopics',
+              __filename
+            );
+            // Kaydetme hatası olsa bile konuları döndürmeye devam et
+          }
+        } else if (dto.courseId && !isAuthenticated) {
+          this.logger.info(
+            `Kullanıcı giriş yapmadığı için öğrenme hedefleri kaydedilmedi`,
+            'LearningTargetsController.detectTopics',
+            __filename,
+          );
+        }
 
         // TopicDetectionResult formatında yanıt döndür
         return {

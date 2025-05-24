@@ -59,6 +59,7 @@ export class LearningTargetsService {
 
       await this.validateCourseOwnership(courseId, userId);
 
+      // Sıralama parametresini kaldırarak indeks gereksinimini ortadan kaldırıyoruz
       const targets =
         await this.firebaseService.findMany<LearningTargetWithQuizzes>(
           FIRESTORE_COLLECTIONS.LEARNING_TARGETS,
@@ -69,7 +70,8 @@ export class LearningTargetsService {
               value: courseId,
             },
           ],
-          { field: 'firstEncountered', direction: 'desc' },
+          // Sıralama kaldırıldı - bileşik indeks gereksinimini ortadan kaldırmak için
+          // { field: 'firstEncountered', direction: 'desc' },
         );
 
       this.logger.info(
@@ -162,7 +164,8 @@ export class LearningTargetsService {
               value: status,
             },
           ],
-          { field: 'firstEncountered', direction: 'desc' },
+          // Sıralama kaldırıldı - bileşik indeks gereksinimini ortadan kaldırmak için
+          // { field: 'firstEncountered', direction: 'desc' },
         );
 
       this.logger.info(
@@ -739,10 +742,77 @@ export class LearningTargetsService {
       const batch = this.firebaseService.firestore.batch();
       const createdTargets: LearningTargetWithQuizzes[] = [];
 
-      // Kalan kodu devam ettir...
+      // Her bir konu için öğrenme hedefi oluştur
+      for (const topic of uniqueTopics) {
+        // Eğer normalizedSubTopicName zaten tanımlı değilse, oluştur
+        const normalizedName = topic.normalizedSubTopicName || 
+          this.normalizationService.normalizeSubTopicName(topic.subTopicName);
+        
+        // Yeni öğrenme hedefi ID'si (Firestore'un benzersiz ID oluşturma metodunu kullanıyoruz)
+        const newId = this.firebaseService.generateId();
+        
+        // Yeni belge referansı
+        const newRef = this.firebaseService.firestore
+          .collection(FIRESTORE_COLLECTIONS.LEARNING_TARGETS)
+          .doc(newId);
+        
+        // Öğrenme hedefi verisi - tüm hedefler "pending" (beklemede) olarak kaydediliyor
+        const newLearningTarget = {
+          id: newId,
+          courseId,
+          userId,
+          subTopicName: topic.subTopicName,
+          normalizedSubTopicName: normalizedName,
+          status: 'pending', // Öğrenme hedefi durumu: beklemede
+          isNew: true, // Yeni oluşturulan hedef olduğu için true
+          lastAttemptScorePercent: 0,
+          attemptCount: 0,
+          successCount: 0,
+          failCount: 0,
+          mediumCount: 0,
+          quizzes: [], // İlişkili sınavlar başlangıçta boş
+          createdAt: now,
+          updatedAt: now,
+          firstEncountered: now,
+          lastAttempt: null,
+        };
+        
+        // Batch'e ekle
+        batch.set(newRef, newLearningTarget);
+        
+        // Oluşturulan hedefleri izle
+        createdTargets.push(newLearningTarget as LearningTargetWithQuizzes);
+        
+        this.logger.debug(
+          `Yeni öğrenme hedefi oluşturuldu: ${newId} (${topic.subTopicName})`,
+          'LearningTargetsService.createBatch',
+          __filename,
+          500,
+          { targetId: newId, topicName: topic.subTopicName }
+        );
+      }
+
+      // Kayıt yapılacak öğrenme hedefi sayısını logla
+      this.logger.info(
+        `${createdTargets.length} adet yeni öğrenme hedefi oluşturulacak`,
+        'LearningTargetsService.createBatch',
+        __filename,
+        510,
+        { courseId, userId, count: createdTargets.length }
+      );
 
       try {
+        // Batch işlemini commit et
         await batch.commit();
+        
+        this.logger.info(
+          `${createdTargets.length} adet yeni öğrenme hedefi başarıyla oluşturuldu`,
+          'LearningTargetsService.createBatch',
+          __filename,
+          520,
+          { courseId, userId, count: createdTargets.length }
+        );
+        
         return createdTargets;
       } catch (error) {
         this.logger.logError(error, 'LearningTargetsService.createBatch', {
