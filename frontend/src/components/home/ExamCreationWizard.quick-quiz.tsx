@@ -1396,17 +1396,17 @@ export default function ExamCreationWizard({
                   handlePreferenceChange(
                     "difficulty",
                     e.target.value as
-                      | "beginner"
-                      | "intermediate"
-                      | "advanced"
+                      | "easy"
+                      | "medium"
+                      | "hard"
                       | "mixed",
                   )
                 }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
               >
-                <option value="beginner">Kolay</option>
-                <option value="intermediate">Orta</option>
-                <option value="advanced">Zor</option>
+                <option value="easy">Kolay</option>
+                <option value="medium">Orta</option>
+                <option value="hard">Zor</option>
                 <option value="mixed">Karışık (Önerilen)</option>
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

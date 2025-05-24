@@ -118,7 +118,7 @@ export default function Home() {
   const handleExamCreationComplete = (result: {
     file: File | null;
     quizType: "quick" | "personalized";
-    personalizedQuizType?: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive";
+    personalizedQuizType?: "weakTopicFocused" | "newTopicFocused" | "comprehensive";
     preferences: QuizPreferences;
     topicNameMap?: Record<string, string>;
     quiz?: Quiz;

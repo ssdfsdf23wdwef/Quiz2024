@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-24T20:36:38.676Z
+## Tarih: 2025-05-24T20:59:39.809Z
 
-## Trace ID: quiz-1748118998666-1y4as
+## Trace ID: quiz-1748120379806-oe4xz
 
 ## Alt Konular (2 adet):
 ```
@@ -215,53 +215,199 @@ Bekleyen konu yok.
 
 ## AI Yanıtı:
 ```json
-Anlaşıldı. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu için soru üretemiyorum. Lütfen soru üretilecek konuları ve her konu için istenen soru sayısını belirtin. Ardından eğitim içeriğini de sağladığınızda, belirtilen kurallara ve formata uygun olarak 10 adet test sorusu oluşturacağım.
-
+```json
+{
+  "questions": [
+    {
+      "id": "q1",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q2",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q3",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q4",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q5",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q6",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q7",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q8",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q9",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q10",
+      "questionText": "Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Seçenek A",
+        "Seçenek B",
+        "Seçenek C",
+        "Seçenek D"
+      ],
+      "correctAnswer": "Seçenek A",
+      "explanation": "Aktif konu olmadığı için varsayılan açıklama",
+      "subTopicName": "Belirtilen Aktif Konu Yok",
+      "normalizedSubTopicName": "belirtilen_aktif_konu_yok",
+      "difficulty": "easy"
+    }
+  ]
+}
+```
 ```
 
 
 
 ## İşlenen Sorular Analizi:
 
-- Toplam Soru Sayısı: 5
+- Toplam Soru Sayısı: 10
 - Alt Konu Dağılımı:
 
-  - Eksaskala Yazılım Zorlukları: 1 soru
-  - Ölçeklenebilirlik: 1 soru
-  - Hata Toleransı: 1 soru
-  - Veri Hareketi: 1 soru
-  - Hafif Çekirdek Tasarımı: 1 soru
+  - Belirtilen Aktif Konu Yok: 10 soru
 
 
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
-#### Eksaskala Yazılım Zorlukları:
-- Soru: Eksaskala bilgi işlem sistemlerinin karşılaştığı temel yazılım zorlukları arasında aşağıdakilerden hangisi yer almaz?
-- Seçenekler: A) Ölçeklenebilirlik sorunları | B) Hata toleransı ve dayanıklılık | C) Masaüstü kullanıcı arayüzü tasarımı | D) Milyonlarca çekirdeğin etkin yönetimi
-- Doğru Cevap: C) Masaüstü kullanıcı arayüzü tasarımı
-- Zorluk: medium
-
-#### Ölçeklenebilirlik:
-- Soru: Eksaskala sistemlerinin ölçeklenebilirlik özelliği için aşağıdaki ifadelerden hangisi doğrudur?
-- Seçenekler: A) Yüzbinlerce çekirdekle çalışan uygulamalar mevcut HPC uygulamalarının doğrudan ölçeklendirilmesiyle elde edilebilir | B) Ölçeklenebilirlikte bellek erişim desenleri önemsizdir | C) Uygulamaların zayıf ölçeklenebilirliği bile eksaskala sistem performansını etkilemez | D) İdeal ölçeklenebilirlikte, işlemci sayısı iki katına çıktığında uygulama hızı da iki katına çıkar
-- Doğru Cevap: D) İdeal ölçeklenebilirlikte, işlemci sayısı iki katına çıktığında uygulama hızı da iki katına çıkar
-- Zorluk: medium
-
-#### Hata Toleransı:
-- Soru: Eksaskala sistemlerinde hata toleransı neden önemlidir?
-- Seçenekler: A) Sistem maliyetini azaltmak için | B) Kullanıcı arayüzünü geliştirmek için | C) Çok sayıda bileşen olduğundan, bileşen arızaları kaçınılmazdır | D) Sadece askeri uygulamalarda gerekli olduğu için
-- Doğru Cevap: C) Çok sayıda bileşen olduğundan, bileşen arızaları kaçınılmazdır
-- Zorluk: medium
-
-#### Veri Hareketi:
-- Soru: Eksaskala sistemlerinde veri hareketi ile ilgili aşağıdaki ifadelerden hangisi doğrudur?
-- Seçenekler: A) Veri hareketi, enerji tüketiminde önemsiz bir faktördür | B) Yerel bellek erişimleri ile uzak bellek erişimleri arasında performans farkı yoktur | C) Veri hareketini minimize etmek, enerji verimliliğini artırır | D) Tüm veriler her zaman tüm işlemcilere eşit mesafededir
-- Doğru Cevap: C) Veri hareketini minimize etmek, enerji verimliliğini artırır
-- Zorluk: hard
-
-#### Hafif Çekirdek Tasarımı:
-- Soru: Eksaskala işletim sistemleri için aşağıdakilerden hangisi doğrudur?
-- Seçenekler: A) Geleneksel işletim sistemleri eksaskala sistemler için yeterlidir | B) Hafif çekirdek (lightweight kernel) tasarımı, sistem kaynaklarını daha verimli kullanır | C) İşletim sistemi servisleri tüm çekirdeklerde tam olarak çalışmalıdır | D) Eksaskala sistemlerde işletim sistemi kullanmak gereksizdir
-- Doğru Cevap: B) Hafif çekirdek (lightweight kernel) tasarımı, sistem kaynaklarını daha verimli kullanır
-- Zorluk: hard
+#### Belirtilen Aktif Konu Yok:
+- Soru: Verilen metinde aktif konu bulunmadığı için soru oluşturulamamıştır. Lütfen aktif konu belirtin.
+- Seçenekler: Seçenek A | Seçenek B | Seçenek C | Seçenek D
+- Doğru Cevap: Seçenek A
+- Zorluk: easy
 
