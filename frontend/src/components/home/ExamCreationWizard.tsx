@@ -40,11 +40,7 @@ const PERSONALIZED_QUIZ_TYPE_OPTIONS = {
     description: "Geçmiş performansınıza göre zayıf olduğunuz konulardan soru oluştur",
     icon: "FiTarget",
   },
-  learningObjectiveFocused: {
-    label: "Öğrenme Hedefi",
-    description: "Belirli öğrenme hedeflerinize odaklanarak soru oluştur",
-    icon: "FiAward",
-  },
+
   newTopicFocused: {
     label: "Yeni Konular",
     description: "Daha önce çalışmadığınız yeni konulardan soru oluştur",
@@ -66,7 +62,6 @@ interface ExamCreationWizardProps {
     quizType: "quick" | "personalized";
     personalizedQuizType?:
       | "weakTopicFocused"
-      | "learningObjectiveFocused"
       | "newTopicFocused"
       | "comprehensive";
     preferences: QuizPreferences;

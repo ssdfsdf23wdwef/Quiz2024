@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname } from 'next/navigation';
 import { QuizPreferences } from "@/types/quiz.type";
 import { Quiz } from "@/types";
 import {
@@ -61,29 +62,56 @@ const buttonHover = {
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { isAuthenticated, isInitializing: isAuthInitializing } = useAuth();
   const [showExamCreationWizard, setShowExamCreationWizard] = useState(false);
   const [currentQuizType, setCurrentQuizType] = useState<'quick' | 'personalized'>('quick');
 
+  // Handle URL parameters on initial load
+  useEffect(() => {
+    const type = searchParams?.get('wizard');
+    if (type === 'quick' || type === 'personalized') {
+      setCurrentQuizType(type);
+      setShowExamCreationWizard(true);
+    }
+  }, [searchParams]);
+
+  // Update URL when wizard state changes
+  const updateWizardState = (show: boolean, type: 'quick' | 'personalized') => {
+    const params = new URLSearchParams(searchParams?.toString());
+    
+    if (show) {
+      params.set('wizard', type);
+    } else {
+      params.delete('wizard');
+    }
+    
+    // Update URL without causing a page refresh
+    const newUrl = `${pathname}?${params.toString()}`;
+    window.history.replaceState(null, '', newUrl);
+    
+    setCurrentQuizType(type);
+    setShowExamCreationWizard(show);
+  };
+
   const handleStartQuickQuiz = () => {
     if (!isAuthenticated && !isAuthInitializing) {
-      router.push("/auth/login?returnUrl=/exams/create?type=quick");
+      router.push(`/auth/login?returnUrl=${encodeURIComponent('/exams/create?type=quick')}`, { scroll: false });
       return;
     }
     if (isAuthenticated && !isAuthInitializing) {
-      setCurrentQuizType('quick');
-      setShowExamCreationWizard(true);
+      updateWizardState(true, 'quick');
     }
   };
 
   const handleStartPersonalizedQuiz = () => {
     if (!isAuthenticated && !isAuthInitializing) {
-      router.push("/auth/login?returnUrl=/exams/create?type=personalized");
+      router.push(`/auth/login?returnUrl=${encodeURIComponent('/exams/create?type=personalized')}`, { scroll: false });
       return;
     }
     if (isAuthenticated && !isAuthInitializing) {
-      setShowExamCreationWizard(true);
-      setCurrentQuizType("personalized");
+      updateWizardState(true, 'personalized');
     }
   };
 
@@ -122,16 +150,16 @@ export default function Home() {
       
       if (result.quizId) {
         console.log(`Quiz ID mevcut (${result.quizId}), doğrudan sınav sayfasına yönlendiriliyor`);
-        router.push(`/exams/${result.quizId}?mode=attempt`);
+  router.push(`/exams/${result.quizId}?mode=attempt`, { scroll: false });
         return;
       }
       
       const url = `/exams/create?${params.toString()}&startQuiz=true`;
-      router.push(url);
+      router.push(url, { scroll: false });
     } catch (error) {
       console.error("ExamCreationWizard tamamlama hatası:", error);
       const url = `/exams/create?type=${result.quizType}`;
-      router.push(url);
+      router.push(url, { scroll: false });
     }
   };
   
@@ -296,10 +324,7 @@ export default function Home() {
                             Seçtiğiniz alanda temel bilgilerinizi ölçmek için ideal.
                           </p>
                           <motion.button
-                            onClick={() => {
-                              setCurrentQuizType('quick');
-                              setShowExamCreationWizard(true);
-                            }}
+                            onClick={() => updateWizardState(true, 'quick')}
                             variants={buttonHover}
                             whileHover="hover"
                             whileTap="rest"
@@ -327,7 +352,7 @@ export default function Home() {
                             sınavlar oluşturun ve ilerlemenizi takip edin.
                           </p>
                           <motion.button
-                            onClick={handleStartPersonalizedQuiz}
+                            onClick={() => handleStartPersonalizedQuiz()}
                             variants={buttonHover}
                             initial="rest"
                             whileHover="hover"

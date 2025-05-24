@@ -58,8 +58,13 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`sidebar-visible fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200
+      className={`fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200 overflow-y-auto
         ${isDarkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
+      style={{ 
+        WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'thin',
+        scrollbarColor: isDarkMode ? '#4B5563 #1F2937' : '#E5E7EB #F3F4F6'
+      }}
     >
       {isInitializing ? (
         // Yükleme durumunda placeholder göster
@@ -79,6 +84,7 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={(e) => e.stopPropagation()}
                 className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
                   isActive(item.href)
                     ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"
@@ -100,6 +106,7 @@ export default function Sidebar() {
           <div className="mt-auto p-3 border-t border-gray-100 dark:border-gray-800">
             <Link
               href="/settings"
+              onClick={(e) => e.stopPropagation()}
               className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
                 isActive("/settings")
                   ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"

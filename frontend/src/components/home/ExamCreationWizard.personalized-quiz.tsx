@@ -33,30 +33,6 @@ import { useRouter } from "next/navigation";
 import { ApiError } from "@/services/error.service"; 
 import { Quiz } from "@/types";
 
-// Kişiselleştirilmiş sınav türü seçenekleri
-const PERSONALIZED_QUIZ_TYPE_OPTIONS = {
-  weakTopicFocused: {
-    label: "Zayıf Konular",
-    description: "Geçmiş performansınıza göre zayıf olduğunuz konulardan soru oluştur",
-    icon: "FiTarget",
-  },
-  learningObjectiveFocused: {
-    label: "Öğrenme Hedefi",
-    description: "Belirli öğrenme hedeflerinize odaklanarak soru oluştur",
-    icon: "FiAward",
-  },
-  newTopicFocused: {
-    label: "Yeni Konular",
-    description: "Daha önce çalışmadığınız yeni konulardan soru oluştur",
-    icon: "FiZap",
-  },
-  comprehensive: {
-    label: "Kapsamlı",
-    description: "Tüm konulardan dengeli bir şekilde soru oluştur",
-    icon: "FiTarget",
-  },
-} as const;
-
 interface ExamCreationWizardProps {
   quizType: "quick" | "personalized"; // Dışarıdan gelen sınav türü
   initialDocumentId?: string; // URL'den gelen belge ID'si
@@ -1912,22 +1888,7 @@ export default function ExamCreationWizard({
                   </div>
                 </div>
 
-                {/* Öğrenme Hedefi */}
-                <div 
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${personalizedQuizType === "learningObjectiveFocused" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"}`}
-                  onClick={() => setPersonalizedQuizType("learningObjectiveFocused")}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${personalizedQuizType === "learningObjectiveFocused" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-800 dark:text-indigo-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}>
-                      <FiAward className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Öğrenme Hedefi</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Belirli öğrenme hedeflerinize odaklanarak soru oluştur</p>
-                    </div>
-                  </div>
-                </div>
-
+            
                 {/* Yeni Konular */}
                 <div 
                   className={`p-4 border rounded-lg cursor-pointer transition-all ${personalizedQuizType === "newTopicFocused" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"}`}

@@ -46,15 +46,26 @@ function MainLayoutBase({ children }: MainLayoutProps) {
         {/* Header is rendered only on client-side after mount to ensure theme consistency */}
         {isMounted && <Header />}
 
-        <div className="flex w-full">
+        <div className="flex w-full relative">
           {isMounted && (
-            <div className="fixed top-0 left-0 h-full z-30 pt-16"> {/* Added pt-16 to account for header height */}
+            <div className="fixed top-0 left-0 h-full z-30 pt-16 w-64">
               <Sidebar />
             </div>
           )}
 
-          <main className={`flex-1 w-full ${isMounted ? "ml-64" : "ml-0"} pt-[64px] px-4 py-6 transition-all duration-300`}> {/* Adjusted pt for header, ml transition */}
-            <div className="max-w-7xl mx-auto">{children}</div>
+          <main 
+            className={`flex-1 w-full min-h-[calc(100vh-64px)] transition-all duration-300 ${
+              isMounted ? "ml-64" : "ml-0"
+            }`}
+            style={{
+              paddingTop: '64px',
+              paddingLeft: '1rem',
+              paddingRight: '1rem',
+              paddingBottom: '1.5rem',
+              marginLeft: isMounted ? '16rem' : '0',
+            }}
+          >
+            <div className="max-w-7xl mx-auto w-full">{children}</div>
           </main>
         </div>
       </div>
