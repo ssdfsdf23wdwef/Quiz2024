@@ -10,6 +10,7 @@ export interface LearningTargetWithQuizzes {
   mediumCount: number;
   successCount: number;
   lastPersonalizedQuizId?: string;
+  source?: 'user_created' | 'document_extracted' | 'ai_generated_new' | 'legacy';
   quizzes: Array<{
     id: string;
     type: string;

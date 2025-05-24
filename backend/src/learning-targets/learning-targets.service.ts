@@ -11,7 +11,7 @@ import { AiService } from '../ai/ai.service';
 import { UpdateLearningTargetDto } from './dto/update-learning-target.dto';
 import { NormalizationService } from '../shared/normalization/normalization.service';
 import { CreateLearningTargetDto } from './dto/create-learning-target.dto';
-import { LearningTargetWithQuizzes } from '../common/interfaces';
+import { LearningTargetWithQuizzes, LearningTarget } from '../common/interfaces';
 import * as admin from 'firebase-admin';
 import { FIRESTORE_COLLECTIONS } from '../common/constants';
 import { LoggerService } from '../common/services/logger.service';
@@ -835,106 +835,201 @@ export class LearningTargetsService {
   }
 
   /**
-   * Update status of multiple learning targets
+   * Confirm and save new AI-suggested topics
+   * This method processes AI-suggested topics that have been confirmed by the user
    */
-  async updateMultipleStatuses(
-    targetUpdates: Array<{
-      id: string;
-      status: LearningTargetStatus;
-      lastAttemptScorePercent: number;
-    }>,
+  @LogMethod({ trackParams: true })
+  async confirmAndSaveNewTopics(
+    courseId: string,
+    newTopicNames: string[],
     userId: string,
-  ): Promise<LearningTargetWithQuizzes[]> {
-    if (targetUpdates.length === 0) {
-      return [];
-    }
-
-    // Verify ownership of all targets first
-    const targetIds = targetUpdates.map((update) => update.id);
-    const existingTargets =
-      await this.firebaseService.findMany<LearningTargetWithQuizzes>(
-        FIRESTORE_COLLECTIONS.LEARNING_TARGETS,
-        [
-          {
-            field: 'id',
-            operator: 'in' as admin.firestore.WhereFilterOp,
-            value: targetIds,
-          },
-        ],
-      );
-
-    // Check if all targets were found
-    if (existingTargets.length !== targetIds.length) {
-      const foundIds = new Set(existingTargets.map((t) => t.id));
-      const missingIds = targetIds.filter((id) => !foundIds.has(id));
-      throw new NotFoundException(
-        `Bazı öğrenme hedefleri bulunamadı: ${missingIds.join(', ')}`,
-      );
-    }
-
-    // Check if user owns all targets
-    const unauthorizedTargets = existingTargets.filter(
-      (t) => t.userId !== userId,
-    );
-    if (unauthorizedTargets.length > 0) {
-      throw new ForbiddenException('Bu işlem için yetkiniz bulunmamaktadır.');
-    }
-
-    // Prepare batch update
-    const batch = this.firebaseService.firestore.batch();
-    const now = new Date();
-    const updatedTargets: LearningTargetWithQuizzes[] = [];
-
-    // Update each target
-    for (const update of targetUpdates) {
-      const target = existingTargets.find((t) => t.id === update.id);
-      if (!target) continue; // Should never happen due to checks above
-
-      const targetRef = this.firebaseService.firestore
-        .collection(FIRESTORE_COLLECTIONS.LEARNING_TARGETS)
-        .doc(update.id);
-
-      // Update status counters
-      let failCount = target.failCount || 0;
-      let mediumCount = target.mediumCount || 0;
-      let successCount = target.successCount || 0;
-
-      if (update.status === 'failed') failCount++;
-      else if (update.status === 'medium') mediumCount++;
-      else if (update.status === 'mastered') successCount++;
-
-      const updateData = {
-        status: update.status,
-        lastAttempt: now,
-        lastAttemptScorePercent: update.lastAttemptScorePercent,
-        failCount,
-        mediumCount,
-        successCount,
-        updatedAt: now,
-      };
-
-      batch.update(targetRef, updateData);
-
-      // Add to updated targets list
-      updatedTargets.push({
-        ...target,
-        ...updateData,
-      });
-    }
-
+  ): Promise<LearningTarget[]> {
     try {
-      await batch.commit();
-      return updatedTargets;
-    } catch (error) {
-      this.logger.logError(
-        error,
-        'LearningTargetsService.updateMultipleStatuses',
+      this.flowTracker.trackStep(
+        `${newTopicNames.length} adet AI önerisi konuları onaylanarak kaydediliyor`,
+        'LearningTargetsService',
+      );
+
+      // Validate inputs
+      if (!courseId || !Array.isArray(newTopicNames) || !userId) {
+        throw new BadRequestException(
+          'Geçersiz parametreler: courseId, newTopicNames ve userId gereklidir',
+        );
+      }
+
+      if (newTopicNames.length === 0) {
+        this.logger.info(
+          'Onaylanacak konu bulunamadı',
+          'LearningTargetsService.confirmAndSaveNewTopics',
+          __filename,
+          undefined,
+          { courseId, userId },
+        );
+        return [];
+      }
+
+      // Verify course ownership
+      await this.validateCourseOwnership(courseId, userId);
+
+      this.logger.debug(
+        `AI önerisi konular onaylanarak kaydediliyor: ${newTopicNames.join(', ')}`,
+        'LearningTargetsService.confirmAndSaveNewTopics',
+        __filename,
+        undefined,
         {
-          targetUpdates: targetUpdates,
+          courseId,
           userId,
-          additionalInfo: 'Öğrenme hedefleri güncellenirken hata oluştu',
+          topicCount: newTopicNames.length,
+          topics: newTopicNames,
         },
       );
+
+      // Get existing topics to check for duplicates
+      const existingTopics = await this.getExistingTopics(courseId);
+      const existingNormalizedTopics = existingTopics.map((topic) =>
+        this.normalizationService.normalizeSubTopicName(topic),
+      );
+
+      this.logger.debug(
+        `${existingTopics.length} adet mevcut konu kontrol ediliyor`,
+        'LearningTargetsService.confirmAndSaveNewTopics',
+        __filename,
+        undefined,
+        {
+          courseId,
+          userId,
+          existingTopicCount: existingTopics.length,
+        },
+      );
+
+      // Filter out duplicates and prepare topics for creation
+      const uniqueTopics: Array<{ subTopicName: string; normalizedSubTopicName: string }> = [];
+      const duplicateTopics: string[] = [];
+
+      for (const topicName of newTopicNames) {
+        const normalizedName = this.normalizationService.normalizeSubTopicName(topicName);
+        
+        if (existingNormalizedTopics.includes(normalizedName)) {
+          duplicateTopics.push(topicName);
+        } else {
+          uniqueTopics.push({
+            subTopicName: topicName,
+            normalizedSubTopicName: normalizedName,
+          });
+        }
+      }
+
+      if (duplicateTopics.length > 0) {
+        this.logger.warn(
+          `Duplicate topics filtered out: ${duplicateTopics.join(', ')}`,
+          'LearningTargetsService.confirmAndSaveNewTopics',
+          __filename,
+          undefined,
+          {
+            courseId,
+            userId,
+            duplicateCount: duplicateTopics.length,
+            duplicates: duplicateTopics,
+          },
+        );
+      }
+
+      if (uniqueTopics.length === 0) {
+        this.logger.info(
+          'Tüm konular zaten mevcut, yeni konu eklenmedi',
+          'LearningTargetsService.confirmAndSaveNewTopics',
+          __filename,
+          undefined,
+          { courseId, userId, duplicateCount: duplicateTopics.length },
+        );
+        return [];
+      }
+
+      // Create learning targets with batch operation
+      const now = new Date();
+      const batch = this.firebaseService.firestore.batch();
+      const createdTargets: LearningTarget[] = [];
+
+      for (const topic of uniqueTopics) {
+        // Generate unique ID for the new learning target
+        const newId = this.firebaseService.generateId();
+        
+        // Create document reference
+        const newRef = this.firebaseService.firestore
+          .collection(FIRESTORE_COLLECTIONS.LEARNING_TARGETS)
+          .doc(newId);
+        
+        // Create learning target data with AI-generated source
+        const newLearningTarget: Omit<LearningTarget, 'id'> & { id: string } = {
+          id: newId,
+          courseId,
+          userId,
+          subTopicName: topic.subTopicName,
+          normalizedSubTopicName: topic.normalizedSubTopicName,
+          status: 'pending', // Default status for new AI-suggested topics
+          failCount: 0,
+          mediumCount: 0,
+          successCount: 0,
+          lastAttemptScorePercent: null,
+          lastAttempt: null,
+          firstEncountered: now.toISOString(),
+        };
+        
+        // Add to batch
+        batch.set(newRef, newLearningTarget);
+        
+        // Track created targets
+        createdTargets.push(newLearningTarget);
+        
+        this.logger.debug(
+          `AI önerisi konu öğrenme hedefi olarak hazırlandı: ${newId} (${topic.subTopicName})`,
+          'LearningTargetsService.confirmAndSaveNewTopics',
+          __filename,
+          undefined,
+          { 
+            targetId: newId, 
+            topicName: topic.subTopicName,
+          },
+        );
+      }
+
+      this.logger.info(
+        `${createdTargets.length} adet AI önerisi konu öğrenme hedefi olarak kaydedilecek`,
+        'LearningTargetsService.confirmAndSaveNewTopics',
+        __filename,
+        undefined,
+        { 
+          courseId, 
+          userId, 
+          count: createdTargets.length,
+        },
+      );
+
+      // Execute batch operation
+      await batch.commit();
+      
+      this.logger.info(
+        `${createdTargets.length} adet AI önerisi konu başarıyla öğrenme hedefi olarak kaydedildi`,
+        'LearningTargetsService.confirmAndSaveNewTopics',
+        __filename,
+        undefined,
+        { 
+          courseId, 
+          userId, 
+          count: createdTargets.length,
+          topics: createdTargets.map(t => t.subTopicName),
+        },
+      );
+
+      return createdTargets;
+    } catch (error) {
+      this.logger.logError(error, 'LearningTargetsService.confirmAndSaveNewTopics', {
+        courseId,
+        userId,
+        topicCount: newTopicNames?.length || 0,
+        topics: newTopicNames,
+        additionalInfo: 'AI önerisi konular kaydedilirken hata oluştu',
+      });
       throw error;
     }
   }

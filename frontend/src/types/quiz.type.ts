@@ -1,4 +1,4 @@
-export type QuizType = "general" | "personalized" | "topic_specific";
+export type QuizType = "general" | "personalized" | "topic_specific" | "quick" | "review";
 export type PersonalizedQuizFocus = "weaknesses" | "strengths" | "new_topics" | "comprehensive";
 export type DifficultyLevel = "easy" | "medium" | "hard" | "mixed";
 

@@ -570,7 +570,7 @@ class AdapterService {
         backendQuizType = "personalized";
         break;
       case "review":
-      case "failed_questions": // Assuming 'failed_questions' quiz type maps to 'review' for submission
+      case "failed_questions" as QuizType: // Cast to QuizType to resolve comparison error
         backendQuizType = "review";
         break;
       case "general":
@@ -587,19 +587,23 @@ class AdapterService {
       }
     }
 
+    const sourceDoc = quiz.sourceDocument;
+    const backendSourceDocument = 
+      (sourceDoc && sourceDoc.storagePath && sourceDoc.storagePath.trim() !== "")
+      ? {
+          fileName: sourceDoc.fileName,
+          storagePath: sourceDoc.storagePath,
+          // documentId remains undefined as it's not in frontend Quiz.sourceDocument
+        }
+      : null;
+
     return {
       userAnswers: userAnswers,
       elapsedTime: elapsedTime ?? null,
       quizType: backendQuizType,
       personalizedQuizType: backendPersonalizedQuizType,
       courseId: quiz.courseId ?? null,
-      sourceDocument: quiz.sourceDocument
-        ? {
-            fileName: quiz.sourceDocument.fileName,
-            storagePath: quiz.sourceDocument.storagePath,
-            // documentId is not in frontend Quiz.sourceDocument, so it remains undefined
-          }
-        : null,
+      sourceDocument: backendSourceDocument,
       selectedSubTopics: quiz.selectedSubTopics
         ? quiz.selectedSubTopics.map((stName) => ({
             subTopic: stName,

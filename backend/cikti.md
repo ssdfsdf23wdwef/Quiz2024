@@ -1,12 +1,12 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-24T22:09:27.428Z
-Trace ID: quiz-1748124565375-4uof6
-Yanıt Uzunluğu: 498 karakter
+Tarih: 2025-05-24T22:45:16.878Z
+Trace ID: quiz-1748126715147-2u0ph
+Yanıt Uzunluğu: 424 karakter
 
 ## Ham Çıktı:
 ```json
-Anlaşıldı. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu için soru üretemiyorum. Lütfen soru üretilecek aktif konuları ve her konu için istenen soru sayısını belirtin. Örneğin:
+Anladım. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu için herhangi bir soru üretemiyorum. Lütfen soru üretilecek aktif konuları belirtin. Örneğin:
 
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
@@ -15,6 +15,6 @@ Anlaşıldı. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu
 - Algoritma Analizi (3 soru)
 ```
 
-Bu bilgiyi sağladıktan sonra, belirtilen eğitim içeriğine ({{DOCUMENT_TEXT}}) dayanarak, istenen sayıda ve zorluk seviyesinde soruları JSON formatında oluşturabilirim.
+Bu şekilde bir girdi sağladığınızda, belirtilen konular ve soru sayılarına göre JSON formatında soruları oluşturabilirim.
 
 ```

@@ -16,6 +16,7 @@ export interface LearningTarget {
   lastAttempt: string | null;
   firstEncountered: string;
   updatedAt?: string | null;
+  source?: 'user_created' | 'document_extracted' | 'ai_generated_new' | 'legacy';
 }
 
 /**
@@ -26,6 +27,7 @@ export interface CreateLearningTargetDto {
   subTopicName: string;
   normalizedSubTopicName?: string;
   status?: 'pending' | 'failed' | 'medium' | 'mastered';
+  source?: 'user_created' | 'document_extracted' | 'ai_generated_new' | 'legacy';
 }
 
 /**

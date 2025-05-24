@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { LoggerService } from '../../common/services/logger.service';
 import { FlowTrackerService } from '../../common/services/flow-tracker.service';
+import { PromptManagerService } from './prompt-manager.service';
 import pRetry from 'p-retry';
 import {
   TopicDetectionAiResponseSchema,
@@ -73,6 +74,7 @@ Sadece JSON döndür, başka açıklama yapma.
   constructor(
     private readonly aiProviderService: AIProviderService,
     private readonly normalizationService: NormalizationService,
+    private readonly promptManagerService: PromptManagerService,
   ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
@@ -315,6 +317,158 @@ Sadece JSON döndür, başka açıklama yapma.
         error,
       );
       throw error;
+    }
+  }
+
+  /**
+   * Detect new and unique topics that are not in the existing topics list
+   * @param lessonContext The context or description of the lesson
+   * @param existingTopicNames Array of existing topic names to exclude
+   * @returns Array of newly identified unique topic names
+   */
+  async detectExclusiveNewTopics(
+    lessonContext: string,
+    existingTopicNames: string[] = [],
+  ): Promise<string[]> {
+    const traceId = `exclusive-topics-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const processingStartTime = Date.now();
+
+    try {
+      this.logger.debug(
+        `[${traceId}] Özel yeni konu tespiti başlatılıyor - Ders bağlamı: ${lessonContext?.length || 0} karakter, Mevcut konu sayısı: ${existingTopicNames.length}`,
+        'TopicDetectionService.detectExclusiveNewTopics',
+        __filename,
+      );
+
+      // Load the exclusive new topics detection prompt
+      let promptTemplate: string;
+      try {
+        promptTemplate = await this.promptManagerService.loadPrompt('detect_new_topics_exclusive_tr.txt');
+        this.logger.debug(
+          `[${traceId}] Özel yeni konu prompt'u başarıyla yüklendi (${promptTemplate.length} karakter)`,
+          'TopicDetectionService.detectExclusiveNewTopics',
+          __filename,
+        );
+      } catch (error) {
+        this.logger.error(
+          `[${traceId}] Özel yeni konu prompt dosyası yüklenemedi: ${error.message}`,
+          'TopicDetectionService.detectExclusiveNewTopics',
+          __filename,
+          undefined,
+          error,
+        );
+        return [];
+      }
+
+      // Prepare variables for prompt compilation
+      const existingTopicsString = existingTopicNames.length > 0 
+        ? existingTopicNames.join(', ') 
+        : 'Yok';
+
+      const variables = {
+        lessonContext: lessonContext || 'Belirtilmemiş',
+        existingTopics: existingTopicsString,
+      };
+
+      // Compile the prompt with variables
+      const compiledPrompt = this.promptManagerService.compilePrompt(promptTemplate, variables);
+
+      this.logger.debug(
+        `[${traceId}] Prompt başarıyla derlendi (${compiledPrompt.length} karakter)`,
+        'TopicDetectionService.detectExclusiveNewTopics',
+        __filename,
+      );
+
+      // Track the process
+      this.flowTracker.trackStep(
+        'Özel yeni konular tespit ediliyor',
+        'TopicDetectionService',
+      );
+
+      // Call AI service with retry mechanism
+      let aiResponse: string;
+      try {
+        const aiCallResult = await pRetry(async () => {
+          const response = await this.aiProviderService.generateContent(compiledPrompt);
+          return response.text;
+        }, this.RETRY_OPTIONS);
+
+        aiResponse = aiCallResult;
+      } catch (error) {
+        this.logger.error(
+          `[${traceId}] AI servisi çağrısı başarısız oldu: ${error.message}`,
+          'TopicDetectionService.detectExclusiveNewTopics',
+          __filename,
+          undefined,
+          error,
+        );
+        return [];
+      }
+
+      // Parse AI response
+      let parsedResponse: { newly_identified_topics?: string[] };
+      try {
+        parsedResponse = this.parseJsonResponse<{ newly_identified_topics?: string[] }>(aiResponse);
+      } catch (parseError) {
+        this.logger.error(
+          `[${traceId}] AI yanıtı JSON parse edilemedi: ${parseError.message}`,
+          'TopicDetectionService.detectExclusiveNewTopics',
+          __filename,
+          undefined,
+          parseError,
+          { aiResponse: aiResponse?.substring(0, 500) },
+        );
+        return [];
+      }
+
+      // Extract newly identified topics
+      const newlyIdentifiedTopics = parsedResponse?.newly_identified_topics || [];
+
+      // Validate that result is an array
+      if (!Array.isArray(newlyIdentifiedTopics)) {
+        this.logger.warn(
+          `[${traceId}] AI yanıtında newly_identified_topics bir dizi değil: ${typeof newlyIdentifiedTopics}`,
+          'TopicDetectionService.detectExclusiveNewTopics',
+          __filename,
+        );
+        return [];
+      }
+
+      // Filter out invalid entries and clean topic names
+      const cleanedTopics = newlyIdentifiedTopics
+        .filter((topic: any) => typeof topic === 'string' && topic.trim().length > 0)
+        .map((topic: string) => this.cleanTopicName(topic))
+        .filter((topic: string) => topic.length > 0);
+
+      const processingDuration = Date.now() - processingStartTime;
+      this.logger.info(
+        `[${traceId}] Özel yeni konu tespiti tamamlandı - ${cleanedTopics.length} yeni konu bulundu (${processingDuration}ms)`,
+        'TopicDetectionService.detectExclusiveNewTopics',
+        __filename,
+      );
+
+      // Log detected topics for debugging
+      if (cleanedTopics.length > 0) {
+        console.log('\n=== YENİ TESPİT EDİLEN KONULAR ===');
+        cleanedTopics.forEach((topic, index) => {
+          console.log(`[${index + 1}] ${topic}`);
+        });
+        console.log('==================================\n');
+      } else {
+        console.log('\n=== HİÇBİR YENİ KONU TESPİT EDİLEMEDİ ===\n');
+      }
+
+      return cleanedTopics;
+
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Özel yeni konu tespiti sırasında beklenmeyen hata: ${error.message}`,
+        'TopicDetectionService.detectExclusiveNewTopics',
+        __filename,
+        undefined,
+        error,
+      );
+      return [];
     }
   }
 

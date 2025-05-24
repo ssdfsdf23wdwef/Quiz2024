@@ -23,6 +23,7 @@ export class PromptManagerService implements OnModuleInit {
     // Başlangıçta sık kullanılan promptları önbelleğe yükle
     await this.loadPrompt('generate-quiz-tr.txt');
     await this.loadPrompt('detect-topics-tr.txt');
+    await this.loadPrompt('detect_new_topics_exclusive_tr.txt');
   }
 
   /**

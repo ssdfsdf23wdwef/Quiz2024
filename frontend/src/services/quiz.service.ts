@@ -359,15 +359,17 @@ class QuizApiService {
         // Ana API isteği
         async () => {
           try {
-            // Doğru endpoint URL formatını kullan
-            const result = await this.apiService.get<QuizAnalysisResponse>(`/quizzes/${quizId}/analysis`);
-            console.log('[QuizApiService.getQuizAnalysis] API yanıtı:', result);
+            // Corrected endpoint: remove leading slash as apiService prepends /api
+            const result = await this.apiService.get<QuizAnalysisResponse>(`quizzes/analysis/${quizId}`);
+            console.log('[QuizApiService.getQuizAnalysis] API yanıtı (quizzes/analysis):', result);
             return result as QuizAnalysisResponse;
           } catch (err) {
             // 404 hatasında alternatif endpoint'i dene
             if (axios.isAxiosError(err) && err.response?.status === 404) {
-              console.log('[QuizApiService.getQuizAnalysis] Alternatif endpoint deneniyor');
-              const result = await this.apiService.get<QuizAnalysisResponse>(`/quiz-analysis/${quizId}`);
+              console.log('[QuizApiService.getQuizAnalysis] Alternatif endpoint deneniyor (quiz-analysis)');
+              // Corrected fallback endpoint: remove leading slash
+              const result = await this.apiService.get<QuizAnalysisResponse>(`quiz-analysis/${quizId}`);
+              console.log('[QuizApiService.getQuizAnalysis] API yanıtı (quiz-analysis):', result);
               return result as QuizAnalysisResponse;
             }
             throw err;
@@ -723,40 +725,39 @@ class QuizApiService {
         // Ana API isteği - formatı backend ile uyumlu hale getiriyoruz
         async () => {
           try {
-            // Önce localStorage'dan quiz verilerini al (backend'in beklediği ek alanlar için)
+            // Önce localStorage'dan quiz verilerini al
             const storedQuiz = this.getQuizFromLocalStorage(payload.quizId);
             
             if (!storedQuiz) {
               console.warn('[QuizApiService.submitQuiz] LocalStorage\'da quiz bulunamadı, minimum veri ile devam ediliyor');
+              throw new Error('Quiz bulunamadı');
             }
             
-            // Backend API'nin beklediği formata uygun veri oluşturma
-            const formattedPayload: Record<string, unknown> = {
-              // Temel bilgiler
-              quizId: payload.quizId, // API endpoint içerisinde olsa da, bazen request body içinde de bekleniyor
-              userAnswers: payload.userAnswers, 
-              elapsedTime: payload.elapsedTime || 0,
-              
-              // Backend validasyonu için gereken alanlar
-              quizType: storedQuiz?.quizType || 'quick',
-              
-              // Tercihler - backend validasyonu için
-              preferences: storedQuiz?.preferences || { 
-                questionCount: Object.keys(payload.userAnswers).length || 10, 
-                difficulty: 'medium',
-                timeLimit: Math.ceil((payload.elapsedTime || 0) / 60) || 10
-              },
-              
-              // Quiz meta verileri - backend validasyonu için
-              title: storedQuiz?.title || 'Quiz',
-              timestamp: new Date().toISOString(),
-              score: storedQuiz?.score || 0,
-              
-              // Sorular - backend soruları doğrulamak için kullanıyor
-              questions: this.prepareQuestionsForSubmission(storedQuiz?.questions || [], payload.userAnswers)
-            };
+            // Adapter service kullanarak backend formatına dönüştür
+            const formattedPayload = adapterService.fromQuizSubmissionPayload(
+              storedQuiz,
+              payload.userAnswers,
+              payload.elapsedTime
+            );
             
-            console.log('[QuizApiService.submitQuiz] Backend\'e gönderilecek formatlı veri:', formattedPayload);
+            // Backend validation hatasını önlemek için, DTO şemayla uyumsuz olan alanları temizle
+            // SubmitQuizDto'ya uymayan alanların kaldırılması
+            const payloadForSubmission = formattedPayload as Record<string, unknown>;
+            delete payloadForSubmission.quizId;
+            delete payloadForSubmission.title;
+            delete payloadForSubmission.timestamp;
+            delete payloadForSubmission.score;
+            delete payloadForSubmission.status;
+            
+            // Emin olmak için tüm sorulardan questionType alanını da temizle
+            if (Array.isArray(payloadForSubmission.questions)) {
+              (payloadForSubmission.questions as Record<string, unknown>[]).forEach(q => {
+                delete q.questionType;
+                delete q.status;
+              });
+            }
+            
+            console.log('[QuizApiService.submitQuiz] Backend\'e gönderilecek formatlı veri (adapter ile):', payloadForSubmission);
             
             // Formatlı veriyi backend'e gönder
             try {
@@ -764,7 +765,7 @@ class QuizApiService {
               const endpoint = `/quizzes/${payload.quizId}/submit`;
               console.log(`[QuizApiService.submitQuiz] API isteği gönderiliyor: ${endpoint}`);
               
-              const result = await this.apiService.post<QuizSubmissionResponse>(endpoint, formattedPayload);
+              const result = await this.apiService.post<QuizSubmissionResponse>(endpoint, payloadForSubmission);
               console.log('[QuizApiService.submitQuiz] API yanıtı başarılı:', result);
               return result as QuizSubmissionResponse;
             } catch (error) {

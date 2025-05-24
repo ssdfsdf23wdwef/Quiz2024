@@ -26,7 +26,7 @@ import { QuizValidationService } from './services/quiz-validation.service';
     PromptManagerService,
     QuizValidationService,
   ],
-  exports: [AiService, QuizGenerationService],
+  exports: [AiService, QuizGenerationService, TopicDetectionService],
 })
 export class AiModule implements OnModuleInit {
   constructor(

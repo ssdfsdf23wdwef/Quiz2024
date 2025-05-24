@@ -25,13 +25,15 @@ import {
   ApiParam,
   ApiBody,
   ApiQuery,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { LearningTargetsService } from './learning-targets.service';
 import {
   UpdateLearningTargetDto,
   DetectTopicsDto,
   CreateBatchLearningTargetsDto,
-  UpdateMultipleStatusesDto,
+  DetectNewTopicsDto,
+  ConfirmNewTopicsDto,
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LearningTargetWithQuizzes } from '../common/interfaces';
@@ -40,6 +42,27 @@ import { LoggerService } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
 import { DocumentsService } from '../documents/documents.service';
+import { TopicDetectionService } from '../ai/services/topic-detection.service';
+
+// Dummy class for Swagger schema reference if LearningTargetWithQuizzes is an interface
+// This is a common workaround for NestJS Swagger when using interfaces for response types.
+// Ensure this class matches the structure of LearningTargetWithQuizzes interface.
+class LearningTargetWithQuizzesResponse implements LearningTargetWithQuizzes {
+  id: string;
+  courseId: string;
+  userId: string;
+  subTopicName: string;
+  normalizedSubTopicName: string;
+  status: 'pending' | 'failed' | 'medium' | 'mastered';
+  failCount: number;
+  mediumCount: number;
+  successCount: number;
+  lastAttemptScorePercent: number | null;
+  lastAttempt: Date | null;
+  firstEncountered: Date;
+  lastPersonalizedQuizId: string | null;
+  // quizzes: any[]; // Define more accurately if possible, e.g., Quiz[]
+}
 
 @ApiTags('Öğrenme Hedefleri')
 @ApiBearerAuth('Firebase JWT')
@@ -52,6 +75,7 @@ export class LearningTargetsController {
   constructor(
     private readonly learningTargetsService: LearningTargetsService,
     private readonly documentsService: DocumentsService,
+    private readonly topicDetectionService: TopicDetectionService,
   ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
@@ -525,53 +549,6 @@ export class LearningTargetsController {
     }
   }
 
-  @Put('update-statuses')
-  @ApiOperation({ summary: 'Çoklu öğrenme hedefi durumlarını günceller' })
-  @ApiBody({ type: UpdateMultipleStatusesDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Öğrenme hedefleri başarıyla güncellendi',
-  })
-  @ApiResponse({ status: 400, description: 'Geçersiz istek' })
-  @ApiResponse({ status: 404, description: 'Bulunamadı' })
-  @LogMethod()
-  async updateStatuses(
-    @Body() dto: UpdateMultipleStatusesDto,
-    @Request() req: RequestWithUser,
-  ): Promise<LearningTargetWithQuizzes[]> {
-    try {
-      this.flowTracker.trackStep(
-        `${dto.targetUpdates.length} adet öğrenme hedefinin durumu güncelleniyor`,
-        'LearningTargetsController',
-      );
-
-      this.logger.debug(
-        'Öğrenme hedefi durumları güncelleniyor',
-        'LearningTargetsController.updateStatuses',
-        __filename,
-        263,
-        {
-          userId: req.user.uid,
-          updateCount: dto.targetUpdates.length,
-        },
-      );
-
-      return await this.learningTargetsService.updateMultipleStatuses(
-        dto.targetUpdates,
-        req.user.uid,
-      );
-    } catch (error) {
-      this.logger.logError(error, 'LearningTargetsController.updateStatuses', {
-        userId: req.user.uid,
-        updateCount: dto.targetUpdates.length,
-        targetIds: dto.targetUpdates.map((u) => u.id),
-        additionalInfo:
-          'Öğrenme hedeflerinin durumları güncellenirken hata oluştu',
-      });
-      throw error;
-    }
-  }
-
   @Put(':id')
   @ApiOperation({ summary: 'Bir öğrenme hedefini günceller' })
   @ApiParam({ name: 'id', description: "Öğrenme hedefi ID'si" })
@@ -579,6 +556,7 @@ export class LearningTargetsController {
   @ApiResponse({
     status: 200,
     description: 'Öğrenme hedefi başarıyla güncellendi',
+    type: LearningTargetWithQuizzesResponse, // Use the class for schema
   })
   @ApiResponse({ status: 404, description: 'Öğrenme hedefi bulunamadı' })
   @LogMethod()
@@ -592,12 +570,16 @@ export class LearningTargetsController {
         `${id} ID'li öğrenme hedefi güncelleniyor`,
         'LearningTargetsController',
       );
-
-      return await this.learningTargetsService.update(
+      const result = await this.learningTargetsService.update(
         id,
         req.user.uid,
         updateLearningTargetDto,
       );
+      return {
+        ...result,
+        lastAttempt: result.lastAttempt ? new Date(result.lastAttempt) : null,
+        firstEncountered: new Date(result.firstEncountered),
+      };
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.update', {
         userId: req.user.uid,
@@ -624,13 +606,136 @@ export class LearningTargetsController {
         `${id} ID'li öğrenme hedefi siliniyor`,
         'LearningTargetsController',
       );
-
       await this.learningTargetsService.remove(id, req.user.uid);
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.remove', {
         userId: req.user.uid,
         targetId: id,
         additionalInfo: 'Öğrenme hedefi silinirken hata oluştu',
+      });
+      throw error;
+    }
+  }
+
+  @Post(':courseId/detect-new-topics')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Detect new topics from lesson context compared to existing topics' })
+  @ApiParam({ name: 'courseId', description: 'Course ID', type: String })
+  @ApiBody({ type: DetectNewTopicsDto })
+  @ApiResponse({ status: 200, description: 'New topics detected successfully', type: [String] })
+  @ApiResponse({ status: 400, description: 'Bad Request: Invalid input data' })
+  @ApiResponse({ status: 404, description: 'Course not found' })
+  @LogMethod()
+  async detectNewTopics(
+    @Param('courseId') courseId: string,
+    @Body() detectNewTopicsDto: DetectNewTopicsDto,
+    @Req() req: RequestWithUser,
+  ): Promise<string[]> {
+    const userId = req.user.uid;
+    try {
+      this.flowTracker.trackStep(
+        `Detecting new topics for course ${courseId} based on lesson context`,
+        'LearningTargetsController.detectNewTopics',
+      );
+      this.logger.debug(
+        'New topic detection started',
+        'LearningTargetsController.detectNewTopics',
+        __filename,
+        undefined, 
+        { userId, courseId, existingTopicsCount: detectNewTopicsDto.existingTopicNames.length },
+      );
+
+      const newTopics = await this.topicDetectionService.detectExclusiveNewTopics(
+        detectNewTopicsDto.lessonContext,
+        detectNewTopicsDto.existingTopicNames,
+      );
+
+      this.logger.info(
+        `${newTopics.length} new topics detected for course ${courseId}`,
+        'LearningTargetsController.detectNewTopics',
+        __filename,
+      );
+      return newTopics;
+    } catch (error) {
+      this.logger.logError(error, 'LearningTargetsController.detectNewTopics', {
+        userId,
+        courseId,
+        lessonContextLength: detectNewTopicsDto.lessonContext?.length,
+        existingTopicNames: detectNewTopicsDto.existingTopicNames,
+        additionalInfo: 'Error during new topic detection',
+      });
+      throw error;
+    }
+  }
+
+  @Post(':courseId/confirm-new-topics')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Confirm and save detected new topics as learning targets' })
+  @ApiParam({ name: 'courseId', description: 'Course ID', type: String })
+  @ApiBody({ type: ConfirmNewTopicsDto })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'New topics confirmed and saved as learning targets', 
+    schema: { type: 'array', items: { $ref: getSchemaPath(LearningTargetWithQuizzesResponse) } }
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request: Invalid input data' })
+  @ApiResponse({ status: 404, description: 'Course not found or no topics to save' })
+  @LogMethod()
+  async confirmNewTopics(
+    @Param('courseId') courseId: string,
+    @Body() confirmNewTopicsDto: ConfirmNewTopicsDto,
+    @Req() req: RequestWithUser,
+  ): Promise<LearningTargetWithQuizzes[]> {
+    const userId = req.user.uid;
+    try {
+      this.flowTracker.trackStep(
+        `Confirming and saving ${confirmNewTopicsDto.newTopicNames.length} new topics for course ${courseId}`,
+        'LearningTargetsController.confirmNewTopics',
+      );
+      this.logger.debug(
+        'Confirmation of new topics started',
+        'LearningTargetsController.confirmNewTopics',
+        __filename,
+        undefined,
+        { userId, courseId, newTopicsCount: confirmNewTopicsDto.newTopicNames.length },
+      );
+
+      if (!confirmNewTopicsDto.newTopicNames || confirmNewTopicsDto.newTopicNames.length === 0) {
+        this.logger.warn(
+          'Attempted to confirm new topics with an empty list.',
+          'LearningTargetsController.confirmNewTopics',
+          __filename,
+          undefined,
+          { userId, courseId }
+        );
+        throw new BadRequestException('No new topic names provided for confirmation.');
+      }
+      
+      const savedLearningTargetsPrisma = await this.learningTargetsService.confirmAndSaveNewTopics(
+        courseId,
+        confirmNewTopicsDto.newTopicNames,
+        userId,
+      );
+
+      this.logger.info(
+        `${savedLearningTargetsPrisma.length} new learning targets saved for course ${courseId}`,
+        'LearningTargetsController.confirmNewTopics',
+        __filename,
+      );
+
+      const savedLearningTargets: LearningTargetWithQuizzes[] = savedLearningTargetsPrisma.map(target => ({
+        ...target,
+        lastAttempt: target.lastAttempt ? new Date(target.lastAttempt) : null,
+        firstEncountered: new Date(target.firstEncountered),
+      }));
+
+      return savedLearningTargets;
+    } catch (error) {
+      this.logger.logError(error, 'LearningTargetsController.confirmNewTopics', {
+        userId,
+        courseId,
+        newTopicNames: confirmNewTopicsDto.newTopicNames,
+        additionalInfo: 'Error during confirmation and saving of new topics',
       });
       throw error;
     }

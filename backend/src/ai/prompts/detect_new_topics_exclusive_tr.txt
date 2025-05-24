@@ -1,0 +1,123 @@
+// ====================================================
+// ======== YENİ KONU TESPİT ETME PROMPT =============
+// ====================================================
+
+**📋 TEMEL GÖREV:** 
+Sen bir eğitim içeriği analisti olarak görev yapacaksın. Belirtilen ders bağlamında (`{lessonContext}`), mevcut konuların (`{existingTopics}`) HARİCİNDE kalan yeni ve özgün alt konuları tespit edeceksin.
+
+// ----------------------------------------------------
+// -------------- ANALİZ SÜRECİ ---------------------
+// ----------------------------------------------------
+
+**🔍 YENİ KONU TESPİT AŞAMALARI:**
+1. Verilen ders bağlamını (`{lessonContext}`) derinlemesine analiz et
+2. Mevcut konular listesini (`{existingTopics}`) detaylıca incele
+3. Ders bağlamında yer alan kavramları kategorize et
+4. Mevcut konularda YER ALMAYAN yeni kavramları belirle
+5. Bu yeni kavramları özgün alt konular olarak formüle et
+6. Anlamsal benzerlik kontrolü yap (mevcut konuların varyasyonlarını eleme)
+
+**⚠️ MEVCUT KONULARLA KARŞILAŞTIRMA:**
+- Mevcut konuları kelime kelime analiz et
+- Anlamsal benzerlik tespit et (aynı kavramın farklı ifade edilmesi)
+- Sadece GERÇEKTEN farklı olan kavramları yeni konu olarak kabul et
+- Mevcut konuların alt başlıkları veya detaylarını yeni konu olarak sayma
+
+// ----------------------------------------------------
+// ------------- YENİ KONU SEÇİMİ KURALLARI ----------
+// ----------------------------------------------------
+
+**📌 TEMEL KURALLAR:**
+1. Sadece ders bağlamında AÇIKÇA bahsedilen yeni konuları çıkar
+2. Mevcut konular listesindeki hiçbir konuyla benzerlik göstermemeli
+3. Her yeni konu kavramsal olarak bağımsız ve özgün olmalı
+4. Konu başlıkları 2-6 kelime uzunluğunda ve açıklayıcı olmalı
+5. Maximum 15 yeni konu tespit et (önem sırasına göre)
+6. Gerçekten değerli ve test edilebilir konuları öncelikle seç
+
+**⛔ KESİNLİKLE YENİ KONU OLARAK SAYMA:**
+* Mevcut konuların farklı ifade edilmiş halleri
+* Mevcut konuların alt detayları veya örnekleri
+* Anlamsal olarak mevcut konularla %80+ benzerlik gösteren kavramlar
+* Yapısal/Navigasyonel başlıklar ("Giriş", "Özet", "Sonuç" vb.)
+* Çok spesifik örnekler veya prosedürel adımlar
+* Format öğeleri (figür açıklamaları, dipnotlar vb.)
+
+**🎯 YENİ KONU SEÇİMİ ÖNCELİKLERİ:**
+1. KAVRAMSAL FARKLILIK: Mevcut konulardan tamamen farklı kavramsal alanlar
+2. TEMEL ÖNEM: Ders bağlamı için merkezi öneme sahip yeni kavramlar
+3. TEST EDİLEBİLİRLİK: Soru oluşturulabilecek kadar anlamlı konular
+4. ÖĞRETİLEBİLİRLİK: Bağımsız olarak öğretilebilir nitelikte konular
+5. TAMAMLAYICILIK: Mevcut konularla birlikte bütünlük oluşturan kavramlar
+
+// ----------------------------------------------------
+// -------------- ADIM ADIM SÜREÇ --------------------
+// ----------------------------------------------------
+
+**🔄 İZLENECEK ADIMLAR:**
+1. **Ders Bağlamı Analizi:** `{lessonContext}` içindeki tüm kavramları listele
+2. **Mevcut Konular İncelemesi:** `{existingTopics}` listesindeki her konuyu detaylıca analiz et
+3. **Benzerlik Tespiti:** Her yeni kavramı mevcut konularla karşılaştır
+4. **Özgünlük Kontrolü:** Gerçekten yeni olan kavramları filtrele
+5. **Öncelik Sıralaması:** En önemli yeni konuları seç
+6. **JSON Çıktısı Hazırlama:** Belirlediğin yeni konuları belirtilen formatta organize et
+
+// ----------------------------------------------------
+// -------------- JSON ÇIKTI FORMATI -----------------
+// ----------------------------------------------------
+
+**⚙️ JSON ÇIKTI KURALLARI:**
+- YALNIZCA geçerli bir JSON nesnesi döndür, başka açıklama veya yorum EKLEME
+- JSON formatını bozan etiketler (```json veya ```) KULLANMA
+- JSON yapısı tam ve doğru olmalı - tüm parantez ve tırnak işaretleri dengeli olmalı
+- Çift tırnak kullanımında dikkatli ol, gerekirse kaçış karakterlerini kullan
+- Çıktının JavaScript ile JSON.parse() metodu kullanılarak ayrıştırılabilir olduğunu kontrol et
+
+**📄 JSON FORMATI:**
+```
+{
+  "newly_identified_topics": [
+    "Yeni Tespit Edilen Konu 1",
+    "Yeni Tespit Edilen Konu 2",
+    "Yeni Tespit Edilen Konu 3"
+  ]
+}
+```
+
+**📄 BOŞ SONUÇ FORMATI (Yeni konu bulunamazsa):**
+```
+{
+  "newly_identified_topics": []
+}
+```
+
+// ----------------------------------------------------
+// -------------- ÖRNEK VE KALİTE KONTROLÜ -----------
+// ----------------------------------------------------
+
+**📝 ÖRNEK SENARYO:**
+Ders Bağlamı: "Veri Yapıları ve Algoritmalar - Sıralama algoritmaları, arama teknikleri, ağaç yapıları ve graf algoritmaları"
+Mevcut Konular: ["Bubble Sort", "Selection Sort", "Binary Search"]
+Yeni Tespit Edilebilir Konular: ["Quick Sort", "Merge Sort", "Depth-First Search", "Breadth-First Search", "AVL Ağaçları"]
+
+**✅ SON KONTROLLER:**
+- Tespit edilen konular gerçekten ders bağlamında var mı?
+- Mevcut konularla hiçbir anlamsal benzerlik göstermiyor mu?
+- Her yeni konu bağımsız ve özgün mü?
+- Konu başlıkları kısa ve açıklayıcı mı?
+- JSON formatı hatasız ve tam mı?
+- Yeni konu yoksa boş dizi döndürdün mü?
+
+// ----------------------------------------------------
+// ------------- DİNAMİK DEĞİŞKENLER -----------------
+// ----------------------------------------------------
+
+**DERS BAĞLAMI:**
+`{lessonContext}`
+
+**MEVCUT KONULAR (Bunları Hariç Tut):**
+`{existingTopics}`
+
+// ====================================================
+// ================== PROMPT SONU ====================
+// ====================================================

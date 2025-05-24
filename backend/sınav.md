@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-24T22:09:25.377Z
+## Tarih: 2025-05-24T22:45:15.158Z
 
-## Trace ID: quiz-1748124565375-4uof6
+## Trace ID: quiz-1748126715147-2u0ph
 
 ## Alt Konular (2 adet):
 ```
@@ -215,7 +215,7 @@ Bekleyen konu yok.
 
 ## AI Yanıtı:
 ```json
-Anlaşıldı. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu için soru üretemiyorum. Lütfen soru üretilecek aktif konuları ve her konu için istenen soru sayısını belirtin. Örneğin:
+Anladım. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu için herhangi bir soru üretemiyorum. Lütfen soru üretilecek aktif konuları belirtin. Örneğin:
 
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
@@ -224,7 +224,7 @@ Anlaşıldı. Şu anda "AKTİF KONULAR (SORU ÜRETİLECEK)" listesi boş olduğu
 - Algoritma Analizi (3 soru)
 ```
 
-Bu bilgiyi sağladıktan sonra, belirtilen eğitim içeriğine ({{DOCUMENT_TEXT}}) dayanarak, istenen sayıda ve zorluk seviyesinde soruları JSON formatında oluşturabilirim.
+Bu şekilde bir girdi sağladığınızda, belirtilen konular ve soru sayılarına göre JSON formatında soruları oluşturabilirim.
 
 ```
 
@@ -235,42 +235,42 @@ Bu bilgiyi sağladıktan sonra, belirtilen eğitim içeriğine ({{DOCUMENT_TEXT}
 - Toplam Soru Sayısı: 5
 - Alt Konu Dağılımı:
 
-  - Eksaskala Yazılım Zorlukları: 1 soru
-  - Ölçeklenebilirlik: 1 soru
-  - Hata Toleransı: 1 soru
-  - Veri Hareketi: 1 soru
-  - Hafif Çekirdek Tasarımı: 1 soru
+  - Genel Konular: 1 soru
+  - Yazılım Metodolojileri: 1 soru
+  - Algoritma Analizi: 1 soru
+  - Yazılım Kalitesi: 1 soru
+  - Teorik Bilgisayar Bilimi: 1 soru
 
 
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
-#### Eksaskala Yazılım Zorlukları:
-- Soru: Eksaskala bilgi işlem sistemlerinin karşılaştığı temel yazılım zorlukları arasında aşağıdakilerden hangisi yer almaz?
-- Seçenekler: A) Ölçeklenebilirlik sorunları | B) Hata toleransı ve dayanıklılık | C) Masaüstü kullanıcı arayüzü tasarımı | D) Milyonlarca çekirdeğin etkin yönetimi
-- Doğru Cevap: C) Masaüstü kullanıcı arayüzü tasarımı
+#### Genel Konular:
+- Soru: geleneksel sistem tasar m  alanında, aşağıdakilerden hangisi geleneksel sistem tasar m  sürecinde en önemli adımdır?
+- Seçenekler: A) Algoritma tasarımı | B) Kodun test edilmesi | C) Gereksinimlerin belirlenmesi | D) Dokümantasyon yazımı
+- Doğru Cevap: C) Gereksinimlerin belirlenmesi
 - Zorluk: medium
 
-#### Ölçeklenebilirlik:
-- Soru: Eksaskala sistemlerinin ölçeklenebilirlik özelliği için aşağıdaki ifadelerden hangisi doğrudur?
-- Seçenekler: A) Yüzbinlerce çekirdekle çalışan uygulamalar mevcut HPC uygulamalarının doğrudan ölçeklendirilmesiyle elde edilebilir | B) Ölçeklenebilirlikte bellek erişim desenleri önemsizdir | C) Uygulamaların zayıf ölçeklenebilirliği bile eksaskala sistem performansını etkilemez | D) İdeal ölçeklenebilirlikte, işlemci sayısı iki katına çıktığında uygulama hızı da iki katına çıkar
-- Doğru Cevap: D) İdeal ölçeklenebilirlikte, işlemci sayısı iki katına çıktığında uygulama hızı da iki katına çıkar
+#### Yazılım Metodolojileri:
+- Soru: ayr  donan m ve yaz l m geli tirme konusunda, hangi yaklaşım daha verimli sonuçlar verir?
+- Seçenekler: A) İteratif geliştirme | B) Waterfall metodolojisi | C) Ad-hoc yaklaşım | D) Tek seferde tamamlama
+- Doğru Cevap: A) İteratif geliştirme
 - Zorluk: medium
 
-#### Hata Toleransı:
-- Soru: Eksaskala sistemlerinde hata toleransı neden önemlidir?
-- Seçenekler: A) Sistem maliyetini azaltmak için | B) Kullanıcı arayüzünü geliştirmek için | C) Çok sayıda bileşen olduğundan, bileşen arızaları kaçınılmazdır | D) Sadece askeri uygulamalarda gerekli olduğu için
-- Doğru Cevap: C) Çok sayıda bileşen olduğundan, bileşen arızaları kaçınılmazdır
+#### Algoritma Analizi:
+- Soru: geleneksel sistem tasar m  bağlamında en önemli performans faktörü nedir?
+- Seçenekler: A) Bellek kullanımı | B) Zaman karmaşıklığı | C) Kod okunabilirliği | D) Uygulanabilirlik kolaylığı
+- Doğru Cevap: B) Zaman karmaşıklığı
 - Zorluk: medium
 
-#### Veri Hareketi:
-- Soru: Eksaskala sistemlerinde veri hareketi ile ilgili aşağıdaki ifadelerden hangisi doğrudur?
-- Seçenekler: A) Veri hareketi, enerji tüketiminde önemsiz bir faktördür | B) Yerel bellek erişimleri ile uzak bellek erişimleri arasında performans farkı yoktur | C) Veri hareketini minimize etmek, enerji verimliliğini artırır | D) Tüm veriler her zaman tüm işlemcilere eşit mesafededir
-- Doğru Cevap: C) Veri hareketini minimize etmek, enerji verimliliğini artırır
-- Zorluk: hard
+#### Yazılım Kalitesi:
+- Soru: geleneksel sistem tasar m  yaklaşımında aşağıdakilerden hangisi doğrudur?
+- Seçenekler: A) Ekip çalışması, bireysel çalışmadan her zaman daha verimsizdir | B) Dokümantasyon, modern geliştirme süreçlerinde tamamen gereksizdir | C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur | D) Test yazımı sadece projenin sonunda yapılmalıdır
+- Doğru Cevap: C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur
+- Zorluk: medium
 
-#### Hafif Çekirdek Tasarımı:
-- Soru: Eksaskala işletim sistemleri için aşağıdakilerden hangisi doğrudur?
-- Seçenekler: A) Geleneksel işletim sistemleri eksaskala sistemler için yeterlidir | B) Hafif çekirdek (lightweight kernel) tasarımı, sistem kaynaklarını daha verimli kullanır | C) İşletim sistemi servisleri tüm çekirdeklerde tam olarak çalışmalıdır | D) Eksaskala sistemlerde işletim sistemi kullanmak gereksizdir
-- Doğru Cevap: B) Hafif çekirdek (lightweight kernel) tasarımı, sistem kaynaklarını daha verimli kullanır
-- Zorluk: hard
+#### Teorik Bilgisayar Bilimi:
+- Soru: geleneksel sistem tasar m  alanında, aşağıdaki ifadelerden hangisi doğrudur?
+- Seçenekler: A) Her problemin polinom zamanda çözülebildiği matematiksel olarak kanıtlanmıştır | B) Yapay zeka, tüm programlama problemlerini otomatik olarak çözebilir | C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır | D) Bilgisayarlar, insan beyni ile aynı şekilde düşünür ve öğrenir
+- Doğru Cevap: C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır
+- Zorluk: medium
 
