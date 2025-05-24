@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-24T19:43:41.400Z
+## Tarih: 2025-05-24T19:52:56.453Z
 
-## Trace ID: quiz-1748115821396-lca46
+## Trace ID: quiz-1748116376450-0ppga
 
 ## Alt Konular (1 adet):
 ```

@@ -664,24 +664,24 @@ export class QuizValidationService {
   }
 
   /**
-   * Parse işlemi başarısız olduğunda fallback veri oluşturur yerine hata fırlatır
+   * Parse işlemi başarısız olduğunda fallback veri oluşturur
    * @param text AI yanıt metni
    * @param metadata Metadata
-   * @returns Fallback veri yerine hata fırlatır
+   * @returns Fallback quiz sorularını içeren veri
    */
   private createFallbackData<T>(text: string, metadata: QuizMetadata): T {
     const { traceId, questionCount = 5, difficulty = 'mixed' } = metadata;
 
-    // AI yanıtı işlemede hata oluştu, bunu logla
+    // AI yanıtı işlemede hata oluştu, fallback sorular oluşturulacak
     this.logger.warn(
-      `[${traceId}] AI yanıtı düzgün işlenemedi. Hata fırlatılacak.`,
+      `[${traceId}] AI yanıtı düzgün işlenemedi. Fallback sorular oluşturuluyor.`,
       'QuizValidationService.createFallbackData',
     );
 
     // Sınav oluşturma hatasını detaylı loglama
     this.logger.logExamError(
       metadata.userId || 'anonymous',
-      new Error('AI yanıtı işlenirken hata oluştu'),
+      new Error('AI yanıtı işlenirken hata oluştu, fallback sorular kullanılıyor'),
       {
         traceId,
         rawResponseLength: text?.length || 0,
@@ -697,36 +697,18 @@ export class QuizValidationService {
 
     // Örnek içeriklerin tespit edilip edilmediğini kontrol et
     const containsExamples = this.detectExampleContent(text);
-    let errorDetails = {
-      code: 'AI_RESPONSE_PARSING_ERROR',
-      message:
-        'AI yanıtı işlenirken bir hata oluştu. Sınav soruları oluşturulamadı.',
-      details: {
-        traceId,
-        reason: 'Yanıt formatı geçersiz veya beklenen JSON şemasına uymuyor',
-        responsePreview: text ? text.substring(0, 200) + '...' : 'Boş yanıt',
-        errorType: 'PARSING_ERROR',
-        containsExamples: false, // Varsayılan olarak ekle
-      },
-    };
-
-    // Örnek içerik tespiti varsa, bu bilgiyi hata mesajına ekle
+    
     if (containsExamples) {
-      errorDetails.message =
-        'AI yanıtında örnek içerik tespit edildi. Gerçek sorular yerine şablonda bulunan örnek sorular döndürüldü.';
-      errorDetails.details.errorType = 'EXAMPLE_CONTENT_DETECTED';
-      errorDetails.details.containsExamples = true;
-
       // Örnek içerik tespitini loglama
       this.logger.logExamProcess(
-        `[HATA] ${metadata.userId || 'anonymous'} kullanıcısı için sınav oluşturulurken AI yanıtında örnek içerik tespit edildi.`,
+        `[UYARI] ${metadata.userId || 'anonymous'} kullanıcısı için sınav oluşturulurken AI yanıtında örnek içerik tespit edildi. Fallback sorular kullanılacak.`,
         {
           traceId,
           userId: metadata.userId,
           timestamp: new Date().toISOString(),
           containsExamples: true,
         },
-        'error',
+        'warn',
       );
     }
 
@@ -739,17 +721,25 @@ export class QuizValidationService {
 
       // sinav-olusturma.log'a da kaydedelim
       this.logger.logExamProcess(
-        `AI yanıtı işlenemedi - Trace ID: ${traceId}`,
+        `AI yanıtı işlenemedi, fallback sorular oluşturuluyor - Trace ID: ${traceId}`,
         {
           responsePreview: text.substring(0, 300) + '...',
           metadata: JSON.stringify(metadata),
         },
-        'error',
+        'warn',
       );
     }
 
-    // Ayrıntılı hata bilgisiyle BadRequestException fırlat
-    throw new BadRequestException(errorDetails);
+    // Fallback sorularını oluştur
+    const fallbackQuestions = this.createFallbackQuestions(metadata);
+    
+    this.logger.info(
+      `[${traceId}] ${fallbackQuestions.length} adet fallback soru başarıyla oluşturuldu.`,
+      'QuizValidationService.createFallbackData',
+    );
+
+    // Uygun formatta döndür - eğer questions dizisi bekleniyor ise onu döndür
+    return { questions: fallbackQuestions } as T;
   }
 
   /**

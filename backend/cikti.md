@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-24T19:43:41.351Z
-Trace ID: quiz-1748115806180-txbl7
-Yanıt Uzunluğu: 10016 karakter
+Tarih: 2025-05-24T19:52:56.357Z
+Trace ID: quiz-1748116361981-zh14y
+Yanıt Uzunluğu: 9368 karakter
 
 ## Ham Çıktı:
 ```json
@@ -21,14 +21,14 @@ Yanıt Uzunluğu: 10016 karakter
         "Ağ iletişim protokolleri"
       ],
       "correctAnswer": "Programlama modelleri ve araçları",
-      "explanation": "Programlama modelleri ve araçları, tasarımcılara eksaskala sistemlerin yüksek hesaplama gücünü kullanabilmeleri için bir köprü görevi görür ve eksaskala bilgisayar sistemleri için kritik bir rol oynar. Diğer seçenekler eksaskala sistemlerin önemli bileşenleri olmakla birlikte, tasarımcıların hesaplama gücünü kullanmaları için doğrudan bir köprü görevi görmezler.",
+      "explanation": "Programlama modelleri ve araçları, tasarımcılara eksaskala sistemlerin yüksek hesaplama gücünü kullanabilmeleri için bir köprü görevi görür ve eksaskala bilgisayar sistemleri için kritik bir rol oynar. Bu modeller ve araçlar, karmaşık sistemlerin yönetilmesini ve optimize edilmesini sağlar.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
     },
     {
       "id": "q2",
-      "questionText": "Aşağıdakilerden hangisi, eksaskala sistemlerde verimliliği artırmak için kullanılan temel paralel programlama paradigmalarından biri değildir?",
+      "questionText": "Aşağıdakilerden hangisi eksaskala sistemlerde kullanılan temel paralel programlama paradigmalarından biri değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
@@ -38,143 +38,143 @@ Yanıt Uzunluğu: 10016 karakter
         "Nesne Yönelimli Programlama"
       ],
       "correctAnswer": "Nesne Yönelimli Programlama",
-      "explanation": "Paylaşımlı Bellek Paradigması, Dağıtık Bellek Paradigması ve Hibrit Paralel Programlama, eksaskala sistemlerde kullanılan başlıca paralel programlama paradigmalarıdır. Nesne Yönelimli Programlama ise bir programlama yaklaşımıdır, paralelleştirme paradigması değildir.",
+      "explanation": "Paylaşımlı bellek, dağıtık bellek ve hibrit paralel programlama, eksaskala sistemlerde kullanılan temel paralel programlama paradigmalarıdır. Nesne yönelimli programlama ise bir programlama yaklaşımıdır, paralelleştirme paradigması değildir.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "easy"
     },
     {
       "id": "q3",
-      "questionText": "Çok çekirdekli işlemciler için ideal olan ve tüm işlemcilerin ortak belleğe eriştiği paralel programlama paradigması hangisidir?",
+      "questionText": "OpenMP hangi paralel programlama paradigması ile daha yakından ilişkilidir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
         "Dağıtık Bellek Paradigması",
         "Paylaşımlı Bellek Paradigması",
-        "Mesaj Geçişi Arayüzü (MPI)",
-        "Hibrit Paralel Programlama"
+        "Hibrit Paralel Programlama",
+        "Veri Paralel Programlama"
       ],
       "correctAnswer": "Paylaşımlı Bellek Paradigması",
-      "explanation": "Paylaşımlı bellek paradigması, çok çekirdekli işlemciler için idealdir ve tüm işlemciler ortak belleğe erişir. Bu paradigmada OpenMP gibi araçlar kullanılır ve düşük iletişim gecikmesi avantajı sağlar. Dağıtık bellek paradigması ise her işlemcinin kendi belleğine sahip olduğu ve veri değişiminin mesajlaşma ile sağlandığı bir yaklaşımdır.",
+      "explanation": "OpenMP, çok çekirdekli işlemciler ve paylaşımlı bellek mimarileri ile paralel uygulamalar geliştirmek için kullanılır. Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırır ve düşük iletişim gecikmesi avantajı sunar.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
     },
     {
       "id": "q4",
-      "questionText": "Aşağıdakilerden hangisi, paylaşımlı bellek mimarilerinde paralel uygulamalar geliştirmek için kullanılan ve derleyici direktifleri ile paralellik sağlayan bir API'dir?",
+      "questionText": "Dağıtık bellek paradigmasında, işlemciler arası veri değişimi nasıl sağlanır?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "MPI",
-        "CUDA",
-        "OpenMP",
-        "OpenCL"
+        "Ortak bellek erişimi ile",
+        "Mesajlaşma ile",
+        "Sanal bellek paylaşımı ile",
+        "Direkt bellek erişimi ile"
       ],
-      "correctAnswer": "OpenMP",
-      "explanation": "OpenMP (Open Multi-Processing), çok çekirdekli işlemciler ve paylaşımlı bellek mimarileri ile paralel uygulamalar geliştirmek için kullanılır. Paralellik sağlamak için derleyici direktifleri kullanılır. MPI dağıtık bellekli ortamlarda kullanılırken, CUDA ve OpenCL GPU programlama için kullanılır.",
+      "correctAnswer": "Mesajlaşma ile",
+      "explanation": "Dağıtık bellek paradigmasında her işlemci kendi düğümünün belleğine erişir ve veri değişimi mesajlaşma ile sağlanır. MPI (Message Passing Interface) bu paradigmada yaygın olarak kullanılan bir araçtır.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
-      "difficulty": "medium"
+      "difficulty": "easy"
     },
     {
       "id": "q5",
-      "questionText": "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılan ve işlemler arasında doğrudan veri alışverişi sağlayan mesajlaşma mekanizmalarını içeren arayüz aşağıdakilerden hangisidir?",
+      "questionText": "MPI (Message Passing Interface) ne için kullanılır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "OpenMP",
-        "MPI",
-        "CUDA",
-        "OpenCL"
+        "Paylaşımlı bellek ortamlarında paralel uygulamalar geliştirmek için",
+        "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için",
+        "Tek çekirdekli sistemlerde performansı artırmak için",
+        "Gömülü sistemlerde düşük güç tüketimi sağlamak için"
       ],
-      "correctAnswer": "MPI",
-      "explanation": "Message Passing Interface (MPI), dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır ve işlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim mekanizmaları sunar. OpenMP paylaşımlı bellek mimarilerinde kullanılırken, CUDA ve OpenCL GPU programlama için kullanılır.",
+      "correctAnswer": "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için",
+      "explanation": "MPI, dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır. Eksaskala sistemlerde bağımsız işlemciler arasında veri alışverişi ve paralel görev koordinasyonu sağlar. MPI, işlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim mekanizmaları sunar.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
     },
     {
       "id": "q6",
-      "questionText": "Eksaskala bilişimde, MPI ve OpenMP paralellik modellerinin kombinasyonu hangi paralellik yaklaşımını ifade eder?",
+      "questionText": "Eksaskala bilişimde MPI ve OpenMP'nin birlikte kullanılmasının temel amacı nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Paylaşımlı paralellik",
-        "Dağıtık paralellik",
-        "Hibrit paralellik",
-        "Eş zamanlı paralellik"
+        "Sadece işlemciler arası iletişimi hızlandırmak",
+        "Hem düğüm içindeki hem de tüm sistem genelindeki paralel işlemleri verimli bir şekilde yapmak",
+        "Sadece bellek kullanımını azaltmak",
+        "Sadece enerji tüketimini optimize etmek"
       ],
-      "correctAnswer": "Hibrit paralellik",
-      "explanation": "Hibrit paralellik, farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirir. Eksaskala bilişimde, MPI ve OpenMP paralellik modellerinin kombinasyonu yaygın bir hibrit yaklaşımdır. MPI işlemler arası iletişim sağlarken, OpenMP düğüm içindeki paralellikten faydalanarak paralelleme verimliliğini artırır.",
+      "correctAnswer": "Hem düğüm içindeki hem de tüm sistem genelindeki paralel işlemleri verimli bir şekilde yapmak",
+      "explanation": "MPI ve OpenMP kombinasyonu, hem her bir düğümdeki paralel işlem hem de tüm sistem genelindeki paralel işlemlerin verimli bir şekilde yapılmasını sağlar. MPI, işlemler arası iletişim sağlarken, OpenMP, düğüm içindeki paralellikten faydalanarak paralelleme verimliliğini artırır.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
     },
     {
       "id": "q7",
-      "questionText": "MPI + OpenMP kombinasyonunda, OpenMP'nin temel işlevi aşağıdakilerden hangisidir?",
+      "questionText": "Aşağıdakilerden hangisi derleyici optimizasyonlarının temel amaçlarından biridir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "İşlemciler arası iletişimi sağlamak",
-        "Çok çekirdekli işlemciler içinde iş parçacıklarını yönetmek",
-        "Dağıtık bellek yönetimi yapmak",
-        "Veri depolama işlemlerini optimize etmek"
+        "Kaynak kodun daha okunabilir olmasını sağlamak",
+        "Kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecini iyileştirmek",
+        "Kaynak kodun farklı platformlarda çalışmasını sağlamak",
+        "Kaynak kodun daha az satır içermesini sağlamak"
       ],
-      "correctAnswer": "Çok çekirdekli işlemciler içinde iş parçacıklarını yönetmek",
-      "explanation": "MPI + OpenMP kombinasyonunda, MPI işlemciler arası iletişim sağlarken (dış paralelleştirme), OpenMP çok çekirdekli işlemciler içinde iş parçacıklarını yönetir (iç paralelleştirme). Bu sayede kaynak kullanımı optimize edilir ve OpenMP, paylaşımlı bellek içinde çalışarak MPI’nin iletişim yükünü azaltır ve performansı artırır.",
+      "correctAnswer": "Kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecini iyileştirmek",
+      "explanation": "Derleyici optimizasyonlarının temel amacı, kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecidir. Eksaskala sistemlerde bu, hesaplama verimliliğini artırmak ve bellek erişim gecikmesini azaltmak anlamına gelir.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
     },
     {
       "id": "q8",
-      "questionText": "Aşağıdakilerden hangisi, kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecinde kullanılan ve hesaplama verimliliğini artırmayı amaçlayan bir tekniktir?",
+      "questionText": "Döngü açma (Loop Unrolling) tekniği ile ne amaçlanır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Veri şifreleme",
-        "Derleyici optimizasyonu",
-        "Ağ topolojisi",
-        "Bellek sanallaştırma"
+        "Döngülerin daha az bellek kullanmasını sağlamak",
+        "Döngü kontrol yapılarının yükünü azaltmak",
+        "Döngülerin daha kolay hata ayıklanmasını sağlamak",
+        "Döngülerin daha az kod satırı içermesini sağlamak"
       ],
-      "correctAnswer": "Derleyici optimizasyonu",
-      "explanation": "Derleyici optimizasyonları, kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecidir. Eksaskala sistemlerde amaç, hesaplama verimliliğini artırmak ve bellek erişim gecikmesini azaltmaktır. Döngü açma, döngü birleştirme ve döngü vektörleştirme gibi teknikler kullanılır.",
+      "correctAnswer": "Döngü kontrol yapılarının yükünü azaltmak",
+      "explanation": "Döngü açma, döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici optimizasyon tekniğidir. Birden fazla iterasyon tek bir döngüde açılır ve bu da işlemcinin birden fazla talimatı aynı anda çalıştırmasını mümkün kılar.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
     },
     {
       "id": "q9",
-      "questionText": "Döngü kontrol yapılarının yükünü azaltmayı amaçlayan ve birden fazla iterasyonu tek bir döngüde açarak işlemcinin birden fazla talimatı aynı anda çalıştırmasını sağlayan derleyici optimizasyon tekniği hangisidir?",
+      "questionText": "MPI_Send ve MPI_Recv fonksiyonları hangi amaçla kullanılır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Döngü birleştirme (Loop Fusion)",
-        "Döngü vektörleştirme (Loop Vectorization)",
-        "Döngü açma (Loop Unrolling)",
-        "Döngü dönüşümü (Loop Inversion)"
+        "Bellek yönetimi",
+        "İşlemler arası doğrudan veri alışverişi",
+        "Dosya okuma/yazma işlemleri",
+        "Hata ayıklama"
       ],
-      "correctAnswer": "Döngü açma (Loop Unrolling)",
-      "explanation": "Döngü açma (Loop Unrolling), döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici optimizasyon tekniğidir. Birden fazla iterasyon tek bir döngüde açılır ve bu da işlemcinin birden fazla talimatı aynı anda çalıştırmasını mümkün kılar. Bu teknik, derleyicinin daha fazla talimat seviyesinde paralellik açığa çıkarmasını sağlar.",
+      "correctAnswer": "İşlemler arası doğrudan veri alışverişi",
+      "explanation": "MPI_Send ve MPI_Recv fonksiyonları, MPI'ın işlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim mekanizmalarındandır. Bu fonksiyonlar, dağıtık bellekli sistemlerde veri transferini sağlamak için kullanılır.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
     },
     {
       "id": "q10",
-      "questionText": "Aşağıdaki derleyici optimizasyon tekniklerinden hangisi, döngü kontrol yükünü azaltarak işlemcinin daha fazla talimatı aynı anda işlemesini sağlamayı hedefler?",
+      "questionText": "Aşağıdakilerden hangisi paralel programlama paradigması değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Döngü Birleştirme",
-        "Döngü Vektörleştirme",
-        "Döngü Açma",
-        "Döngü Döşeme"
+        "Paylaşımlı Bellek Paradigması",
+        "Dağıtık Bellek Paradigması",
+        "Fonksiyonel Programlama",
+        "Hibrit Paralel Programlama"
       ],
-      "correctAnswer": "Döngü Açma",
-      "explanation": "Döngü açma (Loop Unrolling), döngü kontrol yapılarının yükünü azaltmayı amaçlar. Bu teknikte, döngü içindeki birden fazla iterasyon tek bir döngüde birleştirilir, böylece işlemci daha fazla talimatı aynı anda işleyebilir. Bu, talimat seviyesinde paralelliği artırır ve performansı iyileştirir.",
+      "correctAnswer": "Fonksiyonel Programlama",
+      "explanation": "Paylaşımlı Bellek, Dağıtık Bellek ve Hibrit Paralel Programlama, paralel programlama paradigmalarıdır. Fonksiyonel Programlama ise bir programlama stilidir ve paralellik ile doğrudan ilişkili değildir.",
       "subTopicName": "Programlama Modelleri Ve Ara Lar",
       "normalizedSubTopicName": "programlama_modelleri_ve_ara_lar",
       "difficulty": "medium"
