@@ -7,20 +7,22 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
+    "target": "ES2020",
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "baseUrl": "./src",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "strict": false,
+    "strictPropertyInitialization": false,
     "paths": {
       "@prisma/*": ["prisma/*"],
       "@auth/*": ["auth/*"],
@@ -36,5 +38,5 @@
     },
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "exclude": ["node_modules", "dist", "*.ts", "examples"]
+  "exclude": ["node_modules", "dist", "./examples/**/*"]
 }

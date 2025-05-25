@@ -170,12 +170,8 @@ export class QuizAnalysisResponseDto {
     Object.assign(this, partial);
 
     // Tarih ise ISO string formatına dönüştür
-    if (
-      partial.timestamp &&
-      typeof partial.timestamp === 'object' &&
-      'toISOString' in partial.timestamp
-    ) {
-      this.timestamp = (partial.timestamp as Date).toISOString();
+    if (partial.timestamp && this.isDateLike(partial.timestamp)) {
+      this.timestamp = (partial.timestamp as any).toISOString();
     }
 
     // Alt nesneler için tip dönüşümlerini gerçekleştir
@@ -205,5 +201,15 @@ export class QuizAnalysisResponseDto {
         (difficulty) => new DifficultyPerformanceDto(difficulty),
       );
     }
+  }
+
+  private isDateLike(value: any): boolean {
+    return (
+      value &&
+      typeof value === 'object' &&
+      value !== null &&
+      'toISOString' in value &&
+      typeof value.toISOString === 'function'
+    );
   }
 }

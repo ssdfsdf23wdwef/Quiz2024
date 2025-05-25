@@ -26,6 +26,15 @@ export class UpdateLearningTargetDto {
   subTopicName?: string;
 
   @ApiProperty({
+    description: "Öğrenme hedefinin (alt konunun) normalleştirilmiş adı",
+    example: "ikinci-dereceden-denklemler",
+    required: false,
+  })
+  @IsString({ message: "Normalleştirilmiş alt konu adı metinsel bir değer olmalıdır" })
+  @IsOptional()
+  normalizedSubTopicName?: string;
+
+  @ApiProperty({
     description: 'Öğrenme hedefinin durumu',
     enum: LearningTargetStatus,
     example: 'medium',

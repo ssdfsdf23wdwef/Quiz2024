@@ -11,7 +11,7 @@ import {
   Put,
   Query,
   BadRequestException,
-  Request,
+  Request, // Request'i RequestWithUser ile değiştirmek için RequestWithUser import edilmeli
   HttpCode,
   HttpStatus,
   SetMetadata,
@@ -26,6 +26,7 @@ import {
   ApiBody,
   ApiQuery,
   getSchemaPath,
+  ApiProperty, // ApiProperty eklendi
 } from '@nestjs/swagger';
 import { LearningTargetsService } from './learning-targets.service';
 import {
@@ -34,7 +35,7 @@ import {
   CreateBatchLearningTargetsDto,
   DetectNewTopicsDto,
   ConfirmNewTopicsDto,
-} from './dto';
+} from './dto'; // DTO'ların yolu doğru varsayılıyor
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LearningTargetWithQuizzes } from '../common/interfaces';
 import { RequestWithUser } from '../common/types';
@@ -44,29 +45,70 @@ import { LogMethod } from '../common/decorators';
 import { DocumentsService } from '../documents/documents.service';
 import { TopicDetectionService } from '../ai/services/topic-detection.service';
 
-// Dummy class for Swagger schema reference if LearningTargetWithQuizzes is an interface
-// This is a common workaround for NestJS Swagger when using interfaces for response types.
-// Ensure this class matches the structure of LearningTargetWithQuizzes interface.
-class LearningTargetWithQuizzesResponse implements LearningTargetWithQuizzes {
-  id: string;
-  courseId: string;
-  userId: string;
+// Swagger için detectTopics yanıt DTO'ları
+class DetectedTopicDto {
+  @ApiProperty({ description: 'Tespit edilen alt konunun adı' })
   subTopicName: string;
+
+  @ApiProperty({
+    description: 'Tespit edilen alt konunun normalleştirilmiş adı',
+  })
   normalizedSubTopicName: string;
+}
+
+class TopicDetectionResponseDto {
+  @ApiProperty({
+    type: [DetectedTopicDto],
+    description: 'Tespit edilen konuların listesi',
+  })
+  topics: DetectedTopicDto[];
+}
+
+// LearningTargetWithQuizzes arayüzünün Swagger'da şema olarak kullanılabilmesi için dummy sınıf
+// Bu sınıfın LearningTargetWithQuizzes arayüzü ile aynı alanlara sahip olduğundan emin olun.
+class LearningTargetWithQuizzesResponse implements LearningTargetWithQuizzes {
+  @ApiProperty()
+  id: string;
+  @ApiProperty()
+  courseId: string;
+  @ApiProperty()
+  userId: string;
+  @ApiProperty()
+  subTopicName: string;
+  @ApiProperty()
+  normalizedSubTopicName: string;
+  @ApiProperty({ enum: ['pending', 'failed', 'medium', 'mastered'] })
   status: 'pending' | 'failed' | 'medium' | 'mastered';
+  @ApiProperty()
   failCount: number;
+  @ApiProperty()
   mediumCount: number;
+  @ApiProperty()
   successCount: number;
+  @ApiProperty({ type: 'number', nullable: true })
   lastAttemptScorePercent: number | null;
+  @ApiProperty({ type: 'string', format: 'date-time', nullable: true })
   lastAttempt: Date | null;
+  @ApiProperty({ type: 'string', format: 'date-time' })
   firstEncountered: Date;
+  @ApiProperty({ type: 'string', nullable: true })
   lastPersonalizedQuizId: string | null;
-  // quizzes: any[]; // Define more accurately if possible, e.g., Quiz[]
+  // quizzes: any[]; // Daha spesifik bir tip (örn: QuizDto[]) kullanılabilir veya API yanıtında bu alan yoksa kaldırılabilir.
+  // Şimdilik yoruma alıyorum, LearningTargetWithQuizzes interface'ine göre hareket edilmeli.
+}
+
+// Helper function for normalization (isteğe bağlı, kod içinde direkt de kullanılabilir)
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9çğıöşü]+/g, '-') // Türkçe karakterler için genişletilmiş regex
+    .replace(/-+/g, '-') // Birden fazla tireyi tek tireye indirge
+    .replace(/^-+|-+$/g, ''); // Başta ve sonda kalan tireleri temizle
 }
 
 @ApiTags('Öğrenme Hedefleri')
-@ApiBearerAuth('Firebase JWT')
-@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('Firebase JWT') // Swagger UI'da Authorize butonu için Bearer token (JWT) şeması
+@UseGuards(JwtAuthGuard) // Tüm endpoint'ler için JWT koruması (anonymousAllowed ile override edilebilir)
 @Controller('learning-targets')
 export class LearningTargetsController {
   private readonly logger: LoggerService;
@@ -74,7 +116,7 @@ export class LearningTargetsController {
 
   constructor(
     private readonly learningTargetsService: LearningTargetsService,
-    private readonly documentsService: DocumentsService,
+    private readonly documentsService: DocumentsService, // Kullanılmıyorsa kaldırılabilir
     private readonly topicDetectionService: TopicDetectionService,
   ) {
     this.logger = LoggerService.getInstance();
@@ -83,7 +125,8 @@ export class LearningTargetsController {
       'LearningTargetsController başlatıldı',
       'LearningTargetsController.constructor',
       __filename,
-      37,
+      75, // Bu satır numarasını manuel güncelledim, idealde otomatik olmalı veya log servisi kendisi halletmeli
+      { service: LearningTargetsController.name },
     );
   }
 
@@ -96,32 +139,42 @@ export class LearningTargetsController {
     name: 'courseId',
     required: false,
     description: "Ders ID'si (opsiyonel)",
+    type: String,
   })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Öğrenme hedefleri başarıyla listelendi',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(LearningTargetWithQuizzesResponse) },
+    },
   })
   @LogMethod()
   async findAll(
     @Query('courseId') courseId: string | undefined,
-    @Request() req: RequestWithUser,
+    @Req() req: RequestWithUser,
   ) {
     try {
       this.flowTracker.trackStep(
         courseId
           ? `${courseId} ID'li derse ait öğrenme hedefleri listeleniyor`
           : 'Tüm öğrenme hedefleri listeleniyor',
-        'LearningTargetsController',
+        'LearningTargetsController.findAll',
       );
 
+      let targets;
       if (courseId) {
-        return await this.learningTargetsService.findByCourse(
+        targets = await this.learningTargetsService.findByCourse(
           courseId,
           req.user.uid,
         );
+      } else {
+        targets = await this.learningTargetsService.findAll(req.user.uid);
       }
-
-      return await this.learningTargetsService.findAll(req.user.uid);
+      // Prisma'dan gelen Date objeleri JSON'a çevrilirken string'e dönüşür.
+      // Client'a Date objesi olarak gitmesi için bu dönüşüm gerekebilir veya client tarafında parse edilir.
+      // Şimdilik Prisma'nın Date objelerini koruyoruz.
+      return targets;
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.findAll', {
         userId: req.user.uid,
@@ -137,23 +190,29 @@ export class LearningTargetsController {
     summary:
       'Bir derse ait tüm öğrenme hedeflerini listeler (path parametresi ile)',
   })
-  @ApiParam({ name: 'courseId', description: "Ders ID'si" })
+  @ApiParam({ name: 'courseId', description: "Ders ID'si", type: String })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Öğrenme hedefleri başarıyla listelendi',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(LearningTargetWithQuizzesResponse) },
+    },
   })
-  @ApiResponse({ status: 404, description: 'Ders bulunamadı' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ders bulunamadı',
+  })
   @LogMethod()
   async findByCourse(
     @Param('courseId') courseId: string,
-    @Request() req: RequestWithUser,
+    @Req() req: RequestWithUser,
   ) {
     try {
       this.flowTracker.trackStep(
         `${courseId} ID'li derse ait öğrenme hedefleri alınıyor`,
-        'LearningTargetsController',
+        'LearningTargetsController.findByCourse',
       );
-
       return await this.learningTargetsService.findByCourse(
         courseId,
         req.user.uid,
@@ -170,25 +229,27 @@ export class LearningTargetsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Bir öğrenme hedefinin detaylarını getirir' })
-  @ApiParam({ name: 'id', description: "Öğrenme hedefi ID'si" })
+  @ApiParam({ name: 'id', description: "Öğrenme hedefi ID'si", type: String })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Öğrenme hedefi başarıyla getirildi',
+    type: LearningTargetWithQuizzesResponse,
   })
-  @ApiResponse({ status: 404, description: 'Öğrenme hedefi bulunamadı' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Öğrenme hedefi bulunamadı',
+  })
   @LogMethod()
   async findOne(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: RequestWithUser, // Düzeltildi: any -> RequestWithUser
   ): Promise<LearningTargetWithQuizzes> {
     const userId = req.user.uid;
-
     try {
       this.flowTracker.trackStep(
         `${id} ID'li öğrenme hedefi detayları getiriliyor`,
-        'LearningTargetsController',
+        'LearningTargetsController.findOne',
       );
-
       return await this.learningTargetsService.findOne(id, userId);
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.findOne', {
@@ -202,7 +263,7 @@ export class LearningTargetsController {
 
   @Get('by-status/:courseId')
   @ApiOperation({ summary: 'Duruma göre öğrenme hedeflerini listeler' })
-  @ApiParam({ name: 'courseId', description: "Ders ID'si" })
+  @ApiParam({ name: 'courseId', description: "Ders ID'si", type: String })
   @ApiQuery({
     name: 'status',
     description: 'Hedef durumu',
@@ -210,23 +271,32 @@ export class LearningTargetsController {
     required: true,
   })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Öğrenme hedefleri başarıyla listelendi',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(LearningTargetWithQuizzesResponse) },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Geçersiz durum parametresi' })
-  @ApiResponse({ status: 404, description: 'Ders bulunamadı' })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Geçersiz durum parametresi',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ders bulunamadı',
+  })
   @LogMethod()
   async findByStatus(
     @Param('courseId') courseId: string,
     @Query('status') status: string,
-    @Req() req: any,
+    @Req() req: RequestWithUser, // Düzeltildi: any -> RequestWithUser
   ) {
     const userId = req.user.uid;
-
     try {
       this.flowTracker.trackStep(
         `${courseId} ID'li dersin '${status}' durumundaki öğrenme hedefleri listeleniyor`,
-        'LearningTargetsController',
+        'LearningTargetsController.findByStatus',
       );
 
       const validStatuses = ['pending', 'failed', 'medium', 'mastered'];
@@ -235,11 +305,13 @@ export class LearningTargetsController {
           `Geçersiz durum parametresi: ${status}`,
           'LearningTargetsController.findByStatus',
           __filename,
-          147,
-          { validStatuses },
+          251, // Manuel güncellendi
+          { validStatuses, providedStatus: status },
         );
         throw new BadRequestException(
-          `Geçersiz durum paramtresi. Geçerli değerler: ${validStatuses.join(', ')}`,
+          `Geçersiz durum parametresi. Geçerli değerler: ${validStatuses.join(
+            ', ',
+          )}`,
         );
       }
 
@@ -250,236 +322,178 @@ export class LearningTargetsController {
       );
     } catch (error) {
       if (!(error instanceof BadRequestException)) {
-        this.logger.logError(error, 'LearningTargetsController.findByStatus', {
-          userId,
-          courseId,
-          status,
-          additionalInfo: 'Durum bazlı öğrenme hedefleri alınırken hata oluştu',
-        });
+        this.logger.logError(
+          error,
+          'LearningTargetsController.findByStatus',
+          {
+            userId,
+            courseId,
+            status,
+            additionalInfo:
+              'Durum bazlı öğrenme hedefleri alınırken hata oluştu',
+          },
+        );
       }
       throw error;
     }
   }
 
   @Post('detect-topics')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Detect topics from document text and optionally save as learning targets' })
-  @ApiResponse({
-    status: 200,
-    description: 'Topics detected successfully',
-    type: String,
-    isArray: true,
+  @HttpCode(HttpStatus.OK) // Genellikle POST için 201 (Created) kullanılır, ama burada sadece tespit yapılıp kaydedilmeyebilir. OK (200) kabul edilebilir.
+  @ApiOperation({
+    summary:
+      'Belge metninden konuları tespit eder ve isteğe bağlı olarak öğrenme hedefleri olarak kaydeder',
   })
-  @SetMetadata('anonymousAllowed', true)
-  async detectTopics(@Body() dto: DetectTopicsDto, @Req() req: any) {
-    const userId = req.user?.uid || 'anonymous';
+  @ApiBody({ type: DetectTopicsDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Konular başarıyla tespit edildi',
+    type: TopicDetectionResponseDto, // Düzeltildi
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Geçersiz istek (örn: metin veya belge ID eksik)',
+  })
+  @SetMetadata('anonymousAllowed', true) // Bu endpoint kimlik doğrulaması olmadan da kullanılabilir
+  @LogMethod()
+  async detectTopics(
+    @Body() dto: DetectTopicsDto,
+    @Req() req: RequestWithUser, // RequestWithUser kullanılıyor, req.user null olabilir
+  ): Promise<TopicDetectionResponseDto> {
+    const userId = req.user?.uid || 'anonymous'; // req.user null olabilir
     const isAuthenticated = userId !== 'anonymous';
 
     try {
       this.flowTracker.trackStep(
         `${dto.courseId || 'N/A'} ID'li ders için metin içinden konular tespit ediliyor`,
-        'LearningTargetsController',
+        'LearningTargetsController.detectTopics',
       );
 
       this.logger.debug(
         'Konu tespiti başlatılıyor',
         'LearningTargetsController.detectTopics',
         __filename,
-        183,
+        318, // Manuel güncellendi
         {
           userId,
           courseId: dto.courseId || 'N/A',
           textLength: dto.documentText?.length || 0,
           hasDocumentId: !!dto.documentId,
-          isAnonymous: userId === 'anonymous',
-          requestDetails: JSON.stringify(dto),
+          isAnonymous: !isAuthenticated,
+          requestBody: dto, // Hassas veri içermiyorsa loglanabilir
         },
       );
 
-      // Belge ID'si var mı kontrol et
+      let detectedRawTopics: string[] = [];
+
       if (dto.documentId) {
         this.logger.info(
           `Belge ID'si kullanılarak konular tespit ediliyor: ${dto.documentId}`,
           'LearningTargetsController.detectTopics',
           __filename,
+          336, // Manuel güncellendi
+          { documentId: dto.documentId },
         );
-
-        try {
-          // Belge ID'si ile konu tespiti yap
-          const result =
-            await this.learningTargetsService.analyzeDocumentForTopics(
-              dto.documentId,
-              userId,
-            );
-
-          this.logger.info(
-            `Belge ID ${dto.documentId} için konu tespiti başarılı: ${result.length} konu bulundu`,
-            'LearningTargetsController.detectTopics',
-            __filename,
+        detectedRawTopics =
+          await this.learningTargetsService.analyzeDocumentForTopics(
+            dto.documentId,
+            userId, // Servis metodu userId'yi anonim durumlar için handle edebilmeli
           );
-          
-          // Eğer kullanıcı giriş yapmış ve courseId varsa, tespit edilen konuları öğrenme hedefleri olarak kaydet
-          let savedTargets: LearningTargetWithQuizzes[] = [];
-          if (isAuthenticated && dto.courseId) {
-            this.logger.info(
-              `✨ KONU TESPİTİ: ${result.length} konu tespit edildi, ${dto.courseId} ID'li ders için öğrenme hedefleri olarak kaydediliyor`,
-              'LearningTargetsController.detectTopics',
-              __filename,
-            );
-            
-            try {
-              // Tespit edilen konuları öğrenme hedefi olarak oluşturmak için topic listesi hazırla
-              const topics = result.map(topic => ({
-                subTopicName: topic,
-                normalizedSubTopicName: topic.toLowerCase().replace(/\s+/g, '-'),
-              }));
-              
-              this.logger.info(
-                `🔄 KONU KAYDI: createBatch metodu çağrılıyor`,
-                'LearningTargetsController.detectTopics',
-                __filename,
-              );
-              
-              // Toplu öğrenme hedefi oluştur - "pending" (beklemede) durumu ile kaydedilecek
-              savedTargets = await this.learningTargetsService.createBatch(
-                dto.courseId,
-                userId,
-                topics
-              );
-              
-              this.logger.info(
-                `✅ BAŞARILI: ${savedTargets.length} adet öğrenme hedefi "pending" durumu ile veritabanına kaydedildi`,
-                'LearningTargetsController.detectTopics',
-                __filename,
-              );
-            } catch (saveError) {
-              this.logger.error(
-                `❌ HATA: Öğrenme hedefleri kaydedilirken hata oluştu: ${saveError.message}`,
-                'LearningTargetsController.detectTopics',
-                __filename,
-              );
-              // Kaydetme hatası olsa bile konuları döndürmeye devam et
-            }
-          } else if (dto.courseId && !isAuthenticated) {
-            this.logger.info(
-              `⚠️ UYARI: Kullanıcı giriş yapmadığı için öğrenme hedefleri kaydedilmedi`,
-              'LearningTargetsController.detectTopics',
-              __filename,
-            );
-          } else {
-            this.logger.info(
-              `ℹ️ BİLGİ: CourseId sağlanmadığı için öğrenme hedefleri kaydedilmedi`,
-              'LearningTargetsController.detectTopics',
-              __filename,
-            );
-          }
-
-          // TopicDetectionResult formatında yanıt döndür
-          return {
-            topics: result.map((topic) => ({
-              subTopicName: topic,
-              normalizedSubTopicName: topic
-                .toLowerCase()
-                .replace(/[^a-z0-9]/g, '-'),
-            })),
-          };
-        } catch (error) {
-          this.logger.logError(
-            error,
-            'LearningTargetsController.detectTopics.documentIdMode',
-            {
-              userId,
-              documentId: dto.documentId,
-              errorMessage: error.message,
-            },
-          );
-          throw error;
-        }
+        this.logger.info(
+          `Belge ID ${dto.documentId} için konu tespiti başarılı: ${detectedRawTopics.length} konu bulundu`,
+          'LearningTargetsController.detectTopics',
+          __filename,
+          348, // Manuel güncellendi
+        );
       } else if (dto.documentText) {
         this.logger.info(
           `Doğrudan metin kullanılarak konular tespit ediliyor (${dto.documentText?.length || 0} karakter)`,
           'LearningTargetsController.detectTopics',
           __filename,
+          356, // Manuel güncellendi
         );
-
-        // AI servisini doğrudan çağırarak konu tespiti yap
-        const result = await this.learningTargetsService.analyzeDocumentText(
-          dto.documentText || '',
-          userId,
-        );
-
-        this.logger.debug(
-          `Doğrudan metinden konu tespiti tamamlandı: ${result.length} konu bulundu`,
+        detectedRawTopics =
+          await this.learningTargetsService.analyzeDocumentText(
+            dto.documentText,
+            userId, // Servis metodu userId'yi anonim durumlar için handle edebilmeli
+          );
+        this.logger.info(
+          `Doğrudan metinden konu tespiti tamamlandı: ${detectedRawTopics.length} konu bulundu`,
           'LearningTargetsController.detectTopics',
           __filename,
+          367, // Manuel güncellendi
         );
-        
-        // Eğer kullanıcı giriş yapmış ve courseId varsa, tespit edilen konuları öğrenme hedefleri olarak kaydet
-        let savedTargets: LearningTargetWithQuizzes[] = [];
-        if (isAuthenticated && dto.courseId) {
-          this.logger.info(
-            `Tespit edilen ${result.length} konu, ${dto.courseId} ID'li ders için öğrenme hedefi olarak kaydediliyor`,
-            'LearningTargetsController.detectTopics',
-            __filename,
-          );
-          
-          try {
-            // Tespit edilen konuları öğrenme hedefi olarak oluşturmak için topic listesi hazırla
-            const topics = result.map(topic => ({
-              subTopicName: topic,
-              normalizedSubTopicName: topic.toLowerCase().replace(/\s+/g, '-'),
-            }));
-            
-            // Toplu öğrenme hedefi oluştur - "pending" (beklemede) durumu ile kaydedilecek
-            // createBatch metoduna uygun parametreler ile çağrı yapıyoruz
-            savedTargets = await this.learningTargetsService.createBatch(
-              dto.courseId,
-              userId,
-              topics
-            );
-            
-            this.logger.info(
-              `${savedTargets.length} adet öğrenme hedefi "pending" (beklemede) durumu ile başarıyla kaydedildi`,
-              'LearningTargetsController.detectTopics',
-              __filename,
-            );
-          } catch (saveError) {
-            this.logger.error(
-              `Öğrenme hedefleri kaydedilirken hata oluştu: ${saveError.message}`,
-              'LearningTargetsController.detectTopics',
-              __filename
-            );
-            // Kaydetme hatası olsa bile konuları döndürmeye devam et
-          }
-        } else if (dto.courseId && !isAuthenticated) {
-          this.logger.info(
-            `Kullanıcı giriş yapmadığı için öğrenme hedefleri kaydedilmedi`,
-            'LearningTargetsController.detectTopics',
-            __filename,
-          );
-        }
-
-        // TopicDetectionResult formatında yanıt döndür
-        return {
-          topics: result.map((topic) => ({
-            subTopicName: topic,
-            normalizedSubTopicName: topic
-              .toLowerCase()
-              .replace(/[^a-z0-9]/g, '-'),
-          })),
-        };
       } else {
-        // Ne belge metni ne de belge ID'si var
         this.logger.warn(
           "Konu tespiti için ne belge metni ne de belge ID'si belirtilmemiş",
           'LearningTargetsController.detectTopics',
           __filename,
+          374, // Manuel güncellendi
+          { dto },
         );
-
         throw new BadRequestException(
-          "Konu tespiti için belge metni veya belge ID'si gerekmektedir",
+          "Konu tespiti için belge metni (documentText) veya belge ID'si (documentId) gerekmektedir",
         );
       }
+
+      // Tespit edilen konuları öğrenme hedefi olarak kaydetme (eğer kimlik doğrulanmış ve courseId varsa)
+      if (isAuthenticated && dto.courseId && detectedRawTopics.length > 0) {
+        this.logger.info(
+          `✨ KONU TESPİTİ: ${detectedRawTopics.length} konu tespit edildi, ${dto.courseId} ID'li ders için öğrenme hedefleri olarak kaydediliyor`,
+          'LearningTargetsController.detectTopics',
+          __filename,
+          388, // Manuel güncellendi
+        );
+        const topicsToSave = detectedRawTopics.map((topicName) => ({
+          subTopicName: topicName,
+          normalizedSubTopicName: normalizeName(topicName), // Düzeltilmiş normalleştirme
+        }));
+
+        try {
+          const savedTargets = await this.learningTargetsService.createBatch(
+            dto.courseId,
+            userId, // Artık 'anonymous' değil, gerçek userId
+            topicsToSave,
+          );
+          this.logger.info(
+            `✅ BAŞARILI: ${savedTargets.length} adet öğrenme hedefi "pending" durumu ile veritabanına kaydedildi`,
+            'LearningTargetsController.detectTopics',
+            __filename,
+            404, // Manuel güncellendi
+          );
+        } catch (saveError) {
+          this.logger.error(
+            `❌ HATA: Öğrenme hedefleri kaydedilirken hata oluştu: ${saveError.message}`,
+            'LearningTargetsController.detectTopics',
+            __filename,
+            411, // Manuel güncellendi
+            saveError,
+          );
+          // Kaydetme hatası olsa bile tespit edilen konuları döndürmeye devam et
+        }
+      } else if (dto.courseId && !isAuthenticated) {
+        this.logger.info(
+          `⚠️ UYARI: Kullanıcı giriş yapmadığı için ${dto.courseId} dersine öğrenme hedefleri kaydedilmedi`,
+          'LearningTargetsController.detectTopics',
+          __filename,
+          421, // Manuel güncellendi
+        );
+      } else if (isAuthenticated && !dto.courseId && detectedRawTopics.length > 0) {
+        this.logger.info(
+          `ℹ️ BİLGİ: CourseId sağlanmadığı için tespit edilen konular öğrenme hedefi olarak kaydedilmedi.`,
+          'LearningTargetsController.detectTopics',
+          __filename,
+          428, // Manuel güncellendi
+        );
+      }
+
+
+      return {
+        topics: detectedRawTopics.map((topicName) => ({
+          subTopicName: topicName,
+          normalizedSubTopicName: normalizeName(topicName), // Düzeltilmiş ve tutarlı normalleştirme
+        })),
+      };
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.detectTopics', {
         userId,
@@ -487,62 +501,82 @@ export class LearningTargetsController {
         documentId: dto.documentId,
         textLength: dto.documentText?.length || 0,
         additionalInfo: 'Konular tespit edilirken hata oluştu',
-        errorType: error.constructor.name,
-        errorMessage: error.message,
+        errorDetails: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack, // Geliştirme ortamında loglanabilir
+        },
       });
       throw error;
     }
   }
 
   @Post('batch')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Toplu olarak öğrenme hedefleri oluşturur' })
   @ApiBody({ type: CreateBatchLearningTargetsDto })
   @ApiResponse({
-    status: 201,
+    status: HttpStatus.CREATED,
     description: 'Öğrenme hedefleri başarıyla oluşturuldu',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(LearningTargetWithQuizzesResponse) },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Geçersiz istek' })
-  @ApiResponse({ status: 404, description: 'Ders bulunamadı' })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Geçersiz istek veya eksik bilgi',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ders bulunamadı',
+  })
   @LogMethod()
   async createBatch(
     @Body() dto: CreateBatchLearningTargetsDto,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ) {
     const userId = req.user.uid;
-
     try {
       this.flowTracker.trackStep(
-        `${dto.courseId} ID'li ders için toplu öğrenme hedefleri oluşturuluyor`,
-        'LearningTargetsController',
+        `${dto.courseId} ID'li ders için toplu öğrenme hedefleri oluşturuluyor (${dto.topics.length} adet)`,
+        'LearningTargetsController.createBatch',
       );
 
-      const topics = dto.topics.map((topic) => ({
+      if (!dto.topics || dto.topics.length === 0) {
+        throw new BadRequestException('Oluşturulacak konu listesi boş olamaz.');
+      }
+
+      const topicsToCreate = dto.topics.map((topic) => ({
         subTopicName: topic.subTopicName,
-        normalizedSubTopicName: topic.normalizedSubTopicName ?? '',
+        // Eğer DTO'dan normalizedSubTopicName gelmiyorsa veya boşsa, subTopicName'den türet
+        normalizedSubTopicName:
+          topic.normalizedSubTopicName?.trim() ||
+          normalizeName(topic.subTopicName), // Düzeltilmiş
       }));
 
       this.logger.debug(
-        `${topics.length} adet öğrenme hedefi oluşturuluyor`,
+        `${topicsToCreate.length} adet öğrenme hedefi oluşturuluyor`,
         'LearningTargetsController.createBatch',
         __filename,
-        225,
+        504, // Manuel güncellendi
         {
           userId,
           courseId: dto.courseId,
-          topicCount: topics.length,
+          topicCount: topicsToCreate.length,
         },
       );
 
       return await this.learningTargetsService.createBatch(
         dto.courseId,
         userId,
-        topics,
+        topicsToCreate,
       );
     } catch (error) {
       this.logger.logError(error, 'LearningTargetsController.createBatch', {
         userId,
         courseId: dto.courseId,
-        topicCount: dto.topics.length,
+        topicCount: dto.topics?.length || 0,
         additionalInfo: 'Toplu öğrenme hedefleri oluşturulurken hata oluştu',
       });
       throw error;
@@ -551,30 +585,42 @@ export class LearningTargetsController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Bir öğrenme hedefini günceller' })
-  @ApiParam({ name: 'id', description: "Öğrenme hedefi ID'si" })
+  @ApiParam({ name: 'id', description: "Öğrenme hedefi ID'si", type: String })
   @ApiBody({ type: UpdateLearningTargetDto })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'Öğrenme hedefi başarıyla güncellendi',
-    type: LearningTargetWithQuizzesResponse, // Use the class for schema
+    type: LearningTargetWithQuizzesResponse,
   })
-  @ApiResponse({ status: 404, description: 'Öğrenme hedefi bulunamadı' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Öğrenme hedefi bulunamadı',
+  })
   @LogMethod()
   async update(
     @Param('id') id: string,
-    @Request() req: RequestWithUser,
+    @Req() req: RequestWithUser,
     @Body() updateLearningTargetDto: UpdateLearningTargetDto,
   ): Promise<LearningTargetWithQuizzes> {
     try {
       this.flowTracker.trackStep(
         `${id} ID'li öğrenme hedefi güncelleniyor`,
-        'LearningTargetsController',
+        'LearningTargetsController.update',
       );
+      // normalizedSubTopicName güncelleniyorsa, onu da DTO'dan alıp normalize et
+      if (updateLearningTargetDto.subTopicName && !updateLearningTargetDto.normalizedSubTopicName) {
+        updateLearningTargetDto.normalizedSubTopicName = normalizeName(updateLearningTargetDto.subTopicName);
+      } else if (updateLearningTargetDto.normalizedSubTopicName) {
+         updateLearningTargetDto.normalizedSubTopicName = normalizeName(updateLearningTargetDto.normalizedSubTopicName);
+      }
+
+
       const result = await this.learningTargetsService.update(
         id,
         req.user.uid,
         updateLearningTargetDto,
       );
+      // Tarih dönüşümleri burada kalabilir, client'a Date objesi olarak gitmesi isteniyorsa
       return {
         ...result,
         lastAttempt: result.lastAttempt ? new Date(result.lastAttempt) : null,
@@ -592,19 +638,26 @@ export class LearningTargetsController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT) // Başarılı silme işleminde genellikle 204 No Content döndürülür
   @ApiOperation({ summary: 'Bir öğrenme hedefini siler' })
-  @ApiParam({ name: 'id', description: "Öğrenme hedefi ID'si" })
-  @ApiResponse({ status: 200, description: 'Öğrenme hedefi başarıyla silindi' })
-  @ApiResponse({ status: 404, description: 'Öğrenme hedefi bulunamadı' })
+  @ApiParam({ name: 'id', description: "Öğrenme hedefi ID'si", type: String })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Öğrenme hedefi başarıyla silindi',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Öğrenme hedefi bulunamadı',
+  })
   @LogMethod()
   async remove(
     @Param('id') id: string,
-    @Request() req: RequestWithUser,
+    @Req() req: RequestWithUser,
   ): Promise<void> {
     try {
       this.flowTracker.trackStep(
         `${id} ID'li öğrenme hedefi siliniyor`,
-        'LearningTargetsController',
+        'LearningTargetsController.remove',
       );
       await this.learningTargetsService.remove(id, req.user.uid);
     } catch (error) {
@@ -619,12 +672,25 @@ export class LearningTargetsController {
 
   @Post(':courseId/detect-new-topics')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Detect new topics from lesson context compared to existing topics' })
-  @ApiParam({ name: 'courseId', description: 'Course ID', type: String })
+  @ApiOperation({
+    summary:
+      'Ders içeriğine göre mevcut konularla karşılaştırarak yeni konuları tespit eder',
+  })
+  @ApiParam({ name: 'courseId', description: "Ders ID'si", type: String })
   @ApiBody({ type: DetectNewTopicsDto })
-  @ApiResponse({ status: 200, description: 'New topics detected successfully', type: [String] })
-  @ApiResponse({ status: 400, description: 'Bad Request: Invalid input data' })
-  @ApiResponse({ status: 404, description: 'Course not found' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Yeni konular başarıyla tespit edildi',
+    type: [String],
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Geçersiz istek verisi',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ders bulunamadı',
+  })
   @LogMethod()
   async detectNewTopics(
     @Param('courseId') courseId: string,
@@ -638,48 +704,77 @@ export class LearningTargetsController {
         'LearningTargetsController.detectNewTopics',
       );
       this.logger.debug(
-        'New topic detection started',
+        'Yeni konu tespiti başlatıldı',
         'LearningTargetsController.detectNewTopics',
         __filename,
-        undefined, 
-        { userId, courseId, existingTopicsCount: detectNewTopicsDto.existingTopicNames.length },
+        659, // Manuel güncellendi
+        {
+          userId,
+          courseId,
+          existingTopicsCount: detectNewTopicsDto.existingTopicNames.length,
+          lessonContextLength: detectNewTopicsDto.lessonContext?.length || 0,
+        },
       );
 
-      const newTopics = await this.topicDetectionService.detectExclusiveNewTopics(
-        detectNewTopicsDto.lessonContext,
-        detectNewTopicsDto.existingTopicNames,
-      );
+      if (!detectNewTopicsDto.lessonContext?.trim()) {
+        throw new BadRequestException('Ders içeriği (lessonContext) boş olamaz.');
+      }
+
+      const newTopics =
+        await this.topicDetectionService.detectExclusiveNewTopics(
+          detectNewTopicsDto.lessonContext,
+          detectNewTopicsDto.existingTopicNames,
+        );
 
       this.logger.info(
-        `${newTopics.length} new topics detected for course ${courseId}`,
+        `${newTopics.length} yeni konu tespit edildi (course: ${courseId})`,
         'LearningTargetsController.detectNewTopics',
         __filename,
+        682, // Manuel güncellendi
+        { count: newTopics.length },
       );
       return newTopics;
     } catch (error) {
-      this.logger.logError(error, 'LearningTargetsController.detectNewTopics', {
-        userId,
-        courseId,
-        lessonContextLength: detectNewTopicsDto.lessonContext?.length,
-        existingTopicNames: detectNewTopicsDto.existingTopicNames,
-        additionalInfo: 'Error during new topic detection',
-      });
+      this.logger.logError(
+        error,
+        'LearningTargetsController.detectNewTopics',
+        {
+          userId,
+          courseId,
+          lessonContextLength: detectNewTopicsDto.lessonContext?.length,
+          existingTopicNamesCount:
+            detectNewTopicsDto.existingTopicNames?.length,
+          additionalInfo: 'Yeni konu tespiti sırasında hata oluştu',
+        },
+      );
       throw error;
     }
   }
 
   @Post(':courseId/confirm-new-topics')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Confirm and save detected new topics as learning targets' })
-  @ApiParam({ name: 'courseId', description: 'Course ID', type: String })
-  @ApiBody({ type: ConfirmNewTopicsDto })
-  @ApiResponse({ 
-    status: 201, 
-    description: 'New topics confirmed and saved as learning targets', 
-    schema: { type: 'array', items: { $ref: getSchemaPath(LearningTargetWithQuizzesResponse) } }
+  @ApiOperation({
+    summary:
+      'Tespit edilen yeni konuları onaylar ve öğrenme hedefleri olarak kaydeder',
   })
-  @ApiResponse({ status: 400, description: 'Bad Request: Invalid input data' })
-  @ApiResponse({ status: 404, description: 'Course not found or no topics to save' })
+  @ApiParam({ name: 'courseId', description: "Ders ID'si", type: String })
+  @ApiBody({ type: ConfirmNewTopicsDto })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Yeni konular onaylandı ve öğrenme hedefi olarak kaydedildi',
+    schema: {
+      type: 'array',
+      items: { $ref: getSchemaPath(LearningTargetWithQuizzesResponse) },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Geçersiz istek verisi (örn: konu listesi boş)',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ders bulunamadı veya kaydedilecek konu yok',
+  })
   @LogMethod()
   async confirmNewTopics(
     @Param('courseId') courseId: string,
@@ -693,50 +788,72 @@ export class LearningTargetsController {
         'LearningTargetsController.confirmNewTopics',
       );
       this.logger.debug(
-        'Confirmation of new topics started',
+        'Yeni konuların onayı ve kaydı başlatıldı',
         'LearningTargetsController.confirmNewTopics',
         __filename,
-        undefined,
-        { userId, courseId, newTopicsCount: confirmNewTopicsDto.newTopicNames.length },
+        745, // Manuel güncellendi
+        {
+          userId,
+          courseId,
+          newTopicsCount: confirmNewTopicsDto.newTopicNames.length,
+        },
       );
 
-      if (!confirmNewTopicsDto.newTopicNames || confirmNewTopicsDto.newTopicNames.length === 0) {
+      if (
+        !confirmNewTopicsDto.newTopicNames ||
+        confirmNewTopicsDto.newTopicNames.length === 0
+      ) {
         this.logger.warn(
-          'Attempted to confirm new topics with an empty list.',
+          'Onaylanacak yeni konu listesi boş geldi.',
           'LearningTargetsController.confirmNewTopics',
           __filename,
-          undefined,
-          { userId, courseId }
+          760, // Manuel güncellendi
+          { userId, courseId },
         );
-        throw new BadRequestException('No new topic names provided for confirmation.');
+        throw new BadRequestException(
+          'Onaylanacak yeni konu adı (newTopicNames) listesi sağlanmadı veya boş.',
+        );
       }
-      
-      const savedLearningTargetsPrisma = await this.learningTargetsService.confirmAndSaveNewTopics(
-        courseId,
-        confirmNewTopicsDto.newTopicNames,
-        userId,
-      );
+
+      const savedLearningTargetsPrisma =
+        await this.learningTargetsService.confirmAndSaveNewTopics(
+          courseId,
+          confirmNewTopicsDto.newTopicNames, // Bunlar zaten normalize edilmiş olmalı mı? Servis hallediyorsa sorun yok.
+          // Eğer değilse, burada da normalizeName çağrılabilir. Şimdilik servis handle ediyor varsayıyorum.
+          userId,
+        );
 
       this.logger.info(
-        `${savedLearningTargetsPrisma.length} new learning targets saved for course ${courseId}`,
+        `${savedLearningTargetsPrisma.length} yeni öğrenme hedefi kaydedildi (course: ${courseId})`,
         'LearningTargetsController.confirmNewTopics',
         __filename,
+        780, // Manuel güncellendi
+        { count: savedLearningTargetsPrisma.length },
       );
 
-      const savedLearningTargets: LearningTargetWithQuizzes[] = savedLearningTargetsPrisma.map(target => ({
-        ...target,
-        lastAttempt: target.lastAttempt ? new Date(target.lastAttempt) : null,
-        firstEncountered: new Date(target.firstEncountered),
-      }));
+      // Tarih dönüşümleri
+      const savedLearningTargets: LearningTargetWithQuizzes[] =
+        savedLearningTargetsPrisma.map((target) => ({
+          ...target,
+          lastAttempt: target.lastAttempt
+            ? new Date(target.lastAttempt)
+            : null,
+          firstEncountered: new Date(target.firstEncountered),
+        }));
 
       return savedLearningTargets;
     } catch (error) {
-      this.logger.logError(error, 'LearningTargetsController.confirmNewTopics', {
-        userId,
-        courseId,
-        newTopicNames: confirmNewTopicsDto.newTopicNames,
-        additionalInfo: 'Error during confirmation and saving of new topics',
-      });
+      this.logger.logError(
+        error,
+        'LearningTargetsController.confirmNewTopics',
+        {
+          userId,
+          courseId,
+          newTopicNames: confirmNewTopicsDto.newTopicNames,
+          additionalInfo:
+            'Yeni konuların onayı ve kaydı sırasında hata oluştu',
+        },
+      );
       throw error;
     }
   }

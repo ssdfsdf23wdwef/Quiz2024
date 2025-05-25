@@ -288,33 +288,17 @@ export class QuizResponseDto {
     Object.assign(this, partial);
 
     // Tarih alanları için ISO string formatına dönüştürme
-    if (
-      partial.startedAt &&
-      typeof partial.startedAt === 'object' &&
-      'toISOString' in partial.startedAt
-    ) {
-      this.startedAt = (partial.startedAt as Date).toISOString();
+    if (partial.startedAt && this.isDateLike(partial.startedAt)) {
+      this.startedAt = (partial.startedAt as any).toISOString();
     }
-    if (
-      partial.completedAt &&
-      typeof partial.completedAt === 'object' &&
-      'toISOString' in partial.completedAt
-    ) {
-      this.completedAt = (partial.completedAt as Date).toISOString();
+    if (partial.completedAt && this.isDateLike(partial.completedAt)) {
+      this.completedAt = (partial.completedAt as any).toISOString();
     }
-    if (
-      partial.createdAt &&
-      typeof partial.createdAt === 'object' &&
-      'toISOString' in partial.createdAt
-    ) {
-      this.createdAt = (partial.createdAt as Date).toISOString();
+    if (partial.createdAt && this.isDateLike(partial.createdAt)) {
+      this.createdAt = (partial.createdAt as any).toISOString();
     }
-    if (
-      partial.updatedAt &&
-      typeof partial.updatedAt === 'object' &&
-      'toISOString' in partial.updatedAt
-    ) {
-      this.updatedAt = (partial.updatedAt as Date).toISOString();
+    if (partial.updatedAt && this.isDateLike(partial.updatedAt)) {
+      this.updatedAt = (partial.updatedAt as any).toISOString();
     }
 
     // Alt nesneler için tip dönüşümlerini gerçekleştir
@@ -342,5 +326,15 @@ export class QuizResponseDto {
         (difficulty) => new DifficultyPerformanceDto(difficulty),
       );
     }
+  }
+
+  private isDateLike(value: any): boolean {
+    return (
+      value &&
+      typeof value === 'object' &&
+      value !== null &&
+      'toISOString' in value &&
+      typeof value.toISOString === 'function'
+    );
   }
 }

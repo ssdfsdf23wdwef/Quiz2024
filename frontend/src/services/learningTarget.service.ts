@@ -776,6 +776,148 @@ class LearningTargetService {
 
     return recommendations;
   }
+
+  // Yeni konuları tespit et
+  @LogMethod('LearningTargetService', FlowCategory.API)
+  async detectNewTopics(
+    courseId: string, 
+    lessonContext: string, 
+    existingTopicNames: string[]
+  ): Promise<string[]> {
+    flowTracker.markStart(`detectNewTopics_${courseId}`);
+    
+    try {
+      trackFlow(
+        `Detecting new topics for course ${courseId} with ${existingTopicNames.length} existing topics`,
+        "LearningTargetService.detectNewTopics",
+        FlowCategory.API
+      );
+      
+      flowTracker.trackApiCall(
+        `/learning-targets/${courseId}/detect-new-topics`,
+        'POST',
+        'LearningTargetService.detectNewTopics',
+        { courseId, contextLength: lessonContext.length, existingTopicsCount: existingTopicNames.length }
+      );
+      
+      logger.debug(
+        `Yeni konu tespiti başlatılıyor: Kurs=${courseId}, Metin uzunluğu=${lessonContext.length}, Mevcut konu sayısı=${existingTopicNames.length}`,
+        'LearningTargetService.detectNewTopics',
+        __filename,
+        785,
+        { 
+          courseId, 
+          contextLength: lessonContext.length,
+          existingTopicsCount: existingTopicNames.length,
+          existingTopics: existingTopicNames.slice(0, 5) // İlk 5 konu için loglama
+        }
+      );
+      
+      const newTopics = await apiService.post<string[]>(
+        `/learning-targets/${courseId}/detect-new-topics`,
+        {
+          lessonContext,
+          existingTopicNames
+        }
+      );
+      
+      // Başarılı sonuç
+      const duration = flowTracker.markEnd(`detectNewTopics_${courseId}`, mapToTrackerCategory(FlowCategory.API), 'LearningTargetService');
+      logger.info(
+        `Yeni konu tespiti tamamlandı: Kurs=${courseId}, Tespit edilen yeni konu sayısı=${newTopics.length}`,
+        'LearningTargetService.detectNewTopics',
+        __filename,
+        810,
+        { 
+          courseId, 
+          newTopicsCount: newTopics.length,
+          newTopics: newTopics.slice(0, 10), // İlk 10 yeni konu için loglama
+          duration 
+        }
+      );
+      
+      return newTopics;
+    } catch (error) {
+      // Hata durumu
+      flowTracker.markEnd(`detectNewTopics_${courseId}`, mapToTrackerCategory(FlowCategory.API), 'LearningTargetService');
+      logger.error(
+        `Yeni konu tespiti sırasında hata oluştu: ${courseId}`,
+        'LearningTargetService.detectNewTopics',
+        __filename,
+        825,
+        { courseId, contextLength: lessonContext.length, existingTopicsCount: existingTopicNames.length, error }
+      );
+      throw error;
+    }
+  }
+
+  // Yeni konuları onayla ve kaydet
+  @LogMethod('LearningTargetService', FlowCategory.API)
+  async confirmNewTopics(courseId: string, newTopicNames: string[]): Promise<LearningTarget[]> {
+    flowTracker.markStart(`confirmNewTopics_${courseId}`);
+    
+    try {
+      trackFlow(
+        `Confirming ${newTopicNames.length} new topics for course ${courseId}`,
+        "LearningTargetService.confirmNewTopics",
+        FlowCategory.API
+      );
+      
+      flowTracker.trackApiCall(
+        `/learning-targets/${courseId}/confirm-new-topics`,
+        'POST',
+        'LearningTargetService.confirmNewTopics',
+        { courseId, topicsCount: newTopicNames.length }
+      );
+      
+      logger.debug(
+        `Yeni konular onaylanıyor: Kurs=${courseId}, Onaylanacak konu sayısı=${newTopicNames.length}`,
+        'LearningTargetService.confirmNewTopics',
+        __filename,
+        850,
+        { 
+          courseId, 
+          topicsCount: newTopicNames.length,
+          topicNames: newTopicNames.slice(0, 10) // İlk 10 konu adı için loglama
+        }
+      );
+      
+      const confirmedTargets = await apiService.post<LearningTarget[]>(
+        `/learning-targets/${courseId}/confirm-new-topics`,
+        {
+          newTopicNames
+        }
+      );
+      
+      // Başarılı sonuç
+      const duration = flowTracker.markEnd(`confirmNewTopics_${courseId}`, mapToTrackerCategory(FlowCategory.API), 'LearningTargetService');
+      logger.info(
+        `Yeni konular başarıyla onaylandı ve kaydedildi: Kurs=${courseId}, Oluşturulan hedef sayısı=${confirmedTargets.length}`,
+        'LearningTargetService.confirmNewTopics',
+        __filename,
+        875,
+        { 
+          courseId, 
+          confirmedTargetsCount: confirmedTargets.length,
+          targetIds: confirmedTargets.map(t => t.id).slice(0, 10), // İlk 10 hedef ID'si için loglama
+          duration 
+        }
+      );
+      
+      return confirmedTargets;
+    } catch (error) {
+      // Hata durumu
+      flowTracker.markEnd(`confirmNewTopics_${courseId}`, mapToTrackerCategory(FlowCategory.API), 'LearningTargetService');
+      logger.error(
+        `Yeni konuları onaylama ve kaydetme sırasında hata oluştu: ${courseId}`,
+        'LearningTargetService.confirmNewTopics',
+        __filename,
+        890,
+        { courseId, topicsCount: newTopicNames.length, topicNames: newTopicNames, error }
+      );
+      throw error;
+    }
+  }
 }
 
 // Singleton instance oluştur ve export et

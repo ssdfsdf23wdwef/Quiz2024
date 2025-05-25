@@ -495,7 +495,7 @@ Sadece JSON döndür, başka açıklama yapma.
         /kuantum|nanoteknoloji|mekanik|elektron|atom|molekül|orbit|fizik/gi,
       );
       const keywordsFound = keywordMatches
-        ? [...new Set(keywordMatches)].slice(0, 5)
+        ? Array.from(new Set(keywordMatches)).slice(0, 5)
         : [];
 
       // Metin içinden en sık geçen anlamlı kelimeleri bul (stopword filtrelemesi uygula)
