@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-25T15:10:44.260Z
+## Tarih: 2025-05-25T16:34:53.429Z
 
-## Trace ID: quiz-1748185844254-t2eox
+## Trace ID: quiz-1748190893409-pn20m
 
 ## Alt Konular (7 adet):
 ```
@@ -10,26 +10,26 @@
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Biyolojik Risk Etmenleri Tanımı** (2 soru)
-2. **Biyolojik Etkenler Ve Kapsamı** (2 soru)
-3. **Risk Gruplarının Sınıflandırılması** (2 soru)
-4. **Risk Gruplarının Özellikleri** (2 soru)
-5. **Riskli İ Ş Alanlarının Belirlenmesi** (2 soru)
-6. **Risk Değerlendirme Süreci** (2 soru)
+1. **Meslek Hastalıklarının Tanımı** (2 soru)
+2. **Meslek Hastalığı Ve Özellikleri** (2 soru)
+3. **İ Şle İ Lgili Hastalıklar** (2 soru)
+4. **Tarihsel Gelişim Ve Öncüler** (2 soru)
+5. **Türkiyedeki Yasal Düzenlemeler** (2 soru)
 
-**Toplam Aktif: 6 alt konu, 12 soru**
+**Toplam Aktif: 5 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
 **Aşağıdaki konulardan soru üretilmeyecektir:**
 
-1. Sağlık Çalışanlarında Enfeksiyon Riski
+1. Tanı Koyma Süreci
+2. Yasal Bildirim Zorunluluğu
 
 ```
 
-## Soru Sayısı: 12
+## Soru Sayısı: 10
 
-## Zorluk: hard
+## Zorluk: mixed
 
 ## Tam Prompt:
 ```
@@ -49,56 +49,77 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Biyolojik Risk Etmenleri Tanımı** (2 soru)
-2. **Biyolojik Etkenler Ve Kapsamı** (2 soru)
-3. **Risk Gruplarının Sınıflandırılması** (2 soru)
-4. **Risk Gruplarının Özellikleri** (2 soru)
-5. **Riskli İ Ş Alanlarının Belirlenmesi** (2 soru)
-6. **Risk Değerlendirme Süreci** (2 soru)
+1. **Meslek Hastalıklarının Tanımı** (2 soru)
+2. **Meslek Hastalığı Ve Özellikleri** (2 soru)
+3. **İ Şle İ Lgili Hastalıklar** (2 soru)
+4. **Tarihsel Gelişim Ve Öncüler** (2 soru)
+5. **Türkiyedeki Yasal Düzenlemeler** (2 soru)
 
-**Toplam Aktif: 6 alt konu, 12 soru**
+**Toplam Aktif: 5 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
 **Aşağıdaki konulardan soru üretilmeyecektir:**
 
-1. Sağlık Çalışanlarında Enfeksiyon Riski
+1. Tanı Koyma Süreci
+2. Yasal Bildirim Zorunluluğu
 
   *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
 - **Eğitim İçeriği:** 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ÜNİTE
-5
+7
 
 İÇİNDEKİLER
-•Biyolojik Risk Tanımı
-• Biyolojik Risklere Maruz
-Kalınabilecek İşler
-•Risklerin Belirlenmesi ve
-Değerlendirilmesi
-•Risklere Karşı Alınacak
-Önlemler
+•Meslek Hastalıklarının Tanımı
+•Meslek Hastalıklarının Tarihi
+Gelişimi
+•Meslek Hastalıklarının
+Özellikleri, Tanı Kriterleri ve
+Korunma Yöntemleri
+•Meslek Hastalıklarının
+Sınıflandırılması
 HEDEFLER
 •Bu üniteyi çalıştıktan sonra;
-•Biyolojik risklerin tanımını
+•Meslek hastalıklarının ayırımını
 yapabilecek,
-•Biyolojik risk düzeyleri ve
-sınıfları hakkında bilgi sahibi
+•Meslek hastalıklarının çeşitliliğini
+ve sınıflandırılmasını
+yapabilecek,
+•Meslek hastalıklarının hukuksal
+boyutu konusunda bilgi sahibi
 olabilecek,
-•Biyolojik risk altındaki meslek
-gruplarını öğrenebilecek,
-•Biyolojik risk etmenlerine karşı
-alınması gereken önlemler
-hakkında bilgi sahibi olabilecek,
-•Bu konudaki yönetmelik
-hakkında bilgi sahibi
-olabileceksiniz.
-
-
+•Meslek hastalıklarından
+korunma yöntemleri hakkında
+bilgi sahibi olabileceksiniz.
 Prof. Dr.
-Elif ÇADIRCI
+Zekai HALICI
 
 
 İŞ SAĞLIĞI VE GÜVENLİĞİ
@@ -108,9 +129,10 @@ Elif ÇADIRCI
 © Bu ünitenin tüm yayın hakları Atatürk Üniversitesi Açıköğretim Fakültesi’ne aittir. Yazılı izin alınmadan
 ünitenin tümünün veya bir kısmının elektronik, mekanik ya da fotokopi yoluyla basımı, yayımı, çoğaltımı ve
 dağıtımı yapılamaz.
-BİYOLOJİK RİSK ETMENLERİ
+MESLEK HASTALIKLARI
 
-Biyolojik Risk Etmenleri
+Meslek Hastalıkları
+
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 2
 
@@ -124,966 +146,1019 @@ Atatürk Üniversitesi Açıköğretim Fakültesi 2
 
 
 
+MESLEK HASTALIKLARI
+•Meslek Hastalıklarının Tarihçesi
+•Meslek Hastalıklarının Tanımı Ve Özellikleri
+Meslek Hastalıklarının Sınıflandırılması
+•Farklı Meslek Hastalıklarının İşyeri Özelliğine Göre
+Açıklanması
+•Meslek Hastalıklarından Korunma Ve Önleme
+Meslek Hastalıklarının Hukuksal Boyutu
 
+Meslek Hastalıkları
 
-
-
-
-
-
-
-
-
-
-Biyolojik Risk
-Etmenleri
-Önlemler
-- Biyolojik Risk
--Biyolojik risk altındaki
-sektörleri
--Enfeksiyon Riski
-- Parazitler
-- Mantarlar
-- Virüsler
-- Bakteriler
--Çalınan Aldığı Önlemler
--İşverenin
--Aldığı Önlemler
--Risklerin Belirlenmesi
--İkame
--Riskleri Azaltma
--Hijyen ve Kişisel Korunma
--Eğitim ve Belgilendirme
-
-Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 3
 GİRİŞ
-İş sağlığı ve güvenliğinde karşımıza çıkan en önemli sorunlardan biri çalışma
-ortamında karşılaşılabilecek, çalışanın sağlığını ve güvenliğini tehlikeye atabilecek
-çeşitli risk etmenleridir. Genel olarak bu risk etmenleri çalışanlarda anlık veya
-devamlı maruz kalma sonucunda meslek hastalıklarına, çalışamaz hâle gelmeye ve
-hatta ölüme bile neden olabilir. Bunu önlemek için işçinin çalışma ortamından
-kaynaklı ve işçinin sağlık ve güvenliğini tehlikeye atacak tehlikeler ve bu
-tehlikelerin meydana getirdiği risk kaynakları neyse o kaynağa uygun sağlık ve
-güvenlik gözetimi planlanmalıdır. Bunun için de öncelikle iş yerindeki tehlikeler
-belirlenmeli, kimlerin nasıl zarar görebileceği saptanmalı, risklerin analizi
-yapılmalı, bunun sonucuna göre alınacak kontrol önlemlerine karar verilmeli ve
-önlemler uygulamaya konulmalıdır.
-Meslek hastalıklarına neden olabilecek ve iş yerinde çalışma güvenliğini
-tehdit edebilecek etmenler gürültü, titreşim, yüksek ve alçak basınçlarda çalışma,
-soğuk ve sıcakta çalışma, tozlar ve radyasyon gibi fiziksel risk etmenleri; ağır
-metaller, gazlar ve çözücüler gibi kimyasal risk etmenleri; virüsler, bakteriler,
-mantarlar ve parazitler gibi biyolojik risk etmenleri, psikolojik risk etmenleri ve
-ergonomiye özensizlikten kaynaklanan risk etmenleri olarak sınıflandırılabilir.
-Bu bölümde biyolojik kaynaklı risk etmenlerinin genel tanımı ve biyolojik
-risk grupları, hangi çalışanlarda tehlike oluşturdukları ve görülebilecekleri çalışma
-ortamları, çalışma ortamlarında ve/veya laboratuvarlarda biyolojik risklerin
-azaltılmasına, tanınmasına, bulaşmasına vs. yönelik alınması gereken güvenlik
-önlemleri hakkında genel bilgi mevcuttur.
-BİYOLOJİK RİSK TANIMI
-Yeni adıyla Aile, Çalışma ve Sosyal Hizmetler (AÇSH) Bakanlığının 2013 tarihli
-Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkındaki Yönetmeliği’ne
-göre biyolojik etkenler herhangi bir enfeksiyon, alerji veya zehirlenmeye neden
-olabilen hücresel veya hücresel olmayan mikrobiyolojik varlıklar olarak
-tanımlanmıştır. Bu mikro biyolojik varlıklar, genetik olarak değiştirilmiş olanlar da
-dâhil olmak üzere, mikroorganizmalar, hücre kültürleri ve
-insan endoparazitlerinden oluşmaktadırlar. Burada, hücre kültürü “çok hücreli
-organizmalardan türetilmiş hücrelerin in–vitro olarak geliştirilmesini” ve
-mikroorganizma ise “genetik materyalini replikasyon veya aktarma yeteneğinde
-olan mikrobiyolojik varlıkları” temsil etmektedir. Buna göre genel bir tanım ile
-biyolojik etmenler , yaşayan organizmalar ve/veya (genetik olarak değiştirilmiş
-olanlar da dâhil ) bu organizmaların ürünlerinden oluşur. Biyolojik risk etmenleri
-ise virüsler, bakteriler, mantarlar ve bunların metabolizmaları sonucu ortaya
-çıkardıkları ürünlerin yanı sıra vücutta iç ve dış parazit olarak yerleşebilen
-asalaklar ile bitkileri de kapsar. Aynı zamanda son zamanlarda biyoteknolojik
-ürünler de biyolojik kaynaklı risk etmenleri arasına dâhil edilmektedir.
+İnsanoğlu son yüzyılda baş döndürücü bir şekilde teknolojik ve sosyal
+gelişim içine girmiştir. Bu gelişmeyi hayatımızın her anında görmekteyiz. Bu
+gelişimle beraber toplumların sağlık anlayışı da değişmiş ve birçok yeni tanımlar
+ortaya çıkmıştır. Dünya Sağlık Örgütünün (WHO) tanımına göre sağlık, kişinin
+bedensel, ruhsal ve toplumsal olarak tam iyilik hâlidir. Sağlık anlayışı ve tanımları
+değişirken tabii ki iş yeri güvenliği, işçi sağlığı ve bu konuda da birçok önemli ve
+faydalı değişiklikler olmuştur. Bundan 30-40 sene önce kişisel elbiseleriyle hiçbir
+tedbir almadan fabrikalarda çalışan işçiler bulunurken son yıllarda işçi sağlığı
+konusunda çok önemli gelişmeler olmuştur. İşçi sağlığı konusunu irdelerken iş ve
+işçi sağlığı hizmetlerinden bahsetmemiz gerekmektedir. Bu hizmetlerin amacı tüm
+çalışanların sağlıklı bir ortamda çalışmalarını sürdürme ve onları sağlıklı tutma,
+çalışanları çalıştıkları ortam ne koşulda olursa olsun kaynaklanabilecek sağlık
+zararlarından koruma ve aynı zamanda çalışanın fizyolojik ve psikolojik durumuna
+uygun işe yerleştirmektir. Bu kavramı ise kısaca “işe uygun insan, insana uygun iş”
+olarak ifade edebiliriz. Gelişen sanayi ile birlikte çalışanların iş alanları her geçen
+gün artmakla beraber karşılaşabilecekleri fiziksel ve psikolojik mesleki risk
+faktörleri de artmaktadır. Artık çalışma alanlarında 100.000’den fazla kimyasal
+madde bulunmakta bunların 700’den fazlası ise kanserojendir. Mesleki biyolojik
+risk etmenlerinin sayısı şu an itibariyle 200’den fazla olmakla birlikte her geçen
+gün bu sayı artmaktadır. Biyolojik ve kimyasal risklerden farklı olarak ise 20’den
+fazla ergonomik sorun çalışanların sağlığını tehdit etmektedir.
+Tüm bu risk etmenlerini bir araya koyduğumuzda artık karşımıza meslek
+hastalıkları çıkmaktadır. Meslek hastalıklarının tanımı ve ayırıcı özelliklerinin
+bilinmesi oldukça önemlidir. Çünkü meslek hastalıkları ile işle ilgili hastalıklar
+karıştırılmaktadır. İşle ilgili hastalıklar meslek hastalıkları gibi direkt iş ortamına
+bağlı olmayıp karışık multi-etyolojik (çok etkenli) nedenlere sahiptir. Bu iki
+konunun kişisel ve sağlık probleminin yanında aynı zamanda da hukuksal boyutu
+da bulunmaktadır.
+Son yıllarda mahkemelerde birçok dava dosyası bulunmakta olup meslek
+hastalıkları ve işle ilgili hastalıklar arasında kavram karmaşası yaşanmaktadır. Tüm
+bu sebeplerden dolayı meslek hastalıklarının sınıflandırılması ve ayırıcı tanımının
+yapılması hem işveren hem de çalışan için elzemdir.
+MESLEK HASTALIKLARININ TANIMI
+Meslek hastalığı, bir iş yerinde çalışanın yaptığı iş veya iş ortamından
+kaynaklanan ve sürekli tekrarlanan bir sebeple uğradığı geçici veya sürekli hastalık,
+bedensel veya ruhsal özürlülük hâlleridir. Etyolojisi (etkeni) tanımlanabilir ve
+genellikle tek olmalıdır. Buradan da anlaşılacağı gibi meslek hastalığındaki esas
+neden iş veya işle ilgili nedenler olmalıdır. 5510 sayılı SS-GSS (2006) Kanunu2na
+göre meslek hastalığı, sigortalının çalıştığı veya yaptığı işin niteliğinden dolayı
+tekrarlanan bir sebeple veya işin yürütüm şartları yüzünden uğradığı geçici veya
+sürekli hastalık, bedensel veya ruhsal özürlülük hâlleridir [1]. Aynı zamanda 2012
+tarihinde çıkarılan yeni bir kanunla önceki kanunun kapsamı genişletilmiş ve iş
 
+Meslek hastalığı,
+çalışanın yaptığı iş veya
+iş ortamından
+kaynaklanan bir
+sebeple uğradığı geçici
+veya sürekli hastalık,
+bedensel veya ruhsal
+özürlülük hâlleridir.
 
-Biyolojik risk etmenleri
-virüsler, bakteriler,
-mantarlar, insan
-parazitleri ve bunların
-ürünleridir.
+Meslek Hastalıkları
 
-
-Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 4
-Biyolojik Risk Grupları
-Türkiye Cumhuriyeti AÇSH Bakanlığının 2013 tarihli Biyolojik Etkenlere
-Maruziyet Risklerinin Önlenmesi Hakkındaki Yönetmeliği’ne [1] göre biyolojik risk
-etmenleri enfeksiyon yapma risk düzeyine göre 4 risk grubunda sınıflandırılabilir
-(Tablo 5.1 ). Biyolojik bir etkenin sağlıklı kişide hastalığa yol açması; etkenin hasta
-etme yetisinin yüksekliğine (patojenite-virülans) , b ulaşma yollarına (temas, ortak
-kullanılan cansız maddeler, hava ve vektörler), k onakçı adı verilen kişinin
-duyarlılığına, çevre etmenlerine (ısı değişiklikleri, nem, radyasyon, hava basıncı,
-hava akımının hızı, kimyasal maddeler, gazlar ve toksinler) bağlıdır. Bu 4 risk
-grubu;
-Grup 1 biyolojik etkenler: İnsanda hastalığa yol açma ihtimali bulunmayan
-biyolojik etkenler,
-Grup 2 biyolojik etkenler: İnsanda hastalığa neden olabilen, çalışanlara zarar
-verebilecek, ancak topluma yayılma olasılığı olmayan, genellikle etkili korunma
-veya tedavi imkânı bulunan biyolojik etkenler,
+güvenliği ve meslek hastalıkları konusunda çok daha kapsamlı ve koruyucu yasalar
+yürürlüğe geçirilmiştir (Sosyal Sigortalar Ve Genel Sağlık Sigortası Kanununda
+Değişiklik Yapılmasına Dair Kanun, Kanun No. 6283 tarih: 1.3.2012). Yalnız meslek
+hastalıklarının yanında işle ilgili hastalıklar da bulunmakta olup birbirleri arasında
+büyük bir kavram karışıklığı bulunmaktadır. Bu kavram karışıklığı nedeniyle son
+yıllarda birçok hukuksal sorunlar ortaya çıkmıştır. İşle ilgili hastalıklar, ortaya çıkış
+nedeni multi-faktoriyel olan, oluşmasında ve gelişmesinde çalışma ortamı ve
+çalışma şeklinin diğer sebepler arasında önemli faktör olduğu hastalıklardır. İşle
+ilgili hastalık etkeninin iş yerinde olması zorunlu değildir. Doğrudan iş yerindeki
+olumsuz faktörlerden kaynaklanmasalar bile, iş yerinden etkilenirler ve seyirleri
+değişir. Yapılan iş hastalığa neden olur, ağırlaştırır, hızlandırır ya da alevlendirir
+veya çalışma kapasitesini azaltabilir. İşle ilgili hastalıklar meslek hastalıklarına göre
+daha sıktır ve işçiler kadar genel toplumda da görülürler (Şekil 7.1).
+İşle ilgili kanser araştırmalarına bakıldığında akciğer kanserine neden
+olabilecek birçok mesleki kimyasal toksinler bulunmakla beraber bu alanların
+birinde çalışan ve akciğer kanserine yakalanmış bir şahsın sigara da içmesi olayı
+çok daha karmaşık bir hâle getirmektedir. Yukarıda verilen örnekten de
+anlaşılacağı üzere, meslek hastalıklarının tanımı ve çalışanın mesleki bir hastalığa
+yakalanmış olması tanısı bazen çok zor olmaktadır. Dünya Sağlık Örgütü
+tahminlerine göre ise her yıl 11.000.000 yeni meslek hastalığı vakası meydana
+gelmekte ve bunların 700.000’i hayat kaybı ile sonuçlanmaktadır. Bu mesleki
+hastalıkların %32’si ise kanser olarak görülmektedir. Uluslararası Çalışma
+Örgütünün (ILO) verilerine göre işe bağlı ölümlerin 4/5 oranı mesleki hastalıkları
+sonucu oluşmaktadır.
 
-Grup 3 biyolojik etkenler: İnsanda ağır hastalıklara neden olan, çalışanlar için
-ciddi tehlike oluşturan, topluma yayılma riski bulunabilen ancak genellikle etkili
-korunma veya tedavi imkânı olan biyolojik etkenler ve
-Grup 4 biyolojik etkenler: İnsanda ağır hastalıklara neden olan, çalışanlar için
-ciddi tehlike oluşturan, topluma yayılma riski yüksek olan ancak etkili korunma ve
-tedavi yöntemi bulunmayan biyolojik etkenler olarak sınıflandırılmışlardır (Tablo
-5.2) [1].
-Tablo 5.1. Biyolojik risk etmenlerinin enfeksiyon yapma, çalışanlara zarar verme ve
-topluma yayılma risk düzeyine ve etkili korunma ve/veya tedavi yöntemi mevcudiyetine
-göre değerlendirilmesi.
-Grup İnsanlarda
-hastalık
-yapma
-Çalışanlara
-zarar verme
-Topluma
-yayılma
-ihtimali
-Etkili
-korunma/tedavi
-1 - - - +
-2 + + - +
-3 + + + +
-4 + + + -
-
-Grup 1 diğer gruplara kıyasla oldukça geniş listeye sahip olmasına rağmen,
-herhangi bir biyolojik etkenin Grup 2, Grup 3 veya Grup 4 de sınıflandırılmamış
-olması ve listede yer almaması, bu biyolojik etkenin Grup 1 de yer aldığı anlamına
-gelmez. Biyolojik ajanlar yalnızca enfeksiyöz (enfeksiyon yapan) ve toksik
-olmalarından dolayı değil aynı zamanda alerjik rinit, astım ve hipersensitivite
-pnömonisi gibi alerjik reaksiyonlara da neden olabilecekleri için risk teşkil
-etmektedir. Biyolojik ajanların bu aşırı duyarlılık reaksiyonları risk grupları ile
-alakalı değildir. Aşırı duyarlılığa sebep olan etmenler arasında mantarlar,
-bakteriler ve bazı parazitler mevcuttur. Bunlar genellikle solunum sistemini ve
-
-Biyolojik risk
-etmenleri insanlarda
-hastalık yapma,
-çalışanlara zarar
-verme, topluma
-yayılma ve tedavi
-edilebilme
-özelliklerine göre 4
-gruba ayrılır.
+Şekil 7.1. Meslek hastalıklarının sebepleri
 
 
-Biyolojik Risk Etmenleri
+
+Dünya Sağlık Örgütü
+tahminlerine göre ise
+her yıl 11.000.000 yeni
+meslek hastalığı vakası
+meydana gelmekte ve
+bunların 700.000’i
+hayat kaybı ile
+sonuçlanmaktadır.
+
+Meslek Hastalıkları
+
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 5
-daha az olarak da deriyi etkileyebilirler. Bunların yanı sıra bazı biyolojik ajanlar
-uzun süreli maruz kalma sonucunda karsinojenik (kansere neden olucu) etkiler de
-oluşturabilirler. Bu risk etmenlerine maruz kalma risk düzeyine göre iş yerlerinin
-ve çalışanların alması gereken önlemler ve uyması gereken güvenlik önlemleri de
-aynı yönetmelikle belirlenmiştir.
-Tablo 5.2. AÇSH Bakanlığının Avrupa Birliği Güvenlik Konseyi listeleri ışığında hazırladığı
-güvenlik risk sınıflandırmasına göre (sınıflandırma yönetmelikte Grup 2’den başlamaktadır)
-bakteri, virüs, mantar ve parazit örnekleri [1].
-Grup Bakteriler Virüsler Mantarlar Parazitler
-2 Bacteroides fragilis
-Clostridium tetani
-Corynebacterium
-diphteriae
-Staphylococcus
-aureus
-Herpesvirus
-varicella–zoster
-İnfluenza virüsleri
-Tip A, B ve C
-Hepatitis A virüsü
-(insan entero
-virüsü Tip 72)
-Epstein-Barr
-virüsü
-Aspergillus
-fumigatus
-Candida
-albicans
-Candida
-tropicalis
-Ascaris
-lumbricoides
-Taenia
-saginata
-Toxoplasma
-gondii
-Trichuris
-trichiura
-3 Bacillus antrhracis
-Brucella abortus
-Mycobacterium
-tuberculosis
-Yersinia pestis
-Salmonella Typhi
-Shigella
-dysenteriae (Tip 1)
-Hepatit C virüsü
-Hantaan virüsü
-Human
-immunodeficienc
-y virüsleri (HIV)
-Yellow fever
-Blastomyces
-dermatiti dis
-Paracoccidioide
-s brasiliensis
-Ajellomyces
-capsulatus
-Echinococcus
-granulosus
-Trypanosom
-a cruzi
-Taenia
-solium
-Leishmania
-brasiliensis
-4 - Ebola virüsü
-Crimean-Congo
-heamorrhagic
-fever
-Marburg virüsü
-Variola virüsü
-- -
-BİYOLOJİK RİSKLERE MARUZ KALINABİLECEK İŞLER
-Biyolojik ajanlar temelde canlılığın devamı için gerekli ve genellikle faydalı etkilere
-sahip olsalar da bazı durumlarda insan hayatını tehdit edebilmektedirler. Dünyada
-yaşayan organizmalar var olduğundan beri biyolojik risk etmenleri de vardır ve her
-yerde bulunabilirler. Çalışma ortamlarında biyolojik risk etmenleri bazen çalışma
-düzeninin gerekliliği olarak mecburen bulunurken çoğu zaman bunlara maruz
-kalma kazara meydana gelmektedir. Çalışma alanlarındaki biyolojik risk etmenleri
-ve bunlara bağlı enfeksiyonlar aşağıdaki kaynaklardan ortaya çıkabilirler [2].
-• Kan ve diğer vücut sıvıları
-• İnsan cesetleri, hayvan leşleri ve çiğ etler
-• Dışkı ve idrar gibi insan veya hayvan atıkları
+MESLEK HASTALIKLARININ TARİHİ GELİŞİMİ
+Meslekler insanoğlu tarihi kadar eskiye dayanmaktadır. Avcılık ve
+sonrasında tarımla uğraşan insanoğlu sonraları demiri ve diğer madenleri işlemeyi
+öğrenmiş ve birçok yeni mesleği yaşamlarına sokmuşlardır. İlk olarak Pliny (23 –
+79, Roma) tehlikeli tozlara maruz kalanların kendilerini korumaları için maske
+önermiştir. Sonrasında ise Galen (II.yy) madencilerin hastalıkları hakkında bilgi
+vermiştir. Orta Çağ’da Georgius Agricola (1494 1555) radon gazı ve akciğer kanseri
+ilişkisini, tozlu ortam ve pnömokonyoz ilişkisini anlamlandırmış ve madenci
+hastalığı adını vererek korunmaya yönelik birçok tavsiyelerde bulunmuştur.
+Paracelsus (1493-1541) madenciler ile ilgili çalışma yapmış ve bu konularla ilgili 3
+ciltlik bir kitap yazmıştır. Bernardino Ramazzini (1633-1714) “De Morbis Artificium
+Diatriba” adlı meslek hastalıkları kitabında ilk kez çeşitli hastalıklarla iş arasındaki
+ilişkiyi göstermiştir. “Hayret ve tereddüt ediyorum. Acaba, ilaç ve sinameki kokan
+muayenehane ve eczanelerde oturan bu azametli ve şık görüntülü doktorların
+burnuna işyerlerindeki pis kokulu şeyleri mi soksam, yoksa onları bu çukurları
+görmeye mi davet etsem?” sözü ile dünyada ün salmıştır.
+Ülkemizde ise ilk olarak 1865’de Dilaver Paşa Nizamnamesi yayınlanmış, ve
+1869’da Maaddin Nizamnamesi yayınlanarak iş kazalarında tazminat hakkı
+tanımlanmıştır. Cumhuriyet’le beraber iş ve iş sağlığı ile ilgili çalışmalar hız
+kazanmış olup 1921’de 114 ve 151 Sayılı Kanunlar ile Zonguldak ve Ereğli kömür
+havzasında kömür tozlarının işçilerin yararına kullanılmak üzere değerlendirilmesi
+yapılmış sonrasında ise sırayla;
+Umumi Hıfzıssıhha Kanunu (1930): 173-180 maddeleri iş sağlığı ile ilgilidi.r
+İş Kanunu (1936): 3008 Sayılı yasa
+SSK Yasası (1964): 506 Sayılı Yasa
+İş Kanunu (1971): 1475 Sayılı Yasa
+İş Kanunu (2003): 4857 Sayılı Yasa
+Sosyal Sigortalar ve Genel Sağlık Sigortası Kanunu (2006): 5510 Sayılı Yasa ile son
+hâli verilmiştir. 2017 yılına kadar ise 5510 sayılı kanun üzerinde bazı değişikliklere
+gidilmiştir.
+MESLEK HASTALIKLARININ ÖZELLİKLERİ, TANI
+KRİTERLERİ VE KORUNMA YÖNTEMLERİ
+Meslek hastalığı dendiğinde aklımıza öncelikle mesleğe özgü olması
+gelmelidir. Meslek hastalığı önlenebilirdir ve iş yerinde alınacak önlemler ile
+korunmak mümkündür. Meslek hastalığı tanısının konulması için buna özgü bir
+örgütlenme ve düzenlemeler gerekmektedir. Meslek hastalıklarının diğer
+nedenlerle oluşan hastalıklardan farklı olarak kendilerine özgü tanı ve tarama
+yöntemlerinin olması gerekmektedir. Daha öncede belirttiğimiz gibi meslek
+hastalığı tanısının koyulabilmesi için profesyonel bir yaklaşımın ve yeterli bilgi
 
-Biyolojik risk
-açısından
-değerlendirildiğinde
-grup 1 en az riskli
-grup 4 ise en yüksek
-riskli grup olarak
-belirlenmiştir.
+Sosyal Sigortalar ve
+Genel Sağlık Sigortası
+Kanunu 5510 Sayılı Yasa
+ile düzenlenmektedir.
+2017 yılına kadar ise
+5510 sayılı kanun
+üzerinde bazı
+değişikliklere gidilmiştir.
 
 
-Biyolojik risk
-etkenlerinden
-korunmak için “iş
-sağlığı ve güvenliği
-eğitimi” ile
-işverenlerin ve
-çalışanların bilgi
-eksiklikleri
-giderilmeli ve tüm
-çalışanlar gerekli
-ön lemleri
-almalıdır.
+Bir iş yerinde bir meslek
+hastalığının tespit
+edilmesi o iş yerinde
+çalışan diğer kişiler için
+de erken tanı olanağı
+verir.
 
+Meslek Hastalıkları
 
-Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 6
-• Öksürük veya hapşırık sırasında saçılmalar
-• Deri teması
-Bunların yanı sıra küfler ve küf sporları, toz maytları (akarları), tüyler,
-hayvan tüyleri ve polenler gibi etmenler de alerjik ve toksik reaksiyonlara neden
-olabilirler.
-Bilim adamları, hekimler ve laboratuvar çalışanları bu risklerin çoğundan
-haberdar olsa bile çoğu çalışan ve işçilerin bu riskler hakkındaki bilgileri sınırlıdır.
-Bu riskler çoğunlukla gözle görünür olmadığı için risk değerlendirmesi yapmak da
-oldukça güç olabilir. Biyolojik riskler hakkındaki bilgi yetersizliği ve çalışanların
-yeterli d üzeyde “iş sağlığı ve güvenliği eğitimi” almamış olması risk
-değerlendirmesini ve önlenmesini zorlaştırmaktadır. Bir çalışma ortamında
-yaşayan veya ölü insan veya hayvanların bulunması, gıda, bitki, toprak veya su
-atıklarının mevcudiyeti biyolojik risk değerlendirmesi yapılmasını zorunlu kılar. Bu
-nedenle bu tür materyallerle temas oranı yüksek olan tarım, gıda endüstrisi, sağlık
-hizmetleri ve sosyal hizmetler, veteriner hizmetleri, katı ve sıvı atık yönetimi,
-cenaze hizmetleri gibi çalışma alanları biyolojik risk etmenlerinin yüksek olduğu iş
-gruplarıdır. Bunların yanı sıra balıkçılık, seramik çini yapımı, kâğıt ve pamuk
-üretimi gibi birçok çalışma alanı da biyolojik risk altında olabilir.
-Türkiye’de biyolojik risk etmenleriyle karşılaşma riskine göre yapılan
-değerlendirmelerde özellikle sağlık çalışanları, laboratuvar çalışanları ve tarım
-işçileri üzerine yoğunlaşılmıştır. AÇSH Bakanlığı Avrupa İş Sağlığı ve Güvenliği
-Ajansı (EU-OSHA) verilerini de dikkate alarak biyolojik etkenlere maruziyetin
-olabileceği bazı işler listesini aşağıdaki gibi belirlemiştir:
-• Gıda üretilen fabrikalarda çalışma
-• Tarımda çalışma
-• Hayvanlarla ve/veya hayvan kaynaklı ürünlerle çalışma
-• Sağlık hizmetlerinin verildiği yerlerde, karantina dâhil morglarda çalışma
-• Mikrobiyolojik teşhis laboratuvarları dışındaki klinik, veterinerlik ve teşhis
-laboratuvarlarındaki çalışma
-• Atıkları yok eden fabrikalarda çalışma
-• Kanalizasyon, arıtma tesislerindeki çalışma
-Yukarıda listelenen alanlardan herhangi birinde işçi çalıştıran işveren,
-yapılan işin özelliğine göre zararlı biyolojik etkenleri kullanmaktan kaçınmakla ve
-mevcut bilgiler ışığında, biyolojik etkenleri kullanım şartlarında durumuna uygun
-olarak çalışanların sağlığı için tehlikeli olmayan veya daha az tehlikeli olanlar ile
-değiştirmekle yükümlüdür. Aynı zamanda işveren işyerinde biyolojik
-etkenlere maruziyet riskinin azaltılması için gerekli önlemleri de almalıdır.
-RİSKLERİN BELİRLENMESİ VE DEĞERLENDİRİLMESİ
-İş yerlerinde karşılaşılabilecek risklerin belirlenmesi ve uygun şekilde
-değerlendirilmesi güvenlik sınıflandırmasına göre hem işverenin hem de
-çalışanların uygun önlemleri alabilmesi açısından oldukça önemlidir. Biyolojik risk
+birikiminin olması gerekmektedir. Çünkü birçok zaman çalışanın sağlığıyla ilgili
+şikâyetler alışılagelmiş rutin rahatsızlıkların belirtileri olarak değerlendirilerek
+yanlış tanılar konulabilmektedir. Meslek hastalığı tanısı konulabilmesi için, birçok
+alanda inceleme yapılması gerekmekte olup nesnel ve kesin ölçütlere yer verilerek
+iş yerinde ortam analizlerinin yapılması, aynı zamanda iş yerlerinde bulunabilecek
+her türlü risk etmenlerini araştıracak düzeyde donanımlı laboratuvarların
+bulunması gerekmektedir. Böyle laboratuvarların ve bilgi birikiminin elde edilmesi
+ile sadece meslek hastalıklarının tanısı koyulmamakta aynı zamanda iş yerlerinin
+kontrol edilmesi, toksik etmenler açısından incelenmesi ve iş yeri hekimleri
+tarafından muayenelerinin yapılması ile çalışanların herhangi bir şikâyeti ortaya
+çıkmadan bu hastalıklar tespit edilebilmekte ve gerekli önlemler alınmasına imkân
+bulunabilmektedir. Bir iş yerinde bir meslek hastalığının tespit edilmesi o iş
+yerinde çalışan diğer kişiler için de erken tanı olanağı verdiği için çok önemli
+olmaktadır.
+Çalışan bir kişi için meslek hastalıkları dışında iki temel sağlık sorunu
+bulunmaktadır. Bunlar:
+ Genel sağlık sorunları şeklinde toplumda görülen, herkeste olabilen, iş yeri
+veya çalıştığı işle ilgili olmayan sağlık sorunları
+ Doğrudan çalışma hayatında karşılaşılan faktörlerin etkisiyle meydana
+gelen, işe özgü olan hastalıklar (açıklanan iş ile ilgili hastalıklar). Bu sebeple
+meslek hastalığı tanısının temel özellikleri iyi bilinmelidir.
+Meslek Hastalıklarının Tanısında Temel Özellikler
+ Kendine özgü bir klinik tablonun olması,
+ İyi belirlenmiş ve tüm şüphelerden arındırılmış bir hastalık etkeninin
+olması,
+ Bu hastalık etkeni veya metabolitinin iş yeri ortamında olması,
+ Hastalığın deneysel olarak oluşturulabilmesi,
+ Hastalığın o meslekte çalışanlarda insidansının (oluş sıklığının) yüksek
+olması gerekmektedir.
 
-Özellikle sağlık
-çalışanları olmak üzere
-laboratuvar çalışanları
-ve tarım işçileri
-biyolojik risk etmenleri
-açısından tehdit
-altındadır.
+Meslek Hastalıklarında Tanı İlkeleri
+ Klinik Değerlendirmeler
+ Öykü (anamnez)
+ Fizik muayene
+ Fizyolojik ve psikolojik değerlendirme
+ Laboratuvar Değerlendirmeleri
+ Radyolojik yöntemler
+ Biyokimyasal yöntemler
+ Patolojik incelemeler
+ Meslek ile ilişkinin kurulması
+ Kişinin çalıştığı tüm işlerinin tespit edilmesi varsa o iş yerlerine ait
+fiziksel analizlerin tespiti
+ Hastalık belirtileri ile zaman ilişkisinin incelenmesi
 
-Biyolojik Risk Etmenleri
+Herhangi bir çalışana
+meslek hastalığı tanısı
+koyulduktan sonra
+tespit edilen meslek
+hastalığının yetkili
+makamlara bildirilmesi
+yasal zorunluluktur.
+
+
+Meslek Hastalıkları
+
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 7
-etmenlerinin belirlenmesi ve değerlendirilmesinde Avrupa Birliği normlarına
-uygun olarak belli başlı konular dikkate alınmalıdır [3].
-Öncelikle çalışma ortamındaki insan sağlığına zararlı olan veya olabilecek
-tüm biyolojik etkenlerin sınıflandırılması gereklidir.
-Biyolojik etkenlere maruz kalma riski bulunan herhangi bir çalışmada, işçinin
-sağlık ve güvenliğine yönelik herhangi bir riski değerlendirmek ve alınması gereken
-önlemleri belirlemek için, çalışanın maruziyetinin türü, düzeyi ve süresi
-belirlenmelidir.
-Birden fazla grupta yer alan biyolojik etkenlere maruziyetin söz konusu
-olduğu işlerde risk değerlendirmesi, zararlı biyolojik etkenlerin tümünün
-oluşturduğu tehlike dikkate alınarak yapılmalıdır.
-Risk değerlendirmesi, düzenli aralıklarla ve çalışanın biyolojik etkenlere
-maruziyet koşullarını etkileyebilecek herhangi bir değişiklik olduğunda
-yenilenmelidir.
-AÇSH Bakanlığının ve il müdürlüklerinin, çalışanların sağlığını korumak için
-biyolojik etkenlerin denetim altına alınması hakkında işverenlere önerileri dikkate
-alınmalıdır.
-Çalışanlar, işlerinin sonucu olarak ortaya çıkabilecek hastalıklar, alerjik veya
-toksik etkiler ilgili bilgi sahibi olmalıdır.
-Enfeksiyon Riski
-Çalışanların maruz kaldığı biyolojik riskler, tarihsel olarak ilk sağlık
-çalışanlarında tespit edilmiştir. Yıllar boyunca birçok sağlık çalışanı, araştırma
-yaparken veya hastalıkların tedavisi sırasında biyolojik etmenlere bağlı olarak
-hastalanmış hatta yaşamlarını kaybetmiştir.
-Özellikle sağlık çalışanlarında sık görülen enfeksiyonlar: tüberkü loz,
-menengokoksik menenjit, gastrointestinal sistem enfeksiyonları, lejyoner hastalığı,
-difteri, boğmaca gibi bakteriyel enfeksiyonlar; hepatit-B, kızamık, kızamıkçık,
-kabakulak, suçiçeği veya Varisella Zoster, Herpes enfeksiyonları, Sitomegalovirüs
-enfek siyonları, Edinsel Bağışıklık Yetersizliği Sendromu gibi viral enfeksiyonlar ve
-Histoplazmosis gibi paraziter enfeksiyonlar olabilir.
-Etken, kişinin kendisinde yerleşik ise iç kaynaklı (endojen), dışarıdan
-alınmışsa dış kaynaklı (ekzojen) enfeksiyondan bahsedilir. Tablo 5.3’te çalışma
-alanlarına göre karşılaşılabilecek biyolojik risk etmenleri özetlenmiştir.
-Özellikle sağlık çalışanlarında enfeksiyon riski genel nüfusa göre daha
-yüksektir. Çünkü sağlık çalışanları enfeksiyon zinciri (Şekil 5.1) adı verilen bir süreç
-içerisinde sürekli yer alırlar. Enfeksiyon zincirinde , biyolojik risk etmeninin sağlıklı
-bir insana bulaşabilmesi için bir dizi olaylar meydana gelir ve bu olaylar sırasında
-vücutta enfeksiyon oluşması için bir döngü süreci başlar. Altı aşamadan oluş an bu
-döngü sürecine enfeksiyon zinciri denilmektedir. Bu ayrıntılı bir şekilde
-incelenecek olursa aşağıda sırası ile belirtilmiş faktörlerden oluşur.
+ İş yerinde çalışan diğer işçilerin muayene raporlarının incelenmesi
+ve benzer belirtilerin tespiti
+ Hastanın iş dışı etkinliklerin sorgulanması ve ailesinin muayenesi
+Meslek Hastalıklarının Yasal Tanı Koyma Süreci
+Herhangi bir çalışana meslek hastalığı tanısı koymakla ilgili olarak yapılması
+gereken ölçümler, tanı konulduktan sonra yapılması gereken yasal zorunluluklar
+ve sonrasında uygulanması gereken tedavi ilkeleri bulunmaktadır.
+İş yeri ortam ölçümleri
+İş yeri ortamında ve mümkünse çalışanın iş ile ilgili bulunduğu tüm
+ortamlarda yapılacak doğrudan biyolojik, kimyasal, fiziksel ölçümlerle veya
+ortamdan alınan örneklerle yapılacak tayinlerle bu değerlendirmeler yapılabilir. Bu
+incelemeler kanunun belirttiği aralıkla düzenli olarak yapılması ve sonuçların kayıt
+altına alınarak saklanması gereklidir. Bu tür kayıtların incelenmesi ile hem
+hastalıkların tanısında hem de önlenmesinde büyük kolaylıklar sağlanacaktır.
+Meslek hastalıklarının tıbbi ve yasal tanı koyma kriterlerinde bazı terimler
+bulunmaktadır. Bunlar;
+Yükümlülük Süresi: Zararlı mesleksel etkinin sona ermesi ile hastalığın
+ortaya çıkması arasında geçebilecek kabul edilebilir süre.
+Maruziyet Süresi: Zararlı etkenin başlamasıyla hastalık belirtilerinin ortaya
+çıkması için gereken en az süre.
+Birçok hastalıkta yükümlülük ve maruziyet süreleri tespit edilmiş olup
+özellikle ülkemizde çok sık görülen ve büyük bir sağlık sorunu olan
+pnömokonyozun tıbbi ve yasal olarak meslek hastalığı sayılabilmesi için çalışanın iş
+yeri havasında pnömokonyoz yapacak yoğunluk ve nitelikteki toz bulunan yer altı
+ve yer üstü işlerinde en az 3 yıl çalışmış olması gerekmektedir.
+Öte yandan, çalışana meslek hastalığı tanısı koyulduktan sonra yapılması
+gereken yasal zorunlulukların en önemlisi tespit edilen meslek hastalığının yetkili
+makamlara bildirilmesidir. Bununla birlikte iş yerinde önleyici tedbirler için
+öneriler oluşturulmalıdır. Meslek hastalıklarının veya işle ilgili hastalıkların
+tanısının, tazminat açısından kesin bir yasal statüsü bulunmamakla beraber
+önleyici ve kontrol tedbirleri üzerinde önemli bir etkisi bulunabilir. Çalışanın iş ve
+maruziyet öyküsü meslek hastalığı tanısını koymada hayati öneme sahiptir.
+Meslek hastalıklarında tedavi ilkeleri
+Herhangi bir meslek hastalığına yakalanmış olan bir çalışanın derhal iş yeri
+ortamından uzaklaştırılması gerekir. Tedavide o hastalığa yönelik tıbbi
+müdahaleler yapılırken eğer mümkünse kimyasal, biyolojik veya fiziksel ajanların
+vücuttan atılımını arttıracak veya etkisini azaltacak uygun yöntemler
+kullanılmalıdır.
 
-Biyolojik risk
-etmenleri enfekte
-canlı veya cansız
-maddeden çıkan
-bakteri, virüs vb. gibi
-etkenlerin farklı
-taşıyıcılar ile ağız,
-burun , deri gibi bir
-giriş kapısından yeni
-konakçıya
-taşınmasıyla zincir
-şeklinde yayılır.
 
-Biyolojik Risk Etmenleri
+
+
+Herhangi bir meslek
+hastalığına yakalanmış
+olan bir çalışan iş yeri
+ortamından
+uzaklaştırılmalıdır.
+
+
+Meslek Hastalıkları
+
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 8
+Meslek hastalıklarından korunma yöntemleri
+Meslek hastalıkları önlenebilen hastalıklar olup korunma yöntemlerinin
+bilinmesi gerekmektedir.
+Meslek hastalıklarından korunma yöntemleri 3 temel alt birimde
+incelenmelidir.
+ Sağlıkla ilişkili yöntemler:
+ Tıbbi resmî rutin muayeneler (işe giriş ve periyodik muayeneler)
+ Tıbbi arşiv için gerekli ise biyokimyasal, fiziksel ve radyolojik
+incelemeler
+ Sağlıklı beslenme
+ Eğitimle ilişkili yöntemler:
+ Mesleki hastalıklar ve korunma yöntemlerinin öğretilmesi
+ Acil ve ilk yardımın öğretilmesi
+ Teknikle ilişkili yöntemler:
+ Çevrenin kontrolü
+ İkame
+ Ayırma: İş ortamında bulunan fiziksel, biyolojik veya kimyasal
+ajanların uzaklaştırılması
+ Kapatma
+ Havalandırma
+ Yaş yöntem: İş ortamında oluşabilecek olan tozların havaya
+partiküller şeklinde karışmaması için ıslak tutulması
+ Kişisel koruyucu donanımlar: Çalışanın çalıştığı işle ilgili bedenine
+zarar verecek maddeler varlığında bedenini koruyacak fiziksel
+engel oluşturacak ekipmanın verilmesi
+o Baş koruyucuları: baret, kulak tıkacı
+o Göz ve yüz koruyucuları: gözlük, yüz maskeleri
+o Maskeler, vb.
+MESLEK HASTALIKLARININ SINIFLANDIRILMASI
+Uluslararası Çalışma Örgütü meslek hastalıklarını temel olarak üç
+kategoride sınıflandırmıştır.
+ Çalışma ortamına özgün değişik ajanların (fiziksel, kimyasal ve biyolojik)
+meydana getirdiği meslek hastalıkları
+ Hedef organ ve sistemlerin meslek hastalıkları (solunum, kalp, deri)
+ Mesleki kanserler
+Ayrıca meslek hastalıkları iş yerlerindeki değişik faktörlere göre de
+sınıflandırılabilir.
+ Kimyasal kaynaklı meslek hastalıkları
+ Ağır metaller (berilyum, krom, manganez, arsenik, cıva, kurşun,
+vanadyum, antimon, nikel, bakır, kalay, çinko bileşikleri)
+ Çözücüler
+ Gazlar (flor, hidroflorik asit, karbon monoksit, azot oksit, ozon,
+fosgen)
 
+ILO’ a göre Meslek
+Hastalıkları; çalışma
+ortamına özgün değişik
+ajanların meydana
+getirdiği veya hedef
+organ ve sistemlerin
+meslek hastalıkları ya
+da mesleki kanserlerdir.
 
-Şekil 5.1. Enfeksiyon Zinciri
+Ülkemizde meslek
+hastalıkları Kimyasal
+Etmenlerle,
+Cilt Hastalıkları,
+Pnomokonyozlar ve
+Solunum Sistemi,
+Bulaşıcı ve de Fiziksel
+Etmenlerle oluşan
+meslek hastalıkları
+olarak beş grup olarak
+sınıflandırılmıştır.
 
-Etken Enfeksiyon: Vücudumuzun çeşitli yerlerine yerleşmiş olan
-mikroorganizmalar vücudun temel savunma sistemlerinin bir parçası hâlini alırlar.
-Enfeksiyon oluşturma yeteneğine sahip bu organizmalar etken enfeksiyonu
-oluştururlar. Bir enfeksiyon etkeninin hastalık yapabilme yeteneği patojenite; bu
-etkenin ağır veya öldürücü bir hastalık tablosuna yol açma yeteneği ise virülans
-olarak tanımlanır. Sağlık hizmeti verilen birimlerde, özellikle hastanelerin belirli
-bölümlerinde patojenitesi ve virülansı çok yüksek dirençli mikroorganizmaların
-varlığı ve yoğunluğu iyi bilinen ve araştırmalarla saptanmış bir olgudur. Bu
-şekildeki hastane enfeksiyonu etkenleri antibiyotik tedavisine oldukça dirençli,
-bulaşıcılığı yüksek süper enfeksiyonlardır ve hastalarla birlikte sağlık çalışanlarını
-da tehdit ederler.
-Kaynak: Enfeksiyonun yerleşip çoğaldığı, canlı ve cansız varlıklardır ve
-zincirin uç noktasıdır. Daha önce enfeksiyon geçirmiş biri dahi kaynak sebebi
-olabilir.
-Çıkış Kapısı: Mikroorganizmaların vücudu terk etmesidir . Sinüs akıntısı, dışkı,
-kulak akıntısı gibi olaylar çıkış kapısı olarak adlandırılır. Birçok enfeksiyonun
-önlenmesinde büyük rol oynayan bu olay, enfeksiyon zincirinin kırılmasında
-etkilidir.
-Bulaşma Yolu: Enfeksiyonlu bir kişinin, sağlam bir kişi ile tokalaşması,
-öpüşmesi, içmiş olduğu bardaktan su içmesi gibi direkt temas yollarıdır.
-Giriş Kapısı: Enfeksiyonun bulaşabileceği en sık yerlerdir. Ağız, burun, boğaz,
-göz ve cilt gibi vücudumuzdaki alanlar giriş kapısını oluşturmaktadır. Etkenler giriş
-kapısından temas, ortak kullanılan cansız maddeler (su, yiyecek, süt ürünleri vb.),
-hava ve vektörler aracılığı ile vücuda girebilir. Ayaktan ve yataklı tedavi kurumları,
+Meslek Hastalıkları
 
-Biyolojik risk
-etmenleri olan
-enfeksiyonların
-yayılmasının
-engellenmesi için
-enfeksiyon zincirinin
-oluşması
-engellenmesine
-yönelik tedbirler
-alınmalıdır.
-
-Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 9
-tanı ve araştırma laboratuvarları bu etkenlerin her türlü bulaşma yolu için elverişli
-ortamlardır.
-Uygun Konakçı: Vücut direnci zayıflamış ya da savunma sistemi,
-mikroorganizmalara karşı yeterince güçlü olmayan bireylerden oluşur. Enfeksiyon
-zincirinin son halkasıdır. Çalışma koşulları gereği çeşitli mikroorganizmaların kişinin
-çeşitli yerlerinde kolonize olma olasılığının yüksektir. Bunun yanında özgün ve
-özgün olmayan kişisel savunma mekanizmalarının, yine ağır çalışma koşullarının
-yarattığı stres ve normal nüfusa göre fazla olduğu gözlenen bazı sağlık
-bozucu alışkanlıkların da etkisiyle yeterince işlev göremediği durumlar da söz
-konusu olabilir.
-Çevre sel etkenler ise enfeksiyon zincirinin her basamağında etkilidir. Isı
-değişiklikleri, nem, radyasyon, hava basıncı, hava akımının hızı, kimyasal maddeler,
-gazlar ve toksinler gibi faktörler enfeksiyon oluşumunu etkilerler. Patoloji,
-mikrobiyoloji, biyokimya laboratuvarları; radyoloji ve radyoterapi bölümleri;
-ameliyathaneler başta olmak üzere sağlık kuruluşlarının görev yapılan her
-bölümünde bu etmenlerin olumsuz etkileri söz konusudur.
-Tablo 5.3. Farklı çalışma alanlarında maruz kalınabilecek biyolojik risk etmenlerine örnekler
-Çalışma Alanı Sorun oluşturan ana biyolojik risk etmenleri
-Tarım,
-hayvancılık ve
-veteriner
-hizmetleri
-Allerjenler (polen, bitkisel ürünler ve hayvanların idrar, tüy ve
-derilerinden kaynaklanan proteinler gibi), maytlar, mantarlar,
-(Aspergillus spp, Penicillium spp, dermatophytes gibi) ve
-bakteriler (Actinomycetes, Brucella spp, Bacillus
-anthracis, Coxiella burnetii, Salmonella spp, MRSA, E.coli gibi),
-ve bakterilerin hücre duvarı bileşenleri (endotoksinler ve
-glukanlar gibi), zoonotik virüsler (Rabies ve Influenza gibi),
-parazitler ve keneler.
-Hastaneler,
-sağlık
-hizmetleri
-Virüsler (Hepatitis, AIDS, rubella, Rabies ve influenza gibi),
-bakteriler (Staphylococcus aureus, Streptococcus pyogenes,
-Mycobacterium tuberculosis, Legionella ve Clostridium gibi),
-mantarlar (Tinea spp ve Aspergillus spp gibi), parazitler
-(Giardia lamblia gibi) ve pironlar gibi enfeksiyöz ajanlar.
-Laboratuvarlar
-Zoonotik ajanlar (Trichophyron spp, Toxoplasma gondii,
-Rabies gibi), parazitler (Leismania spp gibi) ve pironların yanı
-sıra alerjenler (maytlardan, hayvanların idrar, tüy ve
-derilerinden kaynaklanan proteinler gibi).
-Yiyecek ve
-içecek üretimi,
-fırınlar
-Mantarlar (küf ve maya mantarları), bakteriler, ve maytlar
-Mikotoksiler, endotoksinler, glukanlar, bitkisel ve hayvansal
-kaynaklı alerjenler (α-amilaz, selülazlar gibi),
-Atık toplama,
-arıtma ve
-ayırma
-Mantarlar (Aspergillus fumigatus, ve maya manmtarları),
-enfeksiyöz olan (Salmonella gibi) ve olmayan bakteriler (E.
-Coli, actinomycetes gibi),
-Endotoksinler, glukanlar ve virüsler (Hepatitis A, Hepatitis B
-gibi)
+ Fiziksel kaynaklı meslek hastalıkları
+ Gürültü ve titreşim
+ Yüksek ve alçak basınçta çalışma
+ Soğuk ve sıcakta çalışma
+ Tozlar
+ Radyasyon (İyonlaştırıcı radyasyon, UV Radyasyon, Görünür ışık,
+Kızılötesi)
+ Biyolojik kaynaklı meslek hastalıkları
+ Bakteri kaynaklı olanlar (tüberküloz, lejyonellozis, tifo,
+Leptospirozis, Şarbon, Şistozomazis, Tetanoz, Lyme hastalığı)
+ virus kaynaklı olanlar (hepatit A, Hepatit B, Hepatit C)
+ Biyoteknoloji kaynaklı olanlar.
+ Psikolojik kaynaklı olan meslek hastalıkları (İş stresi, Post-Travmatik Stres
+Bozukluğu, Tükenmişlik sendromu, İşyerinde psikolojik taciz (Mobing))
+ Ergonomiye özensizlikten kaynaklanan meslek hastalıkları
 
-Farklı mesleklerde
-çalışma alanlarına
-göre sorun
-oluşturabilecek
-biyolojik risk
-etmenleri de
-farklılık
-gösterebilmektedir.
-Bu nedenle iş
-yerlerinin alması
-gereken önlemler
-kendi risk gruplarına
-göre
-değerlendirilmelidir.
+Ülkemizde ise meslek hastalıkları 1972 yılında çıkarılan sosyal sigortalar
+sağlık işlemleri tüzüğünde belirtilmiş, 1978’de güncellenmiş sonrasında ise
+1985’de tüzük yenilenmiştir. Şu anda ise aşağıdaki meslek hastalıkları listesi
+kullanılmaktadır [2].
+Sağlık İşlemleri Tüzüğüne Göre Meslek Hastalıkları
+Bunlar aşağıda verilen beş farklı başlık altında sınıflandırılmış olup, hepsi
+ayrı ayrı detaylandırılmıştır.
 
-Biyolojik Risk Etmenleri
+ A Grubu: Kimyasal Etmenlerle Olan Meslek Hastalıkları
+ B Grubu: Mesleki Cilt Hastalıkları
+ C Grubu: Pnömokonyozlar ve Solunum Sisteminin Diğer Meslek
+Hastalıkları
+ D Grubu: Mesleki Bulaşıcı Hastalıklar
+ E Grubu: Fiziksel Etmenlerle Oluşan Meslek Hastalıkları
+Kimyasal Kaynaklı Meslek Hastalıkları
+Sanayileşme artıkça çalışanlarında maruz kaldığı kimyasal maddeler
+artmaktadır. Bu toksik kimyasal maddeler ya ham madde olarak kullanılmakta ya
+da üretime yardımcı işlemlerde kullanılmaktadır. Yukarıda da belirtildiği gibi birçok
+kimyasal madde bulunmakta olup konumuz kapsamınca en çok meslek hastalığına
+neden olan kimyasal maddelerin özellikleri ve sebep olduğu harabiyetlerinden
+bahsedeceğiz.
+Berilyum: Son zamanlarda endüstrinin birçok kolunda (uzay endüstrisi,
+otomotiv sanayi, nükleer enerji, medikal ve elektronik endüstrisi) kullanılmaya
+başlamıştır. Berilyumun vücuda giriş yolu akciğerler aracılığıyla olup göz ve ciltten
+de girme ihtimalleri bulunmaktadır. Berilyum vücutta az miktarda çözünmesine
+rağmen özellikle akciğerlerde çökmekte ve o bölgede hasar yapmaktadır. Molekül
+
+Sanayi kollarının
+artması nedeniyle
+güncel sınıflandırmada
+birçok kimyasal madde
+ayrı olarak incelenmiş
+ve yaptığı etkiler
+detaylandırılmıştır.
+
+
+Meslek Hastalıkları
+
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 10
-RİSKLERE KARŞI ALINACAK ÖNLEMLER
-İş yerlerinde karşılaşılabilecek biyolojik risk etmenlerine karşı hem işverenin
-hem de çalışanların alması gereken önlemler mevcuttur. İşveren işe giriş ve aralıklı
-kontrol muayeneleri olmak üzere periyodik taramalarla duyarlı kişileri
-saptamalıdır. Tüm çalışan personelin eğitimi hem işe başlarken hem meslek içi
-eğitim programları ile yapılmalıdır. İşçilerin çalışırken uyacakları hareket tarzlarının
-yönerg e ve uyarı işaretleri ile düzenlenmesi, belirlenmesi ve çalışanlara bildirilmesi
-sağlanmalıdır. Ayrıca ç alışma ortamının (hastane, laboratuvar, hayvan barınağı,
-kesimevi, paketleme atölyeleri, klinikler, kişisel bakım merkezleri, atık arıtma
-atölyeleri vb.) mimari yapılarının işlevlerine uygunluğu sağlanmalıdır. Uygun
-yalıtım ve dezenfeksiyon önlemleri alınarak enfeksiyon zinciri engellenmelidir.
-Çalışanlar için aktif bağışıklama yapılmalıdır. Bu amaçla çalışanlar iş yerinin
-özelliğine göre aşılanmalıdır. Mesela laboratuvar çalışanları ve/veya hayvancılık ile
-uğraşanlar, Hepatit B aşısı, veba aşısı (Yersinia pestis), kuduz aşısı, şarbon aşısı
-(Bacillus anthracis) gibi aşılarla aşılanmalıyken kreş ve gündüz bakımevlerinde
-çalışanlar kızamık, kabakulak, kızamıkçık, poliomyelit, influenza, Hepatit A ve
-Hepatit B gibi hastalıklara karşı aşılanmalıdır. AÇSH Bakanlığı yönetmeliğine göre
-işverenin yükümlülükleri Tablo 5.4’te özetlenmiştir.
-Tablo 5.4. AÇSH Bakanlığı verilerine göre işverenlerin biyolojik risk etmenlerine karşı alması
-gereken önlemler.
-Yükümlülük Neler Yapılmalı
-İkame
-Biyolojik risk etmenini uygun durumda çalışanın sağlığı için tehlikeli
-olmayan veya daha az tehlikeli olanlarla değiştirir.
-Risklerin
-azaltılması
-Risk mevcudiyetinde çalışanların maruziyetini önler.
-Eğer maruziyet zorunlu ise sağlık ve güvenlik yönünden yeterli
-korumayı sağlayacak düzeyde çalışanların maruziyet düzeyini en aza
-indirir.
-Bakanlığın
-bilgilendirilmesi
-İşveren grup 2, 3 ve 4 biyolojik etkenlerle ilk kez çalışmasından 30
-gün önce Bakanlığa bildirir.
-İşveren risk değerlendirmesi sonuçlarını, hangi işlerde ne kadar
-çalışanın riske maruz kaldığını ve buna karşı iş yeri güvenliği personeli
-dâhil alınan önlemleri bildirir.
-Biyolojik risk etmeninin ortama yayılması veya enfeksiyon
-oluşturması gibi kazaları bildirir.
-Faaliyet sonrası riske maruz kalan çalışanların listesi ve tüm tıbbi
-kayıtları bildirir.
-Hijyen ve
-Kişisel
-Korunma
-Çalışanların biyolojik etken bulaşma riski olan ortamlarda yiyip içmesi
-engellenerek uygun koruyucu giysilerle çalışmasını sağlar (Şekil 5.2).
-Gerekli koruyucu donanım ve ekipmanı (göz yıkama sıvısı, cilt
-antiseptiği gibi) temin eder ve devamlılığını (yenilenme, temizleme)
-sağlar.
-Çalışanların
-eğitimi ve
-bilgilendirilmesi
-İşveren çalışanlarını biyolojik risk etmenlerine maruziyet sonucu
-oluşacak olası sağlık riskleri, maruziyet karşı koruma önlemleri, hijyen
-kuralları, koruyucu donanım ve giysi kullanımı, olay anında veya
-önlenmesinde eylem planı gibi konularda çalışma başlamadan önce
-eğitime tabi tutar.
+ağırlığı nedeniyle hapten özelliği kazanarak gecikmiş tip immün reaksiyonlar
+sonucunda akciğerlerde granülomatöz inflamasyon gelişimine sebep olmaktadır.
+Granülomatöz inflamasyonun ilerlemesi ile akciğerde kalıcı hasara neden
+olmaktadır. Olguların çoğunda 2 yıldan daha uzun süreli berilyum maruziyet
+öyküsü olmakla beraber temasın sonlanmasından yıllar sonra bile hastalığın
+gelişebileceği (4 ay- 30 yıl) unutulmamalıdır.
+Kadmiyum: Pil yapımında, plastik ve diğer madde kaplamalarında oldukça
+yoğun kullanılıp, vücuda hava, su ve hatta gıdalarla girebilmektedir. Hangi yolla
+girerse girsin kadmiyum karaciğer ve böbrekte birikmektedir. Sigaranın da önemli
+bir kadmiyum kaynağı olduğu bilinmekte olup yarılanma ömrü 10 senedir.
+Kadmiyum maruziyeti böbrek, kemik ve akciğerlerde hasar yapmaktadır.
+Krom: Bileşikleri ile sanayide metal kaplamacılığından deri tabaklamaya,
+ahşap korumadan fotoğrafçılığa kadar 90’a yakın iş kolunda kullanılmaktadır.
+Vücudumuza en önemli giriş yolu akciğer olan krom; dermatit, konjunktivit, üst
+solunum yollarında irritasyon, pulmoner ödem gibi cilt ve mukoza irritasyonuna
+neden olmaktadır. Son yapılan klinik çalışmalarda ise kromun bazı bileşiklerinin
+akciğer kanserine neden olabileceği görülmüştür.
+Manganez: Çok büyük oranda demiri sertleştirmek için çelik sanayinde
+kullanılıp aynı zamanda boya, cam, seramik, tekstil endüstrisi, ahşap koruyucu,
+deri işleme işlerinde de kullanılmaktadır. Genellikle vücuda giriş yolu inhalasyon
+şeklinde olup karaciğer, ince bağırsak ve kemiğe dağılmaktadır. Cilt, göz ve mukoz
+membranlarda irritasyona ve pnömoniye neden olabilmektedirler.
+Arsenik: Eskiden birçok iş kolunda kullanılanırken toksik etkilerinden dolayı
+özellikle Avrupa ülkelerinde yasaklanmıştır. Ağızdan ve cilt yolundan alınabilen
+arsenik siroz, kanser, ensefalopati, aplastik anemi ve hatta kromozomal
+anormalilere bile neden olabilmektedir.
+Cıva: Altın ve gümüş üretiminde, laboratuvar gereçleri, ayna, termometre,
+akkor lambaları, röntgen tüpleri, diş amalgamı, galvanik pil, cephane ve patlayıcı
+fitili yapımında kullanılmaktadır. Özellikle evlerde kullanılan floresan lamba
+kırılması da cıva temasına neden olabilmektedir. Ana hedef organları beyin ve
+böbrek olan cıva, inhalasyon yoluyla ve ciltten kolayca vücudumuza girmektedir.
+Sinir sitemi ile ilgili birçok rahatsızlığa neden olan cıva böbreklerinde fonksiyonunu
+da bozmaktadır.
+Kurşun: Kullanımı her geçen gün azalmakla beraber dünyada en çok
+maruziyeti olan maddelerden biridir. İnhalasyon ve ağız yoluyla alınabilen kurşun,
+beyin, kemik iliği, böbrek, karaciğer ve iskelet kasında birikmektedir. Sinir sistemi,
+gastrointestinal sistem, kan, böbrekler ile ilgili birçok hastalığa neden olmaktadır.
+Birikimi ile mitokondri gibi birçok hücre içi organelin yapı ve fonksiyonun
+bozmaktadır. Anemi, diş etlerinde mavi çizgilenme, psikiyatrik semptomlar,
+yorgunluk, ensefalopati, böbreklerde fibrozis ve sperm kalitesinin düşüşüne neden
+olmaktadır.
+Antimon: Akü üretiminde sıklıkla kullanılmaktadır. Madenden çıkarılırken
+çalışanlar beraberinde birçok silika bileşiklerine de maruz kalırlar. Solunum, ağız ve
 
-Çalışanların iş yerinde
-karşılaşılabilecek
-risklere karşı
-korunması ancak hem
-iş yerinin hem de
-çalışanın üzerine
-düşen yükümlülükleri
-eksiksiz yerine
-getirmesi ile sağlanır.
+Sinir sitemi ile ilgili
+birçok rahatsızlığa
+neden olan cıva
+böbreklerin de
+fonksiyonunu
+bozmaktadır. Evlerde
+kullanılan floresan
+lamba kırılması cıva
+temasına neden
+olabilmektedir.
 
-Biyolojik Risk Etmenleri
+
+Solunum sistemini
+etkileyen iş yerlerinde
+çok fazla miktarda
+madde bulunmakta
+olup bunların ilişkili
+olduğu meslek
+hastalıkları ayrı ayrı
+irdelenmelidir.
+
+Meslek Hastalıkları
+
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 11
-Bu eğitimi risk etmenleri değiştikçe ve belirli periyotlarda yeniler.
-Özel
-durumlarda
-çalışanın
-bilgilen dirilmesi
-İşveren biyolojik risk etmenleri ile çalışma sırasında oluşabilecek
-kazalara karşı yazılı talimatlar oluşturarak çalışanlarını bilgilendirir.
-Çalışanlar benzer olayları işverene ve diğer yetkililere bildirir.
-Bu kazaları, sebeplerini ve sonrasında düzeltmek için alınan önlemler
-çalışana/temsilcilerine bildirilir.
-Biyolojik
-etkenlere
-maruz kalan
-çalışanların
-listesi
-İşverenler grup 3 ve grup 4 biyolojik etkenlere maruz kalanların
-listesini tüm detayları ile kayıt altına alır (yapılan iş, hangi erkene
-maruz kalındığı, kazalar vb.).
-Bu kayıtları maruziyet sona erdikten sonra en az 15 yıl saklar (Özel
-durumlarda kayıtların 40 yıl saklanması gerekebilir).
+cilt yoluyla alınan antimon birçok organda birikebilir. Pnomokonyoz, cilt
+bozuklukları ve kansere neden olabilmektedir.
+Nikel: Çelik üretimde kullanılıp giriş yolu solunum sistemidir. Vücudumuzda
+albümine ve plazmine bağlanır. Suda erimeyen kısımları ise akciğerde birikerek
+kansere neden olabilmektedir. Nikel maruziyeti dermatit, astım, solunum yolu
+irritasyonu ve son olarak kansere neden olabilmektedir.
+Bakır: Elektrik ve yapı endüstrisinden kullanılmaktadır. Temel vücuda giriş
+yolu ağızdır. Fazla alınan bakır vücutta kemik, kas ve karaciğerde birikmektedir.
+Akut zehirlenmeler intihar vakalarında görülmekle beraber kronik
+zehirlenmelerinde dişlerde renklenme, katarakt, kronik obstruktif akciğer
+hastalığı, karaciğer fibrozisi, siroz, akciğer ve karaciğer kanserine neden
+olmaktadır.
+Kalay: Kaplama sektörlerinde kullanılan kalay, ağız ve solunum yoluyla
+alınmaktadır. Kalay maruziyetinde pnomokonyoz gelişebilmekte olup kalaya bağlı
+pnomokonyoza “stannozis” denilmektedir.
+Mesleki Cilt Hastalıkları
+Deri hastalıkları denince ilk olarak dermatitler akla gelmekte olup meslek
+hastalıkları dışında da sıkça görülürler. Özellikle kontakt dermatit denilen dermatit
+şeklinde kimyasal, biyolojik ve fiziksel temaslara bağlı olarak ortaya çıkmaktadır.
+Kontakt dermatitler tüm meslek hastalıkları içinde en sık görülen hastalık olup
+mesleki deri hastalıklarının % 90’ından fazlasını oluşturmaktadır. Birçok irritan
+kimyasal maddeler (asitler, deterjanlar, çözücüler, ilaçlar, boyalar), biyolojik
+maddeler (bitkiler, bakteriler, deniz ürünleri, meyveler, sebzeler), fiziksel etmenler
+(soğuk, sıcak, nem, radyasyon, basınç, sürtme) mesleki kontakt dermatite neden
+olabilmektedir. Hatta korunma yöntemlerinde bulunan lateks eldiven, maske ve
+değişik tipteki elbiseler bile kontakt dermatite neden olmaktadır [3].
+Son olarak cilt hastalıkları içinde en çok korkulanı ise mesleki cilt
+kanserleridir. Cildin yapısından dolayı nadir görülmesine rağmen özellikle işçi
+muayenelerinde dikkatle incelenmesi gereken bir konudur. Uzun süreli dışarda ve
+güneş altında çalışanlarda, baca temizleyicilerinde ve zirai ilaçlama yapan
+çalışanlarda görülebilmektedir. Bu iş kolları dışında asfalt işçileri, rafineri
+çalışanlarında ve yüksek radyasyon bulunan bölgelerde çalışanlarda da deri
+kanserleri gözlenebilir.
+Pnömokonyozlar ve Solunum Sisteminin Diğer Meslek
+Hastalıkları
+Çalışma ortamında en çok etkilenebilecek ve en çok dikkat edilmesi gereken
+iki organ bulunmaktadır. İlki cilt diğeri ise akciğerlerdir. Akciğerler solunum
+sisteminin en önemli organı olup geniş yüzey alanı ve direkt çevremizle ilişkili olan
+bir organdır. Bu nedenden dolayı işçi sağlığı konusunda en çok üzerine düşmemiz
+gereken organ olması gerektiği söylenebilir. İş ortamı ile ilgili olarak solunum
+sistemimiz aerosollar, irritan gazlar, havadaki toz partikülleri, mikroorganizmalar,
+buharlarla sürekli olarak temas hâlindedir. Bu değişik türdeki maddelerle temas
 
-İş sağlığı ve güvenliği açısından değerlendirmede yalnızca işveren değil aynı
-zamanda çalışanlarında biyolojik risk etmenlerinden korunmak için uyması
-gereken genel kurallar mevcuttur.
+Kontakt dermatitler
+tüm meslek hastalıkları
+içinde en sık görülen
+hastalık olup mesleki
+deri hastalıklarının da
+%90’ından fazlasını
+oluşturmaktadır.
 
-Şekil 5.2. İş yerlerinde biyolojik risk etmenlerine karşı işveren tarafından asılması
-gereken güvenlik işaretlerine örnekler. Kırmızı güvenlik işaretleri tehlikeleri ve yapılması
-yasak olanları gösterir. Mavi güvenlik işaretleri ise yapılması zorunlu olanları gösterir.
-Burada bazı Kişisel Koruyucu Donanım (KKD) örnekleri gösterilmiştir [3].
-Laboratuvar Uygulamalarında Uyulması Gereken Genel
-Kurallar
-Özellikle hastanelerin veya analiz merkezlerinin laboratuvarları biyolojik
-etmenler açısından yüksek riskli alanlardır. Bu nedenle bu ortamlarda çalışanların
-uyması gereken kurallar aşağıdaki gibi genellenebilir.
-• Pipetler kesinlikle ağızla kullanılmamalıdır, baloncuk oluşmamasına özen
-gösterilmelidir.
-• Pipetlerin yerine kesinlikle enjektör veya iğne kullanılmamalıdır.
-• Açılan tüp kapakları ve tüp ağzı alkollü bez ile örtülmelidir.
-• Biyolojik risk tehlikesi olan işlemler “Biyolojik Güvenlik Kabini”nde
-yapılmalıdır.
-• Santrifüj işlemleri yeterli havalandırmaya sahip bir odada yapılmalı ve bu
-işlemler sırasında kullanılan plastik tüplerin sağlam olmasına dikkat
-edilmelidir.
-• Enjeksiyon ve aspirasyon sırasında genel kural olarak iğnesi kilitlenen
-enjektör kullanılmalıdır. İğne enjektörden ayrılırken alkollü bezle tutulması
-gerekir.
+İş ortamı ile ilgili olarak
+solunum sistemimiz
+aerosollar, irritan
+gazlar, havadaki toz
+partikülleri,
+mikroorganizmalar,
+buharlarla sürekli
+olarak temas
+hâlindedir.
 
-Biyolojik risk etmenleri
-ile karşı karşıya olan iş
-yerleri Avrupa Birliği
-uyum süreci
-çerçevesinde Türkiye
-Cumhuriyeti Aile,
-Çalışma ve Sosyal
-Hizmetler Bakanlığının
-2013 tarihli Yönetmeliği
-doğrultusunda hareket
-etmelidir.
+Meslek Hastalıkları
 
-Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 12
-• İğne ve enjektörler kullanım sonrasında dar ağızlı sağlam özel kaplara
-atılmalıdır.
-• Kullanılan ve kontamine (kirlenmiş) olmuş tüm malzemeler atılmadan
-önce otoklavda steril edilmelidir.
-• Kontamine olmuş pipet ve cam malzemeler otoklavlanmadan önce
-dezenfektanlı kaplara konulmalıdır.
-• Laboratuvarlarda yiyecek , içecek ve sigara tüketilme mesi kesinlikle yasak
-olup, buna dikkat edilmelidir.
-• Laboratuvardan çıkarken eller mutlaka yıkanmalı, işlem sırasında
-kullanılan koruyucu materyal (gözlük, önlük vb.) laboratuvarda
-bırakılmalıdır.
-• Serum veya örnek saklanan buzdolabında kesinlikle gıda maddesi
-bulundurulmamalıdır.
-Bunun yanı sıra çalışanların işyerindeki biyolojik risk etmenlerini bilmesi ve
-bu etmenler için işveren ve yönetmelik tarafından belirlenen tüm önlemleri alması
-gerekmektedir. Bir iş yerinde biyolojik risk etmeninin varlığı uluslararası biyolojik
-tehlike işareti ile gösterilir (Sarı zemin üzerine siyah sembol) (Şekil 5.3).
+akciğerlerde farklı cevaplara neden olmaktadır. Bunlar arasında bazıları alerji,
+enfeksiyon, spazm, mukus artışı, fibrozis ve en önemlisi kanserdir. Bu maddelere
+akciğerin verdiği cevap saniyeler ile yıllar arasında değişmektedir. Ani gelişen
+spazm, öksürük ve nefes darlığından, aylar içinde gelişen pnömoni veya yıllar
+içinde gelişen anfizem, pnömokonyoz ve kanser akciğerde oluşan hasarın uzun bir
+zamana yayılabileceğini göstermektedir.
+Silikozis: Çapı 10 μm küçük solunabilen silika partiküllerin uzun süre
+solunması ile akciğer kronik ve dejeneratif değişiklikleri ile karakterize bir
+hastalıktır. Özellikle taş ve maden işçiliğinde, inşaat sektörlerinde, cam sanayisinde
+silika maruziyeti sık görülmektedir. Silikaların akciğerlerde yerleşik bulunan
+makrofajlar tarafından alınmasıyla makrofajlar akciğer dokusuna hasar veren
+çeşitli maddeler salgılarlar. Bu maddeler yıllar içinde akciğerlerde kalıcı, yıkıcı ve
+sonunda ölümle sonuçlanan hasarlar oluşturur.
+Siliko-Tüberkuloz: Silika partiküllerine maruz kalanlarda tüberküloz riski
+normal topluma göre yaklaşık 3-39 kat daha fazladır. Silikozis ile tüberküloz
+birlikteliği yıllardır bilinmektedir. Silika partiküllerine maruz kalmış akciğer hasara
+uğradıkça tüberkülozun yerleşmesi için zemin hazırlanmaktadır. Akciğerin
+savunmasının bozulması tüberküloz için fırsat oluşturmaktadır. Ayrıca silika
+partikülünün etrafında bulunan demir partikülleri de tüberküloz büyümesi için
+önemli bir faktördür. Silika ve tüberküloz birlikteliği ise akciğer hasarını (fibrozisi)
+oldukça hızlandırmakta ve kişilerinin ölümüne yol açmaktadır.
+Kömür işçisi pnömokonyozu: Kömür tozlarının yıllarca solunması (10 yıl ve
+daha uzun) sonucu akciğerlerde kalıcı hasar oluşmasıdır. Bu hastalığın görülmesi
+ortamdaki partikül miktarına bağlı olarak değişmektedir. Kömür pnömokonyozu
+aslında silikozise çok benzemektedir. Çünkü kömür partiküllerinde silika tozları da
+bulunmaktadır. Bu miktar arttıkça yaptığı hasarda artmaktadır. Silikozisde de
+olduğu gibi bu hastalarda tüberküloz riski oldukça yükselmiştir.
+Asbest: Normalde doğada bulunan ısıya dayanıklı silikatların genel adıdır.
+Özellikle ısıya dayanıklı olduklarından yalıtım işlerinde (inşaat, gemi, fırın, bina
+kaplaması) ve otomotiv sektöründe (fren balatalarında) sık olarak
+kullanılmaktadır. Akciğerlerde fibrotik etki gösteren asbest liflerinin bir kısmı ise
+kanserojen olmaktadır. Ayrıca sigara içimi asbestozis için önemli bir risk
+faktörüdür.
+Silikatoz (asbest dışındaki tozlar): Sanayinin birçok alanında kullanılıp
+tehlikeleri ortaya çıktıktan sonra asbeste alternatif olarak binlerce yeni madde
+sentezlenmiştir. Bunların tamamına asbest dışı tozlar denmektedir. Asbestte
+alternatif olmalarına rağmen kullanım sıklığı ve süresi arttıkça bu tozların da
+akciğerlere zararlı oldukları tespit edilmiştir. Cüruf, kaya, cam, kil gibi birçok
+malzemenin farklı oranlarda değişik kombinasyonlarıyla yüksek derecede ısıya
+maruz kalmasıyla elde edilen bu maddelerin genel adı sentetik mineral liflerdir.
+Asbest kadar toksik olmamalarına rağmen maruziyet süresi ve miktarı ve liflerin
+boyutu ile paralel olarak akciğer hasarına neden olabilmektedirler. Akciğerlerde
+uzun süre ve yüksek oranda alınması birçok akciğer hastalığına neden olmakla
+beraber temel patofizyolojik mekanizması silikozisle benzerdir.
+
+Silika partiküllerine
+maruz kalanlarda
+tüberküloz riski normal
+topluma göre yaklaşık
+3-39 kat daha fazladır.
 
 
-Şekil 5.3. Biyolojik tehlike işareti [1].
+Meslek Hastalıkları
 
-Çalışanların Sağlık Gözetiminde Dikkat Edilmesi Gereken
-Hususlar
-İş yerlerinde risk faktörlerinin yok edilmesi veya en aza indirgenmesi için
-gerekli önlemler alınmış olsa bile bazen yapılan işin zorunlu gerekliliği olarak bazen
-de beklenmedik kaza veya olaylar sonucunda çalışanların biyolojik risk
-etmenlerine maruz kalması ve kontaminasyonu söz konusu olabilir. Bu
-durumlarda iş yeri hekimi ve işveren tarafından bazı uygulamaların yapılması
-gerekmektedir.
-İş yeri hekimi biyolojik etmenlere maruz kalan çalışanların sağlıklarının
-gözetiminden sorumludur. Bu bağlamda iş yerindeki biyolojik risk faktörlerini
-bilmeli, çalışanların sağlık durumlarını ve maruziyet koşullarını takip etmelidir. İş
-yeri hekimi çalışanların sağlık gözetimini
-yaparken iş yeri hekimliğinin uygulama ve
-prensiplerine uygun olarak davranmalı ve aşağıdaki önlemleri almalıdır:
-
-Tüm iş yerleri için
-biyolojik risk
-etmenlerinden
-korunmanın en temel
-kuralı tüm çalışanların
-kişisel hijyen kurallarına
-uyması ve iş yerinin bu
-kuralların uygulanması
-için gerekli ortam ve
-malzemeyi temin
-etmesidir.
-
-Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 13
-• Çalışanların hem kişisel sağlık durumlarını değerlendirmeli hem de tıbbi ve
-mesleki öz ge çmişleri ile ilgili kayıtları tutmalıdır.
-• Çalışanlarda biyolojik etkenlerin oluşturduğu erken ve geri dönüşlü etkileri
-saptayıp biyolojik olarak analizini takip etmelidir.
-• İş yeri hekimi gerek iş yerinin çalışma sırasında karşılaşabileceği risk
-faktörleri hakkında gerekse uygulanması gereken önlemler açısından
-bilgiler güncellendikçe her çalışan için güncel konu ile ilgili daha ileri
-testler yapılmasına karar verilebilir
+Sideroz: Özellikle demir ve demir tozlarına maruziyete bağlı oluşan fibrozise
+ile sonuçlanmayan bening (iyi huylu) akciğer hastalığına neden olan bir mesleki
+akciğer hastalığıdır.
+Sert metal tozları ile meydana gelen meslek hastalıkları: Sert metaller;
+metallerin yüksek ısı ile daha sert hâle getirilme işlemidir. Bu sert metaller
+çalışanların solunum yolları ile akciğerlerinde birikebilmektedirler. Bunlar diğer
+metal veya silika gibi makrofaj uyarımı değil immün sistemin diğer hücrelerini
+uyararak immün akciğer hastalıklarına neden olmaktadırlar. Alveolit, astım gibi
+immün kökenli hastalıklardır.
+Alüminyuma bağlı mesleki akciğer hastalıkları: Alüminyum doğada serbest
+hâlde bulunmaz ve akciğerlerde yaptığı hasarın fizyopatolojisi açıklanamamıştır.
+Potroom astımından kronik bronşit, pulmoner fibrozis, granülomatöz akciğer
+hastalığı, akut trakeobronşit, pnömoni ve pulmoner ödeme kadar çok geniş bir
+akciğer hastalığı yapma yeteneği bulunmaktadır. Akciğer ve mesane kanseri ile
+ilişkisi iyi bilinmekle beraber lösemi, pankreas, böbrek ve beyin kanseri sıklığını da
+artırabildiği söylenmektedir. Özellikle uzun süre alüminyuma maruz kalmış
+çalışanlarda santral sinir sistemi hastalıklarının görülme sıklığı artmıştır.
+Mesleki bronşial astma: Astım sadece iş kollarında değil normal
+popülasyonda da sık görülen bir hastalıktır. Bu nedenden dolayı mesleki astım
+tanısı koymak oldukça önemli bir hâle gelmiştir. Astıma yatkın kişilerde mesleğin
+ortaya çıkardığı astımdan bahsedilirken reaktif irritan hava yolu hastalığı dediğimiz
+zehirli gazlarla karşılaşıldığında 24 saat içinde ortaya çıkan 6 aya kadar devam
+eden astım semptomları bulunmaktadır. Sanayinin ilerlemesi ile astımı tetikleyen
+yüzlerce yeni irritan madde tespit edilmiş olup her geçen gün bunlara yenileri
+eklenmektedir. Tüm astım tanısı almış hastaların % 10-15’ i mesleki astımdır.
+Mesleki astım birçok iş kolunda olabilmesine rağmen tarım, veteriner, hayvan
+çiftlikleri, kozmetik, deterjan endüstrisi, lehimciler, orman çalışanlarında çok daha
+sık görülmektedir. Astıma yol açan maddeler arasında ise bitkisel ve hayvansal
+ürünler, doğal maddeler, bakteri, virüs ve mantarlar, sentetik maddeler ve gazlar
+bulunmaktadır. Ortaya çıkan astım immünolojik veya non-immünolojik şekilde
+olabilir. İmmünolojik olan mesleki astım türünde astımın oluşması için belirli bir
+süre geçmesi gerekmektedir. Non-immünolojik astımda irritan gazların solunması
+ile ortaya çıkan 24 saatte astım semptomları veren astım türüdür.
+Mesleki Bulaşıcı Hastalıklar
+Çalışanın iş ortamı kaynaklı mikroorganizmalar sonucu oluşan enfeksiyon
+hastalıklarıdır. Bu mikroorganizmalar; bakteri, virüs, parazit veya mantar olabilir.
+Bazı iş grupları enfeksiyon hastalıkları için oldukça risklidir. Sağlık çalışanları,
+veterinerler, mezbaha çalışanları, kanalizasyon işçileri özellikle risk grubunda olup
+bu gruplarda çalışanların bu hastalıklar konusunda eğitimi ve korunması özellikle
+önem taşımaktadır. En sık görülen ve risk taşıyan bazı enfeksiyon hastalıkları
+aşağıda açıklanmıştır.
 
 
 
+Astım sadece iş
+kollarında değil normal
+popülasyonda da sık
+görülen bir hastalıktır.
+Tüm astım tanısı almış
+hastaların % 10-15’ i
+mesleki astımdır.
+
+
+Tifo etkeni özellikle
+vücutta uzun süre kalıp
+kişileri taşıyıcı
+yaptığından taşıyıcılar
+gıda sektöründe
+çalıştırılmamalıdır.
+
+
+Meslek Hastalıkları
+
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 14
+Bakteri Kaynaklı Mesleki Bulaşıcı Hastalıklar
+Tüberküloz (Tbc): Etkeni Mikobakterium tüberkülozis’dir. Bu
+mikroorganizma havada asılı şekilde kalabilmekte olup asıl bulaşma şekli solunum
+yoludur. Sağlık çalışanları en önemli risk grubudur. Bu hastalıktan en önemli
+korunma şekli aşılama ve çevresel koşulların iyileştirmesidir. Özellikle silika
+maruziyeti olanlar da tüberküloz açısından korunmalıdır.
+Lejyonellozis: 20’den fazla hastalık yapan lejyonella türü tanımlanmıştır.
+Gram negatif bir bakteridir. Özellikle durgun beklemiş göllerde, havuzlarda ve
+çamur birikintilerinde görülür. Havalandırma sistemleri ve bunlarla ilişkili
+tesisatlarda yüksek yoğunlukta çoğalma yeteneği bulunmakta olup bakteri
+inhalasyonla alınır. Olguların çoğu L. Pneumophila’ya bağlıdır. Aitipik pnömoni
+yapmaktadır. Bu enfeksiyon hastalığı özellikle yaşlılar, sigara içenler ve altta yatan
+akciğer hastalığı olanlar, kapalı binalarda çalışanlar daha ağır geçmekte olup
+ölümcül komplikasyonlara neden olabilmektedir.
+Tifo: Sadece insanda görülür. Etkeni Salmonella typhi olup sadece insanda
+görülen birçok farklı klinik belirti verebilen fekal-oral yolla bulaşan bir
+mikroorganizmadır. Bulaşma özelliklerinden dolayı kanalizasyon işçileri yüksek
+riskli gruptur. Bu bakterinin en önemli özelliği ise vücutta uzun süre kalıp kişileri
+taşıyıcı yapabilmesidir. Bu nedenden dolayı taşıyıcılar gıda sektöründe
+çalıştırılmamalıdır.
+Leptospirozis: Etkeni hayvanlardan insana bulaşabilen bir spiroket olan
+Leptospira interrogans’tır. Kemirgenler, kedi, köpek ve domuz başlıca
+konakçılarıdır. Bulaşma şekli ya konakçılarla direkt temas ya da bu konakçıların
+idrar ile kontamine yüzeylere temasıdır. Basit bir gribal enfeksiyondan ölümcül
+olabilen hepatorenal sendroma kadar çok farklı klinikle hastalar başvurabilir.
+Çiftçiler, balıkçılar, mezbaha işçileri, veterinerler, madenciler, kanalizasyon işçileri
+yüksek riskli gruptur.
+Şarbon (Antraks): Etkeni hayvanlardan insana bulaşabilen Bacillus
+anthracis’dir. Rezervuarı koyun, keçi ve sığır gibi hayvanlardır. Çalışanlar bu
+enfeksiyonu genellikle yaralı ve hasarlı ciltten alırlar. Yalnız bu enfeksiyonun
+ağızdan ve solunumla da alınabildiğini ihmal etmemek gerekir. Enfeksiyon lokal
+küçük bir papül olarak gelişerek tedavisiz vakalarda bakteriyemi, menenjit ve
+ölüme kadar ilerler. Çiftçiler, veterinerler, deri ve yün işçileri risk altındadır.
+Tetanoz: Etkeni Clostridium tetani’dir. Toprakta çok uzun süre canlılığını
+korur. Bakteri bütünlüğü bozulmuş deri ve mukozalar yardımıyla bulaşır.
+Oluşturduğu klinik tablo baş ağrısından başlayıp kasılmayla devam eden sonunda
+ise beyin kanaması ve akciğer komplikasyonları ile ölümle sonuçlanabilen bir
+hastalıktır. Mesleki enfeksiyon hastalıklarından korunmada başta vücuttaki açık
+yaralar iyi kontrol edilmeli ve tetanoz aşısı yaptırılmalıdır.
+Viral Kaynaklı mesleki bulaşıcı hastalıklar
+Hepatit A: Özellikle sağlık personeli, kreş, otel, anaokulu gibi hizmet
+sektöründe çalışan gruplar risk altındadır. Aşılamayla önlenebilir.
+
+Hepatit C virüsünün en
+korkulan tarafı siroza ve
+karaciğer kanserine
+neden olabilmesidir.
+Kan ve diğer tüm vücut
+sıvılarına temasla
+bulaşabilir.
+
+
+Meslek Hastalıkları
+
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 15
+Hepatit B: Etken Hepatit B virüsüdür(HBV). Tek kaynağı enfekte insanlardır.
+Hastalık genellikle kendini sınırlamakla beraber bazı vakalarda kronikleşebilir.
+Genel klinik tablosu hepatit olup aşılama ile korunulabilir. Kronikleşen vakalarda
+siroz ve hepatosellüler kanser görülebilir.
+Hepatit C: Etken Hepatit C virüsü (HCV)dür. En korkulan tarafı siroza ve
+karaciğer kanserine neden olabilmesidir. Kan ve diğer tüm vücut sıvılarına temasla
+bulaşabilir. Olguların çoğu virüsü damar yoluyla veya cinsel temasla alır. Aşısı
+yoktur.
+Parazit Kaynaklı Mesleki Bulaşıcı Hastalıklar
+Şistozomazis: Su salyangozundan bulaşan bir paraziter hastalıktır. Larvalar
+cilt yoluyla alınır. Granülamatöz inflamasyona neden olur. Çiftçiler risk altındadır.
+Fiziki Etmenlerle Olan Meslek Hastalıkları
+İyonlayıcı ışınlarla olan meslek hastalıkları: İyonlayıcı radyasyon herhangi bir
+maddeyle karşılaşınca iyon salınıma neden olan bir radyasyon formu olup
+çevremizde, doğada ve kozmik ışınlar olarak havada bulunmaktadır. İyonlayıcı
+radyasyon özellikle sağlık alanında tanı ve tedavide, nükleer reaktörler ve
+laboratuvar ekipmanlarında kullanılmaktadırlar. Bu radyasyon türüne maruz kalan
+insanlarda serbest oksijen radikal üretimi artmakta, mitokondri ve lizozom yapıları
+bozulmaktadır. Akut etkileri hızlı çoğalan hücrelerimizde çok daha dramatikken
+(kemik iliği hücreleri, barsak hücreleri, cilt) kronik olarak DNA yapısını bozarak
+yıllar sonra ortaya çıkacak başta kanser olmak üzere birçok hastalığa neden
+olmaktadırlar.
+Enfraruj ışınları ile katarakt: Görülmeyen fakat birçok iş kolunda meydana
+çıkan veya kullanılan kızılötesi başta olmak üzere UV B, UV A ve mikrodalga
+ışınları; zamanla gözü etkileyerek katarakta neden olmaktadırlar. Bu ışınların
+birçoğu gözle görülmese de lens tarafından absorbe edilerek lensin elastik yapısını
+bozmaktadırlar. Kaynak sektöründe çalışanlar, cam işçiliğinde çalışanlar, yüksek
+ısılı fırınlarda çalışanların bu riski özellikle çok yüksektir. Görme yeteneği ağrısız ve
+yavaş şekilde kaybolurken yaşlılığa bağlı oluşan katarakttan farklı olarak lensin
+orta kısmında sertleşme ve soluklaşma çok karakteristiktir.
+Gürültü sonucu işitme kaybı: Sanayide makineleşmenin artması, çok farklı
+makinaların kullanıma girmesi gürültü düzeyini de artırmıştır. Uzun ve sürekli
+gürültüye maruz kalmak kulak içindeki yapıları etkileyerek (mikrotravma) işitme
+kayıplarına neden olmaktadır. Genellikle ses düzeyinin 100 desibelden yüksek
+olması durumunda oluşan işitme kaybı sensorinöral tipte olup geçici veya kalıcı
+olabilmektedir.
+Hava basıncındaki değişiklerle olan meslek hastalıkları: Normal hava basıncı
+deniz seviyesindeki hava basıncı olup yaşamamız için gerekli bir basınçtır. Bazı
+ortam ve şartlarda bu basınç artmaktadır. Deniz seviyesinin altında her 10
+metrede 1 atmosfer basınç artmakta olup dalgıçlar, duba işçiliği gibi alanlarda
+çalışanlarda yüksek basınca maruziyet artmaktadır. Yüksek basınca maruz
+kalındığında vücudumuzda bulunan bazı gazlar eriyik hâline geçerek kana
+
+Uzun ve sürekli
+gürültüye maruz
+kalmak kulak içindeki
+yapıları etkileyerek
+işitme kayıplarına
+neden olmaktadır.
+
+
+Meslek Hastalıkları
+
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 16
+geçmekte birçok organda tıkanıklığa neden olmaktadır. Buna dekompresyon
+hastalığı (vurgun) denmektedir. Barotravmaya (basınç travmasına) maruziyette diş
+ağrıları, timpan zar hasarı, ani işitme kaybı, burun kanması, yüzde ödem, gaz
+embolisi, pnömotoraks, kalp krizi gibi birçok hastalığa neden olabilir.
+Dekompreson hastalığında ise beyin hasarı, bilinç bulanıklığı, baş dönmesi,
+nistagmus ve ani boğulma hissi semptomları bulunmaktadır.
+Titreşim sonucu kemik-eklem zararları ve anjionörotik bozukluklar: Mekanik
+titreşim, merkezi bir sabit konumun salınım hareketleri olarak tanımlanabilir.
+Herhangi bir nesnenin titreşimi sırasında çalışanın teması bu salınım hareketlerinin
+çalışanın bedenini etkilemesine neden olur. Bu etkileşim el-kol titreşimi olarak
+lokal olabileceği gibi tüm vücudu da etkileyebilmektedir. Titreşimlerle oluşabilecek
+hasar; bireysel duyarlılık, titreşimin şiddeti, maruziyet sıklığı, süresi (yıl) ve
+kavrama gücü gibi çeşitli faktörlere bağlıdır. Oluşan titreşimin el ve parmaklara
+geçmesi yumuşak doku hasarından sinirsel hasara kadar birçok bozukluğa neden
+olabilir. Ayrıca kemik ve eklem hasarlarına (osteoartroz, osteofit, karpal tünel
+sendromu), kas hastalıklarına (el ve parmaklarda ağrı ve kas güçsüzlüğü, elle
+kavrama yeteneğinin azalması, tendinit, tenosinovit) görme bozukluğu, iç kulak
+hasarına bağlı olarak denge bozukluğu gibi birçok soruna neden olur. Semptomlar
+aylar, yıllar içinde gelişir.
+Sürekli lokal baskı sonucu oluşan meslek hastalıkları: Bir veya birkaç kas-
+eklem grubunu aşırı zorlayan, biyomekanik kapasitesini aşan ve travma oluşturan
+hareketler sonucunda eklem, kas, tendon ve diğer yumuşak dokularda bozulma,
+fonksiyon kaybı ve ağrı ile seyreden sendromlar bu grubu oluştururlar. Bunlara
+uygunsuz postur, ağır efor, statik postur, tekrarlayan hareketler ve vibrasyonlar
+neden olabilmektedir. Böyle fiziksel durumlara sürekli maruz kalan çalışanların
+dokularında inflamasyon, hareket kısıtlanması ve birçok tanımlanmış spesifik
+hastalıklar söz konusu olur. Etkilenme en çok el, kol ve omuz bölgesinde olup en
+çok görülenleri; rotator kılıf sendromu, kireçlenmeler, karpal tünel sendromu,
+omuz dirsek tendiniti, tenosinoviti ve tenisçi dirseğidir.
+Maden işçileri nistagmusu: Eski bir madenci hastalığı olan düşük ışıklı
+ortamlarda çalışanlarda görülen göz kürelerinin kontrol edilemeyen salınımı ile
+karakterize bir hastalıktır. Gözün odaklanma yeteneği bozulmuştur. Kişilerde ışığa
+duyarlılık veya tahammülsüzlük artmıştır. Günümüzde bu hastalık oldukça
+azalmıştır.
+
+Maden işçileri
+nistagmusu düşük ışıklı
+ortamlarda çalışanlarda
+görülen göz kürelerinin
+kontrol edilemeyen
+salınımı ile karakterize
+bir hastalıktır.
+
+Meslek Hastalıkları
+
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 17
 
 
 
 Örnek
-•Son zamanlarda ülkemizde görülme sıklığı artan en önemli ve
-tehlikeli biyolojik risk etmenlerinden birisi kene ısırması sonrası
-hastalara bulaşan ve çok hızlı yayılan Kırım-Kongo kanamalı
-ateşidir .
-•Bu hastalığa AÇSH Bakanlığınnın risk gruplandırmasına göre grup 4
-biyolojik risk etmenleriarasında bulunan Crieman-Congo
-hemorrhagic fever virusünün bulaşması sonucu hayatı tehdit edici
-enfeksiyon oluşur.
-•Hastane laboratuvarı çalışanlarının gerekli önlemleri almadan
-hasta materyaline dokunması sonucu ölüm vakası bildirilmiştir.
+•Silikozis madenlerde, dökümhanelerde, tünel ve yol yapımı işlerinde,
+seramik gibi işkollarında çalışan işçilerin silika tozuna maruz kalmasıyla
+ortaya çıkan akciğerde fibrozisle sonuçlanan bir hastalıktır.
+•Ülkemizde ve dünyada silikozis vakaları özellikle kotların beyazlatılması
+için ortaya çıkan iş kolu ile artmaya başlamıştır. 2005 yılında tanımı
+yapılmış artan vakalar sonucu 2010 yılında kot taşlamasında silika
+benzeri maddelerin kullanılması yasaklanmıştır.
 Bireysel Etkinlik
-•Üniversite öğreniminde fen, sosyal ve sağlık bilimleri eğitimi
-sırasında karşılaşılabilecek biyolojik risk etmenleri neler
-olabilir? Araştırınız.
-•Öğrencilerin eğitimleri sırasında karşılaşabilecekleri biyolojik
-risk etmenlerinden korunması için ne tür önlemler
-alınmalıdır? Tartışınız.
+•Çevrenizde bulunan iş yerlerinde veya ailenizde çalışan fertlerin iş
+kollarında oluşabilecek meslek hastalıkları neler olabilir? Araştırınız.
+•Özelllikle gelecekte hangi meslek hastalıkları ile daha sık
+karşılaşabileceğiz? Tartışınız.
+•Meslek hastalıklarının önlenmesinde sizler nasıl bir öneride
+bulunabilirsiniz?
 
-İş yeri hekimi biyolojik
-etmenlere maruz kalan
-çalışanların sağlıklarının
-gözetiminden
-sorumludur.
+Meslek Hastalıkları
 
-Biyolojik Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 14
-
-
-Özet
-•Biyolojik risk etmenleri yaşayan organizmalar ve/veya bu organizmaların
-(genetik olarak değiştirilmiş olanlar da dâhil) ürünlerinden oluşur. Biyolojik
-risk etmenleri virüsler, bakteriler, mantarlar ve bunların metabolizmaları
-sonucu ortaya çıkardıkları ürünlerin yanı sıra vücutta iç ve dış parazit olarak
-yerleşebilen asalaklar ile bitkileri de kapsar. Biyolojik risk etmenleri
-enfeksiyon yapma risk düzeyine göre 4 risk grubunda sınıflandırılabilir.
-Çalışma ortamlarında biyolojik risk etmenleri bazen çalışma düzeninin
-gerekliliği olarak mecburen bulunurken çoğu zaman bunlara maruz kalma
-kazara meydana gelmektedir.
-•Bir çalışma ortamında yaşayan veya ölü insan veya hayvanların bulunması,
-gıda, bitki, toprak veya su atıklarının mevcudiyeti biyolojik risk
-değerlendirmesi yapılmasını zorunlu kılar. Bu nedenle bu tür materyallerle
-temas oranı yüksek olan tarım, gıda endüstrisi, sağlık hizmetleri ve sosyal
-hizmetler, veteriner hizmetleri, katı ve sıvı atık yönetimi, cenaze hizmetleri
-gibi çalışma alanları biyolojik risk etmenlerinin yüksek olduğu iş gruplarıdır.
-Türkiye’de biyolojik risk etmenleriyle karşılaşma riskine göre yapılan
-değerlendirmelerde özellikle sağlık çalışanları, laboratuvar çalışanları ve
-tarım işçileri üzerine yoğunlaşılmıştır.
-•İş yerlerinde karşılaşılabilecek risklerin belirlenmesi ve uygun şekilde
-değerlendirilmesi güvenlik sınıflandırmasına göre hem işverenin hem de
-çalışanların uygun önlemleri alabilmesi açısından oldukça önemlidir. Avrupa
-Birliği normlarına uygun olarak biyolojik risk etmenlerinin belirlenmesi ve
-değerlendirilmesi yapılmalıdır. Bu değerlendirme sonucunda biyolojik risk
-etmenleri ile sıklıkla karşılaşan işyerlerinde işveren, yapılan işinözelliğine
-göre zararlıbiyolojik etkenleri kullanmaktan kaçınmakla ve mevcut
-bilgiler ışığında, biyolojik etkenleri kullanımşartlarında durumuna uygun
-olarakçalışanların sağlığıiçin tehlikeli olmayan veya daha az tehlikeli olanlar
-ile değiştirmekle yükümlüdür. İş yerlerinde karşılaşılabilecek biyolojik risk
-etmenlerine karşı hem işverenin hem de çalışanların alması gereken
-önlemler mevcuttur. İşveren başta işe giriş ve aralıklı kontrolmuayeneleri
-olmak üzere periyodik taramalarla duyarlı kişileri saptamalıdır. Tüm çalışan
-personelin eğitimi hem işe başlarken hem meslek içi eğitim programları ile
-yapılmalıdır. İşçilerin çalışırken uyacakları hareket tarzlarının belirlenmesi ve
-çalışanlara bildirilmesi sağlanmasıdır. Çalışma ortamının (hastane,
-laboratuvar, klinikler, hayvan barınağı, kesimevi, paketlemeatölyeleri, kişisel
-bakım merkezleri, atık arıtma atölyeleri vb.) mimari yapılarınınişlevlerine
-uygunluğu sağlanmalıdır. Uygun yalıtım ve dezenfeksiyon önlemleri alınarak
-enfeksiyon zinciri engellenmelidir. Çalışanlar için aktif bağışıklama
-yapılmalıdır.
-•Çalışanlar, biyolojik etkenlerin bulaşma riski bulunan çalışma alanlarında
-herhangi bir şeyyiyip içmemelidir. Tüm çalışanlar uygun koruyucu giysi veya
-ve ekipmanı kullanmalıdır. Gereklikoruyucu ekipmanlar belirlenmiş bir yerde
-uygun olarak muhafaza edilmeli, her kullanımdansonra ve kullanımdan önce
-kontrol edilip temizlenmelidir. Biyolojik etkenlerle kirlenmişolabilecek iş
-elbiseleri ve koruyucu ekipman, çalışma alanından ayrılmadan önce
-çıkarılmalıve kirlenmiş bu elbiselerin vekoruyucu ekipmanın
-dekontaminasyonu ve temizliği sağlanmalı, gerektiğinde imhaedilmelidir.
-•Bütün bu uygulamalar yapılırken Aile, Çalışma ve Sosyal Hizmetler
-Bakanlığının Biyolojik Etkenlere Maruziyet RisklerininÖnlenmesi Hakkında
-Yönetmeliği esas alınmalıdır.
-
-Biyolojik Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 15
-DEĞERLENDİRME SORULARI
-1. Aşağıdakilerden hangisi biyolojik risk etmenidir?
-a) Gürültü
-b) Tetanoz
-c) Alkol
-d) Enjektör
-e) Kloroform
-
-2. Aşağıdakilerden hangisi biyolojik risk etmenlerinde Grup 1 Risk Düzeyi’nin
-tanımıdır?
-a) İnsanda hastalığa neden olabilen, ancak topluma yayılma
-olasılığı olmayan etkenler
-b) İnsanda ağır hastalıklara neden olmayan ancak çevresel kirliliğe
-neden olabileceği için topluma yayılma riski olan biyolojik etkenler
-c) İnsanda hastalığa yol açma ihtimali bulunmayan biyolojik etkenler
-d) İnsan da ağır hastalıklara neden olan ve tedavi yöntemi bulunmayan
-biyolojik etkenler
-e) İnsanda ağır hastalıklara neden olan ancak tedavi edilebilen biyolojik
-etkenler
-
-3. Biyolojik risk etmenlerinin belirlenmesi ve değerlendirilmesi ile ilgili
-aşağıdakilerden hangisi yanlıştır?
-a) Çalışma ortamındaki insan sağlığına zararlı olan veya olabilecek tüm
-biyolojik etkenlerin sınıflandırılması gereklidir.
-b) Biyolojik etkenlere çalışanın maruziyetinin türü, düzeyi ve süresi
-belirlenmelidir.
-c) Çalışanlar, işlerinin sonucu olarak ortaya çıkabilecek travmatik
-hastalıklar hakkında bilgi sahibi olmalıdır.
-d) Risk değerlendirmesi düzenli aralıklarla yenilenmelidir.
-e) Çalışanlar, işlerinin sonucu olarak ortaya çıkabilecek enfektif
-hastalıklarla ilgili bilgi sahibi olmalıdır.
-
-4. Enfeksiyon riskinin en fazla olduğu çalışma alanı aşağıdakilerden
-hangisidir?
-a) Tarım
-b) Gıda
-c) Madencilik
-d) Sağlık
-e) İnşaat
-
-
-
-
-
-Biyolojik Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 16
-5. Aşağıdakilerden hangisi enfeksiyon zincirinde yer almaz ?
-a) Enfeksiyon etkeni
-b) Enfeksiyon kaynağı
-c) Enfeksiyon taşıyıcısı
-d) Enfeksiyon tedavisi
-e) Enfeksiyon konakçısı
-
-6. Aşağıdakilerden hangisi biyolojik riske karşı işverenin yapması gereken
-yükümlülüklerdendir ?
-a) Biyolojik risk etmenini tehlikeli olmayan veya daha az tehlikeli
-olanlarla değiştirir.
-b) İşveren grup 2, 3 ve 4 biyolojik etkenlerle ilk kez çalışmasından 10 gün
-önce durumu Bakanlık’ a bildirir.
-c) İşverenler tüm risk gruplarındaki biyolojik etkenlere maruz kalanların
-listesini tüm detayları ile kayıt altına alır.
-d) Biyolojik riske maruz kalan işçilerle ilgili tüm kayıtları maruziyet sona
-erdikten sonra en az 40 yıl saklar.
-e) İşveren risk değerlendirmesi sonuçlarını, hangi işlerde ne kadar
-çalışanın riske maruz kaldığını ve buna karşı alınan önlemleri gizli
-tutar.
-
-7. Aşağıdakilerden hangisi biyolojik riske karşı çalışanın yapması gereken
-yükümlülüklerden biri kesinlikle değildir?
-a) Biyolojik risk tehlikesi olan işlemler “Biyolojik Güvenlik Kabini”nde
-yapılmalıdır.
-b) Laboratuvardan çıkarken eller mutlaka yıkanmalıdır.
-c) İşlem sırasında kullanılan ve kontamine olmuş koruyucu materyali
-(gözlük, önlük vb.) evine götürerek yıkamalıdır.
-d) İğne ve enjektörleri kullanım sonrasında dar ağızlı sağlam özel kaplara
-atmalıdır.
-e) Laboratuvarlarda yiyecek, içecek, sigara vb. tüketmemelidir.
-
-8. Aşağıdakilerden hangisi Grup 4 biyolojik risk etmenlerinin özelliklerinden
-biri değildir?
-a) Topluma yayılma olasılığı yüksek olma
-b) Tedavi şansı yüksek olma
-c) Çalışanlara zarar verme ihtimali yüksek olma
-d) İnsanlara bulaşma ihtimali yüksek olma
-e) Korunma şansı düşük olma
-
-
-
-
-
-Biyolojik Risk Etmenleri
-
-Atatürk Üniversitesi Açıköğretim Fakültesi 17
-9. Grup 4 biyolojik risk etmenleri içinde en çok aşağıdakilerden hangisi
-bulunur?
-a) Bakteriler
-b) Mantarlar
-c) Parazitler
-d) Biyoteknolojik ürünler
-e) Virüsler
-
-10. Aşağıdakilerden hangisi iş yeri hekiminin biyolojik risk faktörlerine karşı
-yapması gerekenlerden biri değildir?
-a) İş yeri hekimi çalışanların sağlık durumlarını ve biyolojik etkenlere
-maruziyet koşullarını takip eder.
-b) Çalışanların hem kişisel sağlık durumlarını değerlendirir hem de tıbbi
-ve mesleki özgeçmişleri ile ilgili kayıtları tutar.
-c) Çalışanlarda biyolojik etkenlerin oluşturduğu erken ve geri dönüşlü
-etkileri saptayıp biyolojik olarak analizini takip eder.
-d) Çalışma sırasında karşılaşabileceği risk faktörleri ve uygulanması
-gereken önlemler hakkında bilgiler güncellendikçe daha ileri testler
-yapılmasını sağlar.
-e) Biyolojik risk etmenlerini çalışanların sağlığı için tehlikeli olmayan
-veya daha az tehlikeli olanlarla değiştirir.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Cevap Anahtarı
-1.b, 2.c, 3.c, 4.d, 5.d, 6.a, 7.c, 8.b, 9.e, 10.e
-
-Biyolojik Risk Etmenleri
 
 Atatürk Üniversitesi Açıköğretim Fakültesi 18
+
+Özet
+•İnsanoğlu son yüzyılda baş döndürücü bir şekilde teknolojik ve sosyal gelişim
+içine girmiştir. Bu gelişmeye paralel olarak her geçen gün yeni ürünler ve
+yeni iş alanları ortaya çıkmıştır. Bu artan iş kollarından dolayı işe bağlı
+hastalıklarda önemli derecede artış olmuştur. İş yeri güvenliği, işçi sağlığı ve
+korunma yöntemleri daha da önemli bir hâle gelmiştir. Gelişen sanayi ile
+birlikte çalışanların iş alanları her geçen gün artmakla beraber
+karşılaşabilecekleri fiziksel ve psikolojik mesleki risk faktörleri de
+artmaktadır. Artık çalışma alanlarında 100.000’den fazla kimyasal madde
+bulunmakta bunların 700’den fazlası ise kanserojendir. Mesleki biyolojik risk
+etmenlerinin sayısı şu an itibariyle 200’den fazla olmakla birlikte her geçen
+gün bu sayı artmaktadır. Biyolojik ve kimyasal risklerden farklı olarak ise
+20’den fazla ergonomik sorun çalışanların sağlığını tehdit etmektedir. Tüm
+bu risk etmenlerini bir araya koyduğumuzda artık karşımıza meslek
+hastalıkları çıkmaktadır.
+•Meslek hastalıklarının tanımı ve ayırıcı özelliklerinin bilinmesi oldukça
+önemlidir. Çünkü meslek hastalıkları ile işle ilgili hastalıklar karıştırılmaktadır.
+İşle ilgili hastalıklar meslek hastalıkları gibi direkt iş ortamına bağlı olmayıp
+karışık multi-etyolojik nedenlere sahiptir. Bu iki konunun kişisel ve sağlık
+probleminin yanında aynı zamanda da hukuksal boyutu da bulunmaktadır.
+Son yıllarda mahkemelerde birçok dava dosyası bulunmakta olup meslek
+hastalıkları ve işle ilgili hastalıklar arasında kavram karmaşası yaşanmaktadır.
+Tüm bu sebeplerden dolayı meslek hastalıklarının sınıflandırılması ve ayırıcı
+tanımının yapılması hem işveren hem de çalışan için elzemdir.
+•Meslek hastalıkları, iş yeri çevresinde bulunan fiziksel, biyolojik, kimyasal ve
+psikolojik faktörlerin etkisi ile meydana gelen hastalıkların ortak adıdır.
+Uluslararası kabul edilmiş tanıma göre meslek hastalıkları: Zararlı bir etkenle
+bundan etkilenen insan vücudu arasında, çalışılan işe özgü bir neden-sonuç,
+etki-tepki ilişkisinin ortaya konabildiği hastalıklar grubu olarak
+tanımlanmaktadır. Meslek hastalıkları etken ve çalışanın ilk temasından 1
+hafta ile 30 yıl sonra ortaya çıkabilmektedir. Meslek hastalıklarının etiyolojisi
+bilinmelidir ve mutlak olarak çalışılan ortamla ilişki ispatlanmalıdır. Oluşan
+hastalıklar çalışılan işle spesifik veya güçlü ilişki gösterirler ve çoğu zaman
+nedensel faktör tektir. Kendilerine özgü klinik tabloları vardır. Aynı meslekte
+çalışanlarda görülme sıklığı daha yüksektir, yani mesleki kümelenme
+gösterirler. Etken veya metabolitlerinin biyolojik ortamlarda saptanması
+olasıdır. Deneysel olarak oluşturulabilirler.
+•Meslek hastalıklarının sınıflandırılmasında birçok farklı yol izlenebilmekte
+olup ülkemizde kimyasal etmenlerle, cilt hastalıkları, pnomokonyozlar ve
+solunum sistemi, bulaşıcı ve de fiziksel etmenlerle oluşan meslek hastalıkları
+olarak beş grup olarak sınıflandırılmışlardır.
+•Bu hastalıkların ayırıcı tanılarının bilinmesi, risk faktörlerinin tespiti ve daha
+önemli korunma yöntemlerinin uygulanması ve kontrolü oldukça önem arz
+etmektedir. Tanısı koyulmuş bir meslek hastalığına yakalanmış olan bir
+çalışanın derhal iş yeri ortamından uzaklaştırılması gerekir. Tedavide o
+hastalığa yönelik tıbbi müdahaleler yapılırken eğer mümkünse kimyasal,
+biyolojik veya fiziksel ajanların vücuttan atılımını arttıracak veya etkisini
+azaltacak uygun yöntemler kullanılmalıdır. Meslek hastalıkları önlenebilen
+hastalıklar olup korunma yöntemlerinin bilinmesi gerekmektedir.
+•Meslek hastalıklarından korunma yöntemleri Sağlıkla İlişkili Yöntemler (tıbbi
+resmi rutin muayeneler; tıbbi arşiv için gerekli ise biyokimyasal, fiziksel ve
+radyolojik incelemeler; sağlıklı beslenme), Eğitimle İlişkili Yöntemler (mesleki
+hastalıklar ve korunma yöntemlerinin öğretilmesi; acil ve ilk yardımın
+öğretilmesi) ve Teknikle İlişkili Yöntemler (çevrenin kontrolü; ikame; ayırma;
+kapatma; havalandırma; yaş yöntem; kişisel koruyucu araçlar) olarak
+sıralanabilir.
+
+Meslek Hastalıkları
+
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 19
+DEĞERLENDİRME SORULARI
+1. Aşağıdakilerden hangisi mesleki enfeksiyon hastalıklarında genel korunma
+metotlarından biri değildir?
+a) Personel eğitimi
+b) Enfeksiyon riskleri ve hastalananlar için epidemiyolojik verilerin
+kayıt sistemi
+c) Uygun temizlik yönergelerinin hazırlanması
+d) Çalışırken uyulacak davranış tarzları
+e) Salgın çıkınca yapılan periyodik kişi taranması
+2. Aşağıdakilerden hangisi mesleki enfeksiyon hastalıklarından Hepatit C’nin
+en sık görüldüğü iş kollarından biridir?
+a) Tarım çalışanları
+b) Hemşireler
+c) Banka çalışanları
+d) Öğretmenler
+e) Belediye çöp hizmetleri çalışanları
+3. Son zamanlarda endüstrinin birçok kolunda (uzay endüstrisi, otomotiv
+sanayi, nükleer enerji, medikal ve elektronik endüstrisi) kullanılmaya
+başlanan, vücuda giriş yolu akciğerler aracılığıyla olup göz ve ciltten de
+girme ihtimalleri bulunan, vücutta az miktarda çözünmesine rağmen
+özellikle akciğerlerde çöken ve o bölgede hasar yapan, molekül ağırlığı
+nedeniyle hapten özelliği kazanarak gecikmiş tip immün reaksiyonlar
+sonucunda akciğerlerde granülomatöz inflamasyon gelişimine sebep olan
+element hangisidir?
+a) Berilyum
+b) Kadmiyum
+c) Krom
+d) Manganez
+e) Arsenik
+4. Mesleki enfeksiyon (hastalık yapan mikrop) hastalıklarından korunmada
+başta vücuttaki açık yaralar iyi kontrol edilmeli, yaralanmalarda ........ aşısı
+yaptırılmalıdır.”
+Cümlede boş bırakılan yere aşağıdakilerden hangisi getirilmelidir?
+a) Tetanoz
+b) Verem
+c) Çiçek
+d) Kuduz
+e) Kızamık
+5. Bir enfeksiyon hastalığı “mesleki bulaşıcı hastalık” olabilmesi için hangi
+özelliğe sahip olmalıdır?
+a) Yiyecek ile bulaşmış olmalıdır.
+b) Aşısı olmamalıdır.
+c) Mutlaka iş yerinde çalışan birisinden bulaşmalıdır.
+
+Meslek Hastalıkları
+
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 20
+d) Enfeksiyonun laboratuvar bulguları ile iş gereği olduğu
+kanıtlanmalıdır.
+e) İş yeri hekimi yoksa ayrım yapılmaz.
+6. Madenlerde, dökümhanelerde, tünel ve yol yapımı işlerinde, seramik gibi
+iş kollarında çalışan işçilerin maruz kalmasıyla ortaya çıkan akciğerde
+fibrozisle sonuçlanan hastalık aşağıdakilerden hangisidir?
+a) Silikozis
+b) Berilyozis
+c) Bisinozis
+d) Pnömokonyoz
+e) Astım Bronşiale
+7. Aşağıdakilerden hangisi bakteri kaynaklı mesleki bulaşıcı hastalıklar
+arasında yer almaz?
+a) Hepatit A
+b) Tüberküloz (Tbc)
+c) Tifo
+d) Şarbon (Antraks)
+e) Tetanoz
+8. Aşağıdakilerden hangisi Türkiye'de dokumacılar (keçi yünü, yün ya da post
+işleyiciler), kasaplar, veterinerler, tarım çalışanlarının ortak mesleki
+hastalığıdır?
+a) Tuleremi
+b) Brusella
+c) Hidatiidoz
+d) Salmonella
+e) Şarbon (Antraks)
+9. Aşağıdakilerden hangisi kan ürünleri ile bulaşan bir virüstür?
+a) HBV
+b) Brusella
+c) ELISA
+d) Tüberküloz
+e) Grip
+10. Meslek hastalıkları ile ilgili ‘maruziyet süresi’ nedir?
+a) Zararlı mesleksel etkinin sona ermesi ile hastalığın ortaya çıkması
+arasında geçebilecek kabul edilebilir süre
+b) Zararlı etkenin başlamasıyla hastalık belirtilerinin ortaya çıkması
+için gereken en az süre
+c) Zararlı etkene maruz kalınan süre
+d) Zararlı etkene günlük olarak maruz kalınan süre
+e) Zararlı etkene aylık olarak maruz kalınan süre
+
+Cevap Anahtarı
+1.e, 2.b, 3.a, 4.d, 5.d, 6.a, 7.a, 8.e, 9.a, 10.b
+
+Meslek Hastalıkları
+
+
+Atatürk Üniversitesi Açıköğretim Fakültesi 21
 YARARLANILAN KAYNAKLAR
-[1] Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkında Yönetmelik,
-Türkiye Cumhuriyeti Aile, Çalışma ve Sosyal Hizmetler Bakanlığı. (2013),
-28678 sayılı Resmi Gazete
-[2] Advisory Committee on Dangerous Pathogens, Infection at work: Controlling
-the risks, ACDP, ( (2003) (s. 25) 25.08.2018 tarihinde
-http://www.hse.gov.uk/pubns/infection.pdf adresinden erişildi.
-[3] Risk Assessment For Biologıcal Agents, European Agency for Safety and Health
-at Work (EU-OSHA) 24.08.2018 tarihinde
-http://osha.europa.eu
-adresinden erişildi.
+[1] Sosyal Sigortalar ve Genel Sağlık Sigortası Kanunu. Türkiye Cumhuriyeti Aile,
+Çalışma ve Sosyal Hizmetler Bakanlığı. (2013), 16 Haziran Tarihli Resmi
+Gazete
+[2] Güven R. (2011). Meslek Hastalıkları Rehberi. Çalışma ve Sosyal Güvenlik
+Bakanlığı, İş Sağlığı Ve Güvenliği Genel Müdürlüğü.
+[3] Bilir V. (2004) Meslek Hastalıkları. Türk İş Yayınları, Ankara.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **İstenen Toplam Soru Sayısı:** 12 soru
-- **Zorluk Seviyesi:** hard
+- **İstenen Toplam Soru Sayısı:** 10 soru
+- **Zorluk Seviyesi:** mixed
 
 // ----------------------------------------------------
 // ------------- METİN ANALİZ SÜRECİ -----------------
@@ -1111,7 +1186,7 @@ adresinden erişildi.
 2. "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" listesindeki konulardan KESİNLİKLE soru ÜRETME
 3. Her aktif alt konu için tam olarak o alt konu yanında belirtilen sayıda soru üret
    Örneğin: "Nesne Yönelimli Programlama (3 soru)" ifadesi, bu konu için tam 3 soru oluşturulmalıdır
-4. Toplam soru sayısının 12 olduğundan emin ol (Bu sayı, aktif konulardaki toplam soru sayısına eşit olmalıdır)
+4. Toplam soru sayısının 10 olduğundan emin ol (Bu sayı, aktif konulardaki toplam soru sayısına eşit olmalıdır)
 5. Belirtilen aktif alt konular ve soru sayılarına MUTLAKA UYULMALIDIR
 6. Her sorunun hangi alt konuya ait olduğu JSON çıktısında "subTopicName" alanında AÇIKÇA belirtilmelidir
 7. Her soruyu üretirken, o sorunun hangi aktif alt konudan geldiğini mutlaka kontrol et
@@ -1236,7 +1311,7 @@ adresinden erişildi.
 - Sorular farklı bilişsel düzeyleri içermeli
 - Tüm gerekli alanlar doldurulmalı
 - ALT KONU DAĞILIMI ve SORU SAYISI:
-  1. Toplam soru sayısı tam olarak 12 adet olmalı (aktif konulardaki toplam soru sayısıyla eşleşmeli)
+  1. Toplam soru sayısı tam olarak 10 adet olmalı (aktif konulardaki toplam soru sayısıyla eşleşmeli)
   2. "Konu Bilgileri" bölümündeki "AKTİF KONULAR (SORU ÜRETİLECEK)" listesindeki HER BİR alt konu için belirtilen SORU SAYISINA MUTLAKA uyulmalı
      Örneğin: "Veri Tabanı Sistemleri (3 soru)" yazıyorsa, bu konudan tam 3 soru üretilmeli
   3. "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" listesindeki konulardan KESİNLİKLE soru üretilmediğinden emin ol
@@ -1253,52 +1328,45 @@ adresinden erişildi.
 
 ## İşlenen Sorular Analizi:
 
-- Toplam Soru Sayısı: 12
+- Toplam Soru Sayısı: 10
 - Alt Konu Dağılımı:
 
-  - Biyolojik Risk Etmenleri Tanımı: 2 soru
-  - Biyolojik Etkenler Ve Kapsamı: 2 soru
-  - Risk Gruplarının Sınıflandırılması: 2 soru
-  - Risk Gruplarının Özellikleri: 2 soru
-  - Riskli İ Ş Alanlarının Belirlenmesi: 2 soru
-  - Risk Değerlendirme Süreci: 2 soru
+  - Meslek Hastalıklarının Tanımı: 2 soru
+  - Meslek Hastalığı Ve Özellikleri: 2 soru
+  - İ Şle İ Lgili Hastalıklar: 2 soru
+  - Tarihsel Gelişim Ve Öncüler: 2 soru
+  - Türkiyedeki Yasal Düzenlemeler: 2 soru
 
 
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
-#### Biyolojik Risk Etmenleri Tanımı:
-- Soru: Aşağıdakilerden hangisi, Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkındaki Yönetmeliğe göre biyolojik etken olarak tanımlanmaz?
-- Seçenekler: Genetik olarak değiştirilmiş mikroorganizmalar | Hücre kültürleri | İnsan endoparazitleri | Radyasyon
-- Doğru Cevap: Radyasyon
+#### Meslek Hastalıklarının Tanımı:
+- Soru: Aşağıdakilerden hangisi meslek hastalığının tanımında yer almaz?
+- Seçenekler: Çalışanın yaptığı işten kaynaklanması | Sürekli tekrarlanan bir sebeple oluşması | Geçici veya sürekli bir hastalık hali olması | Etyolojisinin (etkeninin) birden fazla olması | Bedensel veya ruhsal özürlülük hali olması
+- Doğru Cevap: Etyolojisinin (etkeninin) birden fazla olması
 - Zorluk: easy
 
-#### Biyolojik Etkenler Ve Kapsamı:
-- Soru: Aşağıdakilerden hangisi biyolojik etkenlerin kapsamına girmez?
-- Seçenekler: Virüsler | Bakteriler | Mantarlar | Ağır metaller
-- Doğru Cevap: Ağır metaller
-- Zorluk: easy
-
-#### Risk Gruplarının Sınıflandırılması:
-- Soru: İnsanda hastalığa yol açma ihtimali bulunmayan biyolojik etkenler hangi risk grubunda yer alır?
-- Seçenekler: Grup 1 | Grup 2 | Grup 3 | Grup 4
-- Doğru Cevap: Grup 1
-- Zorluk: easy
-
-#### Risk Gruplarının Özellikleri:
-- Soru: Grup 4 biyolojik risk etmenleri için aşağıdakilerden hangisi doğrudur?
-- Seçenekler: Çalışanlar için düşük tehlike oluşturur. | Topluma yayılma riski düşüktür. | Etkili korunma ve tedavi yöntemi bulunmamaktadır. | Sadece hayvanlarda hastalığa neden olurlar.
-- Doğru Cevap: Etkili korunma ve tedavi yöntemi bulunmamaktadır.
-- Zorluk: easy
-
-#### Riskli İ Ş Alanlarının Belirlenmesi:
-- Soru: Aşağıdakilerden hangisi biyolojik risk değerlendirmesi yapılmasını zorunlu kılan bir durumdur?
-- Seçenekler: Çalışma ortamında ofis malzemelerinin bulunması | Çalışma ortamında yaşayan veya ölü insan veya hayvanların bulunması | Çalışma ortamında bilgisayar kullanımının olması | Çalışma ortamında toplantıların yapılması
-- Doğru Cevap: Çalışma ortamında yaşayan veya ölü insan veya hayvanların bulunması
-- Zorluk: easy
-
-#### Risk Değerlendirme Süreci:
-- Soru: Biyolojik risk değerlendirme sürecinde, Avrupa Birliği normlarına uygun olarak aşağıdakilerden hangisi dikkate alınması gereken öncelikli adımlardan biri değildir?
-- Seçenekler: Çalışma ortamındaki insan sağlığına zararlı olabilecek tüm biyolojik etkenlerin sınıflandırılması | Çalışanların hobileri ve boş zaman aktivitelerinin belirlenmesi | Çalışanın maruziyetinin türü, düzeyi ve süresinin belirlenmesi | Risk değerlendirmesinin düzenli aralıklarla yenilenmesi
-- Doğru Cevap: Çalışanların hobileri ve boş zaman aktivitelerinin belirlenmesi
+#### Meslek Hastalığı Ve Özellikleri:
+- Soru: Aşağıdakilerden hangisi meslek hastalıklarının özelliklerinden biri değildir?
+- Seçenekler: Mesleğe özgü olması | Önlenebilir olması | Tanı ve tarama yöntemlerinin kendine özgü olması | Multi-faktöriyel (çok etkenli) nedenlere sahip olması | İş yerinde alınacak önlemler ile korunmanın mümkün olması
+- Doğru Cevap: Multi-faktöriyel (çok etkenli) nedenlere sahip olması
 - Zorluk: medium
+
+#### İ Şle İ Lgili Hastalıklar:
+- Soru: Aşağıdakilerden hangisi işle ilgili hastalıkların özelliklerinden biridir?
+- Seçenekler: Doğrudan iş ortamındaki olumsuz faktörlerden kaynaklanması | Oluşmasında ve gelişmesinde çalışma ortamı ve şeklinin diğer sebepler arasında önemli bir faktör olması | Etyolojisinin (etkeninin) tanımlanabilir ve genellikle tek olması | Sadece işçilerde görülmesi | İş yerinde bulunmayan bir etkenden kaynaklanmaması
+- Doğru Cevap: Oluşmasında ve gelişmesinde çalışma ortamı ve şeklinin diğer sebepler arasında önemli bir faktör olması
+- Zorluk: medium
+
+#### Tarihsel Gelişim Ve Öncüler:
+- Soru: Aşağıdakilerden hangisi meslek hastalıkları alanında öncü çalışmalara imza atmış kişilerden biri değildir?
+- Seçenekler: Pliny | Galen | Georgius Agricola | Bernardino Ramazzini | İbn-i Sina
+- Doğru Cevap: İbn-i Sina
+- Zorluk: easy
+
+#### Türkiyedeki Yasal Düzenlemeler:
+- Soru: Türkiye'de iş sağlığı ve güvenliği ile ilgili ilk yasal düzenlemelerden biri olan ve iş kazalarında tazminat hakkı tanımlayan düzenleme aşağıdakilerden hangisidir?
+- Seçenekler: Umumi Hıfzıssıhha Kanunu | İş Kanunu | SSK Yasası | Maaddin Nizamnamesi | Sosyal Sigortalar ve Genel Sağlık Sigortası Kanunu
+- Doğru Cevap: Maaddin Nizamnamesi
+- Zorluk: easy
 

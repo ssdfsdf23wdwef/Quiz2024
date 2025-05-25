@@ -193,60 +193,124 @@ export class LearningTargetsService {
   }
   
   /**
-   * Find learning targets by course ID
+   * Find learning targets by course ID with quizzes
    * @param courseId The course ID
    * @param userId The user ID
-   * @returns List of learning targets for the specified course
+   * @returns List of learning targets for the specified course with quizzes
    */
   @LogMethod({ trackParams: true })
-  async findByCourse(courseId: string, userId: string): Promise<LearningTarget[]> {
+  async findByCourse(
+    courseId: string,
+    userId: string,
+  ): Promise<LearningTargetWithQuizzes[]> {
     try {
-      this.flowTracker.trackStep(
-        `${courseId} ID'li derse ait öğrenme hedefleri listeleniyor`,
-        'LearningTargetsService',
-      );
-      
-      this.logger.info(
-        `${courseId} ID'li derse ait öğrenme hedefleri getiriliyor`,
+      this.logger.debug(
+        `Kursa ait öğrenme hedefleri getiriliyor (course: ${courseId}, user: ${userId})`,
         'LearningTargetsService.findByCourse',
         __filename,
-        undefined,
-        { userId, courseId }
+        0,
+        { courseId, userId },
       );
 
-      // Get targets from Firestore
-      const targetsSnapshot = await this.firebaseService.firestore
-        .collection(FIRESTORE_COLLECTIONS.LEARNING_TARGETS)
-        .where('userId', '==', userId)
+      // Önce kullanıcının bu kursa erişim yetkisi olduğunu doğrula
+      await this.validateCourseOwnership(courseId, userId);
+
+      // Öğrenme hedeflerini getir
+      const learningTargetsSnapshot = await this.firebaseService.firestore
+        .collection('learningTargets')
         .where('courseId', '==', courseId)
+        .where('userId', '==', userId)
         .get();
 
-      // Convert to LearningTarget objects
-      const targets: LearningTarget[] = [];
-      targetsSnapshot.forEach((doc) => {
-        targets.push({
-          ...doc.data() as Omit<LearningTarget, 'id'>,
-          id: doc.id,
-        });
-      });
+      if (learningTargetsSnapshot.empty) {
+        this.logger.info(
+          `Kurs için öğrenme hedefi bulunamadı (course: ${courseId})`,
+          'LearningTargetsService.findByCourse',
+          __filename,
+          0,
+          { courseId, userId },
+        );
+        return [];
+      }
+
+      // Her bir öğrenme hedefi için quizleri getir
+      const learningTargets = await Promise.all(
+        learningTargetsSnapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          let quizzes: any[] = [];
+
+          try {
+            // İlişkili quizleri getir
+            const quizzesSnapshot = await this.firebaseService.firestore
+              .collection('quizzes')
+              .where('learningTargetId', '==', doc.id)
+              .get();
+              
+            quizzes = quizzesSnapshot.docs.map(quizDoc => ({
+              id: quizDoc.id,
+              ...quizDoc.data(),
+            }));
+          } catch (quizError) {
+            const errorMessage = quizError instanceof Error ? quizError.message : 'Bilinmeyen hata';
+            this.logger.error(
+              `Quizler getirilirken hata oluştu: ${errorMessage}`,
+              'LearningTargetsService.findByCourse',
+              __filename,
+              0,
+              quizError instanceof Error ? quizError : new Error(errorMessage),
+              { 
+                learningTargetId: doc.id,
+                error: errorMessage
+              },
+            );
+            // Hata durumunda quiz dizisini boş bırak
+            quizzes = [];
+          }
+
+          return {
+            ...data,
+            id: doc.id,
+            quizzes,
+            // Varsayılan değerler
+            lastAttempt: data.lastAttempt || null,
+            lastAttemptScorePercent: data.lastAttemptScorePercent || null,
+            failCount: data.failCount || 0,
+            mediumCount: data.mediumCount || 0,
+            successCount: data.successCount || 0,
+            firstEncountered: data.firstEncountered || new Date(),
+            lastPersonalizedQuizId: data.lastPersonalizedQuizId || null,
+          } as LearningTargetWithQuizzes;
+        })
+      );
 
       this.logger.info(
-        `${targets.length} adet öğrenme hedefi getirildi (course: ${courseId})`,
+        `${learningTargets.length} adet öğrenme hedefi getirildi (course: ${courseId})`,
         'LearningTargetsService.findByCourse',
         __filename,
-        undefined,
-        { courseId, userId, targetCount: targets.length }
+        0,
+        { courseId, userId, targetCount: learningTargets.length }
       );
 
-      return targets;
+      return learningTargets;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      const errorContext = {
+        courseId,
+        userId,
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined
+      };
+      
       this.logger.error(
-        `Öğrenme hedefleri getirilirken hata: ${error.message}`,
+        `Öğrenme hedefleri getirilirken hata: ${errorMessage}`,
         'LearningTargetsService.findByCourse',
         __filename,
-        undefined,
-        error
+        0,
+        error instanceof Error ? error : new Error(errorMessage),
+        errorContext
       );
+      
+      // Rethrow the error to be handled by the controller
       throw error;
     }
   }

@@ -75,16 +75,22 @@ export class QuizzesService {
     
     // Öğrenme hedefleri için log dosyası yolunu ayarla
     const logDir = 'logs';
-    this.learningTargetLogPath = path.join(logDir, 'öğrenme_hedef.log');
+    this.learningTargetLogPath = path.join(logDir, 'learning_targets.log'); // Türkçe karakter içermeyen dosya adı
     
-    // Log dizininin var olduğundan emin ol
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-    
-    // Öğrenme hedefi log dosyasını oluştur (yoksa)
-    if (!fs.existsSync(this.learningTargetLogPath)) {
-      fs.writeFileSync(this.learningTargetLogPath, '', { encoding: 'utf8' });
+    try {
+      // Log dizininin var olduğundan emin ol
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+        console.log(`Log dizini oluşturuldu: ${logDir}`);
+      }
+      
+      // Öğrenme hedefi log dosyasını oluştur (yoksa)
+      if (!fs.existsSync(this.learningTargetLogPath)) {
+        fs.writeFileSync(this.learningTargetLogPath, '[' + new Date().toISOString() + '] Öğrenme hedefleri log dosyası oluşturuldu\n', { encoding: 'utf8' });
+        console.log(`Öğrenme hedefleri log dosyası oluşturuldu: ${this.learningTargetLogPath}`);
+      }
+    } catch (error) {
+      console.error(`Log dosyası oluşturulurken hata: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -530,12 +536,13 @@ export class QuizzesService {
           );
           
           // Konu dağılımı için değişkenler
-          let assignedQuestions = 0;
-          const topicsWithCounts = [...subtopicsWithCount]; // Kopyala
+          let initialAssignedQuestions = 0;
+          // Create empty array for initial topic counts
+          const initialTopicsArray = [];
           
           while (
-            assignedQuestions < totalQuestions &&
-            topicsWithCounts.length > 0
+            initialAssignedQuestions < totalQuestions &&
+            initialTopicsArray.length > 0
           ) {
             // Add remaining to strongest priority that has topics
             if (grouped.failed.length > 0) {
@@ -613,7 +620,7 @@ export class QuizzesService {
           });
 
           // Ensure distribution matches exactly the required count
-          let assignedQuestions = topicsWithCounts.reduce(
+          let finalAssignedQuestions = topicsWithCounts.reduce(
             (sum, topic) => sum + (topic.count ?? 0),
             0,
           );
@@ -621,7 +628,7 @@ export class QuizzesService {
           // Eksik sorular varsa, zayıf konulara ekleme yap
           let index = 0;
           while (
-            assignedQuestions < totalQuestions &&
+            finalAssignedQuestions < totalQuestions &&
             topicsWithCounts.length > 0
           ) {
             const statusPriority = ['failed', 'medium', 'pending', 'mastered'];
@@ -640,13 +647,13 @@ export class QuizzesService {
                 if (topicIndex !== -1) {
                   topicsWithCounts[topicIndex].count =
                     (topicsWithCounts[topicIndex].count ?? 0) + 1;
-                  assignedQuestions += 1;
+                  finalAssignedQuestions += 1;
                   index += 1;
                   break;
                 }
               }
             }
-            if (assignedQuestions === totalQuestions) break;
+            if (finalAssignedQuestions === totalQuestions) break;
           }
 
           // Pass this enhanced array to AI service
@@ -1027,7 +1034,7 @@ export class QuizzesService {
             
             // Normalize edilmiş ada göre hedefi buluyoruz
             const target = targets.find(t => 
-              this.normalizationService.normalizeSubTopicName(t.topicName) === normalizedSubTopic);
+              this.normalizationService.normalizeSubTopicName(t.subTopicName) === normalizedSubTopic);
             
             if (target) {
               // Hedef bulundu, durumunu güncelle
@@ -1107,6 +1114,18 @@ export class QuizzesService {
    */
   private logLearningTarget(level: LogLevel, message: string, data?: Record<string, any>): void {
     try {
+      // Log dizininin var olduğundan emin ol
+      const logDir = 'logs';
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+      
+      // Log dosyası yoksa oluştur
+      if (!fs.existsSync(this.learningTargetLogPath)) {
+        fs.writeFileSync(this.learningTargetLogPath, '[' + new Date().toISOString() + '] Öğrenme hedefleri log dosyası oluşturuldu\n', { encoding: 'utf8' });
+        console.log(`Öğrenme hedefleri log dosyası oluşturuldu: ${this.learningTargetLogPath}`);
+      }
+      
       // Log formatını oluştur
       const timestamp = new Date().toISOString();
       const logData = {
@@ -2051,7 +2070,7 @@ export class QuizzesService {
 
       const targetsList = learningTargets.map((t) => ({
         targetId: t.id,
-        description: t.topicName || '', // Using topicName instead of subTopicName
+        description: t.subTopicName || '', // Using subTopicName as per the interface
         status: t.status,
       }));
 

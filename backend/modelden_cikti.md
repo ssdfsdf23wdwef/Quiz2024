@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-25T15:11:01.710Z
-Trace ID: quiz-1748185844254-t2eox
-Yanıt Uzunluğu: 10889 karakter
+Tarih: 2025-05-25T16:35:11.746Z
+Trace ID: quiz-1748190893409-pn20m
+Yanıt Uzunluğu: 10360 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,207 +11,180 @@ Yanıt Uzunluğu: 10889 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Aşağıdakilerden hangisi, Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkındaki Yönetmeliğe göre biyolojik etken olarak tanımlanmaz?",
+      "questionText": "Aşağıdakilerden hangisi meslek hastalığının tanımında yer almaz?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "Genetik olarak değiştirilmiş mikroorganizmalar",
-        "Hücre kültürleri",
-        "İnsan endoparazitleri",
-        "Radyasyon"
+        "Çalışanın yaptığı işten kaynaklanması",
+        "Sürekli tekrarlanan bir sebeple oluşması",
+        "Geçici veya sürekli bir hastalık hali olması",
+        "Etyolojisinin (etkeninin) birden fazla olması",
+        "Bedensel veya ruhsal özürlülük hali olması"
       ],
-      "correctAnswer": "Radyasyon",
-      "explanation": "Biyolojik etkenler, enfeksiyon, alerji veya zehirlenmeye neden olabilen mikrobiyolojik varlıklardır. Radyasyon fiziksel bir risk etmenidir, biyolojik değil. Yönetmelikte geçen tanım bu şekildedir.",
-      "subTopicName": "Biyolojik Risk Etmenleri Tanımı",
-      "normalizedSubTopicName": "biyolojik_risk_etmenleri_tanımı",
+      "correctAnswer": "Etyolojisinin (etkeninin) birden fazla olması",
+      "explanation": "Meslek hastalığının tanımında etyolojisinin genellikle tek olması gerektiği belirtilmiştir. Çok etkenli nedenlere sahip hastalıklar işle ilgili hastalıklardır. Bkz: Meslek Hastalıklarının Tanımı",
+      "subTopicName": "Meslek Hastalıklarının Tanımı",
+      "normalizedSubTopicName": "meslek_hastaliklarinin_tanimi",
       "difficulty": "easy"
     },
     {
       "id": "q2",
-      "questionText": "Biyolojik risk etmenleri tanımında yer alan 'hücre kültürü' ifadesi neyi ifade eder?",
+      "questionText": "5510 sayılı Sosyal Sigortalar ve Genel Sağlık Sigortası Kanunu'na göre meslek hastalığı aşağıdakilerden hangisi ile tanımlanır?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Mikroorganizmaların genetik yapısının değiştirilmesini",
-        "Çok hücreli organizmalardan türetilmiş hücrelerin in-vitro olarak geliştirilmesini",
-        "İnsan vücudunda yaşayan parazitlerin incelenmesini",
-        "Bakterilerin laboratuvar ortamında çoğaltılmasını"
+        "Sigortalının genetik yatkınlığı sonucu ortaya çıkan hastalıklar",
+        "Sigortalının çalıştığı işin niteliğinden dolayı tekrarlanan bir sebeple uğradığı hastalıklar",
+        "Sigortalının yaşam tarzı seçimleri sonucu ortaya çıkan hastalıklar",
+        "Sigortalının iş dışındaki aktivitelerinden kaynaklanan hastalıklar",
+        "Sigortalının ailesinde görülen kronik hastalıklar"
       ],
-      "correctAnswer": "Çok hücreli organizmalardan türetilmiş hücrelerin in-vitro olarak geliştirilmesini",
-      "explanation": "Biyolojik Etkenlere Maruziyet Risklerinin Önlenmesi Hakkındaki Yönetmeliği’ne göre hücre kültürü, çok hücreli organizmalardan türetilmiş hücrelerin in–vitro olarak geliştirilmesini ifade eder.",
-      "subTopicName": "Biyolojik Risk Etmenleri Tanımı",
-      "normalizedSubTopicName": "biyolojik_risk_etmenleri_tanımı",
+      "correctAnswer": "Sigortalının çalıştığı işin niteliğinden dolayı tekrarlanan bir sebeple uğradığı hastalıklar",
+      "explanation": "5510 sayılı kanuna göre meslek hastalığı, sigortalının çalıştığı veya yaptığı işin niteliğinden dolayı tekrarlanan bir sebeple veya işin yürütüm şartları yüzünden uğradığı geçici veya sürekli hastalık, bedensel veya ruhsal özürlülük halleridir. Bkz: Meslek Hastalıklarının Tanımı",
+      "subTopicName": "Meslek Hastalıklarının Tanımı",
+      "normalizedSubTopicName": "meslek_hastaliklarinin_tanimi",
       "difficulty": "medium"
     },
     {
       "id": "q3",
-      "questionText": "Aşağıdakilerden hangisi biyolojik etkenlerin kapsamına girmez?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Virüsler",
-        "Bakteriler",
-        "Mantarlar",
-        "Ağır metaller"
-      ],
-      "correctAnswer": "Ağır metaller",
-      "explanation": "Biyolojik etkenler virüsler, bakteriler, mantarlar ve parazitler gibi canlı organizmaları ve onların ürünlerini içerir. Ağır metaller kimyasal risk etmenidir.",
-      "subTopicName": "Biyolojik Etkenler Ve Kapsamı",
-      "normalizedSubTopicName": "biyolojik_etkenler_ve_kapsamı",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q4",
-      "questionText": "Biyolojik risk etmenleri düşünüldüğünde, aşağıdakilerden hangisi alerjik reaksiyonlara neden olabilen bir faktördür, ancak risk gruplarıyla doğrudan ilişkili değildir?",
+      "questionText": "Aşağıdakilerden hangisi meslek hastalıklarının özelliklerinden biri değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Grup 4 virüsler",
-        "Grup 1 bakteriler",
-        "Mantarlar",
-        "Grup 3 parazitler"
+        "Mesleğe özgü olması",
+        "Önlenebilir olması",
+        "Tanı ve tarama yöntemlerinin kendine özgü olması",
+        "Multi-faktöriyel (çok etkenli) nedenlere sahip olması",
+        "İş yerinde alınacak önlemler ile korunmanın mümkün olması"
       ],
-      "correctAnswer": "Mantarlar",
-      "explanation": "Metinde belirtildiği gibi, mantarlar alerjik rinit, astım gibi alerjik reaksiyonlara neden olabilirler ve bu reaksiyonlar risk gruplarıyla alakalı değildir.",
-      "subTopicName": "Biyolojik Etkenler Ve Kapsamı",
-      "normalizedSubTopicName": "biyolojik_etkenler_ve_kapsamı",
+      "correctAnswer": "Multi-faktöriyel (çok etkenli) nedenlere sahip olması",
+      "explanation": "Meslek hastalıkları genellikle tek bir nedene bağlıdır. Multi-faktöriyel nedenlere sahip olanlar işle ilgili hastalıklardır. Bkz: Meslek Hastalıklarının Özellikleri, Tanı Kriterleri ve Korunma Yöntemleri",
+      "subTopicName": "Meslek Hastalığı Ve Özellikleri",
+      "normalizedSubTopicName": "meslek_hastaligi_ve_ozellikleri",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q4",
+      "questionText": "Meslek hastalığı tanısı konulabilmesi için aşağıdakilerden hangisi gereklidir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "analyzing",
+      "options": [
+        "Çalışanın kişisel alışkanlıklarının detaylı incelenmesi",
+        "İş yerinde ortam analizlerinin yapılması ve risk etmenlerinin araştırılması",
+        "Çalışanın genetik yatkınlıklarının belirlenmesi",
+        "Çalışanın hobilerinin ve sosyal çevresinin değerlendirilmesi",
+        "Çalışanın daha önceki iş deneyimlerinin göz ardı edilmesi"
+      ],
+      "correctAnswer": "İş yerinde ortam analizlerinin yapılması ve risk etmenlerinin araştırılması",
+      "explanation": "Meslek hastalığı tanısı için iş yerinde ortam analizlerinin yapılması, risk etmenlerinin araştırılması ve donanımlı laboratuvarların bulunması gerekmektedir. Bkz: Meslek Hastalıklarının Özellikleri, Tanı Kriterleri ve Korunma Yöntemleri",
+      "subTopicName": "Meslek Hastalığı Ve Özellikleri",
+      "normalizedSubTopicName": "meslek_hastaligi_ve_ozellikleri",
       "difficulty": "medium"
     },
     {
       "id": "q5",
-      "questionText": "İnsanda hastalığa yol açma ihtimali bulunmayan biyolojik etkenler hangi risk grubunda yer alır?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "Grup 1",
-        "Grup 2",
-        "Grup 3",
-        "Grup 4"
-      ],
-      "correctAnswer": "Grup 1",
-      "explanation": "Grup 1 biyolojik etkenler, insanda hastalığa yol açma ihtimali bulunmayan biyolojik etkenlerdir.",
-      "subTopicName": "Risk Gruplarının Sınıflandırılması",
-      "normalizedSubTopicName": "risk_gruplarının_sınıflandırılması",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q6",
-      "questionText": "Aşağıdakilerden hangisi Grup 3 biyolojik etkenlerin özelliklerinden biridir?",
+      "questionText": "Aşağıdakilerden hangisi işle ilgili hastalıkların özelliklerinden biridir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "İnsanda hastalığa yol açma ihtimali bulunmaması",
-        "Çalışanlar için ciddi tehlike oluşturmaması",
-        "Topluma yayılma riskinin bulunmaması",
-        "Genellikle etkili korunma veya tedavi imkânı olması"
+        "Doğrudan iş ortamındaki olumsuz faktörlerden kaynaklanması",
+        "Oluşmasında ve gelişmesinde çalışma ortamı ve şeklinin diğer sebepler arasında önemli bir faktör olması",
+        "Etyolojisinin (etkeninin) tanımlanabilir ve genellikle tek olması",
+        "Sadece işçilerde görülmesi",
+        "İş yerinde bulunmayan bir etkenden kaynaklanmaması"
       ],
-      "correctAnswer": "Genellikle etkili korunma veya tedavi imkânı olması",
-      "explanation": "Grup 3 biyolojik etkenler, insanda ağır hastalıklara neden olan, çalışanlar için ciddi tehlike oluşturan, topluma yayılma riski bulunabilen ancak genellikle etkili korunma veya tedavi imkânı olan biyolojik etkenlerdir.",
-      "subTopicName": "Risk Gruplarının Sınıflandırılması",
-      "normalizedSubTopicName": "risk_gruplarının_sınıflandırılması",
+      "correctAnswer": "Oluşmasında ve gelişmesinde çalışma ortamı ve şeklinin diğer sebepler arasında önemli bir faktör olması",
+      "explanation": "İşle ilgili hastalıklar, ortaya çıkış nedeni multi-faktoriyel olan, oluşmasında ve gelişmesinde çalışma ortamı ve çalışma şeklinin diğer sebepler arasında önemli faktör olduğu hastalıklardır. Bkz: Meslek Hastalıklarının Tanımı",
+      "subTopicName": "İ Şle İ Lgili Hastalıklar",
+      "normalizedSubTopicName": "i_sle_i_lgili_hastaliklar",
       "difficulty": "medium"
     },
     {
+      "id": "q6",
+      "questionText": "İşle ilgili hastalıklar ile ilgili aşağıdaki ifadelerden hangisi doğrudur?",
+      "questionType": "true_false",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Doğru",
+        "Yanlış"
+      ],
+      "correctAnswer": "Doğru",
+      "explanation": "İşle ilgili hastalıklar, meslek hastalıklarına göre daha sık görülür ve genel toplumda da görülebilirler. Ayrıca, yapılan iş hastalığa neden olabilir, ağırlaştırabilir, hızlandırabilir ya da alevlendirebilir veya çalışma kapasitesini azaltabilir. Bkz: Meslek Hastalıklarının Tanımı",
+      "subTopicName": "İ Şle İ Lgili Hastalıklar",
+      "normalizedSubTopicName": "i_sle_i_lgili_hastaliklar",
+      "difficulty": "easy"
+    },
+    {
       "id": "q7",
-      "questionText": "Grup 4 biyolojik risk etmenleri için aşağıdakilerden hangisi doğrudur?",
+      "questionText": "Aşağıdakilerden hangisi meslek hastalıkları alanında öncü çalışmalara imza atmış kişilerden biri değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "Çalışanlar için düşük tehlike oluşturur.",
-        "Topluma yayılma riski düşüktür.",
-        "Etkili korunma ve tedavi yöntemi bulunmamaktadır.",
-        "Sadece hayvanlarda hastalığa neden olurlar."
+        "Pliny",
+        "Galen",
+        "Georgius Agricola",
+        "Bernardino Ramazzini",
+        "İbn-i Sina"
       ],
-      "correctAnswer": "Etkili korunma ve tedavi yöntemi bulunmamaktadır.",
-      "explanation": "Grup 4 biyolojik etkenler, insanda ağır hastalıklara neden olan, çalışanlar için ciddi tehlike oluşturan, topluma yayılma riski yüksek olan ancak etkili korunma ve tedavi yöntemi bulunmayan biyolojik etkenlerdir.",
-      "subTopicName": "Risk Gruplarının Özellikleri",
-      "normalizedSubTopicName": "risk_gruplarının_özellikleri",
+      "correctAnswer": "İbn-i Sina",
+      "explanation": "Pliny, Galen, Georgius Agricola ve Bernardino Ramazzini meslek hastalıkları alanında önemli çalışmalar yapmışlardır. İbn-i Sina ise tıp alanında önemli bir bilim insanı olmasına rağmen, metinde meslek hastalıkları ile ilgili bir çalışması belirtilmemiştir. Bkz: Meslek Hastalıklarının Tarihi Gelişimi",
+      "subTopicName": "Tarihsel Gelişim Ve Öncüler",
+      "normalizedSubTopicName": "tarihsel_gelisim_ve_onculer",
       "difficulty": "easy"
     },
     {
       "id": "q8",
-      "questionText": "Biyolojik risk etmenlerinin enfeksiyon yapma risk düzeyini etkileyen faktörlerden hangisi konağın (yani enfekte olan kişinin) özellikleriyle ilgilidir?",
+      "questionText": "Bernardino Ramazzini'nin meslek hastalıkları ile ilgili ünlü sözü hangisidir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Etkenin patojenitesi",
-        "Bulaşma yolları",
-        "Kişinin duyarlılığı",
-        "Çevre etmenleri"
+        "“Sağlık, tüm zenginliklerin en büyüğüdür.”",
+        "“Hayret ve tereddüt ediyorum. Acaba, ilaç ve sinameki kokan muayenehane ve eczanelerde oturan bu azametli ve şık görüntülü doktorların burnuna işyerlerindeki pis kokulu şeyleri mi soksam, yoksa onları bu çukurları görmeye mi davet etsem?”",
+        "“İnsan, çalıştığı kadar vardır.”",
+        "“Önce zarar verme.”",
+        "“Bilgi güçtür.”"
       ],
-      "correctAnswer": "Kişinin duyarlılığı",
-      "explanation": "Biyolojik bir etkenin sağlıklı kişide hastalığa yol açması; etkenin hasta etme yetisinin yüksekliğine (patojenite-virülans) , bulaşma yollarına (temas, ortak kullanılan cansız maddeler, hava ve vektörler), konakçı adı verilen kişinin duyarlılığına, çevre etmenlerine bağlıdır.",
-      "subTopicName": "Risk Gruplarının Özellikleri",
-      "normalizedSubTopicName": "risk_gruplarının_özellikleri",
+      "correctAnswer": "“Hayret ve tereddüt ediyorum. Acaba, ilaç ve sinameki kokan muayenehane ve eczanelerde oturan bu azametli ve şık görüntülü doktorların burnuna işyerlerindeki pis kokulu şeyleri mi soksam, yoksa onları bu çukurları görmeye mi davet etsem?”",
+      "explanation": "Bernardino Ramazzini'nin meslek hastalıkları kitabında yer alan ve dünyada ün salmış sözü, “Hayret ve tereddüt ediyorum. Acaba, ilaç ve sinameki kokan muayenehane ve eczanelerde oturan bu azametli ve şık görüntülü doktorların burnuna işyerlerindeki pis kokulu şeyleri mi soksam, yoksa onları bu çukurları görmeye mi davet etsem?” şeklindedir. Bkz: Meslek Hastalıklarının Tarihi Gelişimi",
+      "subTopicName": "Tarihsel Gelişim Ve Öncüler",
+      "normalizedSubTopicName": "tarihsel_gelisim_ve_onculer",
       "difficulty": "medium"
     },
     {
       "id": "q9",
-      "questionText": "Aşağıdakilerden hangisi biyolojik risk değerlendirmesi yapılmasını zorunlu kılan bir durumdur?",
+      "questionText": "Türkiye'de iş sağlığı ve güvenliği ile ilgili ilk yasal düzenlemelerden biri olan ve iş kazalarında tazminat hakkı tanımlayan düzenleme aşağıdakilerden hangisidir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "Çalışma ortamında ofis malzemelerinin bulunması",
-        "Çalışma ortamında yaşayan veya ölü insan veya hayvanların bulunması",
-        "Çalışma ortamında bilgisayar kullanımının olması",
-        "Çalışma ortamında toplantıların yapılması"
+        "Umumi Hıfzıssıhha Kanunu",
+        "İş Kanunu",
+        "SSK Yasası",
+        "Maaddin Nizamnamesi",
+        "Sosyal Sigortalar ve Genel Sağlık Sigortası Kanunu"
       ],
-      "correctAnswer": "Çalışma ortamında yaşayan veya ölü insan veya hayvanların bulunması",
-      "explanation": "Bir çalışma ortamında yaşayan veya ölü insan veya hayvanların bulunması, gıda, bitki, toprak veya su atıklarının mevcudiyeti biyolojik risk değerlendirmesi yapılmasını zorunlu kılar.",
-      "subTopicName": "Riskli İ Ş Alanlarının Belirlenmesi",
-      "normalizedSubTopicName": "riskli_i_ş_alanlarının_belirlenmesi",
+      "correctAnswer": "Maaddin Nizamnamesi",
+      "explanation": "Türkiye'de iş kazalarında tazminat hakkı tanımlayan ilk düzenleme, 1869'da yayınlanan Maaddin Nizamnamesi'dir. Bkz: Meslek Hastalıklarının Tarihi Gelişimi",
+      "subTopicName": "Türkiyedeki Yasal Düzenlemeler",
+      "normalizedSubTopicName": "turkiyedeki_yasal_duzenlemeler",
       "difficulty": "easy"
     },
     {
       "id": "q10",
-      "questionText": "Aşağıdaki iş alanlarından hangisinde biyolojik risk etmenlerine maruz kalma olasılığı daha düşüktür?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
-      "options": [
-        "Tarım",
-        "Sağlık hizmetleri",
-        "Katı atık yönetimi",
-        "Ofis işleri"
-      ],
-      "correctAnswer": "Ofis işleri",
-      "explanation": "Tarım, sağlık hizmetleri ve katı atık yönetimi gibi alanlar, biyolojik risk etmenlerine maruz kalma olasılığının yüksek olduğu iş gruplarıdır. Ofis işlerinde bu risk daha düşüktür.",
-      "subTopicName": "Riskli İ Ş Alanlarının Belirlenmesi",
-      "normalizedSubTopicName": "riskli_i_ş_alanlarının_belirlenmesi",
-      "difficulty": "medium"
-    },
-    {
-      "id": "q11",
-      "questionText": "Biyolojik risk değerlendirme sürecinde, Avrupa Birliği normlarına uygun olarak aşağıdakilerden hangisi dikkate alınması gereken öncelikli adımlardan biri değildir?",
+      "questionText": "Aşağıdakilerden hangisi Türkiye'deki iş sağlığı ve güvenliği ile ilgili kanunlardan biri değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "Çalışma ortamındaki insan sağlığına zararlı olabilecek tüm biyolojik etkenlerin sınıflandırılması",
-        "Çalışanların hobileri ve boş zaman aktivitelerinin belirlenmesi",
-        "Çalışanın maruziyetinin türü, düzeyi ve süresinin belirlenmesi",
-        "Risk değerlendirmesinin düzenli aralıklarla yenilenmesi"
+        "Umumi Hıfzıssıhha Kanunu (1930)",
+        "İş Kanunu (1936)",
+        "Medeni Kanun (1926)",
+        "İş Kanunu (2003)",
+        "Sosyal Sigortalar ve Genel Sağlık Sigortası Kanunu (2006)"
       ],
-      "correctAnswer": "Çalışanların hobileri ve boş zaman aktivitelerinin belirlenmesi",
-      "explanation": "Avrupa Birliği normlarına göre biyolojik risk değerlendirmesinde öncelikli adımlar arasında, biyolojik etkenlerin sınıflandırılması, maruziyetin türü, düzeyi ve süresinin belirlenmesi ve risk değerlendirmesinin düzenli olarak yenilenmesi yer alır. Çalışanların hobileri ve boş zaman aktiviteleri bu süreçte doğrudan dikkate alınmaz.",
-      "subTopicName": "Risk Değerlendirme Süreci",
-      "normalizedSubTopicName": "risk_değerlendirme_süreci",
+      "correctAnswer": "Medeni Kanun (1926)",
+      "explanation": "Medeni Kanun, kişisel ve ailevi ilişkileri düzenleyen bir kanun olup, doğrudan iş sağlığı ve güvenliği ile ilgili değildir. Diğer seçeneklerdeki kanunlar ise iş sağlığı ve güvenliği ile ilgili düzenlemeler içermektedir. Bkz: Meslek Hastalıklarının Tarihi Gelişimi",
+      "subTopicName": "Türkiyedeki Yasal Düzenlemeler",
+      "normalizedSubTopicName": "turkiyedeki_yasal_duzenlemeler",
       "difficulty": "medium"
-    },
-    {
-      "id": "q12",
-      "questionText": "Biyolojik risk değerlendirmesi yapılırken, birden fazla grupta yer alan biyolojik etkenlere maruziyetin söz konusu olduğu durumlarda nasıl bir yaklaşım izlenmelidir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
-      "options": [
-        "Sadece en tehlikeli gruptaki etken dikkate alınmalıdır.",
-        "Her bir etken ayrı ayrı değerlendirilmelidir.",
-        "Zararlı biyolojik etkenlerin tümünün oluşturduğu tehlike dikkate alınarak yapılmalıdır.",
-        "Sadece en yaygın olan etken dikkate alınmalıdır."
-      ],
-      "correctAnswer": "Zararlı biyolojik etkenlerin tümünün oluşturduğu tehlike dikkate alınarak yapılmalıdır.",
-      "explanation": "Birden fazla grupta yer alan biyolojik etkenlere maruziyetin söz konusu olduğu işlerde risk değerlendirmesi, zararlı biyolojik etkenlerin tümünün oluşturduğu tehlike dikkate alınarak yapılmalıdır.",
-      "subTopicName": "Risk Değerlendirme Süreci",
-      "normalizedSubTopicName": "risk_değerlendirme_süreci",
-      "difficulty": "hard"
     }
   ]
 }

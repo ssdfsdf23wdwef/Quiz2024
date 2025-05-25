@@ -42,7 +42,7 @@ export interface LoggerOptions {
 
 /**
  * Hata kayıt servisi
- * Bu servis, uygulama içinde oluşan hataları belirli bir formatta log dosyasına kaydeder.
+ * Bu servis, uygulama içinde olu�Yan hataları belirli bir formatta log dosyasına kaydeder.
  * Hata kayıtları terminale yazdırılmaz, sadece log dosyasına yazılır.
  */
 @Injectable()
@@ -65,120 +65,53 @@ export class LoggerService {
   > = {};
 
   /**
-   * Sınav oluşturma işlemlerini loglamak için kullanılan logger
+   * Sınav olu�Yturma i�Ylemlerini loglamak için kullanılan logger
    */
   public examProcessLogger: any;
 
-  /**
-   * Öğrenme hedefleri işlemlerini loglamak için kullanılan logger
-   */
+
   public learningTargetLogger: any;
 
   /**
-   * Öğrenme hedefleri işlemlerini kaydetmek için özel bir logger
-   */
-  private initLearningTargetLogger() {
-    // Önce log dizininin var olduğundan emin olalım
-    try {
-      if (!fs.existsSync(this.logDir)) {
-        fs.mkdirSync(this.logDir, { recursive: true, mode: 0o777 });
-        console.log(`📁 Log dizini oluşturuldu: ${this.logDir}`);
-      }
-
-      // Öğrenme hedefleri log dosyasını kontrol et ve gerekirse oluştur
-      const learningTargetLogPath = path.join(this.logDir, 'öğrenme_hedef.log');
-      if (!fs.existsSync(learningTargetLogPath)) {
-        fs.writeFileSync(learningTargetLogPath, '', { encoding: 'utf8', mode: 0o666 });
-        console.log(`📝 Öğrenme hedefleri log dosyası oluşturuldu: ${learningTargetLogPath}`);
-      } else {
-        // Dosya var ama yazılabilir mi kontrol et
-        try {
-          fs.accessSync(learningTargetLogPath, fs.constants.W_OK);
-        } catch (err) {
-          console.error(
-            `❌ Öğrenme hedefleri log dosyası yazılabilir değil: ${learningTargetLogPath}`,
-            err,
-          );
-          // Dosya izinlerini düzeltmeye çalış
-          fs.chmodSync(learningTargetLogPath, 0o666);
-          console.log(
-            `🔧 Öğrenme hedefleri log dosyası izinleri düzeltildi: ${learningTargetLogPath}`,
-          );
-        }
-      }
-
-      // Öğrenme hedefleri logger'ını oluştur
-      this.learningTargetLogger = createLogger({
-        level: 'debug',
-        format: format.combine(
-          format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-          format.printf(({ level, message, timestamp, ...meta }) => {
-            return `[${timestamp}] [${level.toUpperCase().padEnd(5)}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : ''}`;
-          }),
-        ),
-        transports: [
-          new transports.File({
-            filename: learningTargetLogPath,
-            level: 'debug',
-          }),
-          // Konsola da yazmak için
-          new transports.Console({
-            format: format.combine(
-              format.colorize(),
-              format.printf(({ level, message, timestamp, ...meta }) => {
-                return `[Öğrenme Hedef] [${timestamp}] [${level}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta) : ''}`;
-              }),
-            ),
-          }),
-        ],
-      });
-
-      console.log(`💬 Öğrenme hedefleri logger'ı başarıyla oluşturuldu`);
-    } catch (error) {
-      console.error('❌ Öğrenme hedefleri logger oluşturulurken hata:', error);
-    }
-  }
-  
-  /**
-   * Sınav oluşturma aşamalarını kaydetmek için özel bir logger
+   * Sınav olu�Yturma a�Yamalarını kaydetmek için özel bir logger
    */
   private initExamProcessLogger() {
-    // Önce log dizininin var olduğundan emin olalım
+    // �-nce log dizininin var oldu�Yundan emin olalım
     try {
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true, mode: 0o777 });
-        console.log(`📁 Log dizini oluşturuldu: ${this.logDir}`);
+        console.log(`�Y"? Log dizini olu�Yturuldu: ${this.logDir}`);
       }
 
-      // Sınav log dosyasını kontrol et ve gerekirse oluştur
+      // Sınav log dosyasını kontrol et ve gerekirse olu�Ytur
       const sinavLogPath = path.join(this.logDir, 'sinav-olusturma.log');
       if (!fs.existsSync(sinavLogPath)) {
         fs.writeFileSync(sinavLogPath, '', { encoding: 'utf8', mode: 0o666 });
-        console.log(`📄 Sınav log dosyası oluşturuldu: ${sinavLogPath}`);
+        console.log(`�Y"" Sınav log dosyası olu�Yturuldu: ${sinavLogPath}`);
       } else {
         // Dosya var ama yazılabilir mi kontrol et
         try {
           fs.accessSync(sinavLogPath, fs.constants.W_OK);
         } catch (err) {
           console.error(
-            `❌ Sınav log dosyası yazılabilir değil: ${sinavLogPath}`,
+            `�?O Sınav log dosyası yazılabilir de�Yil: ${sinavLogPath}`,
             err,
           );
-          // Dosya izinlerini düzeltmeye çalış
+          // Dosya izinlerini düzeltmeye çalı�Y
           fs.chmodSync(sinavLogPath, 0o666);
           console.log(
-            `🔧 Sınav log dosyası izinleri düzeltildi: ${sinavLogPath}`,
+            `�Y"� Sınav log dosyası izinleri düzeltildi: ${sinavLogPath}`,
           );
         }
       }
     } catch (err) {
       console.error(
-        '❌ Sınav log dizini veya dosyası hazırlanırken hata:',
+        '�?O Sınav log dizini veya dosyası hazırlanırken hata:',
         err,
       );
     }
 
-    // Logger'ı oluştur
+    // Logger'ı olu�Ytur
     return createLogger({
       level: 'debug',
       format: format.combine(
@@ -194,7 +127,7 @@ export class LoggerService {
           maxFiles: 5,
           tailable: true,
           handleExceptions: true,
-          // Dosya erişim sorunlarını çözmek için ek ayarlar
+          // Dosya eri�Yim sorunlarını çözmek için ek ayarlar
           options: {
             flags: 'a',
             encoding: 'utf8',
@@ -216,39 +149,39 @@ export class LoggerService {
   }
 
   /**
-   * Öğrenme hedefleri işlemlerini kaydetmek için özel bir logger
+   * �-�Yrenme hedefleri i�Ylemlerini kaydetmek için özel bir logger
    */
   private initLearningTargetLogger() {
-    // Önce log dizininin var olduğundan emin olalım
+    // �-nce log dizininin var oldu�Yundan emin olalım
     try {
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true, mode: 0o777 });
-        console.log(`📁 Log dizini oluşturuldu: ${this.logDir}`);
+        console.log(`�Y"? Log dizini olu�Yturuldu: ${this.logDir}`);
       }
 
-      // Öğrenme hedefleri log dosyasını kontrol et ve gerekirse oluştur
-      const learningTargetLogPath = path.join(this.logDir, 'öğrenme_hedef.log');
+      // �-�Yrenme hedefleri log dosyasını kontrol et ve gerekirse olu�Ytur
+      const learningTargetLogPath = path.join(this.logDir, 'ö�Yrenme_hedef.log');
       if (!fs.existsSync(learningTargetLogPath)) {
         fs.writeFileSync(learningTargetLogPath, '', { encoding: 'utf8', mode: 0o666 });
-        console.log(`📝 Öğrenme hedefleri log dosyası oluşturuldu: ${learningTargetLogPath}`);
+        console.log(`�Y"? �-�Yrenme hedefleri log dosyası olu�Yturuldu: ${learningTargetLogPath}`);
       } else {
         // Dosya var ama yazılabilir mi kontrol et
         try {
           fs.accessSync(learningTargetLogPath, fs.constants.W_OK);
         } catch (err) {
           console.error(
-            `❌ Öğrenme hedefleri log dosyası yazılabilir değil: ${learningTargetLogPath}`,
+            `�?O �-�Yrenme hedefleri log dosyası yazılabilir de�Yil: ${learningTargetLogPath}`,
             err,
           );
-          // Dosya izinlerini düzeltmeye çalış
+          // Dosya izinlerini düzeltmeye çalı�Y
           fs.chmodSync(learningTargetLogPath, 0o666);
           console.log(
-            `🔧 Öğrenme hedefleri log dosyası izinleri düzeltildi: ${learningTargetLogPath}`,
+            `�Y"� �-�Yrenme hedefleri log dosyası izinleri düzeltildi: ${learningTargetLogPath}`,
           );
         }
       }
 
-      // Öğrenme hedefleri logger'ını oluştur
+      // �-�Yrenme hedefleri logger'ını olu�Ytur
       this.learningTargetLogger = createLogger({
         level: 'debug',
         format: format.combine(
@@ -267,21 +200,21 @@ export class LoggerService {
             format: format.combine(
               format.colorize(),
               format.printf(({ level, message, timestamp, ...meta }) => {
-                return `[Öğrenme Hedef] [${timestamp}] [${level}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta) : ''}`;
+                return `[�-�Yrenme Hedef] [${timestamp}] [${level}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta) : ''}`;
               }),
             ),
           }),
         ],
       });
 
-      console.log(`💬 Öğrenme hedefleri logger'ı başarıyla oluşturuldu`);
+      console.log(`�Y'� �-�Yrenme hedefleri logger'ı ba�Yarıyla olu�Yturuldu`);
     } catch (error) {
-      console.error('❌ Öğrenme hedefleri logger oluşturulurken hata:', error);
+      console.error('�?O �-�Yrenme hedefleri logger olu�Yturulurken hata:', error);
     }
   }
 
   constructor(options?: LoggerOptions) {
-    // Seçenekleri başlat
+    // Seçenekleri ba�Ylat
     this.enabled = options?.enabled ?? true;
     this.logToConsole = options?.logToConsole ?? true;
     this.logToFile = options?.logToFile ?? true;
@@ -293,18 +226,18 @@ export class LoggerService {
     // Singleton instance'ı ayarla
     LoggerService.instance = this;
 
-    // Log dizinini oluştur
+    // Log dizinini olu�Ytur
     if (this.logToFile && !fs.existsSync(this.logDir)) {
       fs.mkdirSync(this.logDir, { recursive: true });
     }
 
-    // Sınav süreci logger'ını başlat
+    // Sınav süreci logger'ını ba�Ylat
     this.examProcessLogger = this.initExamProcessLogger();
 
-    // Öğrenme hedefleri logger'ını başlat
+    // �-�Yrenme hedefleri logger'ını ba�Ylat
     this.learningTargetLogger = this.initLearningTargetLogger();
 
-    // Uygulama başlatıldığında log dosyasını temizle
+    // Uygulama ba�Ylatıldı�Yında log dosyasını temizle
     if (this.logToFile && (options?.clearLogsOnStartup ?? true)) {
       this.clearLogFile();
     }
@@ -328,13 +261,13 @@ export class LoggerService {
       try {
         fs.writeFileSync(this.errorLogPath, '', { encoding: 'utf8' });
       } catch (err) {
-        // console.error('Log dosyası temizlenirken hata oluştu:', err);
+        // console.error('Log dosyası temizlenirken hata olu�Ytu:', err);
       }
     }
   }
 
   /**
-   * Log dosyasının içeriğini getirir
+   * Log dosyasının içeri�Yini getirir
    */
   getLogFileContent(): string {
     if (!this.logToFile) {
@@ -344,14 +277,14 @@ export class LoggerService {
     try {
       return fs.readFileSync(this.errorLogPath, { encoding: 'utf8' });
     } catch (err) {
-      // console.error('Log dosyası okunurken hata oluştu:', err);
+      // console.error('Log dosyası okunurken hata olu�Ytu:', err);
       return '';
     }
   }
 
   /**
-   * Log dosyasını indirmek için içeriğini döndürür
-   * @returns Buffer olarak log dosyası içeriği
+   * Log dosyasını indirmek için içeri�Yini döndürür
+   * @returns Buffer olarak log dosyası içeri�Yi
    */
   getLogFileBuffer(): Buffer {
     if (!this.logToFile) {
@@ -361,19 +294,19 @@ export class LoggerService {
     try {
       return fs.readFileSync(this.errorLogPath);
     } catch (err) {
-      // console.error('Log dosyası okunurken hata oluştu:', err);
+      // console.error('Log dosyası okunurken hata olu�Ytu:', err);
       return Buffer.from('');
     }
   }
 
   /**
-   * Hata kaydı oluşturur
+   * Hata kaydı olu�Yturur
    * @param level Hata seviyesi
    * @param message Hata mesajı
-   * @param context Hatanın oluştuğu bağlam (sınıf/metod adı)
-   * @param filePath Hatanın oluştuğu dosya yolu
-   * @param lineNumber Hatanın oluştuğu satır numarası
-   * @param stack Hata yığını
+   * @param context Hatanın olu�Ytu�Yu ba�Ylam (sınıf/metod adı)
+   * @param filePath Hatanın olu�Ytu�Yu dosya yolu
+   * @param lineNumber Hatanın olu�Ytu�Yu satır numarası
+   * @param stack Hata yı�Yını
    * @param additionalInfo Ek bilgiler
    */
   private log(
@@ -409,7 +342,7 @@ export class LoggerService {
 
     const timestamp = new Date().toISOString();
 
-    // Number tipindeki değerleri string'e çevir
+    // Number tipindeki de�Yerleri string'e çevir
     const filePathStr = filePath !== undefined ? String(filePath) : undefined;
     const lineNumberStr =
       lineNumber !== undefined ? String(lineNumber) : undefined;
@@ -432,7 +365,7 @@ export class LoggerService {
 
     // Dosyaya log
     if (this.logToFile) {
-      // Geliştirilmiş log formatı
+      // Geli�Ytirilmi�Y log formatı
       const formattedEntry = this.formatLogEntryForFile(logEntry);
       // Log dosyasını belirle
       const logFilePath = this.getLogFileName(level);
@@ -441,10 +374,10 @@ export class LoggerService {
       if (logFilePath) {
         fs.appendFile(logFilePath, formattedEntry, (err) => {
           if (err) {
-            // Burada console.error kullanıyoruz çünkü log mekanizmasının kendisi çalışmıyor
+            // Burada console.error kullanıyoruz çünkü log mekanizmasının kendisi çalı�Ymıyor
             // Konsolda görünmemesi için yorum haline getirdim
             // console.error(
-            //   `Log dosyasına yazılırken hata oluştu (${logFilePath}):`,
+            //   `Log dosyasına yazılırken hata olu�Ytu (${logFilePath}):`,
             //   err,
             // );
           }
@@ -461,10 +394,10 @@ export class LoggerService {
   }
 
   /**
-   * Log girdisini konsola formatlanmış şekilde yazar
+   * Log girdisini konsola formatlanmı�Y �Yekilde yazar
    */
   private logToConsoleFormatted(entry: LogEntry): void {
-    // Konsola loglama devre dışı - bu metod artık loglama yapmıyor
+    // Konsola loglama devre dı�Yı - bu metod artık loglama yapmıyor
     // Backend logları dosyalara kaydedilir, gerekirse arayüz ile görüntülenebilir
 
     // Loglama tamamen kapatılmasın, çok önemli hatalar için açalım
@@ -517,11 +450,11 @@ export class LoggerService {
   }
 
   /**
-   * Hata seviyesinde log kaydı oluşturur
+   * Hata seviyesinde log kaydı olu�Yturur
    * @param message Hata mesajı
-   * @param context Hatanın oluştuğu bağlam (sınıf/metod adı)
-   * @param filePath Hatanın oluştuğu dosya yolu
-   * @param lineNumber Hatanın oluştuğu satır numarası
+   * @param context Hatanın olu�Ytu�Yu ba�Ylam (sınıf/metod adı)
+   * @param filePath Hatanın olu�Ytu�Yu dosya yolu
+   * @param lineNumber Hatanın olu�Ytu�Yu satır numarası
    * @param error Hata nesnesi
    * @param additionalInfo Ek bilgiler
    */
@@ -547,11 +480,11 @@ export class LoggerService {
   }
 
   /**
-   * Uyarı seviyesinde log kaydı oluşturur
+   * Uyarı seviyesinde log kaydı olu�Yturur
    * @param message Uyarı mesajı
-   * @param context Uyarının oluştuğu bağlam (sınıf/metod adı)
-   * @param filePath Uyarının oluştuğu dosya yolu
-   * @param lineNumber Uyarının oluştuğu satır numarası
+   * @param context Uyarının olu�Ytu�Yu ba�Ylam (sınıf/metod adı)
+   * @param filePath Uyarının olu�Ytu�Yu dosya yolu
+   * @param lineNumber Uyarının olu�Ytu�Yu satır numarası
    * @param additionalInfo Ek bilgiler
    */
   warn(
@@ -573,11 +506,11 @@ export class LoggerService {
   }
 
   /**
-   * Bilgi seviyesinde log kaydı oluşturur
+   * Bilgi seviyesinde log kaydı olu�Yturur
    * @param message Bilgi mesajı
-   * @param context Bilginin oluştuğu bağlam (sınıf/metod adı)
-   * @param filePath Bilginin oluştuğu dosya yolu
-   * @param lineNumber Bilginin oluştuğu satır numarası
+   * @param context Bilginin olu�Ytu�Yu ba�Ylam (sınıf/metod adı)
+   * @param filePath Bilginin olu�Ytu�Yu dosya yolu
+   * @param lineNumber Bilginin olu�Ytu�Yu satır numarası
    * @param additionalInfo Ek bilgiler
    */
   info(
@@ -599,11 +532,11 @@ export class LoggerService {
   }
 
   /**
-   * Debug seviyesinde log kaydı oluşturur
+   * Debug seviyesinde log kaydı olu�Yturur
    * @param message Debug mesajı
-   * @param context Debug bilgisinin oluştuğu bağlam (sınıf/metod adı)
-   * @param filePath Debug bilgisinin oluştuğu dosya yolu
-   * @param lineNumber Debug bilgisinin oluştuğu satır numarası
+   * @param context Debug bilgisinin olu�Ytu�Yu ba�Ylam (sınıf/metod adı)
+   * @param filePath Debug bilgisinin olu�Ytu�Yu dosya yolu
+   * @param lineNumber Debug bilgisinin olu�Ytu�Yu satır numarası
    * @param additionalInfo Ek bilgiler
    */
   debug(
@@ -625,11 +558,11 @@ export class LoggerService {
   }
 
   /**
-   * Hata nesnesinden otomatik olarak log kaydı oluşturur
+   * Hata nesnesinden otomatik olarak log kaydı olu�Yturur
    * @param error Hata nesnesi
-   * @param context Hatanın oluştuğu bağlam (sınıf/metod adı)
-   * @param filePathOrAdditionalInfo Hatanın oluştuğu dosya yolu veya ek bilgiler (opsiyonel)
-   * @param lineNumberOrAdditionalInfo Hatanın oluştuğu satır numarası veya ek bilgiler (opsiyonel)
+   * @param context Hatanın olu�Ytu�Yu ba�Ylam (sınıf/metod adı)
+   * @param filePathOrAdditionalInfo Hatanın olu�Ytu�Yu dosya yolu veya ek bilgiler (opsiyonel)
+   * @param lineNumberOrAdditionalInfo Hatanın olu�Ytu�Yu satır numarası veya ek bilgiler (opsiyonel)
    * @param additionalInfo Ek bilgiler (opsiyonel)
    */
   logError(
@@ -639,13 +572,13 @@ export class LoggerService {
     lineNumberOrAdditionalInfo?: string | number | Record<string, any>,
     additionalInfo?: Record<string, any>,
   ): void {
-    // Hata yığınından dosya yolu ve satır numarası çıkarma
+    // Hata yı�Yınından dosya yolu ve satır numarası çıkarma
     const stackLines = error.stack?.split('\n') || [];
     let filePath: string | undefined;
     let extractedLineNumber: string | undefined;
 
     if (stackLines.length > 1) {
-      // İlk satır hata mesajı, ikinci satır çağrı yığını
+      // İlk satır hata mesajı, ikinci satır ça�Yrı yı�Yını
       const match = stackLines[1].match(/at\s+(.+)\s+\((.+):(\d+):(\d+)\)/);
       if (match) {
         filePath = match[2];
@@ -653,12 +586,12 @@ export class LoggerService {
       }
     }
 
-    // Parametreleri doğru tipe dönüştürme
+    // Parametreleri do�Yru tipe dönü�Ytürme
     let filePathStr: string | number | undefined;
     let lineNumberStr: string | number | undefined;
     let mergedAdditionalInfo: Record<string, any> = {};
 
-    // filePathOrAdditionalInfo parametresini işle
+    // filePathOrAdditionalInfo parametresini i�Yle
     if (filePathOrAdditionalInfo !== undefined) {
       if (
         typeof filePathOrAdditionalInfo === 'string' ||
@@ -675,7 +608,7 @@ export class LoggerService {
       }
     }
 
-    // lineNumberOrAdditionalInfo parametresini işle
+    // lineNumberOrAdditionalInfo parametresini i�Yle
     if (lineNumberOrAdditionalInfo !== undefined) {
       if (
         typeof lineNumberOrAdditionalInfo === 'string' ||
@@ -697,10 +630,10 @@ export class LoggerService {
       mergedAdditionalInfo = { ...mergedAdditionalInfo, ...additionalInfo };
     }
 
-    // Dosya yolu olarak önce parametre olarak gelen, yoksa stackten çıkarılan değeri kullan
+    // Dosya yolu olarak önce parametre olarak gelen, yoksa stackten çıkarılan de�Yeri kullan
     const finalFilePath = filePathStr || filePath;
 
-    // Satır numarası olarak önce parametre olarak gelen, yoksa stackten çıkarılan değeri kullan
+    // Satır numarası olarak önce parametre olarak gelen, yoksa stackten çıkarılan de�Yeri kullan
     const finalLineNumber = lineNumberStr || extractedLineNumber;
 
     this.error(
@@ -716,12 +649,12 @@ export class LoggerService {
   }
 
   /**
-   * Detaylı hata yığınını (stack trace) formatlayıp döndürür
+   * Detaylı hata yı�Yınını (stack trace) formatlayıp döndürür
    * @param error Hata nesnesi
-   * @returns Formatlanmış hata yığını
+   * @returns Formatlanmı�Y hata yı�Yını
    */
   private formatDetailedStack(error: Error): string {
-    if (!error || !error.stack) return 'Hata yığını (stack trace) bulunamadı';
+    if (!error || !error.stack) return 'Hata yı�Yını (stack trace) bulunamadı';
 
     // Stack trace detayını ayırma
     const stackLines = error.stack.split('\n');
@@ -735,7 +668,7 @@ export class LoggerService {
           return `\x1b[33m${line.trim()}\x1b[0m`; // Sarı renk - uygulama kodu
         }
 
-        // Diğer satırlar için gri renk
+        // Di�Yer satırlar için gri renk
         return `\x1b[90m${line.trim()}\x1b[0m`;
       })
       .join('\n');
@@ -744,9 +677,9 @@ export class LoggerService {
   }
 
   /**
-   * Fonksiyon çağrı detaylarını çıkarır
-   * @param depth Kaç seviye geriye gideceği
-   * @returns Fonksiyon çağrı bilgileri
+   * Fonksiyon ça�Yrı detaylarını çıkarır
+   * @param depth Kaç seviye geriye gidece�Yi
+   * @returns Fonksiyon ça�Yrı bilgileri
    */
   private getCallerDetails(depth: number = 2): {
     fileName: string;
@@ -786,7 +719,7 @@ export class LoggerService {
   }
 
   /**
-   * Renkli terminal log çıktısı oluşturur
+   * Renkli terminal log çıktısı olu�Yturur
    * @param level Log seviyesi
    * @param message Mesaj
    * @param details Ek detaylar
@@ -812,7 +745,7 @@ export class LoggerService {
     // Zaman damgası
     const timestamp = new Date().toISOString();
 
-    // Çağrı detayları
+    // �+a�Yrı detayları
     const caller = this.getCallerDetails(3); // 3 seviye geriye git (error, logWithFormat, log metodları)
 
     // Temel log
@@ -829,7 +762,7 @@ export class LoggerService {
       try {
         logString += `\n${colors.DEBUG}Details: ${JSON.stringify(details, null, 2)}${resetColor}`;
       } catch (e) {
-        logString += `\n${colors.DEBUG}Details: [Serileştirilemeyen nesne]${resetColor}`;
+        logString += `\n${colors.DEBUG}Details: [Serile�Ytirilemeyen nesne]${resetColor}`;
       }
     }
 
@@ -837,7 +770,7 @@ export class LoggerService {
   }
 
   /**
-   * Performans ölçümü başlatır ve bir izleme ID'si döndürür
+   * Performans ölçümü ba�Ylatır ve bir izleme ID'si döndürür
    * @param label Performans ölçümü için etiket
    * @returns İzleme ID'si
    */
@@ -950,7 +883,7 @@ export class LoggerService {
         );
         console.log(coloredLog);
 
-        // Dosyaya yazılacak log metni (renkli değil)
+        // Dosyaya yazılacak log metni (renkli de�Yil)
         let fileLogText = logText;
 
         // Hata objesi varsa stack trace ekle
@@ -981,24 +914,24 @@ export class LoggerService {
           }
         }
       } catch (error) {
-        // Logger içinde hata oluşursa güvenli bir şekilde konsola yazdır
+        // Logger içinde hata olu�Yursa güvenli bir �Yekilde konsola yazdır
         console.error('Logger error:', error);
       }
     }
   }
 
   /**
-   * Belirtilen seviyedeki logların kaydedilip kaydedilmeyeceğini kontrol eder
+   * Belirtilen seviyedeki logların kaydedilip kaydedilmeyece�Yini kontrol eder
    * @param level Log seviyesi
    * @returns Log kaydedilmeli mi?
    */
   private shouldLog(level: LogLevel): boolean {
-    // Eğer loglama kapalıysa hiçbir şey loglama
+    // E�Yer loglama kapalıysa hiçbir �Yey loglama
     if (!this.enabled) {
       return false;
     }
 
-    // Log seviyelerine sayısal değerler ata
+    // Log seviyelerine sayısal de�Yerler ata
     const levelValues: Record<LogLevel, number> = {
       [LogLevel.ERROR]: 3,
       [LogLevel.WARN]: 2,
@@ -1016,7 +949,7 @@ export class LoggerService {
    * @returns Log dosyası adı
    */
   private getLogFileName(level: LogLevel): string | null {
-    // error ve warn seviyeleri error.log'a, diğerleri backend.log'a
+    // error ve warn seviyeleri error.log'a, di�Yerleri backend.log'a
     if (level === LogLevel.ERROR || level === LogLevel.WARN) {
       return path.join(this.logDir, 'backend-error.log');
     }
@@ -1041,10 +974,10 @@ export class LoggerService {
         const frontendLogPath = this.getFrontendLogPath();
         fs.writeFileSync(frontendLogPath, '', { encoding: 'utf8' });
         if (this.logToConsole) {
-          console.log(`🧹 Frontend log dosyası temizlendi: ${frontendLogPath}`);
+          console.log(`�Y�� Frontend log dosyası temizlendi: ${frontendLogPath}`);
         }
       } catch (err) {
-        console.error('Frontend log dosyası temizlenirken hata oluştu:', err);
+        console.error('Frontend log dosyası temizlenirken hata olu�Ytu:', err);
       }
     }
   }
@@ -1062,7 +995,7 @@ export class LoggerService {
         encoding: 'utf8',
       });
     } catch (err) {
-      console.error('Frontend log yazılırken hata oluştu:', err);
+      console.error('Frontend log yazılırken hata olu�Ytu:', err);
     }
   }
 
@@ -1091,9 +1024,9 @@ export class LoggerService {
   }
 
   /**
-   * Sınav oluşturma süreciyle ilgili log kaydeder
+   * Sınav olu�Yturma süreciyle ilgili log kaydeder
    * @param message Log mesajı
-   * @param context Ek bağlam bilgileri (opsiyonel)
+   * @param context Ek ba�Ylam bilgileri (opsiyonel)
    * @param level Log seviyesi (default: 'info')
    */
   logExamProcess(
@@ -1101,7 +1034,7 @@ export class LoggerService {
     context?: any,
     level: 'info' | 'debug' | 'warn' | 'error' = 'info',
   ) {
-    // Timestamp ekleyerek daha zengin bir log oluştur
+    // Timestamp ekleyerek daha zengin bir log olu�Ytur
     const logPrefix = `[${new Date().toISOString()}]`;
 
     // Log metni
@@ -1136,7 +1069,7 @@ export class LoggerService {
     // Kritik loglar için ayrıca normal log sistemine de kaydet
     if (level === 'error' || level === 'warn') {
       this[level](
-        `SINAV SÜRECI: ${message}`,
+        `SINAV S�oRECI: ${message}`,
         'ExamProcessLogger',
         __filename,
         undefined,
@@ -1146,7 +1079,7 @@ export class LoggerService {
   }
 
   /**
-   * Sınav oluşturma sürecinin başlangıcını loglar
+   * Sınav olu�Yturma sürecinin ba�Ylangıcını loglar
    * @param userId Kullanıcı ID'si
    * @param quizType Sınav türü
    * @param metadata Sınav meta bilgileri
@@ -1157,15 +1090,15 @@ export class LoggerService {
     metadata: Record<string, any> = {},
   ) {
     this.logExamProcess(
-      `[BAŞLANGIÇ] ${userId} ID'li kullanıcı için ${quizType} türünde sınav oluşturma süreci başlatıldı`,
+      `[BA�?LANGI�+] ${userId} ID'li kullanıcı için ${quizType} türünde sınav olu�Yturma süreci ba�Ylatıldı`,
       { ...metadata, userId, quizType, timestamp: new Date().toISOString() },
     );
   }
 
   /**
-   * Sınav oluşturma sürecinin bitişini loglar
+   * Sınav olu�Yturma sürecinin biti�Yini loglar
    * @param userId Kullanıcı ID'si
-   * @param quizId Oluşturulan sınav ID'si
+   * @param quizId Olu�Yturulan sınav ID'si
    * @param metadata Sınav meta bilgileri
    */
   logExamCompletion(
@@ -1178,23 +1111,23 @@ export class LoggerService {
       : 'bilinmiyor';
 
     this.logExamProcess(
-      `[TAMAMLANDI] ${userId} ID'li kullanıcı için ${quizId} ID'li sınav oluşturuldu. Süreç ${duration} sürdü.`,
+      `[TAMAMLANDI] ${userId} ID'li kullanıcı için ${quizId} ID'li sınav olu�Yturuldu. Süreç ${duration} sürdü.`,
       { ...metadata, userId, quizId, completedAt: new Date().toISOString() },
     );
   }
 
   /**
-   * Sınav oluşturma sürecinde bir aşamayı loglar
+   * Sınav olu�Yturma sürecinde bir a�Yamayı loglar
    * @param userId Kullanıcı ID'si
-   * @param step Aşama adı
-   * @param metadata Aşama meta bilgileri
+   * @param step A�Yama adı
+   * @param metadata A�Yama meta bilgileri
    */
   logExamStage(
     userId: string,
     step: string,
     metadata: Record<string, any> = {},
   ) {
-    this.logExamProcess(`[AŞAMA] ${userId} ID'li kullanıcı: ${step}`, {
+    this.logExamProcess(`[A�?AMA] ${userId} ID'li kullanıcı: ${step}`, {
       ...metadata,
       userId,
       step,
@@ -1203,10 +1136,10 @@ export class LoggerService {
   }
 
   /**
-   * Sınav oluşturma sürecinde bir hata loglar
+   * Sınav olu�Yturma sürecinde bir hata loglar
    * @param userId Kullanıcı ID'si
    * @param error Hata
-   * @param context Hata bağlamı
+   * @param context Hata ba�Ylamı
    */
   logExamError(
     userId: string,
@@ -1229,3 +1162,4 @@ export class LoggerService {
     );
   }
 }
+

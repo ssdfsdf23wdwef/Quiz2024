@@ -17,6 +17,7 @@ import {
   SetMetadata,
   NotFoundException,
   Patch,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -198,16 +199,91 @@ export class LearningTargetsController {
       
       return targets;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      const errorContext = {
+        error: errorMessage,
+        courseId,
+        userId: req.user?.uid || 'unknown'
+      };
+      
       this.logger.error(
-        `Öğrenme hedefleri listelenirken hata: ${error.message}`,
+        `Öğrenme hedefleri listelenirken hata: ${errorMessage}`,
         'LearningTargetsController.findAllByUser',
         __filename,
-        undefined,
-        error,
+        0,
+        error instanceof Error ? error : new Error(errorMessage),
+        errorContext
       );
+      
+      // Rethrow the error to be handled by the global exception filter
       throw error;
     }
   }
+  
+  @Get('by-course/:courseId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Kursa ait öğrenme hedeflerini getirir',
+    description:
+      'Belirtilen kursa ait tüm öğrenme hedeflerini ve ilgili sınavları getirir.',
+  })
+  @ApiParam({ name: 'courseId', description: 'Kurs ID\'si' })
+  @ApiResponse({
+    status: 200,
+    description: 'Öğrenme hedefleri başarıyla getirildi',
+    type: [LearningTargetWithQuizzesResponse],
+  })
+  @ApiResponse({ status: 401, description: 'Yetkilendirme hatası' })
+  @ApiResponse({ status: 404, description: 'Kurs bulunamadı' })
+  @LogMethod()
+  async getByCourse(
+    @Param('courseId') courseId: string,
+    @Req() req: RequestWithUser,
+  ): Promise<LearningTargetWithQuizzes[]> {
+    try {
+      this.flowTracker.trackStep(
+        `Kursa ait öğrenme hedefleri getiriliyor: ${courseId}`,
+        'LearningTargetsController',
+      );
+
+      const userId = req.user.uid;
+      if (!userId) {
+        throw new UnauthorizedException('Geçersiz kullanıcı kimliği');
+      }
+
+      const learningTargets = await this.learningTargetsService.findByCourse(
+        courseId,
+        userId,
+      );
+
+      this.flowTracker.trackStep(
+        `Toplam ${learningTargets.length} adet öğrenme hedefi getirildi`,
+        'LearningTargetsController',
+      );
+
+      return learningTargets;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      const errorContext = {
+        courseId,
+        userId: req.user?.uid || 'unknown',
+        error: errorMessage,
+      };
+      
+      this.logger.error(
+        `Öğrenme hedefleri getirilirken hata: ${errorMessage}`,
+        'LearningTargetsController.getByCourse',
+        __filename,
+        0,
+        error instanceof Error ? error : new Error(errorMessage),
+        errorContext
+      );
+      
+      throw error;
+    }
+  }
+
+  // Removed duplicate findByCourse method - use getByCourse instead
   
   @Post('propose-new')
   @ApiOperation({
