@@ -684,17 +684,31 @@ class QuizApiService {
 
   /**
    * Sınav cevaplarını gönderir ve sonuçları alır
+   * Backend ile iletişimde yaşanabilecek sorunlara karşı güçlü hata yakalama ve geri dönüş mekanizmaları içerir
    */
   @LogMethod('QuizApiService', FlowCategory.API)
   async submitQuiz(payload: QuizSubmissionPayload): Promise<QuizSubmissionResponse> {
     // Quiz ID kontrolü - geçersiz ID varsa yerel sonuca dön
     if (!payload.quizId || payload.quizId === 'undefined') {
       console.warn('[QuizApiService.submitQuiz] Geçersiz Quiz ID:', payload.quizId);
+      ErrorService.showToast("Sınav ID'si bulunamadı, sonuçlar yerel olarak işlenecek", "warning", "Sınav Gönderimi");
       return this.createLocalQuizSubmission(payload);
+    }
+
+    // Kullanıcı cevapları kontrolü
+    if (!payload.userAnswers || Object.keys(payload.userAnswers).length === 0) {
+      console.warn('[QuizApiService.submitQuiz] Kullanıcı cevapları eksik veya boş:', payload.userAnswers);
+      ErrorService.showToast("Sınav cevapları bulunamadı", "error", "Sınav Gönderimi");
+      return this.createLocalQuizSubmission(payload); 
     }
 
     const flowStepId = `submitQuiz_${payload.quizId}`;
     flowTracker.markStart(flowStepId);
+    logger.debug(`Sınav gönderiliyor: ID=${payload.quizId}`, 'QuizApiService.submitQuiz', undefined, undefined, { 
+      quizId: payload.quizId,
+      userAnswersCount: Object.keys(payload.userAnswers).length,
+      elapsedTime: payload.elapsedTime
+    });
     
     try {
       return await this.apiService.safeRequest(
@@ -706,12 +720,28 @@ class QuizApiService {
             
             if (!storedQuiz) {
               console.warn('[QuizApiService.submitQuiz] LocalStorage\'da quiz bulunamadı, minimum veri ile devam ediliyor');
+              ErrorService.showToast("Sınav verileri eksik, basit analiz yapılacak", "warning", "Sınav Gönderimi");
               throw new Error('Quiz bulunamadı');
             }
             
+            // Sorularda normalizedSubTopic ve subTopic kontrolü yap
+            const preparedQuestions = this.prepareQuestionsForSubmission(
+              storedQuiz.questions || [], 
+              payload.userAnswers
+            );
+
+            // Hazırlanan soruları göster
+            console.log('[QuizApiService.submitQuiz] Hazırlanan sorular:', preparedQuestions);
+            
+            // Güncellenen sorularla quiz nesnesini güncelle
+            const updatedQuiz = {
+              ...storedQuiz,
+              questions: preparedQuestions
+            };
+            
             // Adapter service kullanarak backend formatına dönüştür
             const formattedPayload = adapterService.fromQuizSubmissionPayload(
-              storedQuiz,
+              updatedQuiz,
               payload.userAnswers,
               payload.elapsedTime
             );
@@ -725,12 +755,39 @@ class QuizApiService {
             delete payloadForSubmission.score;
             delete payloadForSubmission.status;
             
-            // Emin olmak için tüm sorulardan questionType alanını da temizle
+            // String olmayan değerleri düzelt
             if (Array.isArray(payloadForSubmission.questions)) {
               (payloadForSubmission.questions as Record<string, unknown>[]).forEach(q => {
+                // Alanları temizle
                 delete q.questionType;
                 delete q.status;
+                
+                // Alt konu bilgilerini string olarak kontrol et
+                if (q.subTopic === null || q.subTopic === undefined) {
+                  q.subTopic = "Genel Konu";
+                }
+                
+                if (q.normalizedSubTopic === null || q.normalizedSubTopic === undefined) {
+                  q.normalizedSubTopic = "genel-konu";
+                }
+                
+                // String olmayan değerleri düzelt
+                if (typeof q.subTopic !== 'string') {
+                  q.subTopic = String(q.subTopic);
+                }
+                
+                if (typeof q.normalizedSubTopic !== 'string') {
+                  q.normalizedSubTopic = String(q.normalizedSubTopic);
+                }
+                
+                // Zorluk seviyesi kontrolü
+                if (!q.difficulty || typeof q.difficulty !== 'string') {
+                  q.difficulty = 'medium';
+                }
               });
+            } else {
+              console.warn('[QuizApiService.submitQuiz] questions dizisi bulunamadı veya dizi değil');
+              payloadForSubmission.questions = []; // Boş dizi ata
             }
             
             console.log('[QuizApiService.submitQuiz] Backend\'e gönderilecek formatlı veri (adapter ile):', payloadForSubmission);
@@ -743,6 +800,7 @@ class QuizApiService {
               
               const result = await this.apiService.post<QuizSubmissionResponse>(endpoint, payloadForSubmission);
               console.log('[QuizApiService.submitQuiz] API yanıtı başarılı:', result);
+              logger.info(`Sınav başarıyla gönderildi: ID=${payload.quizId}`, 'QuizApiService.submitQuiz');
               return result as QuizSubmissionResponse;
             } catch (error) {
               console.error('[QuizApiService.submitQuiz] API hatası:', error);
@@ -752,11 +810,28 @@ class QuizApiService {
                 console.error('[QuizApiService.submitQuiz] Status:', error.response?.status);
                 console.error('[QuizApiService.submitQuiz] Response data:', error.response?.data);
                 
+                // Detaylı hata mesajı oluştur
+                const errorMessage = error.response?.data?.message || error.message || 'API hatası';
+                const statusCode = error.response?.status || 0;
+                
+                // Hata durumunda kullanıcıya bilgi ver
+                ErrorService.showToast(
+                  `Sınav sonuçları gönderilemedi: ${errorMessage}`, 
+                  "error", 
+                  "Sunucu Hatası"
+                );
+                
+                logger.error(
+                  `Sınav gönderimi başarısız: ID=${payload.quizId}, Status=${statusCode}`, 
+                  'QuizApiService.submitQuiz', 
+                  error,
+                  undefined,
+                  { errorMessage, statusCode }
+                );
+                
                 // Backend hatası durumunda yerel sonuca geçiş yap
-                if (error.response?.status === 500 || error.response?.status === 400) {
-                  console.warn(`[QuizApiService.submitQuiz] Backend ${error.response.status} hatası, lokalde sonuç oluşturuluyor`);
-                  return this.createLocalQuizSubmission(payload);
-                }
+                console.warn(`[QuizApiService.submitQuiz] Backend hatası, lokalde sonuç oluşturuluyor`);
+                return this.createLocalQuizSubmission(payload);
               }
               
               // Diğer hatalar için tekrar fırlat
@@ -764,6 +839,13 @@ class QuizApiService {
             }
           } catch (error) {
             console.error('[QuizApiService.submitQuiz] İç blok hatası:', error);
+            // Kullanıcıya genel hata mesajı göster
+            ErrorService.showToast(
+              "Sınav sonuçları işlenirken bir hata oluştu, yerel sonuçlar kullanılacak", 
+              "warning", 
+              "Sınav Gönderimi"
+            );
+            
             // İç hatalar için de yerel sonucu dön
             return this.createLocalQuizSubmission(payload);
           }
@@ -771,12 +853,14 @@ class QuizApiService {
         // Fallback - yerel depolama ile sonuç oluştur
         () => {
           console.log('[QuizApiService.submitQuiz] Fallback çözüm uygulanıyor');
+          ErrorService.showToast("Bağlantı sorunu, yerel analiz kullanılıyor", "info", "Sınav Gönderimi");
           return this.createLocalQuizSubmission(payload);
         }
       );
     } catch (error) {
       // Herhangi bir hata durumunda, yerel bir sonuç oluştur
       console.error('[QuizApiService.submitQuiz] En dış blok hatası:', error);
+      ErrorService.showToast("Beklenmeyen bir hata oluştu, yerel analiz kullanılıyor", "error", "Sınav Gönderimi");
       return this.createLocalQuizSubmission(payload);
     } finally {
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.submitQuiz');
@@ -785,14 +869,21 @@ class QuizApiService {
   
   /**
    * Soruları backend'e gönderilecek formatta hazırlar
-   * Backend'in validasyon hatalarını önler
+   * Backend'in validasyon hatalarını önlemek için tüm gerekli alan kontrolleri ve düzeltmeleri yapar
+   * Özellikle subTopic ve normalizedSubTopic alanlarının string olduğundan emin olur (toLowerCase hatalarını önler)
    */
   private prepareQuestionsForSubmission(questions: Question[], userAnswers: Record<string, string>): Question[] {
+    const startTime = Date.now();
+    logger.debug('Sorular backend formatına hazırlanıyor', 'prepareQuestionsForSubmission', undefined, undefined, {
+      questionCount: questions?.length || 0,
+      userAnswersCount: Object.keys(userAnswers || {}).length
+    });
+    
     // Boş array kontrolü
     if (!Array.isArray(questions) || questions.length === 0) {
-      console.warn('[QuizApiService.prepareQuestionsForSubmission] Sorular bulunamadı, varsayılan sorular oluşturuluyor');
+      console.warn('[QuizApiService.prepareQuestionsForSubmission] Sorular bulunamadı veya geçersiz format, varsayılan sorular oluşturuluyor');
       // Kullanıcı yanıtlarından soru ID'lerini al ve varsayılan sorular oluştur
-      return Object.keys(userAnswers).map((qId, index) => ({
+      const fallbackQuestions = Object.keys(userAnswers || {}).map((qId, index) => ({
         id: qId,
         questionText: `Soru ${index + 1}`,
         options: ['A', 'B', 'C', 'D'],
@@ -800,56 +891,130 @@ class QuizApiService {
         difficulty: 'medium' as DifficultyLevel,
         questionType: 'multiple_choice' as QuestionType,
         status: 'active' as QuestionStatus,
-        subTopic: 'Varsayılan Konu',
-        normalizedSubTopic: 'varsayilan-konu',
-        metadata: { generatedForSubmission: true }
+        subTopic: 'Genel Konu',
+        normalizedSubTopic: 'genel-konu',
+        explanation: '',
+        metadata: { generatedForSubmission: true, timestamp: new Date().toISOString() }
       }));
+      
+      logger.warn('Varsayılan sorular oluşturuldu', 'prepareQuestionsForSubmission', undefined, undefined, {
+        fallbackQuestionCount: fallbackQuestions.length
+      });
+      
+      return fallbackQuestions;
     }
     
     // Soruları kopyala ve eksik alanları tamamla
-    return questions.map(q => {
-      // Derin kopya oluştur
-      const question = { ...q };
-      
-      // ID kontrolü 
-      if (!question.id) {
-        question.id = `q_${Math.random().toString(36).substring(2, 15)}`;
+    const preparedQuestions = questions.map((q, index) => {
+      try {
+        // Derin kopya oluştur (nesne referansını korumak için, null-safe)
+        const question: Question = q ? JSON.parse(JSON.stringify(q)) : {} as Question;
+        
+        // ID kontrolü - her soru için unique ID olmalı
+        if (!question.id) {
+          question.id = `q_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 9)}`;
+          console.log(`[QuizApiService.prepareQuestionsForSubmission] Soru #${index} için ID oluşturuldu: ${question.id}`);
+        }
+        
+        // Soru metni kontrolü
+        if (!question.questionText || typeof question.questionText !== 'string') {
+          question.questionText = `Soru ${index + 1}`;
+          console.log(`[QuizApiService.prepareQuestionsForSubmission] Soru #${index} için metin oluşturuldu`);
+        }
+        
+        // Alt konu bilgisi kontrolü - string olmasını garantile
+        if (!question.subTopic || typeof question.subTopic !== 'string') {
+          question.subTopic = 'Genel Konu';
+          console.log(`[QuizApiService.prepareQuestionsForSubmission] Soru #${index} için subTopic oluşturuldu`);
+        }
+        
+        // normalizedSubTopic kontrolü ve oluşturma
+        if (!question.normalizedSubTopic || typeof question.normalizedSubTopic !== 'string') {
+          try {
+            // subTopic string olarak garanti edildiği için güvenle toLowerCase() kullanabiliriz
+            question.normalizedSubTopic = question.subTopic
+              .toLowerCase()
+              .trim()
+              .replace(/\s+/g, '-')
+              .replace(/[^a-z0-9\-]/g, '');
+            console.log(`[QuizApiService.prepareQuestionsForSubmission] Soru #${index} için normalizedSubTopic oluşturuldu: ${question.normalizedSubTopic}`);
+          } catch (error) {
+            // Herhangi bir hata durumunda varsayılan değer kullan
+            console.error(`[QuizApiService.prepareQuestionsForSubmission] normalizedSubTopic oluştururken hata:`, error);
+            question.normalizedSubTopic = 'genel-konu';
+          }
+        }
+        
+        // Alt konu değerlerinin string tipinde olduğundan emin ol
+        if (typeof question.subTopic !== 'string') {
+          question.subTopic = String(question.subTopic || 'Genel Konu');
+        }
+        
+        if (typeof question.normalizedSubTopic !== 'string') {
+          question.normalizedSubTopic = String(question.normalizedSubTopic || 'genel-konu');
+        }
+        
+        // Zorluk seviyesi kontrolü
+        if (!question.difficulty || typeof question.difficulty !== 'string' || 
+            !['easy', 'medium', 'hard', 'mixed'].includes(question.difficulty)) {
+          question.difficulty = 'medium' as DifficultyLevel;
+        }
+        
+        // Soru tipi kontrolü
+        if (!question.questionType || typeof question.questionType !== 'string') {
+          question.questionType = 'multiple_choice' as QuestionType;
+        }
+        
+        // Status kontrolü
+        if (!question.status || typeof question.status !== 'string') {
+          question.status = 'active' as QuestionStatus;
+        }
+        
+        // Options kontrolü - dizi olduğundan ve en az 2 seçenek içerdiğinden emin ol
+        if (!Array.isArray(question.options) || question.options.length < 2) {
+          question.options = ['A) Seçenek A', 'B) Seçenek B', 'C) Seçenek C', 'D) Seçenek D'];
+          console.log(`[QuizApiService.prepareQuestionsForSubmission] Soru #${index} için seçenekler oluşturuldu`);
+        }
+        
+        // correctAnswer kontrolü
+        if (!question.correctAnswer || typeof question.correctAnswer !== 'string') {
+          question.correctAnswer = question.options[0];
+          console.log(`[QuizApiService.prepareQuestionsForSubmission] Soru #${index} için doğru cevap ayarlandı: ${question.correctAnswer}`);
+        }
+        
+        // Açıklama alanı kontrolü
+        if (!question.explanation || typeof question.explanation !== 'string') {
+          question.explanation = '';
+        }
+        
+        return question;
+      } catch (error) {
+        console.error(`[QuizApiService.prepareQuestionsForSubmission] Soru #${index} işlenirken hata:`, error);
+        
+        // Hatada bile varsayılan bir soru döndür - sağlamlık için
+        return {
+          id: `error_q_${index}_${Date.now()}`,
+          questionText: `Hata Oluşan Soru ${index + 1}`,
+          options: ['A) Seçenek A', 'B) Seçenek B', 'C) Seçenek C', 'D) Seçenek D'],
+          correctAnswer: 'A) Seçenek A',
+          difficulty: 'medium' as DifficultyLevel,
+          questionType: 'multiple_choice' as QuestionType,
+          status: 'active' as QuestionStatus,
+          subTopic: 'Genel Konu',
+          normalizedSubTopic: 'genel-konu',
+          explanation: '',
+          metadata: { error: true, message: String(error) }
+        };
       }
-      
-      // Alt konu bilgisi kontrolü
-      if (!question.subTopic) {
-        question.subTopic = 'Genel';
-      }
-      
-      if (!question.normalizedSubTopic) {
-        question.normalizedSubTopic = question.subTopic
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9\-]/g, '');
-      }
-      
-      // Zorluk seviyesi kontrolü
-      if (!question.difficulty) {
-        question.difficulty = 'medium';
-      }
-      
-      // Soru tipi kontrolü
-      if (!question.questionType) {
-        question.questionType = 'multiple_choice';
-      }
-      
-      // Diğer zorunlu alanlar
-      if (!question.status) {
-        question.status = 'active';
-      }
-      
-      // Options kontrolü
-      if (!Array.isArray(question.options) || question.options.length < 2) {
-        question.options = ['A', 'B', 'C', 'D'];
-      }
-      
-      return question;
     });
+    
+    const elapsedTime = Date.now() - startTime;
+    logger.debug('Sorular başarıyla hazırlandı', 'prepareQuestionsForSubmission', undefined, undefined, {
+      processedQuestionCount: preparedQuestions.length,
+      elapsedTimeMs: elapsedTime
+    });
+    
+    return preparedQuestions;
   }
 
   /**

@@ -65,6 +65,7 @@ export default function QuizResultPage() {
   const router = useRouter();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  // Durum değişkenleri
   const [resultData, setResultData] = useState<Quiz | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,13 +75,40 @@ export default function QuizResultPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const {isOpen: isSaveConfirmOpen, onOpen: onSaveConfirmOpen, onClose: onSaveConfirmClose} = useDisclosure();
 
-  const { data: apiAnalysisData, isLoading: isAnalysisLoading, error: analysisApiError } = useQuizAnalysis(id);
+  // API isteklerini kontrol etmek için gerekli değişkenler
+  const [apiAttempts, setApiAttempts] = useState(0);
+  const MAX_API_ATTEMPTS = 2; // En fazla iki kez deneme yap
+  const [apiCallComplete, setApiCallComplete] = useState(false);
 
+  // Şartlı API çağrısı kontrolü
+  const skipAnalysisApi = apiCallComplete || apiAttempts >= MAX_API_ATTEMPTS;
+  
+  // API analiz verilerini şartlı olarak çağır
+  const { 
+    data: apiAnalysisData, 
+    isLoading: isAnalysisLoading, 
+    error: analysisApiError 
+  } = useQuizAnalysis(skipAnalysisApi ? '' : id); // Boş ID göndererek API isteğini engelle
+
+  // API yanıt durumunu izle
+  useEffect(() => {
+    if (apiAnalysisData) {
+      console.log("[DEBUG] API'dan analiz verileri alındı");
+      setApiCallComplete(true); // Başarılı yanıt alındığında durdur
+    } else if (analysisApiError) {
+      console.error("[DEBUG] API'dan analiz verileri alınırken hata:", analysisApiError);
+      if (apiAttempts >= MAX_API_ATTEMPTS - 1) {
+        setApiCallComplete(true); // Maksimum deneme sayısına ulaşıldığında durdur
+      }
+    }
+  }, [apiAnalysisData, analysisApiError, apiAttempts]);
+
+  // Yükleme süresince zaman aşımı kontrolü
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     if (isLoading || isAnalysisLoading) {
       timeoutId = setTimeout(() => {
-        if (isLoading || isAnalysisLoading) { // Hala yükleniyorsa
+        if (isLoading || isAnalysisLoading) {
           console.warn('Sınav sonuçları yükleme zaman aşımı - 15 saniye geçti');
           setIsLoading(false);
           setError('Sınav sonuçları yüklenirken zaman aşımı oluştu. Lütfen sayfayı yenileyin.');
@@ -90,6 +118,7 @@ export default function QuizResultPage() {
     return () => clearTimeout(timeoutId);
   }, [isLoading, isAnalysisLoading]);
 
+  // Quiz'in sunucuya kaydedilme durumunu kontrol et
   useEffect(() => {
     if (id) {
       setIsQuizSaved(checkIfQuizSavedToServer(id));
@@ -98,58 +127,156 @@ export default function QuizResultPage() {
 
   useEffect(() => {
     const fetchAndProcessQuizData = async () => {
-      if (!id) {
-        setError("Sınav ID'si bulunamadı.");
+      // Quiz ID kontrolü
+      if (!id || typeof id !== 'string') {
+        setError("Geçerli bir sınav ID'si bulunamadı.");
         setIsLoading(false);
         return;
       }
 
+      // Yüklemeyi başlat
       setIsLoading(true);
+      
+      // localStorage'dan veri yüklemeyi dene
       let dataFromStorage = getQuizResultsFromStorage(id);
 
       if (dataFromStorage) {
-        console.log("[DEBUG] Quiz sonuçları localStorage'dan yüklendi:", dataFromStorage);
-        // quizType eksikse varsayılan ata
-        if (!dataFromStorage.quizType) {
-          dataFromStorage.quizType = "quick"; // veya 'personalized' olabilir, duruma göre
-          console.warn("[DEBUG] localStorage verisinde quizType eksik, 'quick' olarak atandı.");
-        }
-        // analysisResult yoksa veya eksikse API'dan gelecek veriyi bekle
-        if (!dataFromStorage.analysisResult) {
-             console.warn(`[DEBUG] localStorage'dan yüklenen quiz (${id}) için analysisResult eksik. API'dan analiz verisi beklenecek.`);
-        }
-        setResultData(dataFromStorage);
-      } else {
-        console.log("[DEBUG] Quiz sonuçları localStorage'da bulunamadı, API'dan çekiliyor...");
+        console.log("[DEBUG] Quiz sonuçları localStorage'dan yüklendi.");
+        
         try {
+          // ID'nin kesinlikle string olduğundan emin ol
+          if (!dataFromStorage.id || typeof dataFromStorage.id !== 'string') {
+            dataFromStorage.id = id; // Param ID'yi kullan
+          }
+          
+          // quizType eksikse varsayılan ata
+          if (!dataFromStorage.quizType) {
+            dataFromStorage.quizType = "quick";
+            console.warn("[DEBUG] localStorage verisinde quizType eksik, 'quick' olarak atandı.");
+          }
+          
+          // analysisResult yoksa veya eksikse basit bir varsayılan sonucu hesaplayalim
+          if (!dataFromStorage.analysisResult && dataFromStorage.questions && dataFromStorage.userAnswers) {
+            console.warn(`[DEBUG] Quiz (${id}) için yerel analiz sonuçları kullanılıyor.`);
+            
+            // Basit bir analiz sonuç verisi oluştur
+            const correctAnswers = dataFromStorage.questions.filter(
+              q => q.correctAnswer === dataFromStorage.userAnswers?.[q.id]
+            ).length;
+            
+            const totalQuestions = dataFromStorage.questions.length;
+            const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+            
+            // Basit bir analysisResult objesi oluştur
+            dataFromStorage.analysisResult = {
+              overallScore: score,
+              performanceBySubTopic: {},
+              performanceCategorization: {
+                mastered: [],
+                medium: [],
+                failed: []
+              },
+              performanceByDifficulty: {},
+              recommendations: [`Sınav sonuçlarınız hesaplandı. Toplam puanınız: ${score}%`]
+            };
+          }
+          
+          // Tipi Quiz olarak zorla
+          const typedData = dataFromStorage as Quiz;
+          setResultData(typedData);
+          
+          // Yüklemeyi tamamla - localStorage verisiyle işlem yapabiliriz
+          setIsLoading(false);
+          
+          // API'ye daha fazla istek yapmayı durdur
+          setApiCallComplete(true);
+          
+        } catch (parseError) {
+          console.error("[DEBUG] localStorage verisi işlenirken hata:", parseError);
+          setWarning("Yerel sonuçlar işlenirken bir sorun oluştu, API'den veri alınıyor.");
+          // localStorage'daki veri hatalıysa API'den almaya devam et
+        }
+      } 
+      
+      // Eğer localStorage'dan veri yüklenemezse veya hatalıysa API'den al
+      if (!resultData && !apiCallComplete && apiAttempts < MAX_API_ATTEMPTS) {
+        try {
+          console.log(`[DEBUG] Quiz sonuçları API'dan çekiliyor. Deneme: ${apiAttempts + 1}/${MAX_API_ATTEMPTS}`);
+          setApiAttempts(prev => prev + 1); // Deneme sayısını artır
+          
           const apiQuizData = await quizService.getQuizById(id);
-          if (apiQuizData) {
-            console.log("[DEBUG] Temel Quiz verileri API'dan yüklendi:", apiQuizData);
+          
+          if (apiQuizData && apiQuizData.id) {
+            console.log("[DEBUG] Quiz verileri API'dan başarıyla yüklendi.");
+            
+            // Tip kontrolleri ve varsayılan değerler
             if (!apiQuizData.quizType) {
               apiQuizData.quizType = "quick";
-               console.warn("[DEBUG] API verisinde quizType eksik, 'quick' olarak atandı.");
             }
-            // API'den gelen quiz datası userAnswers veya analysisResult içermeyebilir.
-            // Bunlar ya localStorage'dan (ExamPage sonrası) ya da useQuizAnalysis'ten gelmeli.
-            // Şimdilik temel veriyi set et, analysisResult daha sonra birleşecek.
-            setResultData(apiQuizData);
+            
+            // Tipi Quiz olarak zorla
+            const typedData = apiQuizData as Quiz;
+            setResultData(typedData);
+            
+            // API'ye daha fazla istek yapmayı durdur
+            setApiCallComplete(true);
           } else {
-            setError("Sınav sonuçları API'dan bulunamadı.");
-            setIsLoading(false);
-            return;
+            console.warn("[DEBUG] API'dan geçerli bir quiz nesnesi alınamadı.");
+            setWarning("API'dan alınan sınav verileri geçersiz, yerel veriler kullanılıyor.");
+            
+            // Maksimum deneme sayısına ulaşıldıysa API çağrılarını durdur
+            if (apiAttempts >= MAX_API_ATTEMPTS - 1) {
+              setApiCallComplete(true);
+            }
           }
         } catch (apiFetchError) {
           console.error("[DEBUG] API'dan quiz verileri alınırken hata:", apiFetchError);
-          setError("Sınav temel verilerini yüklerken bir hata oluştu.");
-          setIsLoading(false);
-          return;
+          
+          if (apiAttempts >= MAX_API_ATTEMPTS - 1) {
+            setError("Sınav verilerini yüklerken bir sorun oluştu. Lütfen sayfayı yenileyin.");
+            setApiCallComplete(true); // Daha fazla deneme yapma
+          } else {
+            setWarning("API'dan veri alınırken sorun oluştu, yeniden deneniyor...");
+          }
         }
       }
-      // setIsLoading(false) burada çağrılmıyor, çünkü apiAnalysisData bekleniyor olabilir.
+      
+      // Yükleme işlemini tamamla
+      setIsLoading(false);
     };
 
     fetchAndProcessQuizData();
-  }, [id]);
+  }, [id, apiAttempts, apiCallComplete]);
+
+  useEffect(() => {
+    if (resultData && apiAnalysisData) {
+      console.log("[DEBUG] API'dan analiz verileri ile birleştiriliyor...");
+      
+      // Verileri birleştir
+      const updatedData = {
+        ...resultData,
+        analysisResult: apiAnalysisData,
+      };
+
+      // Tipi Quiz olarak zorla
+      const typedData = updatedData as Quiz;
+      setResultData(typedData);
+      
+      // API çağrılarını durdur - veriler alındı
+      setApiCallComplete(true);
+
+      // Eğer güncel veride değişiklik olduysa localStorage'a kaydet
+      if (JSON.stringify(updatedData) !== JSON.stringify(resultData) && id) {
+        // Quiz ID'nin string olduğundan emin ol
+        const quizId = typeof id === 'string' ? id : String(id);
+        storeQuizResultsInStorage(quizId, typedData);
+        console.log("[DEBUG] Güncellenmiş analiz verisi localStorage'a kaydedildi.");
+      }
+      
+      // Yükleme tamamlandı
+      setIsLoading(false);
+    }
+  }, [resultData, apiAnalysisData, id, apiCallComplete]);
 
   useEffect(() => {
     if (resultData && apiAnalysisData) {

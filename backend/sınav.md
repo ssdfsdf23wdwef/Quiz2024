@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-25T13:17:54.115Z
+## Tarih: 2025-05-25T13:45:22.668Z
 
-## Trace ID: quiz-1748179074110-gdktz
+## Trace ID: quiz-1748180722663-yist6
 
 ## Alt Konular (2 adet):
 ```
@@ -228,31 +228,31 @@ Bekleyen konu yok.
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
 #### Genel Konular:
-- Soru: birim testi ve junit alanında, aşağıdakilerden hangisi birim testi ve junit sürecinde en önemli adımdır?
+- Soru: yazılım testinin önemi alanında, aşağıdakilerden hangisi yazılım testinin önemi sürecinde en önemli adımdır?
 - Seçenekler: A) Algoritma tasarımı | B) Kodun test edilmesi | C) Gereksinimlerin belirlenmesi | D) Dokümantasyon yazımı
 - Doğru Cevap: C) Gereksinimlerin belirlenmesi
 - Zorluk: medium
 
 #### Yazılım Metodolojileri:
-- Soru: birim testinin tanımı konusunda, hangi yaklaşım daha verimli sonuçlar verir?
+- Soru: ekonomik etkileri konusunda, hangi yaklaşım daha verimli sonuçlar verir?
 - Seçenekler: A) İteratif geliştirme | B) Waterfall metodolojisi | C) Ad-hoc yaklaşım | D) Tek seferde tamamlama
 - Doğru Cevap: A) İteratif geliştirme
 - Zorluk: medium
 
 #### Algoritma Analizi:
-- Soru: birim testi ve junit bağlamında en önemli performans faktörü nedir?
+- Soru: yazılım testinin önemi bağlamında en önemli performans faktörü nedir?
 - Seçenekler: A) Bellek kullanımı | B) Zaman karmaşıklığı | C) Kod okunabilirliği | D) Uygulanabilirlik kolaylığı
 - Doğru Cevap: B) Zaman karmaşıklığı
 - Zorluk: medium
 
 #### Yazılım Kalitesi:
-- Soru: birim testi ve junit yaklaşımında aşağıdakilerden hangisi doğrudur?
+- Soru: yazılım testinin önemi yaklaşımında aşağıdakilerden hangisi doğrudur?
 - Seçenekler: A) Ekip çalışması, bireysel çalışmadan her zaman daha verimsizdir | B) Dokümantasyon, modern geliştirme süreçlerinde tamamen gereksizdir | C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur | D) Test yazımı sadece projenin sonunda yapılmalıdır
 - Doğru Cevap: C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur
 - Zorluk: medium
 
 #### Teorik Bilgisayar Bilimi:
-- Soru: birim testi ve junit alanında, aşağıdaki ifadelerden hangisi doğrudur?
+- Soru: yazılım testinin önemi alanında, aşağıdaki ifadelerden hangisi doğrudur?
 - Seçenekler: A) Her problemin polinom zamanda çözülebildiği matematiksel olarak kanıtlanmıştır | B) Yapay zeka, tüm programlama problemlerini otomatik olarak çözebilir | C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır | D) Bilgisayarlar, insan beyni ile aynı şekilde düşünür ve öğrenir
 - Doğru Cevap: C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır
 - Zorluk: medium
