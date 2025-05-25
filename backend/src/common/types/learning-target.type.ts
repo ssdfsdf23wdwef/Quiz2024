@@ -1,22 +1,37 @@
 /**
+ * Öğrenme hedefi durumu
+ */
+export enum LearningTargetStatus {
+  NOT_STARTED = 'Not Started',
+  IN_PROGRESS = 'In Progress',
+  COMPLETED = 'Completed',
+}
+
+/**
+ * Öğrenme hedefi kaynağı
+ */
+export enum LearningTargetSource {
+  AI_PROPOSAL = 'ai_proposal',
+  MANUAL = 'manual',
+  DOCUMENT_IMPORT = 'document_import',
+}
+
+/**
  * Öğrenme Hedefi (LearningTarget) modelini temsil eden interface
  * @see PRD 7.3
  */
 export interface LearningTarget {
-  id: string;
-  courseId: string;
+  id: string; // Firestore tarafından otomatik atanacak
   userId: string;
-  subTopicName: string;
-  normalizedSubTopicName: string;
-  status: 'pending' | 'failed' | 'medium' | 'mastered';
-  failCount: number;
-  mediumCount: number;
-  successCount: number;
-  lastAttemptScorePercent: number | null;
-  lastAttempt: string | null;
-  firstEncountered: string;
-  updatedAt?: string | null;
-  source?: 'user_created' | 'document_extracted' | 'ai_generated_new' | 'legacy';
+  courseId?: string; // Opsiyonel, bir derse bağlıysa
+  topicName: string;
+  status: LearningTargetStatus;
+  isNewTopic: boolean; // Bu hedef bir "yeni konu" ise true
+  source: LearningTargetSource; // Hedefin kaynağı
+  originalProposedId?: string; // Eğer source === 'ai_proposal', AI'dan gelen geçici ID
+  notes?: string; // Kullanıcının ekleyebileceği notlar
+  createdAt: FirebaseFirestore.Timestamp;
+  updatedAt: FirebaseFirestore.Timestamp;
 }
 
 /**

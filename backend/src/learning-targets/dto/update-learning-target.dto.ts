@@ -1,97 +1,32 @@
-import {
-  IsString,
-  IsEnum,
-  IsOptional,
-  IsNumber,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-
-export enum LearningTargetStatus {
-  PENDING = 'pending',
-  FAILED = 'failed',
-  MEDIUM = 'medium',
-  MASTERED = 'mastered',
-}
+import { LearningTargetStatus } from '../../common/types/learning-target.type';
 
 export class UpdateLearningTargetDto {
   @ApiProperty({
-    description: 'Öğrenme hedefinin (alt konunun) adı',
-    example: 'İkinci Dereceden Denklemler',
-    required: false,
-  })
-  @IsString({ message: 'Alt konu adı metinsel bir değer olmalıdır' })
-  @IsOptional()
-  subTopicName?: string;
-
-  @ApiProperty({
-    description: "Öğrenme hedefinin (alt konunun) normalleştirilmiş adı",
-    example: "ikinci-dereceden-denklemler",
-    required: false,
-  })
-  @IsString({ message: "Normalleştirilmiş alt konu adı metinsel bir değer olmalıdır" })
-  @IsOptional()
-  normalizedSubTopicName?: string;
-
-  @ApiProperty({
     description: 'Öğrenme hedefinin durumu',
     enum: LearningTargetStatus,
-    example: 'medium',
+    required: false,
   })
   @IsEnum(LearningTargetStatus, {
-    message:
-      'Geçersiz durum değeri. Kabul edilen değerler: pending, failed, medium, mastered',
+    message: 'Geçersiz durum değeri. Kabul edilen değerler: Not Started, In Progress, Completed',
   })
   @IsOptional()
   status?: LearningTargetStatus;
 
   @ApiProperty({
-    description: 'Başarısızlık sayısı',
-    example: 2,
+    description: 'Öğrenme hedefi konusu',
     required: false,
   })
-  @IsNumber({}, { message: 'Başarısızlık sayısı sayısal bir değer olmalıdır' })
-  @Min(0, { message: 'Başarısızlık sayısı 0 veya daha büyük olmalıdır' })
+  @IsString()
   @IsOptional()
-  failCount?: number;
+  topicName?: string;
 
   @ApiProperty({
-    description: 'Orta seviye başarı sayısı',
-    example: 3,
+    description: 'Kullanıcının ekleyebileceği notlar',
     required: false,
   })
-  @IsNumber(
-    {},
-    { message: 'Orta seviye başarı sayısı sayısal bir değer olmalıdır' },
-  )
-  @Min(0, { message: 'Orta seviye başarı sayısı 0 veya daha büyük olmalıdır' })
+  @IsString()
   @IsOptional()
-  mediumCount?: number;
-
-  @ApiProperty({
-    description: 'Başarı sayısı',
-    example: 5,
-    required: false,
-  })
-  @IsNumber({}, { message: 'Başarı sayısı sayısal bir değer olmalıdır' })
-  @Min(0, { message: 'Başarı sayısı 0 veya daha büyük olmalıdır' })
-  @IsOptional()
-  successCount?: number;
-
-  @ApiProperty({
-    description: 'Son deneme puan yüzdesi',
-    example: 85.5,
-    required: false,
-  })
-  @IsNumber(
-    {},
-    { message: 'Son deneme puan yüzdesi sayısal bir değer olmalıdır' },
-  )
-  @Min(0, { message: 'Son deneme puan yüzdesi 0 veya daha büyük olmalıdır' })
-  @Max(100, {
-    message: 'Son deneme puan yüzdesi 100 veya daha küçük olmalıdır',
-  })
-  @IsOptional()
-  lastAttemptScorePercent?: number;
+  notes?: string;
 }

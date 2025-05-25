@@ -310,27 +310,74 @@ export class QuizGenerationService {
       console.log(
         `[QUIZ_DEBUG] [${traceId}] AI modeline istek gönderiliyor...`,
       );
-      const aiResponseText = await this.generateAIContent(promptText, metadata);
+      const rawJsonResponse = await this.generateAIContent(promptText, metadata);
 
       // DETAYLI LOGLAMA EKLE: AI yanıtını logla
       console.log(
-        `[QUIZ_DEBUG] [${traceId}] AI yanıtı alındı (ilk 500 karakter):\n${aiResponseText.substring(0, 500)}...`,
+        `[QUIZ_DEBUG] [${traceId}] AI yanıtı alındı (ilk 500 karakter):\n${rawJsonResponse.substring(0, 500)}...`,
       );
       console.log(
-        `[QUIZ_DEBUG] [${traceId}] AI yanıtı toplam uzunluğu: ${aiResponseText.length} karakter`,
+        `[QUIZ_DEBUG] [${traceId}] AI yanıtı toplam uzunluğu: ${rawJsonResponse.length} karakter`,
       );
       console.log(
-        `[QUIZ_DEBUG] [${traceId}] Yanıt JSON içeriyor mu: ${aiResponseText.includes('{') && aiResponseText.includes('}') ? 'EVET' : 'HAYIR'}`,
+        `[QUIZ_DEBUG] [${traceId}] Yanıt JSON içeriyor mu: ${rawJsonResponse.includes('{') && rawJsonResponse.includes('}') ? 'EVET' : 'HAYIR'}`,
       );
 
       this.logger.logExamStage(options.userId || 'anon', 'AI yanıtı alındı', {
         traceId,
-        responseLength: aiResponseText.length,
+        responseLength: rawJsonResponse.length,
       });
 
-      // AI yanıtını işle
-      console.log(`[QUIZ_DEBUG] [${traceId}] AI yanıtı işleniyor...`);
-      const questions = this.processAIResponse(aiResponseText, metadata);
+      // JSON parse işlemi
+      console.log(`[QUIZ_DEBUG] [${traceId}] AI yanıtı JSON olarak parse ediliyor...`);
+      let parsedResponse;
+      try {
+        // String kontrolü
+        if (typeof rawJsonResponse !== 'string') {
+          this.logger.error(
+            `[${traceId}] AI yanıtı string değil: ${typeof rawJsonResponse}`,
+            'QuizGenerationService.generateQuizQuestions',
+          );
+          throw new BadRequestException('AI response is not a valid string.');
+        }
+
+        // JSON parse işlemi
+        parsedResponse = JSON.parse(rawJsonResponse);
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] JSON parse başarılı. Anahtarlar:`,
+          Object.keys(parsedResponse),
+        );
+      } catch (error) {
+        // JSON parse hatası
+        this.logger.error(
+          `[${traceId}] AI yanıtı geçerli JSON değil: ${error.message}`,
+          'QuizGenerationService.generateQuizQuestions',
+          undefined,
+          error,
+        );
+        throw new BadRequestException('AI response is not valid JSON.');
+      }
+
+      // Zod validasyonu
+      console.log(`[QUIZ_DEBUG] [${traceId}] AI yanıtı Zod ile doğrulanıyor...`);
+      try {
+        // QuizResponseSchema veya QuizGenerationResponseSchema ile doğrulama
+        const validatedData = this.quizValidation.validateQuizResponseSchema(
+          parsedResponse,
+          metadata,
+          rawJsonResponse,
+        );
+
+        if (!validatedData) {
+          throw new Error('Validation returned null or undefined result');
+        }
+
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] Zod doğrulaması başarılı. Sorular işleniyor...`,
+        );
+
+        // Doğrulanmış sorular için detaylı işleme
+        const questions = this.processAIResponse(rawJsonResponse, metadata, validatedData);
 
       // DETAYLI LOGLAMA EKLE: İşlenen soruları logla
       console.log(
@@ -429,29 +476,47 @@ export class QuizGenerationService {
       'QuizGenerationService',
     );
 
-    // 1. Base prompt'u yükle
-    const basePrompt = await this.promptManager.loadPrompt(
-      'generate-quiz-tr.txt',
-    );
+    // 1. Kişiselleştirilmiş quiz türüne göre uygun prompt'u seç
+    let promptFileName = 'generate-quiz-tr.txt'; // Varsayılan prompt
+    const isNewTopicFocused = metadata.personalizedQuizType === 'newTopicFocused';
+
+    if (isNewTopicFocused) {
+      if (options.subTopics && options.subTopics.length > 0) {
+        promptFileName = 'generate-quiz-new-topics-tr.txt';
+        this.logger.info(
+          `[${traceId}] newTopicFocused türü için özel prompt kullanılıyor: ${promptFileName}. Konular: ${options.subTopics.join(', ')}`,
+          'QuizGenerationService.prepareQuizPrompt',
+        );
+      } else {
+        this.logger.warn(
+          `[${traceId}] newTopicFocused türü istendi ancak hiç konu sağlanmadı. Standart prompt ('${promptFileName}') kullanılacak.`,
+          'QuizGenerationService.prepareQuizPrompt',
+        );
+        // promptFileName değişmeden kalır, yani 'generate-quiz-tr.txt'
+      }
+    }
+
+    // 2. Seçilen prompt'u yükle
+    const basePrompt = await this.promptManager.loadPrompt(promptFileName);
     if (!basePrompt) {
       this.logger.error(
-        `[${traceId}] Temel quiz prompt'u yüklenemedi. Fallback kullanılacak.`,
+        `[${traceId}] Prompt dosyası yüklenemedi: ${promptFileName}. Fallback kullanılacak.`,
         'QuizGenerationService.prepareQuizPrompt',
       );
       return this.promptManager.getFallbackQuizPrompt();
     }
 
-    // 2. Konuları formatla
+    // 3. Konuları formatla
     const topicsText = this.formatTopics(options.subTopics);
 
-    // 3. Değişkenleri doldur
+    // 4. Değişkenleri doldur
     const variables: Record<string, string> = {
       TOPICS: topicsText,
       COUNT: options.questionCount.toString(),
       DIFFICULTY: options.difficulty || 'medium',
     };
 
-    // 4. Belge metni varsa prompt'a ekle
+    // 5. Belge metni varsa prompt'a ekle
     if (options.documentText) {
       variables['DOCUMENT_TEXT'] = options.documentText;
       this.logger.debug(
@@ -460,7 +525,7 @@ export class QuizGenerationService {
       );
     }
 
-    // 5. Kişiselleştirme bağlamı varsa prompt'a ekle
+    // 6. Kişiselleştirme bağlamı varsa prompt'a ekle
     if (options.personalizationContext) {
       variables['PERSONALIZATION_CONTEXT'] = options.personalizationContext;
       this.logger.debug(
@@ -469,13 +534,13 @@ export class QuizGenerationService {
       );
     }
 
-    // 6. Prompt'u derle
+    // 7. Prompt'u derle
     const compiledPrompt = this.promptManager.compilePrompt(
       basePrompt,
       variables,
     );
 
-    // 7. Debug amacıyla prompt'u dosyaya kaydet
+    // 8. Debug amacıyla prompt'u dosyaya kaydet
     try {
       const fs = require('fs');
       const path = require('path');
@@ -565,7 +630,7 @@ export class QuizGenerationService {
         const path = require('path');
 
         // AI yanıtını cikti.md dosyasına kaydet (her seferinde dosyayı yenile)
-        const outputFilePath = path.join(process.cwd(), 'cikti.md');
+        const outputFilePath = path.join(process.cwd(), 'modelden_cikti.md');
         let responseText = result.text;
 
         // Yanıtın uzunluğunu kontrol et
@@ -598,7 +663,7 @@ export class QuizGenerationService {
           'QuizGenerationService.generateAIContent',
         );
 
-        const debugFilePath = path.join(process.cwd(), 'sınav.md');
+        const debugFilePath = path.join(process.cwd(), 'modelle_giris.md');
         if (fs.existsSync(debugFilePath)) {
           let appendContent = `\n\n## AI Yanıtı:\n\`\`\`json\n${result.text}\n\`\`\`\n\n`;
 
@@ -623,11 +688,13 @@ export class QuizGenerationService {
    * AI yanıtını işler ve doğrular
    * @param aiResponseText AI yanıt metni
    * @param metadata Metadata bilgileri
+   * @param validatedData Zod tarafından doğrulanmış veri (opsiyonel)
    * @returns Quiz soruları
    */
   private processAIResponse(
     aiResponseText: string,
     metadata: QuizMetadata,
+    validatedData?: any,
   ): QuizQuestion[] {
     const { traceId } = metadata;
 
@@ -658,21 +725,28 @@ export class QuizGenerationService {
     });
 
     try {
-      // 1. JSON'a dönüştür
-      console.log(
-        `[QUIZ_DEBUG] [${traceId}] ADIM 1: AI yanıtı JSON'a dönüştürülüyor...`,
-      );
-      console.time(`[QUIZ_DEBUG] [${traceId}] JSON'a dönüştürme süresi`);
-      const parsedJson = this.quizValidation.parseAIResponseToJSON(
-        aiResponseText,
-        metadata,
-      ) as any;
-      console.timeEnd(`[QUIZ_DEBUG] [${traceId}] JSON'a dönüştürme süresi`);
+      // 1. Eğer validatedData yoksa, JSON'a dönüştür
+      let parsedJson = validatedData;
+      if (!parsedJson) {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 1: AI yanıtı JSON'a dönüştürülüyor...`,
+        );
+        console.time(`[QUIZ_DEBUG] [${traceId}] JSON'a dönüştürme süresi`);
+        parsedJson = this.quizValidation.parseAIResponseToJSON(
+          aiResponseText,
+          metadata,
+        ) as any;
+        console.timeEnd(`[QUIZ_DEBUG] [${traceId}] JSON'a dönüştürme süresi`);
+      } else {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 1: Önceden doğrulanmış veri kullanılıyor`,
+        );
+      }
 
       // JSON çıktısının özeti
       if (parsedJson) {
         console.log(
-          `[QUIZ_DEBUG] [${traceId}] ADIM 1 SONUÇ: JSON'a dönüştürme başarılı`,
+          `[QUIZ_DEBUG] [${traceId}] ADIM 1 SONUÇ: JSON işleme başarılı`,
         );
         if (typeof parsedJson === 'object' && parsedJson !== null) {
           console.log(
@@ -757,17 +831,24 @@ export class QuizGenerationService {
         return [];
       }
 
-      // 2. Şema doğrulaması
-      console.log(
-        `[QUIZ_DEBUG] [${traceId}] ADIM 2: Şema doğrulaması yapılıyor...`,
-      );
-      console.time(`[QUIZ_DEBUG] [${traceId}] Şema doğrulama süresi`);
-      const validatedData = this.quizValidation.validateQuizResponseSchema(
-        parsedJson,
-        metadata,
-        aiResponseText,
-      );
-      console.timeEnd(`[QUIZ_DEBUG] [${traceId}] Şema doğrulama süresi`);
+      // 2. Şema doğrulaması (eğer önceden doğrulanmamışsa)
+      let validatedResult = parsedJson;
+      if (!validatedData) {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 2: Şema doğrulaması yapılıyor...`,
+        );
+        console.time(`[QUIZ_DEBUG] [${traceId}] Şema doğrulama süresi`);
+        validatedResult = this.quizValidation.validateQuizResponseSchema(
+          parsedJson,
+          metadata,
+          aiResponseText,
+        );
+        console.timeEnd(`[QUIZ_DEBUG] [${traceId}] Şema doğrulama süresi`);
+      } else {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] ADIM 2: Önceden doğrulanmış veri kullanılıyor`,
+        );
+      }
 
       // Doğrulama sonucu
       if (validatedData) {

@@ -706,9 +706,9 @@ export class CoursesService {
 
       // 3. Alt konu bazlı ilerleme durumunu hesapla
       const progressByTopic = learningTargets.map((target) => ({
-        subTopic: target.subTopicName,
+        subTopic: target.topicName, // Using topicName instead of subTopicName
         status: target.status,
-        scorePercent: target.lastAttemptScorePercent || 0,
+        scorePercent: (target as any).lastAttemptScorePercent || 0, // Using type assertion for optional property
       }));
 
       // 4. Son sınav sonuçlarını formatla

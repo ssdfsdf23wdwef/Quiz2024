@@ -1803,7 +1803,7 @@ export class QuizzesService {
 
       const targetsList = learningTargets.map((t) => ({
         targetId: t.id,
-        description: t.subTopicName || '',
+        description: t.topicName || '', // Using topicName instead of subTopicName
         status: t.status,
       }));
 

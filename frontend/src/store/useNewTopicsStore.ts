@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { createTrackedStore } from "./zustand.middleware";
-import { getLogger, getFlowTracker } from "../lib/logger.utils";
+import { getLogger, getFlowTracker, mapToTrackerCategory } from "../lib/logger.utils";
 import { LearningTarget } from "@/types/learningTarget.type";
 import learningTargetService from "@/services/learningTarget.service";
-import { StateCreator } from "zustand";
+import { StateCreator, StoreApi } from "zustand";
 import { FlowCategory } from "../constants/logging.constants";
 
 /**
@@ -49,12 +49,20 @@ interface NewTopicsActions {
   resetNewTopicsState: () => void;
 }
 
+// Define type for extended API with trackAction
+interface ExtendedApi extends StoreApi<NewTopicsStore> {
+  trackAction?: <F extends (...args: any[]) => any>(
+    actionName: string,
+    fn: F
+  ) => F;
+}
+
 /**
- * Tam NewTopics Store arayüzü
+ * Combined interface (State + Actions)
  */
 interface NewTopicsStore extends NewTopicsState, NewTopicsActions {}
 
-// Logger ve flowTracker nesnelerini elde et
+// Logger
 const logger = getLogger();
 const flowTracker = getFlowTracker();
 
@@ -62,9 +70,9 @@ const flowTracker = getFlowTracker();
 const newTopicsStoreImpl: StateCreator<
   NewTopicsStore,
   [],
-  [],
+  [["zustand/immer", never]],
   NewTopicsStore
-> = (set, get, api) => {
+> = (set, get, api: ExtendedApi) => {
   return {
     // Initial state
     suggestedNewTopics: [],
@@ -73,52 +81,60 @@ const newTopicsStoreImpl: StateCreator<
     isLoadingSuggestedTopics: false,
     errorLoadingSuggestedTopics: null,
     isConfirmingTopics: false,
-    errorConfirmingTopics: null,// Actions
+    errorConfirmingTopics: null,
+
+    // Actions
     loadSuggestedNewTopics: async (
-      courseId: string, 
-      lessonContext: string, 
-      existingTopicNames: string[]
+      courseId: string,
+      lessonContext: string,
+      existingTopicNames: string[] = []
     ) => {
       logger.debug(
         `Yeni konu önerileri yükleniyor: courseId=${courseId}, contextLength=${lessonContext.length}, existingTopicsCount=${existingTopicNames.length}`,
         'NewTopicsStore.loadSuggestedNewTopics'
-      );      flowTracker.trackStep(
-        FlowCategory.State,
+      );
+      
+      flowTracker.trackStep(
+        mapToTrackerCategory(FlowCategory.State),
         `Yeni konu önerileri yükleme başlatıldı - courseId: ${courseId}`,
-        { context: 'NewTopicsStore' }
+        'NewTopicsStore'
       );
 
-      // Loading state başlat
-      set((state: NewTopicsStore) => {
-        state.isLoadingSuggestedTopics = true;
-        state.errorLoadingSuggestedTopics = null;
-        return state;
-      });try {
+      // Loading state
+      set((state) => ({
+        ...state,
+        isLoadingSuggestedTopics: true,
+        errorLoadingSuggestedTopics: null
+      }));
+
+      try {
+        // API call
         const suggestedTopics = await learningTargetService.detectNewTopics(
           courseId,
           lessonContext,
           existingTopicNames
         );
 
-        // Başarılı sonuç
+        // Başarılı sonuç (Successful result)
         flowTracker.trackStep(
-          FlowCategory.State,
+          mapToTrackerCategory(FlowCategory.State),
           `Yeni konu önerileri başarıyla yüklendi - ${suggestedTopics.length} konu`,
           'NewTopicsStore'
         );
 
-        logger.info(
-          `Yeni konu önerileri başarıyla yüklendi: ${suggestedTopics.length} konu`,
+        logger.debug(
+          `Yeni konu önerileri yüklendi: ${suggestedTopics.length} konu bulundu`,
           'NewTopicsStore.loadSuggestedNewTopics',
           undefined,
           undefined,
           { courseId, suggestedCount: suggestedTopics.length, topics: suggestedTopics }
         );
 
-        set((state) => {
-          state.suggestedNewTopics = suggestedTopics;
-          state.isLoadingSuggestedTopics = false;
-        });
+        set((state) => ({
+          ...state,
+          suggestedNewTopics: suggestedTopics,
+          isLoadingSuggestedTopics: false
+        }));
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
@@ -128,118 +144,135 @@ const newTopicsStoreImpl: StateCreator<
           'NewTopicsStore.loadSuggestedNewTopics',
           undefined,
           undefined,
-          error instanceof Error ? error : undefined,
-          { courseId, error }
+          error instanceof Error ? error : new Error(errorMessage),
+          { courseId }
         );
 
         flowTracker.trackStep(
-          FlowCategory.Error,
+          mapToTrackerCategory(FlowCategory.Error),
           `Yeni konu önerileri yüklenirken hata: ${errorMessage}`,
           'NewTopicsStore'
         );
 
-        set((state) => {
-          state.suggestedNewTopics = [];
-          state.isLoadingSuggestedTopics = false;
-          state.errorLoadingSuggestedTopics = errorMessage;
-        });
+        set((state) => ({
+          ...state,
+          suggestedNewTopics: [],
+          isLoadingSuggestedTopics: false,
+          errorLoadingSuggestedTopics: errorMessage
+        }));
       }
-    },    toggleTopicForConfirmation: (topicName: string) => {
+    },    
+    
+    toggleTopicForConfirmation: (topicName: string) => {
       logger.debug(
         `Konu onay durumu değiştiriliyor: ${topicName}`,
-        'NewTopicsStore.toggleTopicForConfirmation'
+        'NewTopicsStore.toggleTopicForConfirmation',
+        undefined,
+        "125"
       );
 
       const currentSelected = get().selectedNewTopicsForConfirmation;
       const isCurrentlySelected = currentSelected.includes(topicName);
 
       flowTracker.trackStep(
-        FlowCategory.State,
+        mapToTrackerCategory(FlowCategory.State),
         `Konu onay durumu: ${topicName} - ${isCurrentlySelected ? 'çıkarıldı' : 'eklendi'}`,
         'NewTopicsStore'
       );
 
       set((state) => {
-        if (isCurrentlySelected) {
-          // Konu seçili ise, listeden çıkar
-          state.selectedNewTopicsForConfirmation = state.selectedNewTopicsForConfirmation.filter(
-            name => name !== topicName
-          );
-        } else {
-          // Konu seçili değilse, listeye ekle
-          state.selectedNewTopicsForConfirmation.push(topicName);
-        }
+        // Create a new array based on whether the topic is already selected
+        const newSelectedTopics = isCurrentlySelected 
+          // Konu seçili ise, listeden çıkar (If selected, remove from list)
+          ? state.selectedNewTopicsForConfirmation.filter(name => name !== topicName)
+          // Konu seçili değilse, listeye ekle (If not selected, add to list)
+          : [...state.selectedNewTopicsForConfirmation, topicName];
+          
+        return {
+          ...state,
+          selectedNewTopicsForConfirmation: newSelectedTopics
+        };
       });
 
       logger.debug(
-        `Konu onay durumu güncellendi: ${topicName} - ${isCurrentlySelected ? 'çıkarıldı' : 'eklendi'}`,
+        `Konu onay durumu değiştirildi: ${topicName} - ${isCurrentlySelected ? 'listeden çıkarıldı' : 'listeye eklendi'}`,
         'NewTopicsStore.toggleTopicForConfirmation',
         undefined,
-        undefined,
-        { 
-          topicName, 
-          isSelected: !isCurrentlySelected, 
-          selectedCount: get().selectedNewTopicsForConfirmation.length 
-        }
+        "144",
+        { topicName, isSelected: !isCurrentlySelected, selectedCount: get().selectedNewTopicsForConfirmation.length }
       );
     },
 
-    clearSuggestedTopics: api.trackAction('clearSuggestedTopics', () => {
+    // Use simple function instead of trackAction for type safety
+    clearSuggestedTopics: () => {
       logger.debug(
         'Önerilen konular temizleniyor',
         'NewTopicsStore.clearSuggestedTopics',
-        'useNewTopicsStore.ts',
-        152
+        undefined,
+        "152"
       );
 
       flowTracker.trackStep(
-        'NewTopicsStore',
-        'Önerilen konular ve seçim listesi temizlendi'
+        mapToTrackerCategory(FlowCategory.State),
+        'Önerilen konular ve seçim listesi temizlendi',
+        'NewTopicsStore'
       );
 
-      set((state) => {
-        state.suggestedNewTopics = [];
-        state.selectedNewTopicsForConfirmation = [];
-      });
-    }),
+      set((state) => ({
+        ...state,
+        suggestedNewTopics: [],
+        selectedNewTopicsForConfirmation: []
+      }));
+    },
 
-    confirmSelectedTopics: api.trackAction('confirmSelectedTopics', async (courseId: string): Promise<boolean> => {
+    // Use simple function instead of trackAction for type safety
+    confirmSelectedTopics: async (courseId: string): Promise<boolean> => {
       const selectedTopics = get().selectedNewTopicsForConfirmation;
       
       logger.debug(
         `Seçilen konular onaylanıyor: courseId=${courseId}, selectedCount=${selectedTopics.length}`,
         'NewTopicsStore.confirmSelectedTopics',
-        'useNewTopicsStore.ts',
-        169,
+        undefined,
+        "169",
         { courseId, selectedTopics }
       );
 
       flowTracker.trackStep(
-        'NewTopicsStore',
-        `Seçilen konular onaylanıyor - ${selectedTopics.length} konu`
+        mapToTrackerCategory(FlowCategory.State),
+        `Seçilen konular onaylanıyor - ${selectedTopics.length} konu`,
+        'NewTopicsStore'
       );
 
       if (selectedTopics.length === 0) {
         const errorMessage = 'Onaylanacak konu seçilmedi';
-        logger.warn(
+        logger.error(
           errorMessage,
           'NewTopicsStore.confirmSelectedTopics',
-          'useNewTopicsStore.ts',
-          179
+          undefined,
+          "184",
+          { courseId, selectedTopics, error: new Error(errorMessage) }
         );
 
-        set((state) => {
-          state.errorConfirmingTopics = errorMessage;
-        });
+        flowTracker.trackStep(
+          mapToTrackerCategory(FlowCategory.Error),
+          `Seçilen konular onaylanırken hata: ${errorMessage}`,
+          'NewTopicsStore'
+        );
+
+        set((state) => ({
+          ...state,
+          errorConfirmingTopics: errorMessage
+        }));
 
         return false;
       }
 
-      // Loading state başlat
-      set((state) => {
-        state.isConfirmingTopics = true;
-        state.errorConfirmingTopics = null;
-      });
+      // Loading state başlat (Start loading state)
+      set((state) => ({
+        ...state,
+        isConfirmingTopics: true,
+        errorConfirmingTopics: null
+      }));
 
       try {
         const confirmedTargets = await learningTargetService.confirmNewTopics(
@@ -249,25 +282,29 @@ const newTopicsStoreImpl: StateCreator<
 
         // Başarılı sonuç
         flowTracker.trackStep(
-          'NewTopicsStore',
-          `Konular başarıyla onaylandı ve kaydedildi - ${confirmedTargets.length} öğrenme hedefi`
+          mapToTrackerCategory(FlowCategory.State),
+          `Konular başarıyla onaylandı ve kaydedildi - ${confirmedTargets.length} öğrenme hedefi`,
+          'NewTopicsStore'
         );
 
         logger.info(
           `Konular başarıyla onaylandı ve kaydedildi: ${confirmedTargets.length} öğrenme hedefi`,
           'NewTopicsStore.confirmSelectedTopics',
-          'useNewTopicsStore.ts',
-          203,
+          undefined,
+          "203",
           { courseId, confirmedCount: confirmedTargets.length, targetIds: confirmedTargets.map(t => t.id) }
         );
 
-        set((state) => {
-          state.confirmedNewLearningTargets = confirmedTargets;
-          state.isConfirmingTopics = false;
-          // Başarılı onaylama sonrası temizlik
-          state.suggestedNewTopics = [];
-          state.selectedNewTopicsForConfirmation = [];
-        });
+        // Return the updated state object as required by Zustand
+        set((state) => ({
+          ...state,
+          confirmedNewLearningTargets: confirmedTargets,
+          selectedNewTopicsForConfirmation: [],
+          suggestedNewTopics: [],
+          isConfirmingTopics: false,
+          errorConfirmingTopics: null
+          // Başarılı onaylama sonrası temizlik (cleanup after successful confirmation)
+        }));
 
         return true;
 
@@ -277,48 +314,53 @@ const newTopicsStoreImpl: StateCreator<
         logger.error(
           `Konular onaylanırken hata oluştu: ${errorMessage}`,
           'NewTopicsStore.confirmSelectedTopics',
-          'useNewTopicsStore.ts',
-          220,
-          { courseId, selectedTopics, error }
+          undefined,
+          "220",
+          { courseId, selectedTopics, error: error instanceof Error ? error : new Error(errorMessage) }
         );
 
         flowTracker.trackStep(
-          'NewTopicsStore',
-          `Konular onaylanırken hata: ${errorMessage}`
+          mapToTrackerCategory(FlowCategory.Error),
+          `Konular onaylanırken hata: ${errorMessage}`,
+          'NewTopicsStore'
         );
 
-        set((state) => {
-          state.isConfirmingTopics = false;
-          state.errorConfirmingTopics = errorMessage;
-        });
+        set((state) => ({
+          ...state,
+          isConfirmingTopics: false,
+          errorConfirmingTopics: errorMessage
+        }));
 
         return false;
       }
-    }),
+    },
 
-    resetNewTopicsState: api.trackAction('resetNewTopicsState', () => {
+    // Use simple function instead of trackAction for type safety
+    resetNewTopicsState: () => {
       logger.debug(
         'NewTopics store sıfırlanıyor',
         'NewTopicsStore.resetNewTopicsState',
-        'useNewTopicsStore.ts',
-        239
+        undefined,
+        "239"
       );
 
       flowTracker.trackStep(
-        'NewTopicsStore',
-        'NewTopics store tüm state\'leri sıfırlandı'
+        mapToTrackerCategory(FlowCategory.State),
+        'NewTopics store tüm state\'leri sıfırlandı',
+        'NewTopicsStore'
       );
 
-      set((state) => {
-        state.suggestedNewTopics = [];
-        state.selectedNewTopicsForConfirmation = [];
-        state.confirmedNewLearningTargets = [];
-        state.isLoadingSuggestedTopics = false;
-        state.errorLoadingSuggestedTopics = null;
-        state.isConfirmingTopics = false;
-        state.errorConfirmingTopics = null;
-      });
-    }),
+      set((state) => ({
+        ...state,
+        suggestedNewTopics: [],
+        selectedNewTopicsForConfirmation: [],
+        confirmedNewLearningTargets: [],
+        isLoadingSuggestedTopics: false,
+        errorLoadingSuggestedTopics: null,
+        isConfirmingTopics: false,
+        errorConfirmingTopics: null
+      }));
+    }
   };
 };
 

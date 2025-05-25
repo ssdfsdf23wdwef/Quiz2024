@@ -18,6 +18,18 @@ export class TopicDetectionService {
   private readonly logger: LoggerService;
   private readonly flowTracker: FlowTrackerService;
   private readonly MAX_RETRIES = 3;
+  
+  // Sonuç format şeması
+  private readonly NEW_TOPICS_RESULT_SCHEMA = {
+    type: 'object',
+    properties: {
+      newly_identified_topics: {
+        type: 'array',
+        items: { type: 'string' }
+      }
+    },
+    required: ['newly_identified_topics']
+  };
 
   // Varsayılan Türkçe konu tespiti prompt'u
   private readonly DEFAULT_TOPIC_DETECTION_PROMPT_TR = `
@@ -1018,6 +1030,151 @@ Sadece JSON döndür, başka açıklama yapma.
 
   private shouldReturnDefaultTopics(): boolean {
     return process.env.NODE_ENV !== 'production';
+  }
+
+  /**
+   * Detect new topics that are not already in the list of existing topics
+   * Uses the detect_new_topics_exclusive_tr.txt prompt
+   * @param contextText The context text to analyze
+   * @param existingTopicTexts List of existing topic names
+   * @returns Array of newly identified topics
+   */
+  async detectNewTopicsExclusive(
+    contextText: string,
+    existingTopicTexts: string[],
+  ): Promise<{ proposedTopics: { name: string; relevance?: string; details?: string }[] }> {
+    const traceId = `ai-new-topics-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    
+    try {
+      this.logger.debug(
+        `[${traceId}] Yeni konu tespiti başlatılıyor (${contextText.length} karakter)`,
+        'TopicDetectionService.detectNewTopicsExclusive',
+        __filename,
+      );
+
+      this.flowTracker.trackStep(
+        'Mevcut konuların haricinde yeni konular algılanıyor',
+        'TopicDetectionService',
+      );
+
+      // Truncate document text if too long
+      const maxTextLength = 15000;
+      let truncatedText = contextText;
+      let isTextTruncated = false;
+
+      if (contextText.length > maxTextLength) {
+        const originalLength = contextText.length;
+        truncatedText = contextText.slice(0, maxTextLength) + '...';
+        isTextTruncated = true;
+
+        this.logger.warn(
+          `[${traceId}] Metin çok uzun, ${maxTextLength} karaktere kısaltıldı (orijinal: ${originalLength} karakter)`,
+          'TopicDetectionService.detectNewTopicsExclusive',
+          __filename,
+        );
+      }
+
+      // Read the prompt file
+      const promptFilePath = path.resolve(
+        __dirname,
+        '..',
+        'prompts',
+        'detect_new_topics_exclusive_tr.txt',
+      );
+      
+      let promptContent = '';
+      
+      try {
+        promptContent = fs.readFileSync(promptFilePath, 'utf8');
+      } catch (error) {
+        this.logger.error(
+          `[${traceId}] Prompt dosyası okuma hatası: ${error.message}`,
+          'TopicDetectionService.detectNewTopicsExclusive',
+          __filename,
+          undefined,
+          error,
+        );
+        throw new BadRequestException('Konu tespiti için gerekli prompt dosyası bulunamadı.');
+      }
+
+      // Replace placeholder variables in the prompt
+      const existingTopicsText = existingTopicTexts.join(', ');
+      const fullPrompt = promptContent
+        .replace('{lessonContext}', truncatedText)
+        .replace('{existingTopics}', existingTopicsText);
+
+      this.logger.debug(
+        `[${traceId}] Hazırlanan prompt uzunluğu: ${fullPrompt.length} karakter`,
+        'TopicDetectionService.detectNewTopicsExclusive',
+        __filename,
+      );
+
+      // Call AI service with retry mechanism
+      const aiResponse = await pRetry(
+        async () => {
+          const response = await this.aiProviderService.generateContent(
+            fullPrompt,
+            {
+              metadata: { traceId },
+              temperature: 0.3 // Lower temperature for more predictable output
+            }
+          );
+          
+          // Parse JSON response
+          try {
+            // Try to extract JSON from the response if it's not already in JSON format
+            const text = response.text || '';
+            const jsonMatch = text.match(/\{[\s\S]*\}/); // Match everything between curly braces
+            const jsonStr = jsonMatch ? jsonMatch[0] : text;
+            
+            return JSON.parse(jsonStr);
+          } catch (error) {
+            this.logger.error(
+              `[${traceId}] JSON ayrıştırma hatası: ${error.message}`,
+              'TopicDetectionService.detectNewTopicsExclusive',
+              __filename,
+              undefined,
+              error,
+            );
+            throw new Error(`AI yanıtı JSON formatında değil: ${error.message}`);
+          }
+        },
+        this.RETRY_OPTIONS,
+      );
+
+      this.logger.debug(
+        `[${traceId}] AI yanıtı alındı: ${JSON.stringify(aiResponse)}`,
+        'TopicDetectionService.detectNewTopicsExclusive',
+        __filename,
+      );
+
+      // Process the response
+      const newTopics = aiResponse.newly_identified_topics || [];
+      
+      // Format the response as required
+      const proposedTopics = newTopics.map(topic => ({
+        name: topic,
+        relevance: 'high', // Default relevance 
+        details: '' // Can be enhanced in future versions
+      }));
+
+      this.logger.info(
+        `[${traceId}] ${proposedTopics.length} adet yeni konu tespit edildi`,
+        'TopicDetectionService.detectNewTopicsExclusive',
+        __filename,
+      );
+
+      return { proposedTopics };
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Yeni konu tespiti sırasında hata: ${error.message}`,
+        'TopicDetectionService.detectNewTopicsExclusive',
+        __filename,
+        undefined,
+        error,
+      );
+      throw error;
+    }
   }
 
   /**

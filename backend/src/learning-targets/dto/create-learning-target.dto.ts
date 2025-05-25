@@ -1,52 +1,34 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { LearningTargetStatus } from '../../common/types/learning-target.type';
 
 export class CreateLearningTargetDto {
-  @ApiProperty({ description: 'Kullanıcı ID' })
+  @ApiProperty({ description: 'Konu adı' })
   @IsString()
-  userId: string;
+  topicName: string;
 
-  @ApiProperty({ description: 'Kurs ID' })
+  @ApiProperty({ description: 'Kurs ID (opsiyonel)', required: false })
   @IsString()
-  courseId: string;
-
-  @ApiProperty({ description: 'Alt konu adı' })
-  @IsString()
-  subTopicName: string;
-
-  @ApiProperty({ description: 'Normalize edilmiş alt konu adı' })
-  @IsString()
-  normalizedSubTopicName: string;
-
-  @ApiProperty({ description: 'Öğrenme hedefi durumu', example: 'pending' })
-  @IsString()
-  status: string;
-
-  @ApiProperty({ description: 'Son deneme skoru (yüzde)', required: false })
-  @IsNumber()
   @IsOptional()
-  lastAttemptScorePercent?: number;
-
-  @ApiProperty({ description: 'Başarısız deneme sayısı', required: false })
-  @IsNumber()
-  @IsOptional()
-  failCount?: number;
-
-  @ApiProperty({ description: 'Orta deneme sayısı', required: false })
-  @IsNumber()
-  @IsOptional()
-  mediumCount?: number;
-
-  @ApiProperty({ description: 'Başarılı deneme sayısı', required: false })
-  @IsNumber()
-  @IsOptional()
-  successCount?: number;
+  courseId?: string;
 
   @ApiProperty({
-    description: 'Son kişiselleştirilmiş sınav ID',
+    description: 'Öğrenme hedefi durumu',
+    enum: LearningTargetStatus,
+    default: LearningTargetStatus.NOT_STARTED,
+    required: false,
+  })
+  @IsEnum(LearningTargetStatus)
+  @IsOptional()
+  status?: LearningTargetStatus;
+
+  @ApiProperty({
+    description: 'Kullanıcının ekleyebileceği notlar',
     required: false,
   })
   @IsString()
   @IsOptional()
-  lastPersonalizedQuizId?: string;
+  notes?: string;
+
+  // Not: isNewTopic burada false, source 'manual' olacak - servis tarafında ayarlanacak
 }

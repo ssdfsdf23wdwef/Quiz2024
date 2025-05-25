@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+// Schema for quiz options with ID validation
+export const QuizOptionSchema = z.object({
+  id: z.string().min(1, 'Seçenek ID boş olamaz'),
+  text: z.string().min(1, 'Seçenek metni boş olamaz'),
+});
+
+// Schema for quiz questions with refined validation
 export const QuizQuestionSchema = z.object({
   id: z
     .string()
@@ -7,16 +14,18 @@ export const QuizQuestionSchema = z.object({
     .default(
       () => `q_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     ),
-  questionText: z.string().min(1, 'Soru metni boş olamaz'),
+  questionText: z.string().min(10, 'Soru metni en az 10 karakter olmalıdır'),
   options: z
-    .array(z.string().min(1, 'Seçenek boş olamaz'))
-    .length(4, 'Tam olarak 4 seçenek olmalı'),
-  correctAnswer: z.string().min(1, 'Doğru cevap boş olamaz'),
+    .array(QuizOptionSchema)
+    .min(2, 'En az 2 seçenek olmalıdır')
+    .max(5, 'En fazla 5 seçenek olabilir'),
+  correctAnswerId: z.string().min(1, 'Doğru cevap ID boş olamaz'),
   explanation: z.string().optional().default('Açıklama yok'),
   subTopicName: z.string().min(1, 'Alt konu adı boş olamaz'),
   normalizedSubTopicName: z
     .string()
-    .min(1, 'Normalize edilmiş alt konu adı boş olamaz'),
+    .optional()
+    .default(''),
   difficulty: z
     .enum(['easy', 'medium', 'hard', 'mixed'])
     .optional()
@@ -36,9 +45,27 @@ export const QuizQuestionSchema = z.object({
     ])
     .optional()
     .default('understanding'),
+  topic: z.string().optional(),
+}).refine(
+  (data) => {
+    // Validate that correctAnswerId exists in the options array
+    return data.options.some((option) => option.id === data.correctAnswerId);
+  },
+  {
+    message: 'Doğru cevap ID seçeneklerden birinin ID değeriyle eşleşmelidir',
+    path: ['correctAnswerId'], // Hata çıktısında gösterilecek alan
+  },
+);
+
+// Schema for the complete AI response
+export const QuizResponseSchema = z.object({
+  questions: z.array(QuizQuestionSchema).min(1, 'En az 1 soru olmalıdır'),
+  quizTitle: z.string().optional(),
+  metadata: z.record(z.any()).optional(),
 });
 
+// Union type to handle different AI response formats
 export const QuizGenerationResponseSchema = z.union([
   z.array(QuizQuestionSchema), // For direct array response
-  z.object({ questions: z.array(QuizQuestionSchema) }), // For { questions: [] } format
+  QuizResponseSchema, // For { questions: [] } format
 ]);

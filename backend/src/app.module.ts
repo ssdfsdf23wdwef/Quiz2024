@@ -1,7 +1,6 @@
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -38,7 +37,7 @@ import { LogsController } from './controllers/logs.controller';
     SharedModule,
     AiModule,
   ],
-  controllers: [AppController, LogsController],
+  controllers: [LogsController],
   providers: [
     AppService,
     {

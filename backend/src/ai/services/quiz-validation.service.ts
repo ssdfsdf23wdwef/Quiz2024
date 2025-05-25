@@ -9,6 +9,7 @@ import { NormalizationService } from '../../shared/normalization/normalization.s
 import {
   QuizGenerationResponseSchema,
   QuizQuestionSchema,
+  QuizResponseSchema,
 } from '../schemas/quiz-question.schema';
 import { FlowTrackerService } from '../../common/services/flow-tracker.service';
 import { ConfigService } from '@nestjs/config';
@@ -1544,6 +1545,39 @@ export class QuizValidationService {
   }
 
   /**
+   * QuizResponseSchema ile daha sıkı doğrulama yapar
+   * @param data Doğrulanacak veri
+   * @param traceId Trace ID
+   */
+  private tryQuizResponseValidation(data: any, traceId: string): any {
+    try {
+      // Geçerli bir obje mi kontrol et
+      if (!data || typeof data !== 'object') {
+        return null;
+      }
+      
+      // QuizResponseSchema ile doğrulama (daha sıkı şema)
+      const response = data.questions ? data : { questions: data };
+      const result = QuizResponseSchema.safeParse(response);
+      
+      if (result.success) {
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] Sıkı şema doğrulaması (QuizResponseSchema) başarılı!`,
+        );
+        return result.data;
+      }
+      
+      return null;
+    } catch (e) {
+      console.log(
+        `[QUIZ_DEBUG] [${traceId}] Sıkı şema doğrulaması başarısız:`,
+        e.message,
+      );
+      return null;
+    }
+  }
+
+  /**
    * Zod şeması ile quiz yanıtını doğrular
    * @param parsedJson Parse edilmiş JSON
    * @param metadata Loglama için metadata
@@ -1574,8 +1608,15 @@ export class QuizValidationService {
       console.log(
         `[QUIZ_DEBUG] [${traceId}] Zod şeması ile doğrulama yapılıyor...`,
       );
-      const validationResult =
-        QuizGenerationResponseSchema.safeParse(parsedJson);
+      
+      // Önce QuizResponseSchema ile doğrulamayı deneyelim (daha katı şema)
+      const fullValidationResult = this.tryQuizResponseValidation(parsedJson, traceId);
+      if (fullValidationResult) {
+        return fullValidationResult;
+      }
+      
+      // Alternatif olarak, birleşik şema ile deneyelim
+      const validationResult = QuizGenerationResponseSchema.safeParse(parsedJson);
 
       if (validationResult.success) {
         // Validasyon başarılı - veriyi döndür
@@ -1605,6 +1646,13 @@ export class QuizValidationService {
       console.error(
         `[QUIZ_DEBUG] [${traceId}] Hata detayları:`,
         JSON.stringify(validationError.errors, null, 2),
+      );
+      
+      this.logger.error(
+        `[${traceId}] AI yanıtı Zod doğrulamasından geçemedi: ${validationError.message}`,
+        'QuizValidationService.validateQuizResponseSchema',
+        undefined,
+        validationError,
       );
 
       // Yanıt içinde questions yoksa (ama doğrudan soru listesi içerik olabilir)
