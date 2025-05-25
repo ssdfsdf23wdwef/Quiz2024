@@ -207,10 +207,11 @@ export class QuizAnalysisService {
     // Ayrıca LearningTargets servisine verilecek topicScores verisi
     const topicScores = Object.values(performanceBySubTopic).map(
       (topic: any) => ({
-        normalizedSubTopicName: topic.subTopicName
+        normalizedSubTopicName: (topic.subTopicName || 'unknown')
+          .toString()
           .toLowerCase()
           .replace(/\s+/g, '_'),
-        scorePercent: topic.scorePercent,
+        scorePercent: topic.scorePercent || 0,
       }),
     );
 
