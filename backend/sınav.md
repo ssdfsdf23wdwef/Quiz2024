@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-25T17:00:37.295Z
+## Tarih: 2025-05-25T20:20:36.308Z
 
-## Trace ID: quiz-1748192437292-s4cvs
+## Trace ID: quiz-1748204436305-0pxcb
 
 ## Alt Konular (2 adet):
 ```
@@ -228,31 +228,31 @@ Bekleyen konu yok.
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
 #### Genel Konular:
-- Soru: fiziksel risk etmenleri alanında, aşağıdakilerden hangisi fiziksel risk etmenleri sürecinde en önemli adımdır?
+- Soru: kuantum mekaniği temelleri alanında, aşağıdakilerden hangisi kuantum mekaniği temelleri sürecinde en önemli adımdır?
 - Seçenekler: A) Algoritma tasarımı | B) Kodun test edilmesi | C) Gereksinimlerin belirlenmesi | D) Dokümantasyon yazımı
 - Doğru Cevap: C) Gereksinimlerin belirlenmesi
 - Zorluk: medium
 
 #### Yazılım Metodolojileri:
-- Soru: fiziksel risk etmenleri çeşitleri konusunda, hangi yaklaşım daha verimli sonuçlar verir?
+- Soru: dalga parçacık i kiliği konusunda, hangi yaklaşım daha verimli sonuçlar verir?
 - Seçenekler: A) İteratif geliştirme | B) Waterfall metodolojisi | C) Ad-hoc yaklaşım | D) Tek seferde tamamlama
 - Doğru Cevap: A) İteratif geliştirme
 - Zorluk: medium
 
 #### Algoritma Analizi:
-- Soru: fiziksel risk etmenleri bağlamında en önemli performans faktörü nedir?
+- Soru: kuantum mekaniği temelleri bağlamında en önemli performans faktörü nedir?
 - Seçenekler: A) Bellek kullanımı | B) Zaman karmaşıklığı | C) Kod okunabilirliği | D) Uygulanabilirlik kolaylığı
 - Doğru Cevap: B) Zaman karmaşıklığı
 - Zorluk: medium
 
 #### Yazılım Kalitesi:
-- Soru: fiziksel risk etmenleri yaklaşımında aşağıdakilerden hangisi doğrudur?
+- Soru: kuantum mekaniği temelleri yaklaşımında aşağıdakilerden hangisi doğrudur?
 - Seçenekler: A) Ekip çalışması, bireysel çalışmadan her zaman daha verimsizdir | B) Dokümantasyon, modern geliştirme süreçlerinde tamamen gereksizdir | C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur | D) Test yazımı sadece projenin sonunda yapılmalıdır
 - Doğru Cevap: C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur
 - Zorluk: medium
 
 #### Teorik Bilgisayar Bilimi:
-- Soru: fiziksel risk etmenleri alanında, aşağıdaki ifadelerden hangisi doğrudur?
+- Soru: kuantum mekaniği temelleri alanında, aşağıdaki ifadelerden hangisi doğrudur?
 - Seçenekler: A) Her problemin polinom zamanda çözülebildiği matematiksel olarak kanıtlanmıştır | B) Yapay zeka, tüm programlama problemlerini otomatik olarak çözebilir | C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır | D) Bilgisayarlar, insan beyni ile aynı şekilde düşünür ve öğrenir
 - Doğru Cevap: C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır
 - Zorluk: medium

@@ -1,11 +1,11 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-25T17:00:38.298Z
-Trace ID: quiz-1748192437292-s4cvs
-Yanıt Uzunluğu: 155 karakter
+Tarih: 2025-05-25T20:20:38.094Z
+Trace ID: quiz-1748204436305-0pxcb
+Yanıt Uzunluğu: 383 karakter
 
 ## Ham Çıktı:
 ```json
-Anlaşıldı. Şu anda soru üretilecek aktif bir konu bulunmamaktadır. Bu nedenle, herhangi bir soru üretemem. Lütfen soru üretilecek aktif konuları belirtin.
+Anlaşıldı. Şu anda aktif bir konu belirtilmediği için soru üretemiyorum. Lütfen "AKTİF KONULAR (SORU ÜRETİLECEK)" bölümüne soru üretilecek konuları ve her konu için istenen soru sayısını ekleyin. Ardından, ilgili eğitim içeriğini {{DOCUMENT_TEXT}} alanına yerleştirin. Bu bilgileri sağladıktan sonra, belirtilen kurallara ve formata uygun olarak 10 adet test sorusu oluşturabilirim.
 
 ```
