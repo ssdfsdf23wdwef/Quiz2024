@@ -731,6 +731,24 @@ export class QuizzesService {
       `Quiz veritabanına kaydedildi. Quiz ID: ${newQuiz.id}`,
     );
 
+    // newTopicFocused türü için tespit edilen yeni konuları öğrenme hedefi olarak kaydet
+    if (dto.personalizedQuizType === 'newTopicFocused' && selectedTopics && selectedTopics.length > 0 && dto.courseId) {
+      try {
+        await this.saveDetectedSubTopicsAsLearningTargets(
+          dto.courseId,
+          userId,
+          selectedTopics,
+          dto.personalizedQuizType,
+        );
+        this.logger.logExamProcess(
+          `newTopicFocused türü için ${selectedTopics.length} yeni konu öğrenme hedefi olarak kaydedildi`,
+        );
+      } catch (error) {
+        this.logger.error('Yeni konuları öğrenme hedefi olarak kaydetme hatası:', error);
+        // Quiz oluşturma başarılı oldu, sadece logging yapıyoruz
+      }
+    }
+
     return newQuiz;
   }
 
