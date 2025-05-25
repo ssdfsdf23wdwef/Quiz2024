@@ -17,13 +17,15 @@ import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { LearningTargetStatus } from '../learning-targets/interfaces/learning-target.interface';
 import { Quiz, AnalysisResult } from '../common/interfaces';
 import { FIRESTORE_COLLECTIONS } from '../common/constants';
-import { LoggerService } from '../common/services/logger.service';
+import { LoggerService, LogLevel } from '../common/services/logger.service';
 import { FlowTrackerService } from '../common/services/flow-tracker.service';
 import { LogMethod } from '../common/decorators';
 import { QuizQuestion } from '../ai/interfaces';
 import { DocumentsService } from '../documents/documents.service';
 import { CoursesService } from '../courses/courses.service';
 import { NormalizationService } from '../shared/normalization/normalization.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface CreateQuizParams {
   userId: string;
@@ -49,6 +51,9 @@ export class QuizzesService {
   private readonly flowTracker: FlowTrackerService;
   findAll: any;
 
+  // Öğrenme hedefi log dosyası yolu
+  private readonly learningTargetLogPath: string;
+  
   constructor(
     private readonly firebaseService: FirebaseService,
     private readonly aiService: AiService,
@@ -67,6 +72,20 @@ export class QuizzesService {
       __filename,
       29,
     );
+    
+    // Öğrenme hedefleri için log dosyası yolunu ayarla
+    const logDir = 'logs';
+    this.learningTargetLogPath = path.join(logDir, 'öğrenme_hedef.log');
+    
+    // Log dizininin var olduğundan emin ol
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+    
+    // Öğrenme hedefi log dosyasını oluştur (yoksa)
+    if (!fs.existsSync(this.learningTargetLogPath)) {
+      fs.writeFileSync(this.learningTargetLogPath, '', { encoding: 'utf8' });
+    }
   }
 
   /**
@@ -509,7 +528,15 @@ export class QuizzesService {
             (a, b) => a + b,
             0,
           );
-          while (currentTotal < totalQuestions) {
+          
+          // Konu dağılımı için değişkenler
+          let assignedQuestions = 0;
+          const topicsWithCounts = [...subtopicsWithCount]; // Kopyala
+          
+          while (
+            assignedQuestions < totalQuestions &&
+            topicsWithCounts.length > 0
+          ) {
             // Add remaining to strongest priority that has topics
             if (grouped.failed.length > 0) {
               distribution.failed += 1;
@@ -934,6 +961,15 @@ export class QuizzesService {
             undefined,
             { courseId, userId, subTopicCount: subTopics.length, subTopics }
           );
+          
+          // Öğrenme hedefleri log dosyasına da kaydet
+          this.logLearningTarget(LogLevel.INFO, `Öğrenme hedefleri oluşturuluyor: ${subTopics.length} alt konu`, {
+            courseId, 
+            userId, 
+            traceId,
+            action: 'create_batch',
+            subTopics
+          });
 
           // SubTopics'i LearningTargetsService'in beklediği formata dönüştür
           const topicsForLearningTargets = subTopics.map(topic => ({
@@ -955,6 +991,15 @@ export class QuizzesService {
             undefined,
             { courseId, userId }
           );
+          
+          // Öğrenme hedefleri log dosyasına başarılı işlemi kaydet
+          this.logLearningTarget(LogLevel.INFO, `Öğrenme hedefleri başarıyla oluşturuldu`, {
+            courseId, 
+            userId, 
+            traceId,
+            action: 'create_batch_success',
+            count: topicsForLearningTargets.length
+          });
         }
       }
 
@@ -982,7 +1027,7 @@ export class QuizzesService {
             
             // Normalize edilmiş ada göre hedefi buluyoruz
             const target = targets.find(t => 
-              this.normalizationService.normalizeSubTopicName(t.subTopicName) === normalizedSubTopic);
+              this.normalizationService.normalizeSubTopicName(t.topicName) === normalizedSubTopic);
             
             if (target) {
               // Hedef bulundu, durumunu güncelle
@@ -999,6 +1044,18 @@ export class QuizzesService {
                 undefined,
                 { targetId: target.id, subTopic, newStatus: status, scorePercent: performance.scorePercent }
               );
+              
+              // Öğrenme hedefi güncellemesini özel log dosyasına kaydet
+              this.logLearningTarget(LogLevel.INFO, `Öğrenme hedefi durumu güncellendi: "${subTopic}" -> ${status}`, {
+                courseId,
+                userId,
+                targetId: target.id,
+                oldStatus: target.status,
+                newStatus: status,
+                scorePercent: performance.scorePercent,
+                traceId,
+                action: 'update_status'
+              });
             } else {
               this.logger.warn(
                 `[${traceId}] Could not find learning target for subtopic "${subTopic}"`,
@@ -1016,6 +1073,16 @@ export class QuizzesService {
               __filename,
               undefined
             );
+            
+            // Hata durumunu özel log dosyasına da kaydet
+            this.logLearningTarget(LogLevel.ERROR, `Öğrenme hedefi güncellenirken hata: "${subTopic}"`, {
+              courseId,
+              userId,
+              subTopic,
+              error: error instanceof Error ? error.message : String(error),
+              traceId,
+              action: 'update_error'
+            });
           }
         }
       }
@@ -1029,6 +1096,47 @@ export class QuizzesService {
         // metadata objesi geçmiyoruz, zaten hata mesajı log içeriğinde yer alıyor
       );
       // Hatayı dışarı fırlatmıyoruz, sadece logluyoruz
+    }
+  }
+
+  /**
+   * Öğrenme hedefi işlemlerini özel log dosyasına kaydeder
+   * @param level Log seviyesi
+   * @param message Mesaj
+   * @param data Ek veriler
+   */
+  private logLearningTarget(level: LogLevel, message: string, data?: Record<string, any>): void {
+    try {
+      // Log formatını oluştur
+      const timestamp = new Date().toISOString();
+      const logData = {
+        timestamp,
+        level: level.toUpperCase(),
+        message,
+        ...data
+      };
+      
+      // Log'u dosyaya yaz
+      const logEntry = JSON.stringify(logData) + '\n';
+      fs.appendFileSync(this.learningTargetLogPath, logEntry, { encoding: 'utf8' });
+      
+      // Konsola da yaz
+      switch (level) {
+        case LogLevel.ERROR:
+          console.error(`[Öğrenme Hedef] ${message}`, data);
+          break;
+        case LogLevel.WARN:
+          console.warn(`[Öğrenme Hedef] ${message}`, data);
+          break;
+        case LogLevel.INFO:
+          console.info(`[Öğrenme Hedef] ${message}`, data);
+          break;
+        case LogLevel.DEBUG:
+          console.debug(`[Öğrenme Hedef] ${message}`, data);
+          break;
+      }
+    } catch (error) {
+      console.error(`Öğrenme hedefi log hatası: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

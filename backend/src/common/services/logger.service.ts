@@ -70,6 +70,76 @@ export class LoggerService {
   public examProcessLogger: any;
 
   /**
+   * Öğrenme hedefleri işlemlerini loglamak için kullanılan logger
+   */
+  public learningTargetLogger: any;
+
+  /**
+   * Öğrenme hedefleri işlemlerini kaydetmek için özel bir logger
+   */
+  private initLearningTargetLogger() {
+    // Önce log dizininin var olduğundan emin olalım
+    try {
+      if (!fs.existsSync(this.logDir)) {
+        fs.mkdirSync(this.logDir, { recursive: true, mode: 0o777 });
+        console.log(`📁 Log dizini oluşturuldu: ${this.logDir}`);
+      }
+
+      // Öğrenme hedefleri log dosyasını kontrol et ve gerekirse oluştur
+      const learningTargetLogPath = path.join(this.logDir, 'öğrenme_hedef.log');
+      if (!fs.existsSync(learningTargetLogPath)) {
+        fs.writeFileSync(learningTargetLogPath, '', { encoding: 'utf8', mode: 0o666 });
+        console.log(`📝 Öğrenme hedefleri log dosyası oluşturuldu: ${learningTargetLogPath}`);
+      } else {
+        // Dosya var ama yazılabilir mi kontrol et
+        try {
+          fs.accessSync(learningTargetLogPath, fs.constants.W_OK);
+        } catch (err) {
+          console.error(
+            `❌ Öğrenme hedefleri log dosyası yazılabilir değil: ${learningTargetLogPath}`,
+            err,
+          );
+          // Dosya izinlerini düzeltmeye çalış
+          fs.chmodSync(learningTargetLogPath, 0o666);
+          console.log(
+            `🔧 Öğrenme hedefleri log dosyası izinleri düzeltildi: ${learningTargetLogPath}`,
+          );
+        }
+      }
+
+      // Öğrenme hedefleri logger'ını oluştur
+      this.learningTargetLogger = createLogger({
+        level: 'debug',
+        format: format.combine(
+          format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          format.printf(({ level, message, timestamp, ...meta }) => {
+            return `[${timestamp}] [${level.toUpperCase().padEnd(5)}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : ''}`;
+          }),
+        ),
+        transports: [
+          new transports.File({
+            filename: learningTargetLogPath,
+            level: 'debug',
+          }),
+          // Konsola da yazmak için
+          new transports.Console({
+            format: format.combine(
+              format.colorize(),
+              format.printf(({ level, message, timestamp, ...meta }) => {
+                return `[Öğrenme Hedef] [${timestamp}] [${level}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta) : ''}`;
+              }),
+            ),
+          }),
+        ],
+      });
+
+      console.log(`💬 Öğrenme hedefleri logger'ı başarıyla oluşturuldu`);
+    } catch (error) {
+      console.error('❌ Öğrenme hedefleri logger oluşturulurken hata:', error);
+    }
+  }
+  
+  /**
    * Sınav oluşturma aşamalarını kaydetmek için özel bir logger
    */
   private initExamProcessLogger() {
@@ -145,45 +215,99 @@ export class LoggerService {
     });
   }
 
-  constructor(options?: LoggerOptions) {
-    // Seçenekleri başlat
-    this.enabled = options?.enabled ?? true;
-    this.logToConsole = options?.logToConsole ?? false; // Konsola loglama varsayılan olarak kapalı
-    this.logToFile = options?.logToFile ?? true; // Dosya loglaması varsayılan olarak aktif
-    this.minLevel =
-      options?.minLevel ??
-      (process.env.NODE_ENV === 'production' ? LogLevel.WARN : LogLevel.DEBUG);
-
-    // Log dizini oluşturma
-    this.logDir = options?.logDir ?? path.join(process.cwd(), 'logs');
-
-    // Log dizinini oluştur ve izinleri ayarla
+  /**
+   * Öğrenme hedefleri işlemlerini kaydetmek için özel bir logger
+   */
+  private initLearningTargetLogger() {
+    // Önce log dizininin var olduğundan emin olalım
     try {
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true, mode: 0o777 });
         console.log(`📁 Log dizini oluşturuldu: ${this.logDir}`);
       }
-    } catch (err) {
-      console.error('❌ Log dizini oluşturulurken hata:', err);
-    }
 
-    this.errorLogPath = path.join(this.logDir, 'backend-error.log');
+      // Öğrenme hedefleri log dosyasını kontrol et ve gerekirse oluştur
+      const learningTargetLogPath = path.join(this.logDir, 'öğrenme_hedef.log');
+      if (!fs.existsSync(learningTargetLogPath)) {
+        fs.writeFileSync(learningTargetLogPath, '', { encoding: 'utf8', mode: 0o666 });
+        console.log(`📝 Öğrenme hedefleri log dosyası oluşturuldu: ${learningTargetLogPath}`);
+      } else {
+        // Dosya var ama yazılabilir mi kontrol et
+        try {
+          fs.accessSync(learningTargetLogPath, fs.constants.W_OK);
+        } catch (err) {
+          console.error(
+            `❌ Öğrenme hedefleri log dosyası yazılabilir değil: ${learningTargetLogPath}`,
+            err,
+          );
+          // Dosya izinlerini düzeltmeye çalış
+          fs.chmodSync(learningTargetLogPath, 0o666);
+          console.log(
+            `🔧 Öğrenme hedefleri log dosyası izinleri düzeltildi: ${learningTargetLogPath}`,
+          );
+        }
+      }
+
+      // Öğrenme hedefleri logger'ını oluştur
+      this.learningTargetLogger = createLogger({
+        level: 'debug',
+        format: format.combine(
+          format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          format.printf(({ level, message, timestamp, ...meta }) => {
+            return `[${timestamp}] [${level.toUpperCase().padEnd(5)}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta, null, 2) : ''}`;
+          }),
+        ),
+        transports: [
+          new transports.File({
+            filename: learningTargetLogPath,
+            level: 'debug',
+          }),
+          // Konsola da yazmak için
+          new transports.Console({
+            format: format.combine(
+              format.colorize(),
+              format.printf(({ level, message, timestamp, ...meta }) => {
+                return `[Öğrenme Hedef] [${timestamp}] [${level}] ${message} ${Object.keys(meta).length > 0 ? JSON.stringify(meta) : ''}`;
+              }),
+            ),
+          }),
+        ],
+      });
+
+      console.log(`💬 Öğrenme hedefleri logger'ı başarıyla oluşturuldu`);
+    } catch (error) {
+      console.error('❌ Öğrenme hedefleri logger oluşturulurken hata:', error);
+    }
+  }
+
+  constructor(options?: LoggerOptions) {
+    // Seçenekleri başlat
+    this.enabled = options?.enabled ?? true;
+    this.logToConsole = options?.logToConsole ?? true;
+    this.logToFile = options?.logToFile ?? true;
+    this.logDir = options?.logDir ?? 'logs';
+    this.errorLogPath = options?.errorLogPath ?? 'logs/error.log';
+    this.minLevel = options?.minLevel ?? LogLevel.DEBUG;
+    this.allowedContexts = new Set(['*']); // Varsayılan: tüm context'ler izinli
+
+    // Singleton instance'ı ayarla
+    LoggerService.instance = this;
+
+    // Log dizinini oluştur
+    if (this.logToFile && !fs.existsSync(this.logDir)) {
+      fs.mkdirSync(this.logDir, { recursive: true });
+    }
 
     // Sınav süreci logger'ını başlat
     this.examProcessLogger = this.initExamProcessLogger();
+
+    // Öğrenme hedefleri logger'ını başlat
+    this.learningTargetLogger = this.initLearningTargetLogger();
 
     // Uygulama başlatıldığında log dosyasını temizle
     if (this.logToFile && (options?.clearLogsOnStartup ?? true)) {
       this.clearLogFile();
     }
-
-    // Sadece belirli context'lerde loglama yapılmasını sağla
-    const allowed = process.env.LOGGER_CONTEXTS
-      ? process.env.LOGGER_CONTEXTS.split(',').map((s) => s.trim())
-      : ['*']; // Tüm servislere izin ver (* joker karakteri)
-    this.allowedContexts = new Set(allowed);
-
-    LoggerService.instance = this;
   }
 
   /**
@@ -203,9 +327,6 @@ export class LoggerService {
     if (this.logToFile) {
       try {
         fs.writeFileSync(this.errorLogPath, '', { encoding: 'utf8' });
-        // if (this.logToConsole) {
-        //   console.log(`🧹 Log dosyası temizlendi: ${this.errorLogPath}`);
-        // }
       } catch (err) {
         // console.error('Log dosyası temizlenirken hata oluştu:', err);
       }
