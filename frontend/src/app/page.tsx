@@ -8,10 +8,6 @@ import { QuizPreferences } from "@/types/quiz.type";
 import { Quiz } from "@/types";
 import {
   FiTarget,
-  FiPlay,
-  FiAward,
-  FiArrowLeft,
-  FiArrowRight,
   FiUser,
   FiClock,
   FiZap
@@ -95,15 +91,6 @@ export default function Home() {
     setShowExamCreationWizard(show);
   };
 
-  const handleStartQuickQuiz = () => {
-    if (!isAuthenticated && !isAuthInitializing) {
-      router.push(`/auth/login?returnUrl=${encodeURIComponent('/exams/create?type=quick')}`, { scroll: false });
-      return;
-    }
-    if (isAuthenticated && !isAuthInitializing) {
-      updateWizardState(true, 'quick');
-    }
-  };
 
   const handleStartPersonalizedQuiz = () => {
     if (!isAuthenticated && !isAuthInitializing) {
@@ -165,7 +152,7 @@ export default function Home() {
   
   if (isAuthInitializing) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 to-sky-100 dark:from-slate-900 dark:to-sky-900">
+      <div className="flex items-center justify-center h-screen bg-primary">
         <Spinner size="lg" />
       </div>
     );
@@ -173,14 +160,14 @@ export default function Home() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-100 dark:from-slate-900 dark:to-sky-900 p-4 sm:p-6 lg:p-8">
+      
         <div className="container mx-auto">
           {showExamCreationWizard ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 sm:p-8 md:p-10"
+              className="bg-elevated rounded-xl shadow-xl p-6 sm:p-8 md:p-10"
             >
               <Suspense
                 fallback={
@@ -205,7 +192,7 @@ export default function Home() {
           ) : (
             <>
               <motion.div
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-600 dark:from-sky-600 dark:via-indigo-600 dark:to-violet-700 shadow-2xl"
+                className="relative overflow-hidden rounded-xl bg-gradient-to-r from-brand-primary via-brand-secondary to-brand-accent shadow-xl"
                 variants={gradientVariants}
                 initial="hidden"
                 animate="visible"
@@ -371,7 +358,7 @@ export default function Home() {
             </>
           )}
         </div>
-      </div>
+      
     </PageTransition>
   );
 }

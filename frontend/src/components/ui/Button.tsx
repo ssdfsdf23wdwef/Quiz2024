@@ -10,20 +10,20 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500",
+          "bg-brand-primary text-white hover:bg-brand-primary-hover focus-visible:ring-brand-primary",
         secondary:
-          "bg-secondary-600 text-white hover:bg-secondary-700 focus-visible:ring-secondary-500",
+          "bg-brand-secondary text-white hover:bg-brand-secondary-hover focus-visible:ring-brand-secondary",
         outline:
-          "border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-gray-400",
+          "border border-primary bg-transparent hover:bg-interactive-hover focus-visible:ring-brand-primary",
         ghost:
-          "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-gray-400",
+          "bg-transparent hover:bg-interactive-hover focus-visible:ring-brand-primary",
         destructive:
-          "bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger-500",
+          "bg-state-error text-white hover:bg-state-error/90 focus-visible:ring-state-error",
         success:
-          "bg-success-600 text-white hover:bg-success-700 focus-visible:ring-success-500",
+          "bg-state-success text-white hover:bg-state-success/90 focus-visible:ring-state-success",
         warning:
-          "bg-warning-600 text-white hover:bg-warning-700 focus-visible:ring-warning-500",
-        link: "text-primary-600 underline-offset-4 hover:underline dark:text-primary-400",
+          "bg-state-warning text-white hover:bg-state-warning/90 focus-visible:ring-state-warning",
+        link: "text-brand-primary underline-offset-4 hover:underline hover:text-brand-primary-hover",
       },
       size: {
         sm: "h-8 px-3 text-xs",

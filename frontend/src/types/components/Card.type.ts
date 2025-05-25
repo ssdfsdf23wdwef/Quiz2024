@@ -4,10 +4,10 @@ export const cardVariants = cva("rounded-lg overflow-hidden transition-all", {
   variants: {
     variant: {
       default:
-        "bg-white dark:bg-dark-bg-secondary border border-gray-200 dark:border-gray-700 shadow-soft",
-      flat: "bg-white dark:bg-dark-bg-secondary",
-      outline: "bg-transparent border border-gray-200 dark:border-gray-700",
-      elevated: "bg-white dark:bg-dark-bg-secondary shadow-md",
+        "bg-elevated border border-primary shadow-sm",
+      flat: "bg-secondary",
+      outline: "bg-transparent border border-primary",
+      elevated: "bg-elevated shadow-md",
     },
     padding: {
       none: "",

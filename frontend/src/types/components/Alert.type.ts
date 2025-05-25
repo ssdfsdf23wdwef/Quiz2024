@@ -6,14 +6,14 @@ export const alertVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gray-50 text-gray-900 border-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 [&>svg]:text-gray-500 dark:[&>svg]:text-gray-400",
-        info: "bg-primary-50 text-primary-900 border-primary-200 dark:bg-primary-950/30 dark:text-primary-100 dark:border-primary-900 [&>svg]:text-primary-500",
+          "bg-secondary text-primary border-primary [&>svg]:text-secondary",
+        info: "bg-state-info-bg text-primary border-state-info-border [&>svg]:text-state-info",
         success:
-          "bg-success-50 text-success-900 border-success-200 dark:bg-success-950/30 dark:text-success-100 dark:border-success-900 [&>svg]:text-success-500",
+          "bg-state-success-bg text-primary border-state-success-border [&>svg]:text-state-success",
         warning:
-          "bg-warning-50 text-warning-900 border-warning-200 dark:bg-warning-950/30 dark:text-warning-100 dark:border-warning-900 [&>svg]:text-warning-500",
+          "bg-state-warning-bg text-primary border-state-warning-border [&>svg]:text-state-warning",
         error:
-          "bg-danger-50 text-danger-900 border-danger-200 dark:bg-danger-950/30 dark:text-danger-100 dark:border-danger-900 [&>svg]:text-danger-500",
+          "bg-state-error-bg text-primary border-state-error-border [&>svg]:text-state-error",
       },
       dismissible: {
         true: "pr-8",

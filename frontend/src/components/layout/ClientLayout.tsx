@@ -7,7 +7,7 @@ import Footer from './Footer';
 import { getLogger, trackFlow } from '@/lib/logger.utils';
 import { FlowCategory } from '@/constants/logging.constants';
 import { NextUIProvider } from '@nextui-org/react';
-import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import { ThemeProvider } from '@/context/ThemeProvider';
 import { Toaster } from 'react-hot-toast';
 import { setupGlobalErrorHandling } from '@/lib/logger.utils';
 import MainLayout from "@/components/layout/MainLayout";
@@ -50,7 +50,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
 
   return (
     <NextUIProvider>
-      <NextThemesProvider attribute="class" defaultTheme="light">
+      <ThemeProvider>
         <MainLayout>
           {children}
         </MainLayout>
@@ -61,12 +61,13 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           toastOptions={{
             duration: 3000,
             style: {
-              background: '#333',
-              color: '#fff',
+              background: 'rgb(var(--color-bg-elevated))',
+              color: 'rgb(var(--color-text-primary))',
+              border: '1px solid rgb(var(--color-border-primary))',
             },
           }}
         />
-      </NextThemesProvider>
+      </ThemeProvider>
     </NextUIProvider>
   );
 } 

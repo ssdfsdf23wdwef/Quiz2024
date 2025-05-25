@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 
 export default function Spinner({
   size = "md",
-  color = "indigo",
+  color = "primary",
 }: {
   size?: "sm" | "md" | "lg";
-  color?: "indigo" | "green" | "amber" | "red" | "blue";
+  color?: "primary" | "secondary" | "accent" | "success" | "warning" | "error";
 }) {
   const sizeMap = {
     sm: "w-5 h-5",
@@ -16,17 +16,18 @@ export default function Spinner({
   };
 
   const colorMap = {
-    indigo: "border-indigo-600",
-    green: "border-green-600",
-    amber: "border-amber-600",
-    red: "border-red-600",
-    blue: "border-blue-600",
+    primary: "border-brand-primary",
+    secondary: "border-brand-secondary",
+    accent: "border-brand-accent",
+    success: "border-state-success",
+    warning: "border-state-warning",
+    error: "border-state-error",
   };
 
   return (
     <div className="flex justify-center items-center">
       <motion.div
-        className={`${sizeMap[size]} border-4 border-gray-200 rounded-full ${colorMap[color]} border-t-transparent`}
+        className={`${sizeMap[size]} border-4 border-primary/30 rounded-full ${colorMap[color]} border-t-transparent`}
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
       />

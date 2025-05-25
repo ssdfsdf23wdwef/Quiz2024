@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeProvider";
 import { useAuth } from "@/context/AuthContext";
 import {
   FiHome,
@@ -14,7 +14,8 @@ import {
 } from "react-icons/fi";
 
 export default function Sidebar() {
-  const { isDarkMode } = useTheme();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
   const { isInitializing } = useAuth();
   const pathname = usePathname();
 
@@ -58,12 +59,11 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200 overflow-y-auto
-        ${isDarkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"}`}
+      className="fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r border-primary bg-secondary transition-colors duration-normal overflow-y-auto"
       style={{ 
         WebkitOverflowScrolling: 'touch',
         scrollbarWidth: 'thin',
-        scrollbarColor: isDarkMode ? '#4B5563 #1F2937' : '#E5E7EB #F3F4F6'
+        scrollbarColor: 'var(--color-border-secondary) var(--color-bg-secondary)'
       }}
     >
       {isInitializing ? (
@@ -72,7 +72,7 @@ export default function Sidebar() {
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"
+              className="h-10 bg-tertiary rounded-lg animate-pulse"
             ></div>
           ))}
         </div>
@@ -85,40 +85,40 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={(e) => e.stopPropagation()}
-                className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
+                className={`py-3 px-4 rounded-md flex items-center transition-all duration-normal group ${
                   isActive(item.href)
-                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/70"
+                    ? "bg-brand-secondary/20 text-brand-primary font-medium"
+                    : "text-primary hover:bg-interactive-hover"
                 }`}
               >
-                <span className={`${isActive(item.href) ? "text-purple-500 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"} mr-3 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400`}>
+                <span className={`${isActive(item.href) ? "text-brand-primary" : "text-secondary"} mr-3 transition-colors group-hover:text-brand-primary`}>
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
                 {isActive(item.href) && (
-                  <span className="ml-auto h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
+                  <span className="ml-auto h-2 w-2 rounded-full bg-brand-primary"></span>
                 )}
               </Link>
             ))}
           </nav>
           
           {/* Ayarlar butonu - En altta ayrı bir grup olarak */}
-          <div className="mt-auto p-3 border-t border-gray-100 dark:border-gray-800">
+          <div className="mt-auto p-3 border-t border-primary">
             <Link
               href="/settings"
               onClick={(e) => e.stopPropagation()}
-              className={`py-3 px-4 rounded-lg flex items-center transition-all duration-200 group ${
+              className={`py-3 px-4 rounded-md flex items-center transition-all duration-normal group ${
                 isActive("/settings")
-                  ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 font-medium"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/70"
+                  ? "bg-brand-secondary/20 text-brand-primary font-medium"
+                  : "text-primary hover:bg-interactive-hover"
               }`}
             >
-              <span className={`${isActive("/settings") ? "text-purple-500 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"} mr-3 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400`}>
+              <span className={`${isActive("/settings") ? "text-brand-primary" : "text-secondary"} mr-3 transition-colors group-hover:text-brand-primary`}>
                 <FiSettings size={18} />
               </span>
               <span>Ayarlar</span>
               {isActive("/settings") && (
-                <span className="ml-auto h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
+                <span className="ml-auto h-2 w-2 rounded-full bg-brand-primary"></span>
               )}
             </Link>
           </div>

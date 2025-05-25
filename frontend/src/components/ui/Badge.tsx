@@ -10,19 +10,19 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-gray-900 text-gray-50 dark:bg-gray-700 dark:text-gray-100",
+          "border-transparent bg-tertiary text-primary",
         primary:
-          "border-transparent bg-primary-500 text-white dark:bg-primary-700",
+          "border-transparent bg-brand-primary text-white",
         secondary:
-          "border-transparent bg-secondary-500 text-white dark:bg-secondary-700",
+          "border-transparent bg-brand-secondary text-white",
         success:
-          "border-transparent bg-success-500 text-white dark:bg-success-700",
+          "border-transparent bg-state-success text-white",
         warning:
-          "border-transparent bg-warning-500 text-white dark:bg-warning-700",
+          "border-transparent bg-state-warning text-white",
         danger:
-          "border-transparent bg-danger-500 text-white dark:bg-danger-700",
+          "border-transparent bg-state-error text-white",
         outline:
-          "text-gray-900 border-gray-300 dark:text-gray-100 dark:border-gray-700",
+          "text-primary border-primary",
       },
       size: {
         sm: "h-4 text-[0.625rem]",

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "@/app/globals.css";
+import "@/styles/globals.css";
 import { Providers } from "@/app/providers";
 import ClientLayout from "@/components/layout/ClientLayout";
 import ClientLogSetup from "@/components/layout/ClientLogSetup";
@@ -48,7 +49,7 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={cn("min-h-screen bg-gray-50 dark:bg-gray-900 font-sans antialiased", fontSans.className)}>
+      <body className={cn("min-h-screen bg-primary text-primary font-sans antialiased", fontSans.className)}>
         <ClientLogSetup>
         <Providers>
           <ClientLayout>

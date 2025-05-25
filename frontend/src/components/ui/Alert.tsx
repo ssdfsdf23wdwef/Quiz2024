@@ -35,7 +35,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
         {dismissible && onDismiss && (
           <button
             onClick={onDismiss}
-            className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+            className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
             aria-label="Uyarıyı kapat"
           >
             <RiCloseLine className="h-4 w-4" />
