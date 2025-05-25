@@ -871,14 +871,6 @@ export class QuizzesService {
     // Update learning targets status if this was a personalized quiz
     if (dto.quizType === 'personalized' && dto.courseId) {
       try {
-        this.logger.info(
-          `${savedQuizId} ID'li sınav tamamlandı, öğrenme hedefleri güncelleniyor...`,
-          'QuizzesService.submitQuiz',
-          __filename,
-          undefined,
-          { quizId: savedQuizId, courseId: dto.courseId, userId }
-        );
-
         // Define interface for subtopic update
         interface SubtopicUpdate {
           subTopic: string;
@@ -889,20 +881,19 @@ export class QuizzesService {
         const subTopicsToUpdate: SubtopicUpdate[] = [];
         const selectedSubTopics = Array.isArray(dto.selectedSubTopics) ? dto.selectedSubTopics : [];
         
+        // Process each subtopic
         for (const item of selectedSubTopics) {
           try {
-            // Skip invalid items
-            if (!item || typeof item !== 'object') {
-              continue;
-            }
+            if (!item || typeof item !== 'object') continue;
             
             // Handle TopicSelection object with proper type checking
-            if (item && typeof item === 'object' && 'subTopic' in item && item.subTopic) {
-              const subTopic = String(item.subTopic).trim();
+            const topicItem = item as Record<string, any>;
+            if ('subTopic' in topicItem && topicItem.subTopic) {
+              const subTopic = String(topicItem.subTopic).trim();
               if (subTopic) {
                 const normalizedSubTopic = 
-                  'normalizedSubTopic' in item && item.normalizedSubTopic 
-                    ? String(item.normalizedSubTopic)
+                  'normalizedSubTopic' in topicItem && topicItem.normalizedSubTopic 
+                    ? String(topicItem.normalizedSubTopic)
                     : this.normalizationService.normalizeSubTopicName(subTopic);
                 
                 subTopicsToUpdate.push({
@@ -923,6 +914,18 @@ export class QuizzesService {
           }
         }
 
+        this.logger.info(
+          `${savedQuizId} ID'li sınav tamamlandı, öğrenme hedefleri güncelleniyor...`,
+          'QuizzesService.submitQuiz',
+          __filename,
+          undefined,
+          { 
+            quizId: savedQuizId,
+            subtopicsCount: subTopicsToUpdate.length,
+            courseId: dto.courseId
+          } as Record<string, unknown>
+        );
+
         // Log the subtopics that will be updated
         if (subTopicsToUpdate.length > 0) {
           this.logger.debug(
@@ -938,12 +941,20 @@ export class QuizzesService {
           );
 
           try {
-            await this.updateLearningTargetsFromAnalysis(
-              analysis,
-              dto.courseId,
-              userId,
-              subTopicsToUpdate
-            );
+            // Convert to the expected TopicDto format for updateLearningTargetsFromAnalysis
+            const topicDtos = subTopicsToUpdate.map(topic => ({
+              subTopic: topic.subTopic,
+              normalizedSubTopic: topic.normalizedSubTopic
+            }));
+            
+            if (dto.courseId) {
+              await this.updateLearningTargetsFromAnalysis(
+                analysis,
+                dto.courseId,
+                userId,
+                topicDtos
+              );
+            }
             
             this.logger.info(
               `Successfully updated learning targets for ${subTopicsToUpdate.length} subtopics`,
@@ -1030,7 +1041,13 @@ export class QuizzesService {
     return { quiz: returnedQuiz, analysis };
   }
 
-  // Helper function to update learning targets
+  /**
+   * Updates learning targets based on quiz analysis results
+   * @param analysis Quiz analysis results
+   * @param courseId Course ID
+   * @param userId User ID
+   * @param selectedSubTopics Selected subtopics for the quiz
+   */
   private async updateLearningTargetsFromAnalysis(
     analysis: AnalysisResult,
     courseId: string,
@@ -1038,26 +1055,84 @@ export class QuizzesService {
     selectedSubTopics?: TopicDto[],
   ): Promise<void> {
     const traceId = `LT-${Date.now()}`;
-
-    this.logger.info(
-      `[${traceId}] Updating learning targets for course ${courseId} based on quiz analysis... User: ${userId}`,
-      'QuizzesService.updateLearningTargetsFromAnalysis',
-      __filename,
-      undefined,
-      { courseId, userId },
+    const startTime = Date.now();
+    
+    // Log the start of the learning target update process
+    this.logLearningTarget(
+      LogLevel.INFO,
+      `[${traceId}] Learning target update process started`,
+      {
+        traceId,
+        courseId,
+        userId,
+        hasAnalysis: !!analysis,
+        hasSelectedSubTopics: !!selectedSubTopics && selectedSubTopics.length > 0,
+        timestamp: new Date().toISOString()
+      }
     );
+    
+    console.log(`[${traceId}] [START] updateLearningTargetsFromAnalysis`, {
+      courseId,
+      userId,
+      hasAnalysis: !!analysis,
+      selectedSubTopicsCount: selectedSubTopics?.length || 0,
+      timestamp: new Date().toISOString()
+    });
 
     try {
+      // Log the start of the operation
+      this.logger.info(
+        `[${traceId}] Updating learning targets for course ${courseId} based on quiz analysis...`,
+        'QuizzesService.updateLearningTargetsFromAnalysis',
+        __filename,
+        undefined,
+        { 
+          courseId, 
+          userId,
+          hasPerformanceData: !!(analysis?.performanceBySubTopic),
+          selectedSubTopicsCount: selectedSubTopics?.length || 0
+        },
+      );
+      
+      // Log to learning targets log file
+      this.logLearningTarget(
+        LogLevel.INFO,
+        `[${traceId}] Starting learning target update process`,
+        {
+          traceId,
+          courseId,
+          userId,
+          hasAnalysis: !!analysis,
+          selectedSubTopicsCount: selectedSubTopics?.length || 0,
+          timestamp: new Date().toISOString()
+        }
+      );
+      
+      console.log(`[${traceId}] [VALIDATION] Validating parameters...`);
       // Parametre doğrulama
       if (!courseId || !userId) {
         throw new Error('Course ID ve User ID zorunludur');
       }
 
-      // 1. İlk olarak, sınavdaki tüm alt konular için öğrenme hedefi oluşturalım (eğer henüz yoksa)
+      // 1. First, create learning targets for all subtopics in the quiz (if they don't exist yet)
       let subTopics: string[] = [];
       
-      // selectedSubTopics parametresi farklı formatlarda gelebilir, hepsini string dizisine çevirelim
+      // Log the raw selectedSubTopics for debugging
+      console.log(`[${traceId}] [DEBUG] Raw selectedSubTopics:`, JSON.stringify(selectedSubTopics, null, 2));
+      this.logLearningTarget(
+        LogLevel.DEBUG,
+        `[${traceId}] Raw selectedSubTopics`,
+        { selectedSubTopics, count: selectedSubTopics?.length || 0 }
+      );
+      
+      // The selectedSubTopics parameter can come in different formats, let's convert them all to a string array
       if (selectedSubTopics && selectedSubTopics.length > 0) {
+        console.log(`[${traceId}] [PROCESSING] Processing ${selectedSubTopics.length} selected subtopics...`);
+        this.logLearningTarget(
+          LogLevel.INFO,
+          `[${traceId}] Processing selected subtopics`,
+          { count: selectedSubTopics.length }
+        );
         try {
           // Debug için log ekle
           console.log('[DEBUG] Selected Subtopics:', JSON.stringify(selectedSubTopics, null, 2));
@@ -1084,89 +1159,177 @@ export class QuizzesService {
               { courseId, userId, subTopicCount: subTopics.length, subTopics }
             );
             
-            // Öğrenme hedefleri log dosyasına da kaydet
-            this.logLearningTarget(LogLevel.INFO, `Öğrenme hedefleri oluşturuluyor: ${subTopics.length} alt konu`, {
+            // Log to learning targets file
+            this.logLearningTarget(LogLevel.INFO, `Creating learning targets for ${subTopics.length} subtopics`, {
               courseId, 
-              userId, 
+              userId,
               traceId,
-              action: 'create_batch',
+              subTopicCount: subTopics.length,
               subTopics
             });
 
-            // SubTopics'i LearningTargetsService'in beklediği formata dönüştür
+            // Process each subtopic
             const topicsForLearningTargets = subTopics
-              .filter(topic => topic && typeof topic === 'string')
+              .filter(topic => {
+                const isValid = topic && typeof topic === 'string';
+                if (!isValid) {
+                  console.warn(`[${traceId}] [WARN] Invalid topic filtered out:`, topic);
+                  this.logLearningTarget(
+                    LogLevel.WARN,
+                    `[${traceId}] Invalid topic filtered out`,
+                    { topic, type: typeof topic }
+                  );
+                }
+                return isValid;
+              })
               .map(topic => ({
                 subTopicName: topic,
                 normalizedSubTopicName: this.normalizationService.normalizeSubTopicName(topic)
               }));
 
-            console.log('[DEBUG] Topics for Learning Targets:', JSON.stringify(topicsForLearningTargets, null, 2));
+            console.log(`[${traceId}] [DEBUG] Topics for Learning Targets:`, JSON.stringify(topicsForLearningTargets, null, 2));
+            this.logLearningTarget(
+              LogLevel.DEBUG,
+              `[${traceId}] Topics for Learning Targets`,
+              { count: topicsForLearningTargets.length, topics: topicsForLearningTargets }
+            );
 
-            if (topicsForLearningTargets.length > 0) {
-              try {
-                // Öğrenme hedeflerini oluştur (var olanları güncellemez, sadece olmayanları oluşturur)
-                const result = await this.learningTargetsService.createBatch(
-                  courseId,
-                  userId,
-                  topicsForLearningTargets
-                );
-                
-                console.log('[DEBUG] Create Batch Result:', result);
+            if (topicsForLearningTargets.length === 0) {
+              console.warn(`[${traceId}] [WARN] No valid topics after filtering and normalization`);
+              this.logLearningTarget(
+                LogLevel.WARN,
+                `[${traceId}] No valid topics after filtering and normalization`,
+                { originalCount: subTopics.length }
+              );
+              return; // Exit early if no valid topics
+            }
 
-                this.logger.info(
-                  `[${traceId}] Learning targets created successfully for all subtopics`,
-                  'QuizzesService.updateLearningTargetsFromAnalysis',
-                  __filename,
-                  undefined,
-                  { courseId, userId, result }
-                );
-                
-                // Öğrenme hedefleri log dosyasına başarılı işlemi kaydet
-                this.logLearningTarget(LogLevel.INFO, `Öğrenme hedefleri başarıyla oluşturuldu`, {
-                  courseId, 
-                  userId, 
-                  traceId,
-                  action: 'create_batch_success',
-                  count: topicsForLearningTargets.length,
-                  result: result ? 'success' : 'no_result'
-                });
-              } catch (batchError) {
-                console.error('[ERROR] Create Batch Error:', batchError);
-                this.logger.error(
-                  `Error processing learning targets batch: ${batchError}`,
-                  'QuizzesService.updateLearningTargetsFromAnalysis',
-                  __filename,
-                  undefined, // lineNumber
-                  batchError instanceof Error ? batchError : new Error(String(batchError)), // error
-                  { courseId, userId } // additionalInfo
-                );
-                throw batchError;
-              }
-            } else {
-              console.warn('[WARN] No valid topics to create learning targets');
-              this.logger.warn(
-                `[${traceId}] No valid topics to create learning targets`,
+            try {
+              // Create learning targets (updates existing ones, only creates new ones if they don't exist)
+              console.log(`[${traceId}] [CREATE_BATCH] Creating batch for ${topicsForLearningTargets.length} learning targets...`);
+              this.logLearningTarget(
+                LogLevel.INFO,
+                `[${traceId}] Creating batch learning targets`,
+                { count: topicsForLearningTargets.length }
+              );
+
+              const batchStartTime = Date.now();
+              const result = await this.learningTargetsService.createBatch(
+                courseId,
+                userId,
+                topicsForLearningTargets
+              );
+
+              const batchDuration = Date.now() - batchStartTime;
+              console.log(`[${traceId}] [CREATE_BATCH] Completed in ${batchDuration}ms`);
+              console.log(`[${traceId}] [CREATE_BATCH] Result:`, result);
+
+              this.logLearningTarget(
+                LogLevel.INFO,
+                `[${traceId}] Batch creation completed`,
+                { 
+                  durationMs: batchDuration,
+                  result: result || 'no_result',
+                  success: !!result
+                }
+              );
+
+              this.logger.info(
+                `[${traceId}] Learning targets created successfully for all subtopics`,
                 'QuizzesService.updateLearningTargetsFromAnalysis',
                 __filename,
                 undefined,
-                { courseId, userId, subTopics }
+                { courseId, userId, result }
               );
+
+              // Öğrenme hedefleri log dosyasına başarılı işlemi kaydet
+              this.logLearningTarget(LogLevel.INFO, 'Learning targets created successfully', {
+                courseId, 
+                userId, 
+                traceId,
+                action: 'create_batch_success',
+                count: topicsForLearningTargets.length,
+                result: result ? 'success' : 'no_result'
+              });
+            } catch (batchError) {
+              console.error('[ERROR] Create Batch Error:', batchError);
+              this.logger.error(
+                `Error processing learning targets batch: ${batchError}`,
+                'QuizzesService.updateLearningTargetsFromAnalysis',
+                __filename,
+                undefined, // lineNumber
+                batchError instanceof Error ? batchError : new Error(String(batchError)), // error
+                { courseId, userId } // additionalInfo
+              );
+              throw batchError;
             }
           } else {
-            console.warn('[WARN] No subtopics provided after filtering');
+            console.warn('[WARN] No valid topics to create learning targets');
+            this.logger.warn(
+              `[${traceId}] No valid topics to create learning targets`,
+              'QuizzesService.updateLearningTargetsFromAnalysis',
+              __filename,
+              undefined,
+              { courseId, userId, subTopics }
+            );
           }
         } catch (processError) {
           console.error('[ERROR] Error processing subtopics:', processError);
+          const errorMessage = processError instanceof Error ? processError.message : String(processError);
+          const errorStack = processError instanceof Error ? processError.stack : undefined;
+
+          console.error(`[${traceId}] [ERROR] Error in updateLearningTargetsFromAnalysis:`, errorMessage);
+          if (errorStack) {
+            console.error(`[${traceId}] [ERROR] Stack trace:`, errorStack);
+          }
+
           this.logger.error(
-            `Error in updateLearningTargetsFromAnalysis: ${processError}`,
+            `[${traceId}] Error in updateLearningTargetsFromAnalysis: ${errorMessage}`,
             'QuizzesService.updateLearningTargetsFromAnalysis',
             __filename,
-            undefined, // lineNumber
-            processError instanceof Error ? processError : new Error(String(processError)), // error
-            { courseId, userId } // additionalInfo
+            undefined,
+            processError,
+            { 
+              courseId, 
+              userId,
+              traceId,
+              error: {
+                message: errorMessage,
+                name: processError instanceof Error ? processError.name : 'UnknownError',
+                stack: errorStack
+              }
+            },
           );
-          throw processError;
+
+          // Log to learning targets file
+          this.logLearningTarget(
+            LogLevel.ERROR,
+            `[${traceId}] Error updating learning targets`,
+            {
+              error: errorMessage,
+              stack: errorStack,
+              courseId,
+              userId,
+              traceId
+            }
+          );
+
+          // We don't throw the error, we just log it because the failure of this operation should not affect the main process
+        } finally {
+          const duration = Date.now() - startTime;
+          console.log(`[${traceId}] [COMPLETED] updateLearningTargetsFromAnalysis completed in ${duration}ms`);
+
+          this.logLearningTarget(
+            LogLevel.INFO,
+            `[${traceId}] Learning target update process completed`,
+            {
+              traceId,
+              courseId,
+              userId,
+              durationMs: duration,
+              timestamp: new Date().toISOString()
+            }
+          );
         }
       } else {
         console.warn('[WARN] No selectedSubTopics provided or empty array');
@@ -1179,8 +1342,30 @@ export class QuizzesService {
         );
       }
 
-      // 2. Analiz sonuçlarına göre öğrenme hedeflerinin durumlarını güncelleyelim
+      // 2. Update learning target statuses based on analysis results
+      console.log(`[${traceId}] [ANALYSIS] Checking analysis results...`);
+      this.logLearningTarget(
+        LogLevel.INFO,
+        `[${traceId}] Processing analysis results`,
+        { 
+          hasAnalysis: !!analysis,
+          hasPerformanceData: !!(analysis?.performanceBySubTopic),
+          performanceKeys: analysis?.performanceBySubTopic ? Object.keys(analysis.performanceBySubTopic) : []
+        }
+      );
+      
       if (analysis && analysis.performanceBySubTopic) {
+        const performanceEntries = Object.entries(analysis.performanceBySubTopic);
+        console.log(`[${traceId}] [ANALYSIS] Found performance data for ${performanceEntries.length} subtopics`);
+        
+        if (performanceEntries.length === 0) {
+          console.warn(`[${traceId}] [WARN] No performance data available in analysis`);
+          this.logLearningTarget(
+            LogLevel.WARN,
+            `[${traceId}] No performance data available`,
+            { analysisKeys: Object.keys(analysis) }
+          );
+        }
         this.logger.info(
           `[${traceId}] Updating learning target statuses based on performance`,
           'QuizzesService.updateLearningTargetsFromAnalysis',
@@ -1280,6 +1465,12 @@ export class QuizzesService {
    * @param level Log seviyesi
    * @param message Mesaj
    * @param data Ek veriler
+   */
+  /**
+   * Logs learning target related messages to a dedicated log file
+   * @param level Log level
+   * @param message Log message
+   * @param data Additional data to include in the log
    */
   private logLearningTarget(level: LogLevel, message: string, data?: Record<string, any>): void {
     try {
