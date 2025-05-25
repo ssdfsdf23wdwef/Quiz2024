@@ -17,7 +17,6 @@ import type {
   QuestionType,
   QuestionStatus,
   SubTopic,
-  PersonalizedQuizType,
   QuizResponseDto, // Eklendi
 } from "../types/quiz.type";
 import type { BaseApiResponse } from "../types/api.type"; // Eklendi
@@ -26,7 +25,6 @@ import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
 import { FlowCategory, FlowTrackerService } from "./flow-tracker.service";
 import { LoggerService } from "./logger.service";
 import axios, { AxiosResponse } from "axios";
-
 
 const logger: LoggerService = getLogger();
 const flowTracker: FlowTrackerService = getFlowTracker();
@@ -130,41 +128,6 @@ class QuizApiService {
     }
   }
 
-  private safeCastToQuestion(rawData: unknown, index: number): Question {
-    console.log(`[DEBUG] quiz.service.ts - safeCastToQuestion - Ham veri (index: ${index}):`, JSON.stringify(rawData, null, 2));
-    
-    if (!this.isObject(rawData)) {
-      logger.warn(`Question data at index ${index} is not an object, creating fallback.`, 'QuizApiService.safeCastToQuestion');
-      return this.createFallbackQuestion(index);
-    }
-    const data = rawData as Record<string, unknown>;
-    
-    // Alt konu bilgilerini kontrol et
-    if (!data.subTopic && !data.normalizedSubTopic) {
-      console.log(`[DEBUG] quiz.service.ts - safeCastToQuestion - Alt konu alanları eksik (index: ${index}).`);
-    } else {
-      console.log(`[DEBUG] quiz.service.ts - safeCastToQuestion - Alt konu bilgileri: subTopic='${data.subTopic}', normalizedSubTopic='${data.normalizedSubTopic}'`);
-    }
-    
-    const question = {
-      id: String(data.id || data._id || `fallback_q_${index}_${Date.now()}`),
-      questionText: String(data.questionText || data.question || 'Boş Soru'),
-      options: Array.isArray(data.options) && data.options.every(opt => typeof opt === 'string')
-        ? data.options as string[]
-        : ['A', 'B', 'C', 'D'].map(opt => String(data[opt] || `Seçenek ${opt}`)),
-      correctAnswer: String(data.correctAnswer || data.answer || (Array.isArray(data.options) ? data.options[0] : 'A')),
-      explanation: String(data.explanation || ''),
-      subTopic: String(data.subTopic || data.topic || 'Genel'),
-      normalizedSubTopic: String(data.normalizedSubTopic || 'genel'),
-      difficulty: (typeof data.difficulty === 'string' ? data.difficulty : 'medium') as DifficultyLevel,
-      questionType: (typeof data.questionType === 'string' ? data.questionType : 'multiple_choice') as QuestionType,
-      status: (typeof data.status === 'string' ? data.status : 'active') as QuestionStatus,
-      metadata: this.isObject(data.metadata) ? data.metadata : {},
-    } as Question;
-
-    console.log(`[DEBUG] quiz.service.ts - safeCastToQuestion - Dönüştürülen soru (ID: ${question.id}): subTopic='${question.subTopic}', normalizedSubTopic='${question.normalizedSubTopic}'`);
-    return question;
-  }
 
   private createFallbackQuestion(index: number): Question {
     console.log(`[QuizApiService.createFallbackQuestion] Varsayılan soru oluşturuluyor. Index: ${index}`);
@@ -226,45 +189,7 @@ class QuizApiService {
     return quiz;
   }
 
-  private parseQuizFromUnknown(responseData: unknown, options?: QuizGenerationOptions): Quiz {
-    let apiQuiz: ApiQuiz | null = null;
 
-    if (typeof responseData === 'string') {
-      try {
-        const parsedJson = JSON.parse(responseData);
-        if (this.isValidApiQuiz(parsedJson)) {
-          apiQuiz = parsedJson as ApiQuiz;
-        } else if (this.isObject(parsedJson) && this.isValidApiQuiz(parsedJson.quiz)) {
-          apiQuiz = parsedJson.quiz as ApiQuiz;
-        } else if (this.isObject(parsedJson) && this.isValidApiQuiz(parsedJson.data)) {
-          apiQuiz = parsedJson.data as ApiQuiz;
-        }
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.warn('API response string could not be parsed as JSON or valid Quiz structure.', 
-          'QuizApiService.parseQuizFromUnknown', undefined, undefined, { responseData, error: errorMessage });
-        // TODO: Add text-based question extraction if necessary
-      }
-    } else if (this.isValidApiQuiz(responseData)) {
-      apiQuiz = responseData as ApiQuiz;
-    } else if (this.isObject(responseData)) {
-      if (this.isValidApiQuiz(responseData.quiz)) {
-        apiQuiz = responseData.quiz as ApiQuiz;
-      } else if (this.isValidApiQuiz(responseData.data)) {
-        apiQuiz = responseData.data as ApiQuiz;
-      } else if (this.isValidApiQuiz(responseData.result)) {
-        apiQuiz = responseData.result as ApiQuiz;
-      }
-    }
-
-    if (apiQuiz) {
-      return adapterService.toQuiz(apiQuiz); // Adapter'ı kullan
-    }
-
-    logger.warn('Could not parse a valid ApiQuiz from response, creating fallback quiz.', 
-      'QuizApiService.parseQuizFromUnknown', undefined, undefined, { responseData });
-    return this.createFallbackQuiz('parsed_fallback', options);
-  }
   
   /**
    * Tüm sınavları getirir
@@ -686,23 +611,74 @@ class QuizApiService {
     } catch (error) {
       console.error(`[QuizApiService.generateQuiz] HATA OLUŞTU: ${error instanceof Error ? error.message : String(error)}`);
       console.error(`[QuizApiService.generateQuiz] Tam hata detayı:`, error);
-      
-      // Detaylı hata bilgisiyle ApiError oluştur
-      if (axios.isAxiosError(error)) {
+
+      const errorMessageString = error instanceof Error ? error.message : String(error);
+      // TODO: Confirm the exact error message from backend or use a more robust error identification (e.g., error code)
+      const isInvalidJsonResponse = errorMessageString.includes("AI response is not valid JSON");
+
+      if (isInvalidJsonResponse) {
+        console.warn('[QuizApiService.generateQuiz] AI response is not valid JSON detected.');
+        
+        // Only retry for personalized quizzes with multiple subtopics that can be reduced
+        if (options.quizType === 'personalized' && Array.isArray(options.selectedSubTopics) && options.selectedSubTopics.length > 1) {
+          console.log(`[QuizApiService.generateQuiz] Attempting to regenerate quiz with ${options.selectedSubTopics.length - 1} subtopics.`);
+          const newSelectedSubTopics = options.selectedSubTopics.slice(0, -1);
+          const newOptions: QuizGenerationOptions = { 
+            ...options, 
+            selectedSubTopics: newSelectedSubTopics,
+          }; 
+          
+          try {
+            console.log('[QuizApiService.generateQuiz] Retrying quiz generation with new options:', newOptions);
+            return await this.generateQuiz(newOptions); 
+          } catch (retryError) {
+            const retryErrorMessage = retryError instanceof Error ? retryError.message : String(retryError);
+            console.error(`[QuizApiService.generateQuiz] Retry with fewer subtopics failed: ${retryErrorMessage}`, retryError);
+            const fallbackQuiz = this.createFallbackQuiz("retry_json_fallback", options);
+            flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error(`Retry after invalid JSON failed: ${retryErrorMessage}`));
+            return fallbackQuiz;
+          }
+        } else {
+          let reason = "Cannot reduce subtopics or not a personalized quiz with multiple subtopics.";
+          if (options.quizType !== 'personalized') reason = "Not a personalized quiz, retry not applicable.";
+          else if (!options.selectedSubTopics || !Array.isArray(options.selectedSubTopics) || options.selectedSubTopics.length <= 1) reason = "Not enough subtopics to reduce for retry.";
+          
+          console.warn(`[QuizApiService.generateQuiz] ${reason} Generating fallback quiz due to invalid JSON.`);
+          const fallbackQuiz = this.createFallbackQuiz("invalid_json_fallback", options);
+          flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error(`Invalid JSON response, no retry: ${reason}`));
+          return fallbackQuiz;
+        }
+      } else if (axios.isAxiosError(error)) {
         const statusCode = error.response?.status;
-        const responseData = error.response?.data;
+        const responseData = error.response?.data as { message?: string; [key: string]: any } | undefined;
       
         console.error(`[QuizApiService.generateQuiz] Axios hatası: Status=${statusCode}, Data=`, responseData);
         
-        if (statusCode === 400 && responseData?.message) {
-          throw ErrorService.createApiError(responseData.message);
+        let apiError;
+        const backendMessage = responseData?.message;
+        if (statusCode === 400 && backendMessage) {
+          apiError = ErrorService.createApiError(backendMessage, statusCode, responseData);
+        } else {
+          const defaultMessage = `Sınav oluşturulurken bir sunucu hatası oluştu (Status: ${statusCode})`;
+          apiError = ErrorService.createApiError(
+            backendMessage || defaultMessage, 
+            statusCode,
+            responseData
+          );
         }
+        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', apiError);
+        throw apiError;
+        
+      } else {
+        console.error('[QuizApiService.generateQuiz] Genel veya bilinmeyen bir hata oluştu.', error);
+        const genericError = ErrorService.createApiError(
+          errorMessageString || 'Sınav oluşturulurken beklenmeyen bir hata oluştu.',
+          undefined, 
+          { originalError: error } 
+        );
+        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', genericError);
+        throw genericError;
       }
-      
-      // Genel hata
-      throw ErrorService.createApiError(
-        error instanceof Error ? error.message : 'Sınav oluşturulurken beklenmeyen bir hata oluştu'
-      );
     }
   }
 
@@ -742,7 +718,7 @@ class QuizApiService {
             
             // Backend validation hatasını önlemek için, DTO şemayla uyumsuz olan alanları temizle
             // SubmitQuizDto'ya uymayan alanların kaldırılması
-            const payloadForSubmission = formattedPayload as Record<string, unknown>;
+            const payloadForSubmission = formattedPayload as unknown as Record<string, unknown>;
             delete payloadForSubmission.quizId;
             delete payloadForSubmission.title;
             delete payloadForSubmission.timestamp;
@@ -895,12 +871,12 @@ class QuizApiService {
       flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.deleteQuiz', err);
       logger.error(`Sınav silinemedi: ID=${id}`, 'QuizApiService.deleteQuiz', err, undefined, { id });
       const apiError = ErrorService.createApiError("Sınav silinirken bir hata oluştu.", 
-        err.message || String(err), {
-          original: {
+        err.message || String(err), { 
+          original: { 
             error: err,
             context: 'deleteQuiz',
             quizId: id
-          }
+          } 
         });
       ErrorService.handleError(apiError, "Sınav Silme");
       throw apiError;

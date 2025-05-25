@@ -341,8 +341,32 @@ export class QuizGenerationService {
           throw new BadRequestException('AI response is not a valid string.');
         }
 
+        // Ham yanıtı temizle ve JSON çıkar
+        let cleanedResponse = rawJsonResponse;
+        
+        // Ham yanıtın ilk 100 karakterini logla
+        console.log(`[QUIZ_DEBUG] [${traceId}] Ham yanıt (ilk 100 karakter): ${rawJsonResponse.substring(0, 100)}...`);
+        
+        // 1. Başlık satırlarını kaldır (## Ham Çıktı: gibi)
+        cleanedResponse = cleanedResponse.replace(/^.*?Ham Çıktı:.*?$/m, '');
+        
+        // 2. Markdown kod bloklarını temizle
+        // 2.1 Duplicate ```json etiketlerini düzelt
+        cleanedResponse = cleanedResponse.replace(/```json\s*```json/g, '```json');
+        
+        // 2.2 Kod blok etiketlerini kaldır
+        cleanedResponse = cleanedResponse.replace(/```json\s*|\s*```/g, '');
+        
+        // 3. JSON başlangıcını bul
+        const jsonStartIndex = cleanedResponse.indexOf('{');
+        if (jsonStartIndex !== -1) {
+          cleanedResponse = cleanedResponse.substring(jsonStartIndex);
+        }
+        
+        console.log(`[QUIZ_DEBUG] [${traceId}] Temizlenmiş yanıt (ilk 100 karakter): ${cleanedResponse.substring(0, 100)}...`);
+
         // JSON parse işlemi
-        parsedResponse = JSON.parse(rawJsonResponse);
+        parsedResponse = JSON.parse(cleanedResponse);
         console.log(
           `[QUIZ_DEBUG] [${traceId}] JSON parse başarılı. Anahtarlar:`,
           Object.keys(parsedResponse),
@@ -355,7 +379,21 @@ export class QuizGenerationService {
           undefined,
           error,
         );
-        throw new BadRequestException('AI response is not valid JSON.');
+        
+        // Validation service'i kullanmaya çalış (son çare)
+        try {
+          console.log(`[QUIZ_DEBUG] [${traceId}] QuizValidation servisi ile parse etmeye çalışılıyor...`);
+          parsedResponse = this.quizValidation.parseAIResponseToJSON(rawJsonResponse, metadata);
+          console.log(`[QUIZ_DEBUG] [${traceId}] QuizValidation servisi ile parse başarılı`);
+        } catch (validationError) {
+          this.logger.error(
+            `[${traceId}] QuizValidation servisi ile parse başarısız: ${validationError.message}`,
+            'QuizGenerationService.generateQuizQuestions',
+            undefined,
+            validationError,
+          );
+          throw new BadRequestException('AI response is not valid JSON.');
+        }
       }
 
       // Zod validasyonu

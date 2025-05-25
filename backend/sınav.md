@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-25T12:37:20.699Z
+## Tarih: 2025-05-25T13:17:54.115Z
 
-## Trace ID: quiz-1748176640697-wbfwq
+## Trace ID: quiz-1748179074110-gdktz
 
 ## Alt Konular (2 adet):
 ```
@@ -228,7 +228,7 @@ Bekleyen konu yok.
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
 #### Genel Konular:
-- Soru: birim testi ve junite giriş alanında, aşağıdakilerden hangisi birim testi ve junite giriş sürecinde en önemli adımdır?
+- Soru: birim testi ve junit alanında, aşağıdakilerden hangisi birim testi ve junit sürecinde en önemli adımdır?
 - Seçenekler: A) Algoritma tasarımı | B) Kodun test edilmesi | C) Gereksinimlerin belirlenmesi | D) Dokümantasyon yazımı
 - Doğru Cevap: C) Gereksinimlerin belirlenmesi
 - Zorluk: medium
@@ -240,21 +240,20 @@ Bekleyen konu yok.
 - Zorluk: medium
 
 #### Algoritma Analizi:
-- Soru: birim testi ve junite giriş bağlamında en önemli performans faktörü nedir?
+- Soru: birim testi ve junit bağlamında en önemli performans faktörü nedir?
 - Seçenekler: A) Bellek kullanımı | B) Zaman karmaşıklığı | C) Kod okunabilirliği | D) Uygulanabilirlik kolaylığı
 - Doğru Cevap: B) Zaman karmaşıklığı
 - Zorluk: medium
 
 #### Yazılım Kalitesi:
-- Soru: birim testi ve junite giriş yaklaşımında aşağıdakilerden hangisi doğrudur?
+- Soru: birim testi ve junit yaklaşımında aşağıdakilerden hangisi doğrudur?
 - Seçenekler: A) Ekip çalışması, bireysel çalışmadan her zaman daha verimsizdir | B) Dokümantasyon, modern geliştirme süreçlerinde tamamen gereksizdir | C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur | D) Test yazımı sadece projenin sonunda yapılmalıdır
 - Doğru Cevap: C) Sürekli entegrasyon (CI), kod kalitesini artırmaya yardımcı olur
 - Zorluk: medium
 
 #### Teorik Bilgisayar Bilimi:
-
-- Soru: birim testi ve junite giriş alanında, aşağıdaki ifadelerden hangisi doğrudur?
-- Seçenekler: A) Her problemin polinom zamanda çözülebildiği matematiksel olarak kanıtlanmıştır | B) Yapay zeka, tüm programlama problemlerini otomatikletik olarak çözebilir | C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır | D) Bilgisayarlar, insan beyni ile aynı şekilde düşünür ve öğrenir
+- Soru: birim testi ve junit alanında, aşağıdaki ifadelerden hangisi doğrudur?
+- Seçenekler: A) Her problemin polinom zamanda çözülebildiği matematiksel olarak kanıtlanmıştır | B) Yapay zeka, tüm programlama problemlerini otomatik olarak çözebilir | C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır | D) Bilgisayarlar, insan beyni ile aynı şekilde düşünür ve öğrenir
 - Doğru Cevap: C) NP-Tam problemlerin verimli çözümleri henüz bulunamamıştır
 - Zorluk: medium
 
