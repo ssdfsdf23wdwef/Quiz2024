@@ -379,50 +379,60 @@ export class QuizGenerationService {
         // Doğrulanmış sorular için detaylı işleme
         const questions = this.processAIResponse(rawJsonResponse, metadata, validatedData);
 
-      // DETAYLI LOGLAMA EKLE: İşlenen soruları logla
-      console.log(
-        `[QUIZ_DEBUG] [${traceId}] İşlem sonrası soru sayısı: ${questions.length}`,
-      );
-      console.log(
-        `[QUIZ_DEBUG] [${traceId}] İlk soru örneği:`,
-        questions.length > 0
-          ? JSON.stringify(questions[0], null, 2)
-          : 'Soru yok',
-      );
-      console.log(
-        `[QUIZ_DEBUG] [${traceId}] Tüm sorular:`,
-        JSON.stringify(
-          questions.map((q) => ({
-            id: q.id,
-            text: q.questionText.substring(0, 50) + '...',
-            subTopic: q.subTopicName,
-            normalized: q.normalizedSubTopicName,
-            difficulty: q.difficulty,
-          })),
-          null,
-          2,
-        ),
-      );
-
-      // KONTROL EKLE: İstenen soru sayısı ve dönen soru sayısı karşılaştırması
-      if (questions.length < options.questionCount) {
-        console.warn(
-          `[QUIZ_DEBUG] [${traceId}] UYARI: Üretilen soru sayısı (${questions.length}) istenen soru sayısından (${options.questionCount}) az! AI yanıtı eksik olabilir.`,
+        // DETAYLI LOGLAMA EKLE: İşlenen soruları logla
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] İşlem sonrası soru sayısı: ${questions.length}`,
         );
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] İlk soru örneği:`,
+          questions.length > 0
+            ? JSON.stringify(questions[0], null, 2)
+            : 'Soru yok',
+        );
+        console.log(
+          `[QUIZ_DEBUG] [${traceId}] Tüm sorular:`,
+          JSON.stringify(
+            questions.map((q) => ({
+              id: q.id,
+              text: q.questionText.substring(0, 50) + '...',
+              subTopic: q.subTopicName,
+              normalized: q.normalizedSubTopicName,
+              difficulty: q.difficulty,
+            })),
+            null,
+            2,
+          ),
+        );
+
+        // KONTROL EKLE: İstenen soru sayısı ve dönen soru sayısı karşılaştırması
+        if (questions.length < options.questionCount) {
+          console.warn(
+            `[QUIZ_DEBUG] [${traceId}] UYARI: Üretilen soru sayısı (${questions.length}) istenen soru sayısından (${options.questionCount}) az! AI yanıtı eksik olabilir.`,
+          );
+        }
+
+        // Sınav oluşturmayı tamamladığını logla
+        this.logger.logExamCompletion(
+          options.userId || 'anon',
+          'quiz_' + traceId,
+          {
+            traceId,
+            questionsCount: questions.length,
+            startTime: Date.now() - 60000, // Yaklaşık bir başlangıç zamanı
+          },
+        );
+
+        return questions;
+      } catch (error) {
+        // Zod validasyonu sırasında hata oluştu
+        this.logger.error(
+          `[${traceId}] Zod validasyonu sırasında hata: ${error.message}`,
+          'QuizGenerationService.generateQuizQuestions',
+          undefined,
+          error
+        );
+        throw new BadRequestException(`Validation error: ${error.message}`);
       }
-
-      // Sınav oluşturmayı tamamladığını logla
-      this.logger.logExamCompletion(
-        options.userId || 'anon',
-        'quiz_' + traceId,
-        {
-          traceId,
-          questionsCount: questions.length,
-          startTime: Date.now() - 60000, // Yaklaşık bir başlangıç zamanı
-        },
-      );
-
-      return questions;
     } catch (error) {
       // DETAYLI LOGLAMA EKLE: Hata detaylarını artır
       console.error(

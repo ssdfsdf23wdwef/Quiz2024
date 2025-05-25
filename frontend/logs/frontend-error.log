@@ -1324,3 +1324,7 @@ Details: {"reason":"AxiosError: Request failed with status code 401\n    at sett
 ------------------------------------------------------------
 [2025-05-25T12:28:57.969Z] [info] [ClientLogSetup] Uygulama başlatıldı
 ------------------------------------------------------------
+[2025-05-25T12:54:01.893Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-05-25T12:54:01.889Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------

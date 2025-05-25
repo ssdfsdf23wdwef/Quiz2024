@@ -417,20 +417,69 @@ Sadece JSON döndür, başka açıklama yapma.
         return [];
       }
 
-      // Parse AI response
+      // Parse AI response with enhanced error handling
       let parsedResponse: { newly_identified_topics?: string[] };
       try {
+        // Try to parse the JSON response
         parsedResponse = this.parseJsonResponse<{ newly_identified_topics?: string[] }>(aiResponse);
       } catch (parseError) {
+        // Enhanced error logging with more context
         this.logger.error(
           `[${traceId}] AI yanıtı JSON parse edilemedi: ${parseError.message}`,
           'TopicDetectionService.detectExclusiveNewTopics',
           __filename,
           undefined,
           parseError,
-          { aiResponse: aiResponse?.substring(0, 500) },
+          { 
+            aiResponse: aiResponse?.substring(0, 500),
+            parseErrorStack: parseError.stack
+          },
         );
-        return [];
+        
+        // Attempt to extract JSON manually as a fallback
+        try {
+          // Extract any JSON-like structure using regex
+          const jsonMatch = aiResponse.match(/\{[\s\S]*\}/); // Match everything between curly braces
+          if (jsonMatch) {
+            const jsonStr = jsonMatch[0];
+            
+            // Clean and repair the extracted JSON
+            const cleanedJson = this.cleanJsonString(jsonStr);
+            const balancedJson = this.balanceBrackets(cleanedJson);
+            const repairedJson = this.repairJsonString(balancedJson);
+            
+            this.logger.info(
+              `[${traceId}] JSON parse hatasından sonra düzeltilmiş JSON ile yeniden deneniyor`,
+              'TopicDetectionService.detectExclusiveNewTopics',
+              __filename
+            );
+            
+            // Try parsing the repaired JSON
+            parsedResponse = JSON.parse(repairedJson);
+          } else {
+            // If no JSON structure is found, create a minimal valid structure
+            this.logger.warn(
+              `[${traceId}] AI yanıtında JSON yapısı bulunamadı, boş sonuç döndürülüyor`,
+              'TopicDetectionService.detectExclusiveNewTopics',
+              __filename
+            );
+            return [];
+          }
+        } catch (fallbackError) {
+          // If fallback parsing also fails, log and return empty array
+          this.logger.error(
+            `[${traceId}] Düzeltilmiş JSON ile yeniden deneme de başarısız oldu: ${fallbackError.message}`,
+            'TopicDetectionService.detectExclusiveNewTopics',
+            __filename,
+            undefined,
+            fallbackError
+          );
+          
+          // Throw a more descriptive HTTP exception
+          throw new BadRequestException(
+            `AI yanıtı parse edilemedi: ${parseError.message}. Lütfen daha sonra tekrar deneyin.`
+          );
+        }
       }
 
       // Extract newly identified topics
@@ -1120,23 +1169,60 @@ Sadece JSON döndür, başka açıklama yapma.
             }
           );
           
-          // Parse JSON response
+          const aiResponseText = response.text || '';
+          
+          // Log the raw response for debugging
+          this.logger.debug(
+            `[${traceId}] AI servisi yanıtı: ${aiResponseText.substring(0, 500)}...`,
+            'TopicDetectionService.detectNewTopicsExclusive',
+            __filename
+          );
+          
+          // Parse JSON response with improved error handling
           try {
-            // Try to extract JSON from the response if it's not already in JSON format
-            const text = response.text || '';
-            const jsonMatch = text.match(/\{[\s\S]*\}/); // Match everything between curly braces
-            const jsonStr = jsonMatch ? jsonMatch[0] : text;
-            
-            return JSON.parse(jsonStr);
-          } catch (error) {
+            // Try to parse the JSON response using our improved parseJsonResponse method
+            return this.parseJsonResponse<any>(aiResponseText);
+          } catch (parseError) {
+            // Enhanced error logging
             this.logger.error(
-              `[${traceId}] JSON ayrıştırma hatası: ${error.message}`,
+              `[${traceId}] AI yanıtı JSON olarak parse edilemedi: ${parseError.message}`,
               'TopicDetectionService.detectNewTopicsExclusive',
               __filename,
               undefined,
-              error,
+              parseError,
+              { aiResponse: aiResponseText?.substring(0, 500) } // Log first 500 chars of response
             );
-            throw new Error(`AI yanıtı JSON formatında değil: ${error.message}`);
+            
+            // Try extracting JSON with regex as fallback
+            try {
+              // Extract JSON from the response if it's embedded within other text
+              const jsonMatch = aiResponseText.match(/\{[\s\S]*\}/); // Match everything between curly braces
+              const jsonStr = jsonMatch ? jsonMatch[0] : aiResponseText;
+              
+              // Clean and repair the JSON string before parsing
+              const cleanedJson = this.cleanJsonString(jsonStr);
+              const balancedJson = this.balanceBrackets(cleanedJson);
+              const repairedJson = this.repairJsonString(balancedJson);
+              
+              this.logger.info(
+                `[${traceId}] Düzeltilmiş JSON ile parse yeniden deneniyor`,
+                'TopicDetectionService.detectNewTopicsExclusive',
+                __filename
+              );
+              
+              return JSON.parse(repairedJson);
+            } catch (fallbackError) {
+              this.logger.error(
+                `[${traceId}] Fallback JSON ayrıştırma da başarısız oldu: ${fallbackError.message}`,
+                'TopicDetectionService.detectNewTopicsExclusive',
+                __filename,
+                undefined,
+                fallbackError
+              );
+              
+              // Return a valid but empty result structure to prevent complete failure
+              return { newly_identified_topics: [] };
+            }
           }
         },
         this.RETRY_OPTIONS,
@@ -1148,15 +1234,27 @@ Sadece JSON döndür, başka açıklama yapma.
         __filename,
       );
 
-      // Process the response
-      const newTopics = aiResponse.newly_identified_topics || [];
+      // Process the response with validation
+      const newTopics = aiResponse?.newly_identified_topics || [];
       
-      // Format the response as required
-      const proposedTopics = newTopics.map(topic => ({
-        name: topic,
-        relevance: 'high', // Default relevance 
-        details: '' // Can be enhanced in future versions
-      }));
+      // Validate that newTopics is an array
+      if (!Array.isArray(newTopics)) {
+        this.logger.warn(
+          `[${traceId}] AI yanıtındaki newly_identified_topics bir dizi değil: ${typeof newTopics}`,
+          'TopicDetectionService.detectNewTopicsExclusive',
+          __filename
+        );
+        return { proposedTopics: [] };
+      }
+      
+      // Format the response as required with type checking
+      const proposedTopics = newTopics
+        .filter(topic => typeof topic === 'string' && topic.trim().length > 0)
+        .map(topic => ({
+          name: this.cleanTopicName(topic),
+          relevance: 'high', // Default relevance 
+          details: '' // Can be enhanced in future versions
+        }));
 
       this.logger.info(
         `[${traceId}] ${proposedTopics.length} adet yeni konu tespit edildi`,

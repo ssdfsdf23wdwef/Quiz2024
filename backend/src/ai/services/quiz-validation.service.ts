@@ -1652,6 +1652,7 @@ export class QuizValidationService {
         `[${traceId}] AI yanıtı Zod doğrulamasından geçemedi: ${validationError.message}`,
         'QuizValidationService.validateQuizResponseSchema',
         undefined,
+        undefined,
         validationError,
       );
 
