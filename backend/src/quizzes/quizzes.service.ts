@@ -28,6 +28,7 @@ import { NormalizationService } from '../shared/normalization/normalization.serv
 interface CreateQuizParams {
   userId: string;
   quizType: 'quick' | 'personalized';
+  personalizedQuizType?: string; // Yeni konular odaklı, zayıf konular odaklı gibi
   courseId?: string;
   sourceDocument?: {
     documentId: string;
@@ -835,12 +836,39 @@ export class QuizzesService {
 
     // Update learning targets status if this was a personalized quiz
     if (dto.quizType === 'personalized' && dto.courseId) {
-      await this.updateLearningTargetsFromAnalysis(
-        analysis,
-        dto.courseId,
-        userId,
-        dto.selectedSubTopics // Sınavda kullanılan alt konuları geçiyoruz
-      );
+      try {
+        this.logger.info(
+          `${savedQuizId} ID'li sınav tamamlandı, öğrenme hedefleri güncelleniyor...`,
+          'QuizzesService.submitQuiz',
+          __filename,
+          undefined,
+          { quizId: savedQuizId, courseId: dto.courseId, userId }
+        );
+
+        await this.updateLearningTargetsFromAnalysis(
+          analysis,
+          dto.courseId,
+          userId,
+          dto.selectedSubTopics // Sınavda kullanılan alt konuları geçiyoruz
+        );
+        
+        this.logger.info(
+          `Öğrenme hedefleri başarıyla güncellendi`,
+          'QuizzesService.submitQuiz',
+          __filename,
+          undefined,
+          { quizId: savedQuizId }
+        );
+      } catch (error) {
+        // Öğrenme hedefi güncelleme hatası sınavın tamamlanmasını engellemesin
+        this.logger.error(
+          `Öğrenme hedefleri güncellenirken hata oluştu (Quiz ID: ${savedQuizId}): ${error instanceof Error ? error.message : String(error)}`,
+          'QuizzesService.submitQuiz',
+          __filename,
+          undefined
+        );
+        // Hatayı logluyoruz ama dışarı fırlatmıyoruz
+      }
     }
 
     // Construct the Quiz object to return (matching the interface)
@@ -983,22 +1011,22 @@ export class QuizzesService {
           } catch (error) {
             // Bireysel güncellemeler hatası sınavın tamamlanmasını engellemesin
             this.logger.error(
-              `[${traceId}] Error updating learning target for "${subTopic}": ${error.message}`,
+              `[${traceId}] Error updating learning target for "${subTopic}": ${error instanceof Error ? error.message : String(error)}`,
               'QuizzesService.updateLearningTargetsFromAnalysis',
               __filename,
-              undefined,
-              { errorMessage: error.message }
+              undefined
             );
           }
         }
       }
     } catch (error) {
+      // Genel hata durumunda loglama yap
       this.logger.error(
-        `[${traceId}] Error in updateLearningTargetsFromAnalysis: ${error.message}`,
+        `[${traceId}] Error in updateLearningTargetsFromAnalysis: ${error instanceof Error ? error.message : String(error)}`,
         'QuizzesService.updateLearningTargetsFromAnalysis',
         __filename,
-        undefined,
-        { errorMessage: error.message }
+        undefined
+        // metadata objesi geçmiyoruz, zaten hata mesajı log içeriğinde yer alıyor
       );
       // Hatayı dışarı fırlatmıyoruz, sadece logluyoruz
     }
@@ -1870,6 +1898,7 @@ export class QuizzesService {
     difficulty: string = 'medium',
     documentId?: string,
     documentText?: string,
+    personalizedQuizType?: string,
   ): Promise<Quiz> {
     const startTime = Date.now();
     const traceId = `personalized-quiz-${startTime}-${Math.random().toString(36).substring(2, 7)}`;
@@ -1940,6 +1969,7 @@ export class QuizzesService {
       const createParams: CreateQuizParams = {
         userId,
         quizType: 'personalized',
+        personalizedQuizType, // Eklenen parametre
         courseId,
         sourceDocument:
           documentId && documentText
@@ -1962,7 +1992,7 @@ export class QuizzesService {
       await this.updateQuizWithQuestions(savedQuiz.id, questions);
 
       // 7. Eğer yeni konulara odaklı bir sınav ise, bu konuları öğrenme hedefi olarak kaydet
-      if (dto.personalizedQuizType === 'newTopicFocused' && subTopics.length > 0) {
+      if (personalizedQuizType === 'newTopicFocused' && subTopics.length > 0) {
         try {
           this.logger.info(
             `[${traceId}] Yeni konulara odaklı sınav sonrası öğrenme hedefleri oluşturuluyor. Konu sayısı: ${subTopics.length}`,
@@ -1996,11 +2026,10 @@ export class QuizzesService {
         } catch (error) {
           // Öğrenme hedefi oluşturma hatası sınavın oluşturulmasını engellemesin
           this.logger.error(
-            `[${traceId}] Yeni konular için öğrenme hedefleri oluşturulurken/güncellenirken hata oluştu: ${error.message}`,
+            `[${traceId}] Yeni konular için öğrenme hedefleri oluşturulurken/güncellenirken hata oluştu (UserId: ${userId}, CourseId: ${courseId}, SubTopicCount: ${subTopics.length}): ${error instanceof Error ? error.message : String(error)}`,
             'QuizzesService.createPersonalizedQuiz',
             __filename,
-            undefined,
-            { userId, courseId, subTopicCount: subTopics.length, errorMessage: error.message }
+            undefined
           );
           // Hatayı logla ama dışarı fırlatma
         }
