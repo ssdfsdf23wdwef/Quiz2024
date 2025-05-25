@@ -23,6 +23,7 @@ import { LogMethod } from '../common/decorators';
 import { QuizQuestion } from '../ai/interfaces';
 import { DocumentsService } from '../documents/documents.service';
 import { CoursesService } from '../courses/courses.service';
+import { NormalizationService } from '../shared/normalization/normalization.service';
 
 interface CreateQuizParams {
   userId: string;
@@ -55,6 +56,7 @@ export class QuizzesService {
     private readonly quizAnalysisService: QuizAnalysisService,
     private readonly documentsService: DocumentsService,
     private readonly coursesService: CoursesService,
+    private readonly normalizationService: NormalizationService,
   ) {
     this.logger = LoggerService.getInstance();
     this.flowTracker = FlowTrackerService.getInstance();
@@ -837,6 +839,7 @@ export class QuizzesService {
         analysis,
         dto.courseId,
         userId,
+        dto.selectedSubTopics // Sınavda kullanılan alt konuları geçiyoruz
       );
     }
 
@@ -864,33 +867,141 @@ export class QuizzesService {
     return { quiz: returnedQuiz, analysis };
   }
 
-  // Helper function to update learning targets (implementation needed based on PRD 4.5.x)
+  // Helper function to update learning targets
   private async updateLearningTargetsFromAnalysis(
     analysis: AnalysisResult,
     courseId: string,
     userId: string,
+    selectedSubTopics?: string[] | TopicDto[] | null,
   ): Promise<void> {
+    const traceId = `LT-${Date.now()}`;
+
     this.logger.info(
-      `Updating learning targets for course ${courseId} based on quiz analysis... User: ${userId}`,
+      `[${traceId}] Updating learning targets for course ${courseId} based on quiz analysis... User: ${userId}`,
       'QuizzesService.updateLearningTargetsFromAnalysis',
       __filename,
       532,
       { courseId, userId },
     );
 
-    // Implement actual logic using analysis parameter
-    if (analysis && analysis.performanceBySubTopic) {
-      for (const [_subTopic, performance] of Object.entries(
-        analysis.performanceBySubTopic,
-      )) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const status = this.calculateStatus(performance.scorePercent);
-        // Burada hedefleri güncellemek için mantık eklenebilir
-        // Örneğin: this.learningTargetsService.updateStatus(...);
-      }
-    }
+    try {
+      // 1. İlk olarak, sınavdaki tüm alt konular için öğrenme hedefi oluşturalım (eğer henüz yoksa)
+      let subTopics: string[] = [];
+      
+      // selectedSubTopics parametresi farklı formatlarda gelebilir, hepsini string dizisine çevirelim
+      if (selectedSubTopics && selectedSubTopics.length > 0) {
+        if (typeof selectedSubTopics[0] === 'string') {
+          // Eğer zaten string dizisiyse
+          subTopics = selectedSubTopics as string[];
+        } else {
+          // Eğer TopicDto dizisiyse
+          subTopics = (selectedSubTopics as TopicDto[]).map(topic => topic.subTopic);
+        }
 
-    return Promise.resolve();
+        if (subTopics.length > 0) {
+          this.logger.info(
+            `[${traceId}] Creating learning targets for ${subTopics.length} subtopics`,
+            'QuizzesService.updateLearningTargetsFromAnalysis',
+            __filename,
+            undefined,
+            { courseId, userId, subTopicCount: subTopics.length, subTopics }
+          );
+
+          // SubTopics'i LearningTargetsService'in beklediği formata dönüştür
+          const topicsForLearningTargets = subTopics.map(topic => ({
+            subTopicName: topic,
+            normalizedSubTopicName: this.normalizationService.normalizeSubTopicName(topic)
+          }));
+
+          // Öğrenme hedeflerini oluştur (var olanları güncellemez, sadece olmayanları oluşturur)
+          await this.learningTargetsService.createBatch(
+            courseId,
+            userId,
+            topicsForLearningTargets
+          );
+
+          this.logger.info(
+            `[${traceId}] Learning targets created successfully for all subtopics`,
+            'QuizzesService.updateLearningTargetsFromAnalysis',
+            __filename,
+            undefined,
+            { courseId, userId }
+          );
+        }
+      }
+
+      // 2. Analiz sonuçlarına göre öğrenme hedeflerinin durumlarını güncelleyelim
+      if (analysis && analysis.performanceBySubTopic) {
+        this.logger.info(
+          `[${traceId}] Updating learning target statuses based on performance`,
+          'QuizzesService.updateLearningTargetsFromAnalysis',
+          __filename,
+          undefined,
+          { courseId, userId, performanceTopicsCount: Object.keys(analysis.performanceBySubTopic).length }
+        );
+
+        // Analiz sonuçlarındaki her alt konu için
+        for (const [subTopic, performance] of Object.entries(
+          analysis.performanceBySubTopic,
+        )) {
+          // Puana göre durumu hesapla
+          const status = this.calculateStatus(performance.scorePercent);
+          
+          try {
+            // Öğrenme hedefini bul
+            const targets = await this.learningTargetsService.findByCourse(courseId, userId);
+            const normalizedSubTopic = this.normalizationService.normalizeSubTopicName(subTopic);
+            
+            // Normalize edilmiş ada göre hedefi buluyoruz
+            const target = targets.find(t => 
+              this.normalizationService.normalizeSubTopicName(t.subTopicName) === normalizedSubTopic);
+            
+            if (target) {
+              // Hedef bulundu, durumunu güncelle
+              await this.learningTargetsService.updateLearningTarget(target.id, {
+                status: status as any, // Type casting ile sorunu çözüyoruz
+                // Not: UpdateLearningTargetDto içinde lastAttemptScorePercent alanı yok
+                // istatistikler için ayrı bir güncelleme metodu kullanılabilir
+              }, userId);
+              
+              this.logger.info(
+                `[${traceId}] Updated learning target status for "${subTopic}" to ${status}`,
+                'QuizzesService.updateLearningTargetsFromAnalysis',
+                __filename,
+                undefined,
+                { targetId: target.id, subTopic, newStatus: status, scorePercent: performance.scorePercent }
+              );
+            } else {
+              this.logger.warn(
+                `[${traceId}] Could not find learning target for subtopic "${subTopic}"`,
+                'QuizzesService.updateLearningTargetsFromAnalysis',
+                __filename,
+                undefined,
+                { courseId, userId, subTopic, normalizedSubTopic }
+              );
+            }
+          } catch (error) {
+            // Bireysel güncellemeler hatası sınavın tamamlanmasını engellemesin
+            this.logger.error(
+              `[${traceId}] Error updating learning target for "${subTopic}": ${error.message}`,
+              'QuizzesService.updateLearningTargetsFromAnalysis',
+              __filename,
+              undefined,
+              { errorMessage: error.message }
+            );
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        `[${traceId}] Error in updateLearningTargetsFromAnalysis: ${error.message}`,
+        'QuizzesService.updateLearningTargetsFromAnalysis',
+        __filename,
+        undefined,
+        { errorMessage: error.message }
+      );
+      // Hatayı dışarı fırlatmıyoruz, sadece logluyoruz
+    }
   }
 
   // Helper to calculate status based on score (PRD 4.5.2)
@@ -1849,6 +1960,51 @@ export class QuizzesService {
 
       // 6. Soruları quiz ile ilişkilendir
       await this.updateQuizWithQuestions(savedQuiz.id, questions);
+
+      // 7. Eğer yeni konulara odaklı bir sınav ise, bu konuları öğrenme hedefi olarak kaydet
+      if (dto.personalizedQuizType === 'newTopicFocused' && subTopics.length > 0) {
+        try {
+          this.logger.info(
+            `[${traceId}] Yeni konulara odaklı sınav sonrası öğrenme hedefleri oluşturuluyor. Konu sayısı: ${subTopics.length}`,
+            'QuizzesService.createPersonalizedQuiz',
+            __filename,
+            undefined,
+            { userId, courseId, subTopicCount: subTopics.length }
+          );
+
+          // SubTopics'i LearningTargetsService'in beklediği formata dönüştür
+          const topicsForLearningTargets = subTopics.map(topic => ({
+            subTopicName: topic,
+            // Normalize edilmiş adı da ekleyebiliriz, ancak servis kendisi de yapabilir
+            normalizedSubTopicName: this.normalizationService.normalizeSubTopicName(topic)
+          }));
+
+          // Öğrenme hedeflerini oluştur
+          await this.learningTargetsService.createBatch(
+            courseId,
+            userId,
+            topicsForLearningTargets
+          );
+
+          this.logger.info(
+            `[${traceId}] Öğrenme hedefleri başarıyla oluşturuldu/güncellendi`,
+            'QuizzesService.createPersonalizedQuiz',
+            __filename,
+            undefined,
+            { userId, courseId, subTopics }
+          );
+        } catch (error) {
+          // Öğrenme hedefi oluşturma hatası sınavın oluşturulmasını engellemesin
+          this.logger.error(
+            `[${traceId}] Yeni konular için öğrenme hedefleri oluşturulurken/güncellenirken hata oluştu: ${error.message}`,
+            'QuizzesService.createPersonalizedQuiz',
+            __filename,
+            undefined,
+            { userId, courseId, subTopicCount: subTopics.length, errorMessage: error.message }
+          );
+          // Hatayı logla ama dışarı fırlatma
+        }
+      }
 
       const duration = Date.now() - startTime;
       this.logger.info(
