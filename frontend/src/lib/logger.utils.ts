@@ -10,22 +10,6 @@ import { FlowCategory } from "@/constants/logging.constants";
 let loggerInstance: LoggerService | null = null;
 let flowTrackerInstance: FlowTrackerService | null = null;
 
-// Flow kategorileri tipi - LoggerService ve FlowTracker için
-// export enum FlowCategory {
-//   API = 'API',                // API çağrıları
-//   Auth = 'Auth',              // Kimlik doğrulama işlemleri
-//   UI = 'UI',                  // Kullanıcı arayüzü
-//   Error = 'Error',            // Hata izleme
-//   Custom = 'Custom',          // Özel kategoriler
-//   Firebase = 'Firebase',      // Firebase işlemleri
-//   Navigation = 'Navigation',  // Gezinti işlemleri
-//   Component = 'Component',    // Bileşen işlemleri
-//   State = 'State',            // Durum değişiklikleri
-//   Render = 'Render',          // Render işlemleri
-//   User = 'User'               // Kullanıcı işlemleri
-// }
-
-// FlowCategory'yi TrackerFlowCategory'ye eşleştiren yardımcı fonksiyon
 export function mapToTrackerCategory(category: FlowCategory): TrackerFlowCategory {
   switch(category) {
     case FlowCategory.API:
