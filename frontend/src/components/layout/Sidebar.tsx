@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import {
   FiHome,
   FiBook,
@@ -10,67 +9,20 @@ import {
   FiTarget,
   FiSettings,
   FiBarChart2,
-  FiLogOut,
-  FiLogIn,
-  FiUser,
 } from "react-icons/fi";
-import { ThemeToggle } from "../ui/ThemeToggle";
-import { useTheme } from "next-themes";
-import { useAuthStore } from "@/store/auth.store";
-import { useAuth as useAuthHook } from "@/hooks/auth/useAuth";
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@nextui-org/react";
+import { useState, useEffect } from "react";
 
 export default function Sidebar() {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
-  const { isInitializing } = useAuth();
-  const { user, isLoading, isAuthenticated } = useAuthStore();
-  const { logout } = useAuthHook();
   const pathname = usePathname();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  const displayName = user
-    ? `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-      user.email ||
-      "Kullanıcı"
-    : "Kullanıcı";
-
-  const getInitials = () => {
-    if (!user) return "K";
-    
-    const firstName = user.firstName || '';
-    const lastName = user.lastName || '';
-    
-    if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`.toUpperCase();
-    } else if (firstName) {
-      return firstName[0].toUpperCase();
-    } else if (user.email) {
-      return user.email[0].toUpperCase();
-    } else {
-      return "K";
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    setIsDropdownOpen(false);
-  };
-
-  // Dropdown dışına tıklandığında dropdown'ı kapat
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
+    // Simulate loading
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 500);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   // Eğer /auth/login sayfasındaysak, sidebar'ı render etme
@@ -120,67 +72,9 @@ export default function Sidebar() {
         scrollbarColor: 'var(--color-border-secondary) var(--color-bg-secondary)'
       }}
     >
-      {/* Üst kısım - Tema ve Profil Butonları */}
-      <div className="p-4 border-b border-primary bg-secondary/50 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          {/* Tema değiştirme butonu */}
-          <ThemeToggle size="sm" />
-
-          {/* Kullanıcı Kimlik Doğrulama - Geliştirilmiş profil butonu */}
-          {isLoading ? (
-            <div className="h-10 w-10 bg-tertiary/50 border border-primary/30 rounded-full animate-pulse"></div>
-          ) : isAuthenticated ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary border-2 border-white/30 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-xl hover:scale-105"
-                aria-label="Profil menüsünü aç"
-              >
-                <span className="text-sm font-bold text-white drop-shadow-md">{getInitials()}</span>
-              </button>
-
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-2xl z-50 overflow-hidden transform transition-all duration-200 origin-top-right"
-                     style={{
-                       backdropFilter: 'blur(12px)',
-                       WebkitBackdropFilter: 'blur(12px)'
-                     }}
-                >
-                  <div className="px-4 py-3 bg-gradient-to-r from-brand-primary/5 to-transparent border-b border-gray-100/30 dark:border-gray-700/30">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{displayName}</p>
-                    {user?.email && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>}
-                  </div>
-                  <nav className="py-1">
-                    <Link href="/profile" prefetch={true}>
-                      <div className="flex items-center px-4 py-3 text-sm text-primary hover:bg-interactive-hover cursor-pointer transition-colors">
-                        <FiUser className="mr-3 text-brand-primary" />
-                        Profil
-                      </div>
-                    </Link>
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full flex items-center px-4 py-3 text-sm text-primary hover:bg-interactive-hover cursor-pointer transition-colors"
-                    >
-                      <FiLogOut className="mr-3 text-state-error" />
-                      Çıkış Yap
-                    </button>
-                  </nav>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link href="/auth/login" prefetch={true}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary hover:bg-interactive-hover focus:ring-brand-primary flex items-center px-3 py-2 rounded-md border border-brand-primary/30 hover:border-brand-primary"
-              >
-                <FiLogIn className="mr-2 h-4 w-4" />
-                Giriş Yap
-              </Button>
-            </Link>
-          )}
-        </div>
+      {/* Sidebar Header */}
+      <div className="p-4 border-b border-primary bg-secondary/50">
+        <h2 className="text-lg font-semibold text-primary">Menü</h2>
       </div>
       <div className="flex-1 flex flex-col">
         {isInitializing ? (

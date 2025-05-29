@@ -11,26 +11,23 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
-  const { isDarkMode, setThemeMode } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   const [settings, setSettings] = useState({
-    darkMode: false,
     emailNotifications: true,
     autoStartTimer: true,
     showHints: true,
     language: "tr",
   });
 
-  // Tema durumunu settings'e yansıt
+  // Only show the theme toggle UI after mounting to avoid hydration mismatch
   useEffect(() => {
-    setSettings((prev) => ({
-      ...prev,
-      darkMode: isDarkMode,
-    }));
-  }, [isDarkMode]);
+    setMounted(true);
+  }, []);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -67,9 +64,9 @@ export default function SettingsPage() {
 
       // Tema değişikliği için setThemeMode'u çağır
       if (name === "darkMode") {
-        // Checkbox işaretlendiyse dark, işaretlenmediyse light
-        const newMode = e.target.checked ? "dark" : "light";
-        setThemeMode(newMode);
+        const toggleTheme = () => {
+          setTheme(theme === 'dark' ? 'light' : 'dark');
+        };
       }
     } else {
       setSettings((prev) => ({ ...prev, [name]: value }));
@@ -184,23 +181,28 @@ export default function SettingsPage() {
                     Uygulamada karanlık temayı etkinleştirin
                   </p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="darkMode"
-                    className="sr-only peer"
-                    checked={settings.darkMode}
-                    onChange={handleSettingChange}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                  <span className="ml-2">
-                    {settings.darkMode ? (
-                      <FiMoon className="text-indigo-600" />
-                    ) : (
-                      <FiSun className="text-gray-500" />
-                    )}
-                  </span>
-                </label>
+                <div className="flex items-center justify-between py-3 px-4 bg-secondary/50 rounded-lg">
+                  <span className="text-sm font-medium">Koyu Tema</span>
+                  <button
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                      theme === 'dark' ? "bg-primary" : "bg-gray-200"
+                    }`}
+                    disabled={!mounted}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
+                        theme === 'dark' ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    >
+                      {mounted && (theme === 'dark' ? (
+                        <FiMoon className="h-full w-full p-0.5 text-primary" />
+                      ) : (
+                        <FiSun className="h-full w-full p-0.5 text-yellow-500" />
+                      ))}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between">

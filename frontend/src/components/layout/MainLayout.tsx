@@ -1,18 +1,17 @@
 "use client";
 
-import React, { ReactNode, memo, useEffect, useState } from "react";
-import { useTheme } from "@/context/ThemeProvider";
+import { ReactNode, memo, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import DevLoggerProvider from "@/components/providers/DevLoggerProvider";
+import UserControls from "./UserControls";
+import { usePathname } from "next/navigation";
 
-// Simple loading placeholder
 const LoadingPlaceholder = () => (
   <div className="animate-pulse">
     <div className="h-16 bg-secondary border border-primary rounded-md"></div> 
   </div>
 );
 
-// Lazy load components with loading priority
 const Sidebar = dynamic(() => import("@/components/layout/Sidebar"), { 
   loading: () => <LoadingPlaceholder /> 
 });
@@ -22,12 +21,22 @@ interface MainLayoutProps {
 }
 
 function MainLayoutBase({ children }: MainLayoutProps) {
-  const { theme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isHomePage) {
+      document.body.classList.add('no-scroll');
+      return () => {
+        document.body.classList.remove('no-scroll');
+      };
+    }
+  }, [isHomePage]);
 
   const layoutStructure = (
     <DevLoggerProvider>
@@ -46,11 +55,19 @@ function MainLayoutBase({ children }: MainLayoutProps) {
             style={{
               paddingLeft: '1rem',
               paddingRight: '1rem',
-              paddingBottom: '1.5rem',
               marginLeft: isMounted ? '16rem' : '0',
+              position: 'relative',
             }}
           >
-            <div className="max-w-7xl mx-auto w-full">{children}</div>
+            {/* User Controls - Only on Home Page */}
+            {isHomePage && (
+              <div className="fixed top-4 right-6 z-40">
+                <UserControls />
+              </div>
+            )}
+            <div className="max-w-7xl mx-auto w-full">
+              {children}
+            </div>
           </main>
         </div>
       </div>
@@ -60,6 +77,6 @@ function MainLayoutBase({ children }: MainLayoutProps) {
   return layoutStructure;
 }
 
-// Memoize the layout to prevent unnecessary rerenders
+
 const MainLayout = memo(MainLayoutBase);
 export default MainLayout;
