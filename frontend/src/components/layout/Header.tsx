@@ -73,19 +73,7 @@ const HeaderComponent: React.FC<HeaderProps> = () => {
 
   return (
     <header className="bg-elevated border-b border-primary fixed top-0 left-0 right-0 z-50 shadow-sm">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 h-16 flex items-center">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" prefetch={true} className="flex items-center group">
-            <span className="text-3xl font-bold text-brand-primary mr-1.5 group-hover:text-brand-primary-hover transition-colors">
-              q
-            </span>
-            <span className="text-2xl text-primary font-semibold group-hover:text-brand-primary transition-colors">
-              quiz
-            </span>
-          </Link>
-
-          {/* Sağ taraftaki aksiyonlar */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 h-16 flex items-center justify-end">
           <div className="flex items-center space-x-3 sm:space-x-4">
             {/* Tema değiştirme butonu */}
             <ThemeToggle size="sm" />
@@ -144,7 +132,6 @@ const HeaderComponent: React.FC<HeaderProps> = () => {
               </div>
             )}
           </div>
-        </div>
       </div>
     </header>
   );

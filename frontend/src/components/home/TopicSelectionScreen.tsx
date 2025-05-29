@@ -637,7 +637,7 @@ function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
     >
       <div className="flex items-center gap-3">
         <div
-          className={`rounded-md min-w-6 w-6 h-6 flex items-center justify-center transition-all duration-200 ${{
+          className={`rounded-md min-w-6 w-6 h-6 flex items-center justify-center transition-all duration-200 ${
             topic.isSelected
               ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
               : "bg-surface border border-border-secondary"

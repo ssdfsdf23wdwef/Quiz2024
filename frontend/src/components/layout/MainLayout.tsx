@@ -13,10 +13,6 @@ const LoadingPlaceholder = () => (
 );
 
 // Lazy load components with loading priority
-const Header = dynamic(() => import("@/components/layout/Header").then(mod => mod.Header), { 
-  loading: () => <LoadingPlaceholder /> 
-});
-
 const Sidebar = dynamic(() => import("@/components/layout/Sidebar"), { 
   loading: () => <LoadingPlaceholder /> 
 });
@@ -36,22 +32,18 @@ function MainLayoutBase({ children }: MainLayoutProps) {
   const layoutStructure = (
     <DevLoggerProvider>
       <div className="min-h-screen bg-primary text-primary transition-colors duration-normal">
-        {/* Header is rendered only on client-side after mount to ensure theme consistency */}
-        {isMounted && <Header />}
-
         <div className="flex w-full relative">
           {isMounted && (
-            <div className="fixed top-0 left-0 h-full z-docked pt-16 w-64">
+            <div className="fixed top-0 left-0 h-full z-docked w-64">
               <Sidebar />
             </div>
           )}
 
           <main 
-            className={`flex-1 w-full min-h-[calc(100vh-64px)] transition-all duration-normal ${
+            className={`flex-1 w-full min-h-screen transition-all duration-normal ${
               isMounted ? "ml-64" : "ml-0"
             }`}
             style={{
-              paddingTop: '64px',
               paddingLeft: '1rem',
               paddingRight: '1rem',
               paddingBottom: '1.5rem',
