@@ -16,40 +16,46 @@ const ExamCreationProgress: React.FC<ExamCreationProgressProps> = ({
   const actualTotalSteps = quizType === "personalized" ? 5 : 3;
   
   return (
-  <div className="mb-10">
-    <div className="flex items-center justify-between mb-2">
+  <div className="mb-10 bg-elevated rounded-lg p-5 shadow-sm border border-border-secondary">
+    <h3 className="text-lg font-semibold text-primary mb-5 flex items-center">
+      <span className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center mr-2">
+        <FiTarget className="text-brand-primary" />
+      </span>
+      Sınav Oluşturma İlerlemesi
+    </h3>
+    
+    <div className="flex items-center justify-between mb-4">
       <div className="w-full">
         <div className="relative">
-          <div className="overflow-hidden h-2 text-xs flex rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="overflow-hidden h-3 text-xs flex rounded-full bg-surface">
             <div
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 dark:bg-indigo-500 transition-all duration-500"
+              className="shadow-sm flex flex-col text-center whitespace-nowrap text-inverse justify-center bg-brand-primary transition-all duration-500 rounded-full"
             ></div>
           </div>
         </div>
       </div>
     </div>
-    {/* Step indicators can be added here if needed */}
-    <div className="flex justify-between">
+    <div className="flex justify-between px-2">
       {/* Ders Seçimi - Hızlı sınav için bu adım yok */}
       {quizType === "personalized" ? (
         <div
           className={`flex flex-col items-center ${
             currentStep >= 1
-              ? "text-indigo-600 dark:text-indigo-400"
-              : "text-gray-400 dark:text-gray-600"
+              ? "text-brand-primary"
+              : "text-tertiary"
           }`}
         >
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
               currentStep >= 1
-                ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+                ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
+                : "bg-surface text-tertiary border border-border-secondary"
             }`}
           >
             <FiBook className="w-4 h-4" />
           </div>
-          <span className="text-xs mt-1">Ders</span>
+          <span className={`text-xs mt-2 font-medium ${currentStep >= 1 ? "text-primary" : "text-tertiary"}`}>Ders</span>
         </div>
       ) : null}
 
@@ -58,20 +64,20 @@ const ExamCreationProgress: React.FC<ExamCreationProgressProps> = ({
         <div
           className={`flex flex-col items-center ${
             currentStep >= 2
-              ? "text-indigo-600 dark:text-indigo-400"
-              : "text-gray-400 dark:text-gray-600"
+              ? "text-brand-primary"
+              : "text-tertiary"
           }`}
         >
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
               currentStep >= 2
-                ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+                ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
+                : "bg-surface text-tertiary border border-border-secondary"
             }`}
           >
             <FiTarget className="w-4 h-4" />
           </div>
-          <span className="text-xs mt-1">Sınav Türü</span>
+          <span className={`text-xs mt-2 font-medium ${currentStep >= 2 ? "text-primary" : "text-tertiary"}`}>Sınav Türü</span>
         </div>
       ) : null}
 
@@ -79,60 +85,60 @@ const ExamCreationProgress: React.FC<ExamCreationProgressProps> = ({
       <div
         className={`flex flex-col items-center ${
           currentStep >= (quizType === "personalized" ? 3 : 1)
-            ? "text-indigo-600 dark:text-indigo-400"
-            : "text-gray-400 dark:text-gray-600"
+            ? "text-brand-primary"
+            : "text-tertiary"
         }`}
       >
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
             currentStep >= (quizType === "personalized" ? 3 : 1)
-              ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+              ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
+              : "bg-surface text-tertiary border border-border-secondary"
           }`}
         >
           <FiFileText className="w-4 h-4" />
         </div>
-        <span className="text-xs mt-1">Dosya</span>
+        <span className={`text-xs mt-2 font-medium ${currentStep >= (quizType === "personalized" ? 3 : 1) ? "text-primary" : "text-tertiary"}`}>Dosya</span>
       </div>
 
       {/* Alt Konu Seçimi */}
       <div
         className={`flex flex-col items-center ${
           currentStep >= (quizType === "personalized" ? 4 : 2)
-            ? "text-indigo-600 dark:text-indigo-400"
-            : "text-gray-400 dark:text-gray-600"
+            ? "text-brand-primary"
+            : "text-tertiary"
         }`}
       >
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
             currentStep >= (quizType === "personalized" ? 4 : 2)
-              ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+              ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
+              : "bg-surface text-tertiary border border-border-secondary"
           }`}
         >
           <FiList className="w-4 h-4" />
         </div>
-        <span className="text-xs mt-1">Alt Konular</span>
+        <span className={`text-xs mt-2 font-medium ${currentStep >= (quizType === "personalized" ? 4 : 2) ? "text-primary" : "text-tertiary"}`}>Alt Konular</span>
       </div>
 
       {/* Tercihler */}
       <div
         className={`flex flex-col items-center ${
           currentStep >= (quizType === "personalized" ? 5 : 3)
-            ? "text-indigo-600 dark:text-indigo-400"
-            : "text-gray-400 dark:text-gray-600"
+            ? "text-brand-primary"
+            : "text-tertiary"
         }`}
       >
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-300 ${
             currentStep >= (quizType === "personalized" ? 5 : 3)
-              ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400"
-              : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600"
+              ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
+              : "bg-surface text-tertiary border border-border-secondary"
           }`}
         >
           <FiSettings className="w-4 h-4" />
         </div>
-        <span className="text-xs mt-1">Tercihler</span>
+        <span className={`text-xs mt-2 font-medium ${currentStep >= (quizType === "personalized" ? 5 : 3) ? "text-primary" : "text-tertiary"}`}>Tercihler</span>
       </div>
     </div>
   </div>

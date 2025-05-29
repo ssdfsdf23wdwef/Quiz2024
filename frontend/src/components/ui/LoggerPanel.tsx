@@ -146,27 +146,27 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
   // Log seviyesine göre renk belirleme
   const getLogLevelColor = (level: LogLevel): string => {
     switch(level) {
-      case 'error': return 'text-red-500';
-      case 'warn': return 'text-yellow-500';
-      case 'info': return 'text-blue-500';
-      case 'debug': return 'text-gray-500';
-      case 'trace': return 'text-purple-500';
-      default: return 'text-gray-700';
+      case 'error': return 'text-state-error';
+      case 'warn': return 'text-state-warning';
+      case 'info': return 'text-state-info';
+      case 'debug': return 'text-tertiary';
+      case 'trace': return 'text-accent';
+      default: return 'text-primary';
     }
   };
   
   // Akış kategorisine göre renk belirleme
   const getFlowCategoryColor = (category: FlowCategory): string => {
     switch(category) {
-      case 'Navigation': return 'text-green-600';
-      case 'API': return 'text-blue-600';
-      case 'Auth': return 'text-purple-600';
-      case 'Component': return 'text-cyan-600';
-      case 'State': return 'text-amber-600';
-      case 'Render': return 'text-rose-600';
-      case 'User': return 'text-indigo-600';
-      case 'Custom': return 'text-gray-600';
-      default: return 'text-gray-600';
+      case 'Navigation': return 'text-state-success';
+      case 'API': return 'text-state-info';
+      case 'Auth': return 'text-accent';
+      case 'Component': return 'text-info';
+      case 'State': return 'text-state-warning';
+      case 'Render': return 'text-state-error';
+      case 'User': return 'text-brand-primary';
+      case 'Custom': return 'text-tertiary';
+      default: return 'text-tertiary';
     }
   };
   
@@ -205,13 +205,17 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
         bottom: 0,
         zIndex: 9999,
         width: '100%',
-        height: '100%'
+        height: '100%',
+        boxShadow: 'var(--shadow-xl)', // Using theme shadow variable
+        backgroundColor: 'rgb(var(--color-bg-elevated))' // Using theme background variable
       }
     : {
         position: 'fixed',
         zIndex: 9999,
         width: position === 'bottom' ? width : 500,
         height: position === 'bottom' ? height : '90vh',
+        boxShadow: 'var(--shadow-lg)', // Using theme shadow variable
+        backgroundColor: 'rgb(var(--color-bg-elevated))', // Using theme background variable
         ...(position === 'bottom' 
           ? { bottom: 0, left: 0, right: 0 } 
           : { right: 0, top: '10vh', bottom: '10vh' })
@@ -219,13 +223,13 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
   
   return (
     <div 
-      className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-lg flex flex-col"
+      className="bg-primary border border-primary shadow-lg flex flex-col"
       style={panelStyle}
     >
       {/* Panel başlığı */}
-      <div className="bg-gray-100 dark:bg-gray-900 p-2 flex items-center justify-between border-b border-gray-300 dark:border-gray-700">
+      <div className="bg-secondary p-2 flex items-center justify-between border-b border-primary">
         <div className="flex items-center space-x-2">
-          <span className="font-semibold text-gray-800 dark:text-gray-200">
+          <span className="font-semibold text-primary">
             🔍 Logger Panel {process.env.NODE_ENV === 'development' ? '(DEV)' : ''}
           </span>
           
@@ -233,16 +237,16 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
             <button 
               onClick={() => setActiveTab('logs')}
               className={`px-3 py-1 text-xs rounded ${activeTab === 'logs' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+                ? 'bg-brand-primary text-inverse' 
+                : 'bg-interactive-disabled text-secondary'}`}
             >
               Loglar
             </button>
             <button 
               onClick={() => setActiveTab('flows')}
               className={`px-3 py-1 text-xs rounded ${activeTab === 'flows' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+                ? 'bg-brand-primary text-inverse' 
+                : 'bg-interactive-disabled text-secondary'}`}
             >
               Akışlar
             </button>
@@ -252,7 +256,7 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
         <div className="flex items-center space-x-2">
           <button 
             onClick={refreshData}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+            className="p-1 text-secondary hover:text-brand-primary"
             title="Yenile"
           >
             <FiRefreshCw size={16} />
@@ -261,8 +265,8 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
           <button 
             onClick={() => setAutoRefresh(!autoRefresh)}
             className={`p-1 ${autoRefresh 
-              ? 'text-green-600 dark:text-green-400' 
-              : 'text-gray-600 dark:text-gray-400'}`}
+              ? 'text-state-success' 
+              : 'text-tertiary'}`}
             title={autoRefresh ? 'Otomatik yenileme açık' : 'Otomatik yenileme kapalı'}
           >
             <FiClock size={16} />
@@ -270,7 +274,7 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
           
           <button 
             onClick={exportData}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+            className="p-1 text-secondary hover:text-brand-primary"
             title="JSON olarak dışa aktar"
           >
             <FiDownload size={16} />
@@ -278,7 +282,7 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
           
           <button 
             onClick={() => setIsMaximized(!isMaximized)}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+            className="p-1 text-secondary hover:text-brand-primary"
             title={isMaximized ? 'Küçült' : 'Büyüt'}
           >
             {isMaximized ? <FiMinimize size={16} /> : <FiMaximize size={16} />}
@@ -286,7 +290,7 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
           
           <button 
             onClick={onClose}
-            className="p-1 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+            className="p-1 text-secondary hover:text-state-error"
             title="Kapat"
           >
             <FiX size={16} />
@@ -295,20 +299,20 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
       </div>
       
       {/* Arama ve filtre araçları */}
-      <div className="bg-gray-50 dark:bg-gray-850 p-2 border-b border-gray-300 dark:border-gray-700 flex flex-wrap items-center gap-2">
+      <div className="bg-secondary p-2 border-b border-primary flex flex-wrap items-center gap-2">
         <div className="flex-grow">
           <input
             type="text"
             placeholder="Arama..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded 
-                     bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+            className="w-full px-2 py-1 text-sm border border-primary rounded 
+                       bg-primary text-primary"
           />
         </div>
         
         <div className="flex items-center">
-          <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+          <span className="text-xs text-tertiary flex items-center">
             <FiFilter className="mr-1" size={12} /> Filtrele:
           </span>
           
@@ -321,7 +325,7 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
                   className={`px-2 py-0.5 text-xs rounded border ${
                     logLevelFilter.includes(level)
                       ? `${getLogLevelColor(level)} border-current bg-opacity-10 bg-current`
-                      : 'text-gray-400 dark:text-gray-600 border-gray-300 dark:border-gray-700'
+                      : 'text-tertiary border-secondary'
                   }`}
                 >
                   {level.toUpperCase()}
@@ -339,7 +343,7 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
                   className={`px-2 py-0.5 text-xs rounded border ${
                     flowCategoryFilter.includes(category)
                       ? `${getFlowCategoryColor(category)} border-current bg-opacity-10 bg-current`
-                      : 'text-gray-400 dark:text-gray-600 border-gray-300 dark:border-gray-700'
+                      : 'text-tertiary border-secondary'
                   }`}
                 >
                   {category}
@@ -351,28 +355,28 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
         
         <button
           onClick={clearHistory}
-          className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+          className="px-2 py-1 text-xs bg-state-error text-inverse rounded hover:bg-state-error/90"
         >
           Temizle
         </button>
       </div>
       
       {/* Log içeriği */}
-      <div className="overflow-auto flex-grow bg-white dark:bg-gray-850 font-mono text-xs">
+      <div className="overflow-auto flex-grow bg-primary font-mono text-xs">
         {activeTab === 'logs' && (
           <table className="min-w-full">
-            <thead className="sticky top-0 bg-gray-100 dark:bg-gray-900">
+            <thead className="sticky top-0 bg-secondary">
               <tr>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700 w-24">Zaman</th>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700 w-16">Seviye</th>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700">Mesaj</th>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700 w-48">Bağlam</th>
+                <th className="p-2 text-left border-b border-primary text-primary w-24">Zaman</th>
+                <th className="p-2 text-left border-b border-primary text-primary w-16">Seviye</th>
+                <th className="p-2 text-left border-b border-primary text-primary">Mesaj</th>
+                <th className="p-2 text-left border-b border-primary text-primary w-48">Bağlam</th>
               </tr>
             </thead>
             <tbody>
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={4} className="p-4 text-center text-tertiary">
                     Log kaydı bulunamadı
                   </td>
                 </tr>
@@ -380,44 +384,44 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
                 filteredLogs.map((entry, index) => (
                   <tr
                     key={index}
-                    className={`hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-800 ${
-                      entry.level === 'error' ? 'bg-red-50 dark:bg-red-900 dark:bg-opacity-10' : 
-                      entry.level === 'warn' ? 'bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-10' : ''
+                    className={`hover:bg-interactive-hover border-b border-primary ${
+                      entry.level === 'error' ? 'bg-state-error-bg' : 
+                      entry.level === 'warn' ? 'bg-state-warning-bg' : ''
                     }`}
                   >
-                    <td className="p-2 text-gray-500 dark:text-gray-400">
+                    <td className="p-2 text-tertiary">
                       {new Date(entry.timestamp).toLocaleTimeString()}
                     </td>
                     <td className={`p-2 font-semibold ${getLogLevelColor(entry.level)}`}>
                       {entry.level.toUpperCase()}
                     </td>
-                    <td className="p-2 text-gray-900 dark:text-gray-200">
+                    <td className="p-2 text-primary">
                       {entry.message}
                       {entry.metadata && Object.keys(entry.metadata).length > 0 && (
                         <details className="mt-1">
-                          <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-blue-500">
+                          <summary className="text-xs text-tertiary cursor-pointer hover:text-brand-primary">
                             metadata
                           </summary>
-                          <pre className="mt-1 p-1 bg-gray-100 dark:bg-gray-800 rounded overflow-auto max-h-32 text-gray-600 dark:text-gray-300">
+                          <pre className="mt-1 p-1 bg-secondary rounded overflow-auto max-h-32 text-secondary">
                             {JSON.stringify(entry.metadata, null, 2)}
                           </pre>
                         </details>
                       )}
                       {entry.stackTrace && (
                         <details className="mt-1">
-                          <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-blue-500">
+                          <summary className="text-xs text-tertiary cursor-pointer hover:text-brand-primary">
                             stack trace
                           </summary>
-                          <pre className="mt-1 p-1 bg-gray-100 dark:bg-gray-800 rounded overflow-auto max-h-32 text-gray-600 dark:text-gray-300">
+                          <pre className="mt-1 p-1 bg-secondary rounded overflow-auto max-h-32 text-secondary">
                             {entry.stackTrace}
                           </pre>
                         </details>
                       )}
                     </td>
-                    <td className="p-2 text-gray-600 dark:text-gray-400">
+                    <td className="p-2 text-secondary">
                       {entry.context}
                       {entry.filePath && (
-                        <div className="text-xs text-gray-500 dark:text-gray-500 truncate">
+                        <div className="text-xs text-tertiary truncate">
                           {entry.filePath}
                           {entry.lineNumber && `:${entry.lineNumber}`}
                         </div>
@@ -432,19 +436,19 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
         
         {activeTab === 'flows' && (
           <table className="min-w-full">
-            <thead className="sticky top-0 bg-gray-100 dark:bg-gray-900">
+            <thead className="sticky top-0 bg-secondary">
               <tr>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700 w-24">Zaman</th>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700 w-24">Kategori</th>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700">Mesaj</th>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700 w-40">Bağlam</th>
-                <th className="p-2 text-left border-b border-gray-300 dark:border-gray-700 w-20">Süre</th>
+                <th className="p-2 text-left border-b border-primary text-primary w-24">Zaman</th>
+                <th className="p-2 text-left border-b border-primary text-primary w-24">Kategori</th>
+                <th className="p-2 text-left border-b border-primary text-primary">Mesaj</th>
+                <th className="p-2 text-left border-b border-primary text-primary w-40">Bağlam</th>
+                <th className="p-2 text-left border-b border-primary text-primary w-20">Süre</th>
               </tr>
             </thead>
             <tbody>
               {filteredFlows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={5} className="p-4 text-center text-tertiary">
                     Akış kaydı bulunamadı
                   </td>
                 </tr>
@@ -452,31 +456,31 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
                 filteredFlows.map((step, index) => (
                   <tr
                     key={index}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-800"
+                    className="hover:bg-interactive-hover border-b border-primary"
                   >
-                    <td className="p-2 text-gray-500 dark:text-gray-400">
+                    <td className="p-2 text-tertiary">
                       {new Date(step.timestamp).toLocaleTimeString()}
                     </td>
                     <td className={`p-2 font-semibold ${getFlowCategoryColor(step.category)}`}>
                       {step.category}
                     </td>
-                    <td className="p-2 text-gray-900 dark:text-gray-200">
+                    <td className="p-2 text-primary">
                       {step.message}
                       {step.metadata && Object.keys(step.metadata).length > 0 && (
                         <details className="mt-1">
-                          <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-blue-500">
+                          <summary className="text-xs text-tertiary cursor-pointer hover:text-brand-primary">
                             metadata
                           </summary>
-                          <pre className="mt-1 p-1 bg-gray-100 dark:bg-gray-800 rounded overflow-auto max-h-32 text-gray-600 dark:text-gray-300">
+                          <pre className="mt-1 p-1 bg-secondary rounded overflow-auto max-h-32 text-secondary">
                             {JSON.stringify(step.metadata, null, 2)}
                           </pre>
                         </details>
                       )}
                     </td>
-                    <td className="p-2 text-gray-600 dark:text-gray-400">
+                    <td className="p-2 text-secondary">
                       {step.context}
                     </td>
-                    <td className="p-2 text-gray-500 dark:text-gray-400">
+                    <td className="p-2 text-tertiary">
                       {step.timing ? `${step.timing.toFixed(2)}ms` : ''}
                     </td>
                   </tr>
@@ -488,7 +492,7 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
       </div>
       
       {/* Panel alt bilgisi */}
-      <div className="bg-gray-100 dark:bg-gray-900 p-2 border-t border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 flex justify-between">
+      <div className="bg-secondary p-2 border-t border-primary text-xs text-tertiary flex justify-between">
         <div>
           {activeTab === 'logs' ? `${filteredLogs.length} log gösteriliyor` : `${filteredFlows.length} akış adımı gösteriliyor`}
         </div>
@@ -500,4 +504,4 @@ const LoggerPanel: React.FC<LoggerPanelProps> = ({
   );
 };
 
-export default LoggerPanel; 
+export default LoggerPanel;

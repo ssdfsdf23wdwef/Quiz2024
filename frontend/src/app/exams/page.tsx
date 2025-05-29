@@ -70,18 +70,18 @@ const ExamItem = ({ quiz, index }: { quiz: Quiz; index: number }) => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="group transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/40"
+      className="group transition-colors hover:bg-interactive-hover"
     >
       <td className="px-4 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mr-3">
+          <div className="w-10 h-10 rounded-lg bg-brand-primary bg-opacity-10 flex items-center justify-center text-brand-primary mr-3">
             <FiFileText className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="text-sm font-medium text-primary">
               {title}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-tertiary">
               {questionsCount} Soru
             </div>
           </div>
@@ -96,13 +96,13 @@ const ExamItem = ({ quiz, index }: { quiz: Quiz; index: number }) => {
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
         <div className="flex items-center">
-          <FiCalendar className="w-4 h-4 mr-1.5 text-gray-400 dark:text-gray-500" />
+          <FiCalendar className="w-4 h-4 mr-1.5 text-tertiary" />
           {formatDate(createdAt)}
         </div>
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
         <div className="flex items-center">
-          <FiClock className="w-4 h-4 mr-1.5 text-gray-400 dark:text-gray-500" />
+          <FiClock className="w-4 h-4 mr-1.5 text-tertiary" />
           {duration} dk
         </div>
       </td>
@@ -110,11 +110,11 @@ const ExamItem = ({ quiz, index }: { quiz: Quiz; index: number }) => {
         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end space-x-2">
           <Link
             href={`/exams/${quiz.id}`}
-            className="inline-flex items-center justify-center w-8 h-8 rounded-full text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800/30 transition-colors"
+            className="inline-flex items-center justify-center w-8 h-8 rounded-full text-brand-primary bg-brand-primary bg-opacity-10 hover:bg-opacity-20 transition-colors"
           >
             <FiEye className="w-4 h-4" />
           </Link>
-          <button className="inline-flex items-center justify-center w-8 h-8 rounded-full text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          <button className="inline-flex items-center justify-center w-8 h-8 rounded-full text-tertiary bg-secondary hover:bg-interactive-hover transition-colors">
             <FiDownload className="w-4 h-4" />
           </button>
         </div>
@@ -170,7 +170,7 @@ export default function ExamsPage() {
   if (isError || !quizzes) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8">
-        <div className="text-red-600 dark:text-red-400 font-semibold text-lg">
+        <div className="text-state-error font-semibold text-lg">
           {error instanceof Error
             ? error.message
             : "Sınavlar yüklenirken bir hata oluştu."}
@@ -180,13 +180,13 @@ export default function ExamsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-primary p-8">
+      <div className="container mx-auto">
         <div className="mb-8">
           <motion.h1
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 mb-2"
+            className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-primary to-brand-accent mb-2"
           >
             Sınavlarım
           </motion.h1>
@@ -194,7 +194,7 @@ export default function ExamsPage() {
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-gray-600 dark:text-gray-400"
+            className="text-secondary"
           >
             Geçmiş sınavlarınızı görüntüleyin ve yeni sınavlar oluşturun.
           </motion.p>
@@ -212,16 +212,16 @@ export default function ExamsPage() {
               <input
                 type="text"
                 placeholder="Sınav ara..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-all duration-300"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-primary bg-elevated text-primary focus:outline-none focus:ring-2 focus:border-focus transition-all duration-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-tertiary" />
             </div>
 
             <div className="relative">
               <select
-                className="appearance-none pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-all duration-300"
+                className="appearance-none pl-10 pr-10 py-2.5 rounded-xl border border-primary bg-elevated text-primary focus:outline-none focus:ring-2 focus:border-focus transition-all duration-300"
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
               >
@@ -229,10 +229,10 @@ export default function ExamsPage() {
                 <option value="quick">Hızlı Sınav</option>
                 <option value="personalized">Kişiselleştirilmiş Sınav</option>
               </select>
-              <FiFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <FiFilter className="absolute left-3.5 top-1/2 -translate-y-1/2 text-tertiary" />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg
-                  className="w-4 h-4 text-gray-400"
+                  className="w-4 h-4 text-tertiary"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -248,7 +248,7 @@ export default function ExamsPage() {
 
           <button
             onClick={handleCreateNewExam}
-            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-md hover:shadow-xl"
+            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-primary to-brand-accent text-inverse font-medium hover:opacity-90 transition-all duration-300 shadow-md hover:shadow-xl"
           >
             <FiPlus className="mr-2" />
             Yeni Sınav
@@ -261,11 +261,11 @@ export default function ExamsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden"
+            className="bg-elevated shadow-md rounded-xl overflow-hidden"
           >
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-900/50">
+                <thead className="bg-secondary">
                   <tr>
                     <th
                       scope="col"
@@ -299,7 +299,7 @@ export default function ExamsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-elevated divide-y border-primary">
                   {filteredQuizzes.map((quiz, idx) => (
                     <ExamItem key={quiz.id} quiz={quiz} index={idx} />
                   ))}
@@ -315,22 +315,22 @@ export default function ExamsPage() {
             className="mt-20 flex flex-col items-center justify-center text-center"
           >
             <div className="w-32 h-32 relative mb-8">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-3xl rotate-6"></div>
-              <div className="absolute inset-0 bg-white dark:bg-gray-800 rounded-3xl flex items-center justify-center border border-gray-100 dark:border-gray-700">
-                <FiFileText className="text-6xl text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 to-purple-500" />
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-accent opacity-10 rounded-3xl rotate-6"></div>
+              <div className="absolute inset-0 bg-elevated rounded-3xl flex items-center justify-center border border-primary">
+                <FiFileText className="text-6xl text-transparent bg-clip-text bg-gradient-to-br from-brand-primary to-brand-accent" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-2xl font-bold text-primary mb-2">
               Henüz hiç sınav bulunamadı
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md">
+            <p className="text-tertiary mb-8 max-w-md">
               {searchTerm || selectedType !== "all"
                 ? "Filtrelerinize uygun sınav bulunamadı. Lütfen arama kriterlerinizi değiştirin."
                 : "Kişiselleştirilmiş sınavlar oluşturmak için yeni sınav ekleyin."}
             </p>
             <button
               onClick={handleCreateNewExam}
-              className="inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-lg font-medium hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-brand-primary to-brand-accent text-inverse text-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <FiPlus className="mr-2" />
               İlk Sınavı Oluştur

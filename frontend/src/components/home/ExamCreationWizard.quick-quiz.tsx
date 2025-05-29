@@ -1268,7 +1268,7 @@ export default function ExamCreationWizard({
           <h2 className="text-xl font-bold">Sınav Tercihleri</h2>
           
           {/* Seçilen konu ve dosya bilgileri */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+          <div className="bg-secondary p-4 rounded-md">
             <h3 className="font-semibold mb-2">Sınav İçeriği</h3>
             
             <div className="flex flex-wrap gap-2 mb-2">
@@ -1370,9 +1370,9 @@ export default function ExamCreationWizard({
                       parseInt(e.target.value),
                     )
                   }
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-500"
+                  className="w-full h-2 bg-tertiary rounded-lg appearance-none cursor-pointer accent-brand-primary"
                 />
-                <span className="w-12 text-center text-sm font-medium text-gray-700 dark:text-gray-300 ml-4 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+                <span className="w-12 text-center text-sm font-medium text-primary ml-4 bg-secondary px-2 py-0.5 rounded">
                   {preferences.questionCount}
                 </span>
               </div>
@@ -1402,7 +1402,7 @@ export default function ExamCreationWizard({
                       | "mixed",
                   )
                 }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                className="w-full px-3 py-2 border border-primary rounded-md bg-primary text-primary focus:outline-none focus:ring-2 focus:ring-border-focus focus:border-brand-primary text-sm"
               >
                 <option value="easy">Kolay</option>
                 <option value="medium">Orta</option>
@@ -1452,7 +1452,7 @@ export default function ExamCreationWizard({
                       onChange={(e) =>
                         handleTimeLimitInputChange(e.target.value)
                       }
-                      className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm"
+                      className="w-20 px-2 py-1 border border-primary rounded-md bg-primary text-primary focus:outline-none focus:ring-1 focus:ring-border-focus text-sm"
                       placeholder="örn: 30"
                     />
                     <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
@@ -1473,8 +1473,8 @@ export default function ExamCreationWizard({
 
   // Render
   return (
-    <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+    <div className="max-w-3xl mx-auto bg-primary shadow-lg rounded-xl overflow-hidden border border-primary">
+      <div className="p-6 border-b border-primary bg-secondary">
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
           {quizType === "quick" ? "Hızlı Sınav Oluştur" : "Kişiselleştirilmiş Sınav Oluştur"}
         </h2>
@@ -1767,7 +1767,7 @@ export default function ExamCreationWizard({
             className={`px-4 py-2 rounded-md flex items-center text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               currentStep === 1
                 ? "text-gray-400 dark:text-gray-600"
-                : "text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+                : "text-primary bg-secondary hover:bg-interactive-hover"
             }`}
           >
             <FiArrowLeft className="mr-1.5" size={16} /> Geri

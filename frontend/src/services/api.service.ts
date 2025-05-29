@@ -1,18 +1,10 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosInstance } from "axios";
 import { auth } from "@/app/firebase/config";
 import { ErrorService } from "./error.service";
-// import { LoggerService } from "./logger.service"; // LoggerService is not directly used, getLogger is used
-import { FlowCategory } from "./flow-tracker.service"; // Correctly import FlowCategory
+import { FlowCategory, FlowTrackerService } from "./flow-tracker.service"; 
 import { getLogger, getFlowTracker } from "../lib/logger.utils";
+import { LoggerService } from "./logger.service";
 
-/**
- * API temel URL'si
- * 
- * Öncelik sırası:
- * 1. .env.local dosyasında tanımlanmış NEXT_PUBLIC_API_URL 
- * 2. localStorage'da kaydedilmiş API URL (kullanıcı tarafından değiştirilmiş)
- * 3. Varsayılan değer: http://localhost:3001
- */
 let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 // Hata ayıklama için API URL logla

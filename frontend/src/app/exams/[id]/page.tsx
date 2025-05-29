@@ -37,7 +37,7 @@ export default function ExamPage() {
   const params = useParams();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  // Removed currentQuestionIndex as we're now showing all questions at once
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
   const [isCompleted, setIsCompleted] = useState(false);
@@ -736,59 +736,22 @@ export default function ExamPage() {
 
     return Math.round((correctCount / quiz.questions.length) * 100);
   };
-
-  // Yükleme durumu
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4">
-        <div className="text-center">
-          <div className="w-20 h-20 border-t-4 border-b-4 border-indigo-600 dark:border-indigo-400 rounded-full animate-spin mx-auto mb-6"></div>
-          <h2 className="text-2xl font-semibold mb-2">Sınav Yükleniyor...</h2>
-          <p className="text-gray-600 dark:text-gray-400">Lütfen bekleyin, sınavınız hazırlanıyor.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Sınav bulunamadı
-  if (!quiz) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4">
-        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md">
-          <XCircle className="w-16 h-16 text-red-500 dark:text-red-400 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">Sınav Bulunamadı</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-8">
-            Aradığınız sınav mevcut değil veya erişim yetkiniz bulunmuyor. Lütfen sınav listesine geri dönün.
-          </p>
-          <Link
-            href="/exams"
-            className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-150 shadow-md hover:shadow-lg"
-          >
-            <ChevronLeft size={20} className="mr-2" />
-            Sınav Listesine Dön
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
+  
   const renderQuestionNavigation = () => {
     // Alt konuları grupla ve renklendir
     const subTopicColors: Record<string, { bg: string; text: string; ring: string; }> = {};
     const subTopicMap: Record<string, {count: number; displayName: string; normalizedName: string}> = {};
     
-    console.log("[DEBUG] renderQuestionNavigation - Alt konu bilgileri işleniyor...");
-    
-    // Renk seçenekleri (daha canlı ve erişilebilir renkler)
+    // Renk seçenekleri (theme variables kullanarak)
     const colorOptions = [
-      { bg: "bg-sky-100 dark:bg-sky-800/40", text: "text-sky-700 dark:text-sky-300", ring: "ring-sky-400 dark:ring-sky-500" },
-      { bg: "bg-emerald-100 dark:bg-emerald-800/40", text: "text-emerald-700 dark:text-emerald-300", ring: "ring-emerald-400 dark:ring-emerald-500" },
-      { bg: "bg-amber-100 dark:bg-amber-800/40", text: "text-amber-700 dark:text-amber-300", ring: "ring-amber-400 dark:ring-amber-500" },
-      { bg: "bg-rose-100 dark:bg-rose-800/40", text: "text-rose-700 dark:text-rose-300", ring: "ring-rose-400 dark:ring-rose-500" },
-      { bg: "bg-violet-100 dark:bg-violet-800/40", text: "text-violet-700 dark:text-violet-300", ring: "ring-violet-400 dark:ring-violet-500" },
-      { bg: "bg-cyan-100 dark:bg-cyan-800/40", text: "text-cyan-700 dark:text-cyan-300", ring: "ring-cyan-400 dark:ring-cyan-500" },
-      { bg: "bg-pink-100 dark:bg-pink-800/40", text: "text-pink-700 dark:text-pink-300", ring: "ring-pink-400 dark:ring-pink-500" },
-      { bg: "bg-lime-100 dark:bg-lime-800/40", text: "text-lime-700 dark:text-lime-300", ring: "ring-lime-400 dark:ring-lime-500" },
+      { bg: "bg-state-infoBg", text: "text-state-info", ring: "ring-state-info" },
+      { bg: "bg-state-successBg", text: "text-state-success", ring: "ring-state-success" },
+      { bg: "bg-state-warningBg", text: "text-state-warning", ring: "ring-state-warning" },
+      { bg: "bg-state-errorBg", text: "text-state-error", ring: "ring-state-error" },
+      { bg: "bg-brand-secondary/20", text: "text-brand-secondary", ring: "ring-brand-secondary" },
+      { bg: "bg-brand-accent/20", text: "text-brand-accent", ring: "ring-brand-accent" },
+      { bg: "bg-brand-tertiary/20", text: "text-brand-tertiary", ring: "ring-brand-tertiary" },
+      { bg: "bg-interactive-hover/20", text: "text-interactive-active", ring: "ring-interactive-active" },
     ];
     
     // Alt konulara göre renk ataması yapma
@@ -816,7 +779,7 @@ export default function ExamPage() {
     
     const getSubTopicInfo = (question: Question) => {
       const subTopic = question.subTopic || "Genel Konu";
-      const colorSet = subTopicColors[subTopic] || { bg: "bg-gray-200 dark:bg-gray-700", text: "text-gray-800 dark:text-gray-200", ring: "ring-gray-400" };
+      const colorSet = subTopicColors[subTopic] || { bg: "bg-secondary/30", text: "text-secondary", ring: "ring-secondary" };
       
       return {
         name: subTopic,
@@ -826,41 +789,43 @@ export default function ExamPage() {
     };
 
     return (
-      <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-lg sticky top-24">
+      <div className="bg-elevated p-5 rounded-xl shadow-lg sticky top-24 border border-border-primary">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Soru Navigasyonu</h3>
+          <h3 className="text-xl font-bold text-brand-primary">Sorular</h3>
           <Tooltip content="Renkler farklı alt konuları gösterir. İşaretli sorular bayrak ile belirtilir.">
-            <div className="cursor-help p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-              <Info size={18} className="text-gray-500 dark:text-gray-400" />
+            <div className="cursor-help p-1 rounded-full hover:bg-surface transition-colors">
+              <Info size={18} className="text-tertiary" />
             </div>
           </Tooltip>
         </div>
-        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-5 gap-2 mb-4">
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 gap-2 mb-4">
           {quiz.questions &&
             quiz.questions.map((question: Question, index: number) => {
               const isAnswered = userAnswers[question.id] !== undefined;
-              const isCurrent = currentQuestionIndex === index;
               const isFlagged = flaggedQuestions.has(index);
               const subTopicInfo = getSubTopicInfo(question);
 
               return (
                 <Tooltip key={question.id} content={`${index + 1}. Soru ${isFlagged ? '(İşaretli)' : ''} - ${subTopicInfo.name}`}>
                   <button
-                    onClick={() => setCurrentQuestionIndex(index)}
-                    className={`w-full h-10 rounded-md flex items-center justify-center text-sm font-medium transition-all duration-150 ease-in-out
-                               focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800
-                               ${
-                                isCurrent 
-                                  ? `${subTopicInfo.colorSet.bg} ${subTopicInfo.colorSet.text} ring-2 ${subTopicInfo.colorSet.ring} shadow-md scale-105` 
-                                  : isAnswered 
-                                    ? `${subTopicInfo.colorSet.bg} ${subTopicInfo.colorSet.text} opacity-70 hover:opacity-100` 
-                                    : `bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600`
-                               }
-                               relative`}
+                    onClick={() => {
+                      // Smooth scroll to question
+                      document.getElementById(`question-${index}`)?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }}
+                    className={`w-full h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all duration-200 ease-in-out
+                               focus:outline-none focus:ring-2 
+                                ${isAnswered 
+                                  ? `${subTopicInfo.colorSet.bg} ${subTopicInfo.colorSet.text} font-semibold shadow-sm hover:shadow-md` 
+                                  : `bg-surface text-tertiary hover:bg-surface-hover hover:text-secondary`
+                                }
+                               relative hover:scale-105`}
                   >
                     {index + 1}
                     {isFlagged && (
-                      <Flag size={12} className="absolute top-1 right-1 text-red-500 dark:text-red-400" />
+                      <Flag size={12} className="absolute top-1 right-1 text-state-error" />
                     )}
                   </button>
                 </Tooltip>
@@ -869,11 +834,14 @@ export default function ExamPage() {
         </div>
         
         {Object.keys(subTopicMap).length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Alt Konu Lejantı:</p>
+          <div className="mt-6 pt-4 border-t border-border-secondary">
+            <p className="text-sm font-medium text-secondary mb-3 flex items-center">
+              <span className="inline-block w-3 h-3 mr-2 bg-brand-primary/20 rounded-sm"></span>
+              Alt Konular:
+            </p>
             <div className="flex flex-wrap gap-x-3 gap-y-2">
               {Object.entries(subTopicMap).map(([subTopic, info]) => {
-                const colorSet = subTopicColors[subTopic] || { bg: 'bg-gray-300', text: 'text-gray-600 dark:text-gray-400' }; // Fallback colorSet
+                const colorSet = subTopicColors[subTopic] || { bg: 'bg-secondary/30', text: 'text-tertiary' }; 
                 return (
                   <div key={subTopic} className="flex items-center">
                     <span className={`w-3 h-3 rounded-sm mr-2 ${colorSet.bg}`}></span>
@@ -889,7 +857,91 @@ export default function ExamPage() {
       </div>
     );
   };
+  
+  const renderQuestion = (question: Question, index: number) => {
+    const processedQuestion = ensureQuestionSubTopics(question);
+    const subTopicName = processedQuestion.subTopic || "Belirtilmemiş";
+    const difficultyMap = {
+      easy: { text: "Kolay", color: "text-state-success", bg: "bg-state-successBg" },
+      medium: { text: "Orta", color: "text-state-warning", bg: "bg-state-warningBg" },
+      hard: { text: "Zor", color: "text-state-error", bg: "bg-state-errorBg" },
+      mixed: { text: "Karma", color: "text-state-info", bg: "bg-state-infoBg" },
+    };
+    const difficultyInfo = difficultyMap[processedQuestion.difficulty || 'medium'] || difficultyMap.medium;
 
+    return (
+      <div className="bg-elevated rounded-md shadow-sm p-4 max-w-3xl mx-auto">
+        {/* Soru Başlığı */}
+        <div className="flex flex-wrap items-center justify-between mb-3 gap-2">
+          <div className="flex items-center">
+            <span className="bg-brand-primary text-inverse w-8 h-8 rounded-full flex items-center justify-center font-bold mr-2">
+              {index + 1}
+            </span>
+            <span className={`text-xs px-2 py-1 rounded-full ${difficultyInfo.bg} ${difficultyInfo.color}`}>
+              {difficultyInfo.text}
+            </span>
+            <span className="text-xs text-tertiary ml-2">
+              {subTopicName}
+            </span>
+          </div>
+          
+          <Tooltip content={flaggedQuestions.has(index) ? "İşareti Kaldır" : "İşaretle"}>
+            <button
+              onClick={() => {
+                const newFlagged = new Set(flaggedQuestions);
+                if (newFlagged.has(index)) {
+                  newFlagged.delete(index);
+                } else {
+                  newFlagged.add(index);
+                }
+                setFlaggedQuestions(newFlagged);
+              }}
+              className={`p-1.5 rounded-full transition-colors ${
+                flaggedQuestions.has(index)
+                  ? "bg-state-errorBg text-state-error"
+                  : "bg-surface text-tertiary hover:bg-surface-hover"
+              }`}
+            >
+              <Flag size={16} />
+            </button>
+          </Tooltip>
+        </div>
+        
+        {/* Soru Metni */}
+        <p className="text-primary text-base mb-4 font-medium">{processedQuestion.questionText}</p>
+
+        {/* Şıklar */}
+        <div className="space-y-2">
+          {processedQuestion.options.map((option, optionIndex) => (
+            <div
+              key={optionIndex}
+              className={`py-2 px-3 rounded cursor-pointer transition-all duration-150 ease-in-out
+                        flex items-center
+                        ${userAnswers[processedQuestion.id] === option
+                            ? "bg-brand-primary bg-opacity-10"
+                            : "hover:bg-surface-hover"
+                        }`}
+              onClick={() => {
+                setUserAnswers((prev) => ({
+                  ...prev,
+                  [processedQuestion.id]: option,
+                }));
+              }}
+            >
+              <span className={`mr-3 flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center
+                              ${userAnswers[processedQuestion.id] === option ? 'border-brand-primary bg-brand-primary' : 'border-border-secondary'}`}>
+                {userAnswers[processedQuestion.id] === option && <CheckCircle size={12} className="text-inverse" />}
+              </span>
+              <span className={`${userAnswers[processedQuestion.id] === option ? 'text-primary font-medium' : 'text-secondary'}`}>
+                {option}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  
   const renderResults = () => {
     const score = calculateScore();
     // Analiz sonuçlarını localStorage'dan al
@@ -902,23 +954,23 @@ export default function ExamPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl max-w-3xl mx-auto"
+        className="bg-elevated p-6 sm:p-8 rounded-xl shadow-2xl max-w-3xl mx-auto"
       >
         <div className="text-center mb-10">
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 120 }}
-            className="w-28 h-28 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-400 dark:to-purple-500 rounded-full flex flex-col items-center justify-center shadow-lg mb-6"
+            className="w-28 h-28 mx-auto bg-gradient-to-br from-brand-primary to-brand-accent rounded-full flex flex-col items-center justify-center shadow-lg mb-6"
           >
-            <Award size={40} className="text-white mb-1" />
-            <span className="text-3xl font-bold text-white">{score}%</span>
+            <Award size={40} className="text-inverse mb-1" />
+            <span className="text-3xl font-bold text-inverse">{score}%</span>
           </motion.div>
-          <h2 className="text-4xl font-bold text-gray-800 dark:text-white mb-3">
+          <h2 className="text-4xl font-bold text-primary mb-3">
             Sınav Tamamlandı!
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Toplam puanınız: <span className="font-bold text-gray-900 dark:text-white">{score}%</span> (
+          <p className="text-lg text-secondary">
+            Toplam puanınız: <span className="font-bold text-primary">{score}%</span> (
             {
               quiz.questions.filter(
                 (q) => userAnswersFromStorage[q.id] === q.correctAnswer, // userAnswersFromStorage kullanıldı
@@ -930,24 +982,24 @@ export default function ExamPage() {
 
         {/* Detaylı Sonuçlar ve Analiz */}
         {analysis.performanceBySubTopic && (
-          <div className="mb-8 p-6 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Konu Bazlı Performans</h3>
+          <div className="mb-8 p-6 bg-surface rounded-lg">
+            <h3 className="text-xl font-semibold text-primary mb-4">Konu Bazlı Performans</h3>
             <div className="space-y-3">
               {Object.entries(analysis.performanceBySubTopic).map(([topic, data]: [string, any]) => (
-                <div key={topic} className="p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm">
+                <div key={topic} className="p-3 bg-elevated rounded-md shadow-sm">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-medium text-gray-700 dark:text-gray-200">{topic}</span>
-                    <span className={`font-semibold ${data.scorePercent >= 75 ? 'text-green-600 dark:text-green-400' : data.scorePercent >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span className="font-medium text-secondary">{topic}</span>
+                    <span className={`font-semibold ${data.scorePercent >= 75 ? 'text-state-success' : data.scorePercent >= 50 ? 'text-state-warning' : 'text-state-error'}`}>
                       %{data.scorePercent}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+                  <div className="w-full bg-secondary bg-opacity-20 rounded-full h-2.5">
                     <div
-                      className={`h-2.5 rounded-full ${data.scorePercent >= 75 ? 'bg-green-500' : data.scorePercent >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                      className={`h-2.5 rounded-full ${data.scorePercent >= 75 ? 'bg-state-success' : data.scorePercent >= 50 ? 'bg-state-warning' : 'bg-state-error'}`}
                       style={{ width: `${data.scorePercent}%` }}
                     ></div>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{data.correctCount}/{data.questionCount} doğru</p>
+                  <p className="text-xs text-tertiary mt-1">{data.correctCount}/{data.questionCount} doğru</p>
                 </div>
               ))}
             </div>
@@ -955,39 +1007,39 @@ export default function ExamPage() {
         )}
 
         <div className="space-y-6 mb-10">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Yanıtlarınızın İncelenmesi</h3>
+          <h3 className="text-xl font-semibold text-primary mb-4">Yanıtlarınızın İncelenmesi</h3>
           {quiz.questions.map((question, index) => {
             const userAnswer = userAnswersFromStorage[question.id]; // userAnswersFromStorage kullanıldı
             const isCorrect = userAnswer === question.correctAnswer;
             const questionData = ensureQuestionSubTopics(question); // Ensure subtopics are present
 
             return (
-              <div key={question.id} className={`p-5 rounded-lg shadow-md ${isCorrect ? 'bg-green-50 dark:bg-green-800/30 border-l-4 border-green-500' : 'bg-red-50 dark:bg-red-800/30 border-l-4 border-red-500'}`}>
+              <div key={question.id} className={`p-5 rounded-lg shadow-md ${isCorrect ? 'bg-state-successBg border-l-4 border-state-success' : 'bg-state-errorBg border-l-4 border-state-error'}`}>
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-md font-semibold text-gray-800 dark:text-white">
-                    Soru {index + 1}: <span className="text-sm text-gray-600 dark:text-gray-400">({questionData.subTopic || "Genel Konu"})</span>
+                  <h4 className="text-md font-semibold text-primary">
+                    Soru {index + 1}: <span className="text-sm text-secondary">({questionData.subTopic || "Genel Konu"})</span>
                   </h4>
                   {isCorrect ? (
-                    <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
+                    <CheckCircle className="w-6 h-6 text-state-success flex-shrink-0" />
                   ) : (
-                    <XCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" />
+                    <XCircle className="w-6 h-6 text-state-error flex-shrink-0" />
                   )}
                 </div>
-                <p className="text-gray-700 dark:text-gray-200 mb-3">{question.questionText}</p>
+                <p className="text-primary mb-3">{question.questionText}</p>
                 <div className="space-y-2 text-sm">
-                  <p className={`font-medium ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
+                  <p className={`font-medium ${isCorrect ? 'text-state-success' : 'text-state-error'}`}>
                     Sizin Cevabınız: <span className="font-normal">{userAnswer || "Boş bırakıldı"}</span>
                   </p>
                   {!isCorrect && (
-                    <p className="text-green-700 dark:text-green-300 font-medium">
+                    <p className="text-state-success font-medium">
                       Doğru Cevap: <span className="font-normal">{question.correctAnswer}</span>
                     </p>
                   )}
                 </div>
                 {question.explanation && (
-                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Açıklama:</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-300">{question.explanation}</p>
+                  <div className="mt-3 pt-3 border-t border-border-secondary">
+                    <p className="text-xs text-secondary font-medium">Açıklama:</p>
+                    <p className="text-xs text-tertiary">{question.explanation}</p>
                   </div>
                 )}
               </div>
@@ -998,14 +1050,14 @@ export default function ExamPage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/exams"
-            className="flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-150 shadow-sm hover:shadow-md"
+            className="flex items-center justify-center px-6 py-3 border border-border-primary rounded-lg hover:bg-surface-hover text-secondary font-medium transition-colors duration-150 shadow-sm hover:shadow-md"
           >
             <ListChecks size={18} className="mr-2" />
             Sınav Listesi
           </Link>
           <Link
             href={`/performance/quiz/${quiz.id}`} // Dinamik performans sayfasına yönlendirme
-            className="flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-150 shadow-md hover:shadow-lg"
+            className="flex items-center justify-center px-6 py-3 bg-brand-primary text-inverse font-semibold rounded-lg hover:bg-brand-primaryHover transition-colors duration-150 shadow-md hover:shadow-lg"
           >
             <BarChart3 size={18} className="mr-2" />
             Detaylı Performans Analizi
@@ -1015,164 +1067,180 @@ export default function ExamPage() {
     );
   };
 
-  const currentQuestion = quiz.questions[currentQuestionIndex];
+  // Yükleme durumu
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-primary p-4">
+        <div className="text-center">
+          <div className="w-20 h-20 border-t-4 border-b-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-2xl font-semibold mb-2">Sınav Yükleniyor...</h2>
+          <p className="text-secondary">Lütfen bekleyin, sınavınız hazırlanıyor.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Sınav bulunamadı
+  if (!quiz) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-primary p-4">
+        <div className="text-center p-8 bg-elevated rounded-xl shadow-2xl max-w-md">
+          <XCircle className="w-16 h-16 text-state-error mx-auto mb-6" />
+          <h2 className="text-3xl font-bold text-primary mb-4">Sınav Bulunamadı</h2>
+          <p className="text-tertiary mb-8">
+            Aradığınız sınav mevcut değil veya erişim yetkiniz bulunmuyor. Lütfen sınav listesine geri dönün.
+          </p>
+          <Link
+            href="/exams"
+            className="inline-flex items-center px-6 py-3 bg-brand-primary text-inverse font-semibold rounded-lg hover:bg-brand-primary/90 transition-colors duration-150 shadow-md hover:shadow-lg"
+          >
+            <ChevronLeft size={20} className="mr-2" />
+            Sınav Listesine Dön
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  const renderQuestion = () => {
-    if (!currentQuestion) return null;
+  // This is defined after all the other render functions to ensure it has access to them
+  const renderExam = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-lg text-secondary">Sınav yükleniyor...</p>
+        </div>
+      );
+    }
 
-    const processedQuestion = ensureQuestionSubTopics(currentQuestion);
-    const subTopicName = processedQuestion.subTopic || "Belirtilmemiş";
-    const difficultyMap = {
-      easy: { text: "Kolay", color: "text-green-600 dark:text-green-400", bg: "bg-green-100 dark:bg-green-700/30" },
-      medium: { text: "Orta", color: "text-yellow-600 dark:text-yellow-400", bg: "bg-yellow-100 dark:bg-yellow-700/30" },
-      hard: { text: "Zor", color: "text-red-600 dark:text-red-400", bg: "bg-red-100 dark:bg-red-700/30" },
-      mixed: { text: "Karma", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-700/30" },
-    };
-    const difficultyInfo = difficultyMap[processedQuestion.difficulty || 'medium'] || difficultyMap.medium;
-
+    if (showResults) {
+      return renderResults();
+    }
 
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8">
-        <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 dark:text-indigo-400">
-              Soru {currentQuestionIndex + 1} <span className="text-gray-500 dark:text-gray-400 font-normal text-xl">/ {quiz.questions.length}</span>
-            </h2>
-            <div className="mt-2 sm:mt-0 flex items-center space-x-3">
-              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${difficultyInfo.bg} ${difficultyInfo.color}`}>
-                {difficultyInfo.text}
-              </span>
-              <Tooltip content={flaggedQuestions.has(currentQuestionIndex) ? "İşareti Kaldır" : "Bu Soruyu İşaretle"}>
-                <button
-                  onClick={() => {
-                    const newFlagged = new Set(flaggedQuestions);
-                    if (newFlagged.has(currentQuestionIndex)) {
-                      newFlagged.delete(currentQuestionIndex);
-                    } else {
-                      newFlagged.add(currentQuestionIndex);
-                    }
-                    setFlaggedQuestions(newFlagged);
-                  }}
-                  className={`p-2 rounded-full transition-colors ${
-                    flaggedQuestions.has(currentQuestionIndex)
-                      ? "bg-red-100 dark:bg-red-700/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-700/50"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-                >
-                  <Flag size={18} />
-                </button>
-              </Tooltip>
-            </div>
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <motion.h1
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl font-bold text-primary"
+          >
+            {quiz.title}
+          </motion.h1>
+
+          <div className="flex items-center space-x-4">
+            {/* Timer */}
+            {remainingTime !== null && (
+              <div
+                className={`flex items-center px-4 py-2 rounded-lg ${remainingTime < 60 ? "bg-state-errorBg text-state-error" : "bg-state-infoBg text-state-info"}`}
+              >
+                <Clock size={18} className="mr-2" />
+                <span className="font-semibold">
+                  {formatTime(remainingTime)}
+                </span>
+              </div>
+            )}
+
+            {/* Submit button */}
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-150 flex items-center ${isSubmitting
+                ? "bg-interactive-disabled text-disabled cursor-not-allowed"
+                : "bg-brand-primary hover:bg-brand-primaryHover text-inverse shadow-md hover:shadow-lg"
+                }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-text-inverse border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Gönderiliyor...
+                </>
+              ) : (
+                "Sınavı Bitir"
+              )}
+            </button>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Alt Konu: <span className="font-medium text-gray-700 dark:text-gray-300">{subTopicName}</span>
-          </p>
-          
-          <p className="mt-4 text-lg text-gray-800 dark:text-gray-100 leading-relaxed">{processedQuestion.questionText}</p>
-          
         </div>
 
-        <div className="space-y-4">
-          {processedQuestion.options.map((option, index) => (
+        {/* Progress and question stats */}
+        <div className="relative mb-8">
+          {/* Progress bar */}
+          <div className="h-2 w-full bg-secondary bg-opacity-20 rounded-full mb-6 overflow-hidden">
             <div
-              key={index}
-              className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-150 ease-in-out transform hover:scale-[1.02]
-                          flex items-center group
-                          ${
-                            userAnswers[processedQuestion.id] === option
-                              ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-700/30 dark:border-indigo-500 shadow-lg"
-                              : "border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-400 bg-gray-50 dark:bg-gray-700/30 hover:bg-white dark:hover:bg-gray-700"
-                          }`}
-              onClick={() => {
-                setUserAnswers((prev) => ({
-                  ...prev,
-                  [processedQuestion.id]: option,
-                }));
+              className="h-full bg-brand-primary transition-all duration-300"
+              style={{
+                width: `${Object.keys(userAnswers).length / quiz.questions.length * 100}%`,
               }}
-            >
-              <span className={`mr-3 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
-                              ${userAnswers[processedQuestion.id] === option ? 'border-indigo-600 bg-indigo-600' : 'border-gray-400 dark:border-gray-500 group-hover:border-indigo-500'}`}>
-                {userAnswers[processedQuestion.id] === option && <CheckCircle size={14} className="text-white" />}
-              </span>
-              <span className={`text-md ${userAnswers[processedQuestion.id] === option ? 'text-indigo-800 dark:text-indigo-100 font-semibold' : 'text-gray-700 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-300'}`}>
-                {option}
-              </span>
+            ></div>
+          </div>
+          
+          <div className="flex justify-between items-center mb-6">
+            <div className="text-sm">
+              <span className="font-medium text-brand-primary">{Object.keys(userAnswers).length}</span>
+              <span className="text-tertiary"> / {quiz.questions.length} cevaplandı</span>
+            </div>
+            <div className="text-sm text-tertiary">
+              Tüm sorular tek sayfada gösteriliyor
+            </div>
+          </div>
+        </div>
+
+        {/* All questions display */}
+        <div className="space-y-12 mb-10">
+          {quiz.questions.map((question, index) => (
+            <div key={question.id} id={`question-${index}`} className="scroll-mt-24">
+              {renderQuestion(question, index)}
             </div>
           ))}
         </div>
-
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
+        
+        {/* Submit section at bottom */}
+        <div className="sticky bottom-6 flex justify-center mt-8 pb-4">
           <button
-            onClick={() => {
-              if (currentQuestionIndex > 0) {
-                setCurrentQuestionIndex(currentQuestionIndex - 1);
-              }
-            }}
-            disabled={currentQuestionIndex === 0}
-            className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-150 shadow-sm hover:shadow-md mb-3 sm:mb-0"
-          >
-            <ChevronLeft size={20} className="mr-2" />
-            Önceki Soru
-          </button>
-
-          <button
-            onClick={() => {
-              const isLast = currentQuestionIndex === quiz.questions.length - 1;
-              if (isLast) {
-                // Son soruysa ve tamamla butonuna basıldıysa, handleSubmit çağır
-                handleSubmit();
-              } else {
-                setCurrentQuestionIndex(currentQuestionIndex + 1);
-              }
-            }}
-            className="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-150 shadow-md hover:shadow-lg disabled:bg-indigo-400 dark:disabled:bg-indigo-700"
+            onClick={handleSubmit}
             disabled={isSubmitting}
+            className={`px-8 py-3 rounded-lg font-semibold transition-colors duration-150 flex items-center shadow-lg ${isSubmitting
+              ? "bg-interactive-disabled text-disabled cursor-not-allowed"
+              : "bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-90 text-inverse"
+              }`}
           >
-            {currentQuestionIndex === quiz.questions.length - 1
-              ? (isSubmitting ? "Gönderiliyor..." : "Sınavı Tamamla")
-              : "Sonraki Soru"}
-            {currentQuestionIndex !== quiz.questions.length - 1 && <ChevronRight size={20} className="ml-2" />}
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-text-inverse border-t-transparent rounded-full animate-spin mr-2"></div>
+                Gönderiliyor...
+              </>
+            ) : (
+              "Sınavı Tamamla ve Gönder"
+            )}
           </button>
         </div>
       </div>
     );
   };
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-indigo-100 dark:from-gray-900 dark:to-indigo-900/50 text-gray-800 dark:text-gray-200 selection:bg-indigo-500 selection:text-white">
-      <div className="container mx-auto px-4 py-8">
-        {!showResults ? (
-          <>
-            {/* Header: Sınav Adı ve Zamanlayıcı */}
-            <header className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-              <div className="flex flex-col sm:flex-row justify-between items-center">
-                <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700 dark:text-indigo-400 mb-3 sm:mb-0 truncate max-w-xl" title={quiz.title}>
-                  {quiz.title}
-                </h1>
-                {remainingTime !== null && !isCompleted && (
-                  <div className="flex items-center space-x-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-700/30 rounded-lg shadow-inner">
-                    <Clock size={20} className="text-indigo-600 dark:text-indigo-300" />
-                    <span className="text-lg font-semibold text-indigo-700 dark:text-indigo-200">
-                      {formatTime(remainingTime)}
-                    </span>
-                  </div>
-                )}
+    <div className="min-h-screen bg-gradient-to-br from-surface to-brand-primary/10 text-primary selection:bg-brand-primary selection:text-inverse pt-20 relative z-0"> {/* z-0 ekleyerek header altında kalmasını sağlıyoruz */}
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        {/* Sayfa başlığı ve geri butonu */}
+        <div className="sticky top-[72px] z-10 bg-surface/95 backdrop-blur-sm py-3 px-4 rounded-lg shadow-sm mb-6 flex items-center">
+          <Link href="/exams" className="mr-3 p-2 bg-surface rounded-full hover:bg-surface-hover transition-colors">
+            <ChevronLeft size={20} className="text-tertiary" />
+          </Link>
+          <h1 className="text-xl font-medium text-primary">Sınav</h1>
+          
+          {/* Timer gösterimi */}
+          {remainingTime !== null && (
+            <div className="ml-auto flex items-center">
+              <div className="flex items-center px-3 py-1.5 rounded-full bg-state-infoBg text-state-info text-sm font-medium">
+                <Clock size={14} className="mr-1.5" />
+                {formatTime(remainingTime)}
               </div>
-            </header>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <aside className="lg:col-span-4 xl:col-span-3">
-                {renderQuestionNavigation()}
-              </aside>
-
-              <main className="lg:col-span-8 xl:col-span-9">
-                {renderQuestion()}
-              </main>
             </div>
-          </>
-        ) : (
-          renderResults()
-        )}
+          )}
+        </div>
+        
+        {renderExam()}
       </div>
     </div>
   );

@@ -32,18 +32,18 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     <button
       onClick={toggleTheme}
       className={`
-        ${sizeClasses[size]}
-        ${className}
+        ${sizeClasses[size]}        ${className}
         inline-flex items-center justify-center
         rounded-md
-        bg-primary
-        text-primary
+        bg-secondary
+        text-primary 
         border border-primary
         hover:bg-interactive-hover
         focus:outline-none
         focus:ring-2
-        focus:ring-brand-primary
+        focus:ring-border-focus
         focus:ring-offset-2
+        shadow-sm
         transition-all duration-normal
         group
       `}

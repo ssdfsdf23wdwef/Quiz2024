@@ -9,25 +9,12 @@ import CourseList from "@/components/ui/CourseList";
 import { Course } from "@/types/course.type";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuthStore } from "@/store/auth.store";
-import { getLogger, startFlow } from "@/lib/logger.utils";
-import { FlowCategory } from "@/constants/logging.constants";
 
 // Loglayıcıyı al (providers.tsx'te başlatıldı)
-const logger = getLogger();
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const { user } = useAuthStore();
-
-  // Sayfa yüklendiğinde flow başlat
-  useEffect(() => {
-    const pageFlow = startFlow(FlowCategory.Navigation, 'CoursesPageLoad');
-    pageFlow.trackStep('Kurslar sayfası yükleniyor');
-    
-    return () => {
-      pageFlow.end('Kurslar sayfasından çıkıldı');
-    };
-  }, []);
 
   // Kursları çekmek için TanStack Query kullanımı
   const {
@@ -37,13 +24,10 @@ export default function CoursesPage() {
   } = useQuery({
     queryKey: ["courses", user?.id],
     queryFn: async () => {
-      logger.info('Kurslar getiriliyor', 'CoursesPage');
       try {
         const result = await courseService.getCourses();
-        logger.info(`${result.length} kurs başarıyla getirildi`, 'CoursesPage');
         return result;
       } catch (err) {
-        logger.error(`Kurslar getirilirken hata oluştu: ${err instanceof Error ? err.message : 'Bilinmeyen hata'}`, 'CoursesPage', err instanceof Error ? err : undefined);
         throw err;
       }
     },
@@ -54,11 +38,6 @@ export default function CoursesPage() {
   // Arama sonuçlarını logla
   useEffect(() => {
     if (searchTerm && courses.length > 0) {
-      const filteredCount = courses.filter(
-        (course) => course.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ).length;
-      
-      logger.info(`Arama yapıldı: "${searchTerm}" - ${filteredCount} sonuç bulundu`, 'CoursesPage.Search');
     }
   }, [searchTerm, courses]);
 

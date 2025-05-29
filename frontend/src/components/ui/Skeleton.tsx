@@ -45,7 +45,7 @@ const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
       <div
         ref={ref}
         className={twMerge(
-          "bg-gray-200 dark:bg-gray-700",
+          "bg-interactive-disabled", // Updated to theme variable
           disableAnimation ? "" : "animate-pulse",
           circle && "rounded-full",
           rounded && "rounded-md",
@@ -109,7 +109,7 @@ export const SkeletonCard = ({
   return (
     <div
       className={twMerge(
-        "rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden",
+        "rounded-lg border border-primary shadow-sm bg-primary", // Updated to theme variables
         className,
       )}
       {...props}

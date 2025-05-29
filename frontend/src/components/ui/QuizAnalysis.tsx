@@ -21,8 +21,8 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
 
   if (!analysisResult) {
     return (
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <p className="text-gray-500 text-center">
+      <div className="p-4 bg-secondary rounded-lg border border-primary">
+        <p className="text-tertiary text-center">
           Bu sınav için analiz sonucu bulunmamaktadır.
         </p>
       </div>
@@ -40,9 +40,9 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
 
   // Skor rengi belirleme
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-amber-600";
-    return "text-red-600";
+    if (score >= 80) return "text-state-success";
+    if (score >= 60) return "text-state-warning";
+    return "text-state-error";
   };
 
   // Zorluk seviyesi çevirisi
@@ -55,8 +55,8 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
   return (
     <div className="space-y-6">
       {/* Genel Skor */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="bg-primary rounded-lg shadow-md border border-primary p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center text-primary">
           <FiBarChart2 className="mr-2" /> Genel Performans
         </h3>
 
@@ -66,7 +66,7 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
           </div>
         </div>
 
-        <p className="text-gray-600 text-center text-sm">
+        <p className="text-secondary text-center text-sm">
           {quizType === "quick"
             ? "Bu hızlı sınav sonucu öğrenme hedeflerinizi etkilemez."
             : "Bu kişiselleştirilmiş sınav sonucu öğrenme hedeflerinizi günceller."}
@@ -76,8 +76,8 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
       {showDetailedAnalysis && (
         <>
           {/* Konu Bazlı Performans */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <div className="bg-primary rounded-lg shadow-md border border-primary p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center text-primary">
               <FiTarget className="mr-2" /> Konu Bazlı Performans
             </h3>
 
@@ -85,21 +85,20 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
               {Object.entries(topicPerformance).map(([topic, data]) => (
                 <div key={topic}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">{topic}</span>
+                    <span className="text-sm font-medium text-primary">{topic}</span>
                     <span
                       className={`text-sm font-semibold ${getScoreColor(data.percentage)}`}
                     >
                       %{data.percentage} ({data.correct}/{data.total})
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
+                  <div className="w-full bg-tertiary rounded-full h-2">                        <div
                       className={`h-2 rounded-full ${
                         data.percentage >= 80
-                          ? "bg-green-500"
+                          ? "bg-state-success"
                           : data.percentage >= 60
-                            ? "bg-amber-500"
-                            : "bg-red-500"
+                            ? "bg-state-warning"
+                            : "bg-state-error"
                       }`}
                       style={{ width: `${data.percentage}%` }}
                     ></div>
@@ -108,7 +107,7 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
               ))}
             </div>
 
-            <div className="mt-6 text-sm text-gray-600">
+            <div className="mt-6 text-sm text-secondary">
               <p className="mb-2">
                 <strong>Hesaplama Formülü:</strong> Toplam başarı oranı, her alt
                 konunun soru sayısına ve başarı oranına göre ağırlıklandırılmış
@@ -118,7 +117,7 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
                 <strong>Formül:</strong> (Σ (soru sayısı * alt konu başarı
                 oranı)) / toplam soru sayısı
               </p>
-              <div className="pl-4 border-l-2 border-gray-200 mt-2">
+              <div className="pl-4 border-l-2 border-secondary mt-2">
                 {Object.entries(topicPerformance).map(([topic, data]) => (
                   <p key={topic} className="text-xs">
                     {topic}: {data.total} soru, %{data.percentage} başarı (
@@ -147,8 +146,8 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
 
           {/* Zorluk Seviyesine Göre Performans */}
           {performanceByDifficulty && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <div className="bg-primary rounded-lg shadow-md border border-primary p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-primary">
                 <FiTrendingUp className="mr-2" /> Zorluk Seviyesine Göre
                 Performans
               </h3>
@@ -158,7 +157,7 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
                   ([difficulty, percentage]) => (
                     <div key={difficulty}>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium">
+                        <span className="text-sm font-medium text-primary">
                           {difficultyTranslation[difficulty]}
                         </span>
                         <span
@@ -167,14 +166,14 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
                           %{percentage}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-tertiary rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${
                             percentage >= 80
-                              ? "bg-green-500"
+                              ? "bg-state-success"
                               : percentage >= 60
-                                ? "bg-amber-500"
-                                : "bg-red-500"
+                                ? "bg-state-warning"
+                                : "bg-state-error"
                           }`}
                           style={{ width: `${percentage}%` }}
                         ></div>
@@ -189,8 +188,8 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
           {/* Güçlü ve Zayıf Konular */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Güçlü Konular */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center text-green-600">
+            <div className="bg-primary rounded-lg shadow-md border border-primary p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-state-success">
                 <FiCheckCircle className="mr-2" /> Güçlü Konular
               </h3>
 
@@ -199,22 +198,22 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
                   {strongTopics.map((topic) => (
                     <li
                       key={topic}
-                      className="flex items-center text-green-600"
+                      className="flex items-center text-state-success"
                     >
                       <FiCheckCircle className="mr-2" /> {topic}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 text-center">
+                <p className="text-tertiary text-center">
                   Henüz güçlü konu belirlenmedi.
                 </p>
               )}
             </div>
 
             {/* Zayıf Konular */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center text-red-600">
+            <div className="bg-primary rounded-lg shadow-md border border-primary p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-state-error">
                 <FiAlertCircle className="mr-2" /> Geliştirilmesi Gereken
                 Konular
               </h3>
@@ -222,13 +221,13 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
               {weakTopics.length > 0 ? (
                 <ul className="space-y-2">
                   {weakTopics.map((topic) => (
-                    <li key={topic} className="flex items-center text-red-600">
+                    <li key={topic} className="flex items-center text-state-error">
                       <FiAlertCircle className="mr-2" /> {topic}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 text-center">
+                <p className="text-tertiary text-center">
                   Tebrikler! Zayıf konunuz bulunmamaktadır.
                 </p>
               )}
@@ -237,20 +236,20 @@ const QuizAnalysis: React.FC<QuizAnalysisProps> = ({
 
           {/* Öneriler */}
           {recommendedFocus && recommendedFocus.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <div className="bg-primary rounded-lg shadow-md border border-primary p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-primary">
                 <FiTarget className="mr-2" /> Çalışma Önerileri
               </h3>
 
-              <p className="text-gray-600 mb-4">
+              <p className="text-secondary mb-4">
                 Aşağıdaki konulara odaklanmanız, genel performansınızı
                 artırmanıza yardımcı olacaktır:
               </p>
 
               <ul className="space-y-2">
                 {recommendedFocus.map((topic) => (
-                  <li key={topic} className="flex items-center">
-                    <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>{" "}
+                  <li key={topic} className="flex items-center text-primary">
+                    <span className="w-2 h-2 bg-brand-primary rounded-full mr-2"></span>{" "}
                     {topic}
                   </li>
                 ))}

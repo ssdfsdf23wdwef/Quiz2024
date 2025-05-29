@@ -20,31 +20,12 @@ import type {
   QuizResponseDto, // Eklendi
 } from "../types/quiz.type";
 import type { BaseApiResponse } from "../types/api.type"; // Eklendi
-import { getLogger, getFlowTracker } from "@/lib/logger.utils";
-import { LogClass, LogMethod } from "@/decorators/log-method.decorator";
-import { FlowCategory, FlowTrackerService } from "./flow-tracker.service";
-import { LoggerService } from "./logger.service";
 import axios, { AxiosResponse } from "axios";
+import API_ENDPOINTS from "@/constants/api.constants";
 
-const logger: LoggerService = getLogger();
-const flowTracker: FlowTrackerService = getFlowTracker();
 
-/**
- * API endpoint sabitleri
- */
-const API_ENDPOINTS = {
-  QUIZZES: "/quizzes",
-  FAILED_QUESTIONS: "/failed-questions",
-  GENERATE_QUICK_QUIZ: "/quizzes/quick",
-  GENERATE_PERSONALIZED_QUIZ: "/quizzes/personalized",
-  SAVE_QUICK_QUIZ: "/quizzes/save-quick-quiz",
-};
 
-/**
- * Quiz API Servisi
- * Quiz ile ilgili endpoint'leri çağırmak için kullanılır
- */
-@LogClass('QuizApiService')
+
 class QuizApiService {
   private readonly basePath = API_ENDPOINTS.QUIZZES;
   private readonly failedQuestionsPath = API_ENDPOINTS.FAILED_QUESTIONS;
@@ -196,27 +177,21 @@ class QuizApiService {
    * @param courseId İsteğe bağlı ders ID'si
    * @returns Quiz dizisi
    */
-  @LogMethod('QuizApiService', FlowCategory.API)
   async getQuizzes(courseId?: string): Promise<Quiz[]> {
-    const flowStepId = 'getQuizzes';
-    flowTracker.markStart(flowStepId);
+
     
     try {
       const params: Record<string, string> = {};
       if (courseId) params.courseId = courseId;
       
-      logger.debug(`Sınav listesi alınıyor`, 'QuizApiService.getQuizzes', undefined, undefined, { courseId });
       const response = await apiService.get<ApiQuiz[]>(this.basePath, params);
       const apiQuizzes = this.getResponseData(response) as ApiQuiz[];
       
       const quizzes = apiQuizzes.map(q => adapterService.toQuiz(q));
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getQuizzes', new Error('Success'));
-      logger.debug(`${quizzes.length} sınav alındı`, 'QuizApiService.getQuizzes', undefined, undefined, { count: quizzes.length, courseId });
       return quizzes;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getQuizzes', err);
-      logger.error("Sınav listesi alınamadı", 'QuizApiService.getQuizzes', err, undefined, { courseId });
+     
       const apiError = ErrorService.createApiError("Sınav listesi yüklenirken bir hata oluştu.", 
         err.message || String(err), { 
           original: { 
@@ -235,34 +210,24 @@ class QuizApiService {
    * @param id Quiz ID
    * @returns Quiz detayları
    */
-  @LogMethod('QuizApiService', FlowCategory.API)
   async getQuizById(id: string): Promise<Quiz | null> {
-    const flowStepId = `getQuizById_${id}`;
-    flowTracker.markStart(flowStepId);
       
     try {
-      logger.debug(`Sınav detayı alınıyor: ID=${id}`, 'QuizApiService.getQuizById', undefined, undefined, { id });
       const response = await apiService.get<ApiQuiz>(`${this.basePath}/${id}`);
       const apiQuiz = this.getResponseData(response) as ApiQuiz;
       console.log("[DEBUG] quiz.service.ts - getQuizById - Ham apiQuiz:", JSON.stringify(apiQuiz, null, 2));
 
       if (!this.isValidApiQuiz(apiQuiz)) {
-        logger.warn('API yanıtı geçerli bir sınav formatında değil, fallback oluşturuluyor.', 'QuizApiService.getQuizById', undefined, undefined, { id, apiQuiz });
         return this.createFallbackQuiz(`invalid_api_quiz_${id}`);
       }
       const quiz = adapterService.toQuiz(apiQuiz);
       console.log("[DEBUG] quiz.service.ts - getQuizById - Adapter sonrası quiz:", JSON.stringify(quiz, null, 2));
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getQuizById', new Error('Success'));
-      logger.debug(`Sınav detayı alındı: ID=${id}`, 'QuizApiService.getQuizById', undefined, undefined, { id, title: quiz.title });
       return quiz;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getQuizById', err);
-      logger.error(`Sınav detayı alınamadı: ID=${id}`, 'QuizApiService.getQuizById', err, undefined, { id });
       
       // Hata durumunda fallback quiz oluştur
       const fallbackQuiz = this.createFallbackQuiz(`error_fallback_${id}`);
-      logger.warn(`Hata nedeniyle fallback quiz oluşturuldu: ${fallbackQuiz.id}`, 'QuizApiService.getQuizById', err, undefined, { id });
       ErrorService.showToast(
         `Sınav (ID: ${id}) yüklenemedi. Geçici bir sınav görüntülüyorsunuz.`, 
         "warning", 
@@ -277,7 +242,6 @@ class QuizApiService {
    * @param id Quiz ID
    * @returns Quiz analiz sonuçları
    */
-  @LogMethod('QuizApiService', FlowCategory.API)
   async getQuizAnalysis(quizId: string): Promise<QuizAnalysisResponse> {
     try {
       return await this.apiService.safeRequest(
@@ -314,24 +278,18 @@ class QuizApiService {
    * @param courseId İsteğe bağlı ders ID'si
    * @returns Başarısız sorular dizisi
    */
-  @LogMethod('QuizApiService', FlowCategory.API)
   async getFailedQuestions(courseId?: string) {
-    const flowStepId = 'getFailedQuestions';
-    flowTracker.markStart(flowStepId);
+   
     
     try {
       const params: Record<string, string> = {};
       if (courseId) params.courseId = courseId;
-      logger.debug(`Yanlış cevaplanan sorular alınıyor`, 'QuizApiService.getFailedQuestions', undefined, undefined, { courseId });
       const response = await apiService.get<ApiFailedQuestion[]>(this.failedQuestionsPath, params);
       const failedQuestions = this.getResponseData(response) as ApiFailedQuestion[];
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getFailedQuestions', new Error('Success'));
-      logger.debug(`${failedQuestions.length} yanlış cevaplanan soru alındı`, 'QuizApiService.getFailedQuestions', undefined, undefined, { count: failedQuestions.length, courseId });
+   
       return failedQuestions;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.getFailedQuestions', err);
-      logger.error('Yanlış cevaplanan sorular alınamadı', 'QuizApiService.getFailedQuestions', err, undefined, { courseId });
       const apiError = ErrorService.createApiError("Yanlış cevaplanan sorular yüklenirken bir hata oluştu.", 
         err.message || String(err), {
           original: {
@@ -392,11 +350,8 @@ class QuizApiService {
   /**
    * Verilen seçeneklere göre yeni bir sınav oluşturur
    */
-  @LogMethod('QuizApiService', FlowCategory.API)
   async generateQuiz(options: QuizGenerationOptions): Promise<Quiz> {
-    const flowStepId = 'generateQuiz';
-    flowTracker.markStart(flowStepId);
-    logger.debug('Sınav oluşturma isteği', 'QuizApiService.generateQuiz', undefined, undefined, { options });
+ 
 
     try {
       let endpoint: string;
@@ -420,7 +375,6 @@ class QuizApiService {
       const relevantTypesForSubtopicValidation: QuizType[] = ['personalized', 'general', 'topic_specific'];
       if (relevantTypesForSubtopicValidation.includes(options.quizType) || (options.quizType as string) === 'quick') { // Type assertion added to allow 'quick' string comparison
         if (!subTopicIds || subTopicIds.length === 0) {
-          logger.warn(`Sınav oluşturma için alt konular sağlanmadı. Quiz Tipi: ${options.quizType}`, 'QuizApiService.generateQuiz', undefined, undefined, { options });
           const clientError = ErrorService.createApiError(
             'Sınav Oluşturma Hatası',
             'Sınav oluşturmak için en az bir alt konu seçilmelidir. Lütfen Konu Seçimi adımında alt konu seçtiğinizden emin olun.',
@@ -498,7 +452,6 @@ class QuizApiService {
         };
       }
 
-      logger.debug(`Sınav oluşturma isteği gönderiliyor: ${endpoint}`, 'QuizApiService.generateQuiz', undefined, undefined, { payload });
       
       // API isteğini gönder
       const response = await apiService.post<QuizResponseDto>(endpoint, payload);
@@ -523,7 +476,6 @@ class QuizApiService {
         console.warn("[QuizApiService.generateQuiz] API yanıtı beklenen formatta değil, varsayılan sınav oluşturuluyor");
         console.warn("[QuizApiService.generateQuiz] Problem olan yanıt:", responseData);
         const fallbackQuiz = this.createFallbackQuiz("api_fallback", options);
-        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Invalid API response'));
         return fallbackQuiz;
       }
 
@@ -537,7 +489,6 @@ class QuizApiService {
           console.log("[QuizApiService.generateQuiz] API yanıtı içinde data nesnesi bulundu:", responseData.data);
           try {
             const mappedQuiz = this.mapResponseToQuiz(responseData.data as unknown as QuizResponseDto);
-            flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with nested data'));
             return mappedQuiz;
           } catch (dataMapError) {
             console.error("[QuizApiService.generateQuiz] Data nesnesi dönüştürme hatası:", dataMapError);
@@ -573,7 +524,6 @@ class QuizApiService {
           console.log("[QuizApiService.generateQuiz] Alternatif formatta quiz bulundu:", possibleQuiz);
           try {
             const mappedQuiz = this.mapResponseToQuiz(possibleQuiz as unknown as QuizResponseDto);
-            flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success with alternative format'));
             return mappedQuiz;
           } catch (altMapError) {
             console.error("[QuizApiService.generateQuiz] Alternatif format dönüştürme hatası:", altMapError);
@@ -584,7 +534,6 @@ class QuizApiService {
         // Eğer hiçbir şekilde uygun bir yapı bulunamazsa varsayılan oluştur
         console.warn("[QuizApiService.generateQuiz] Geçerli bir sınav formatı bulunamadı, varsayılan oluşturuldu");
         const fallbackQuiz = this.createFallbackQuiz("format_fallback", options);
-        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Missing ID in API response'));
         return fallbackQuiz;
       }
       
@@ -593,7 +542,6 @@ class QuizApiService {
         console.log("[QuizApiService.generateQuiz] Standart yanıt işleniyor. ID:", responseData.id);
         const mappedQuiz = this.mapResponseToQuiz(responseData as unknown as QuizResponseDto);
         console.log("[QuizApiService.generateQuiz] Quiz başarıyla oluşturuldu:", mappedQuiz.id);
-        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error('Success'));
         return mappedQuiz;
       } catch (mapError) {
         // Eşleme hatası oluşursa loglayıp fallback dönün
@@ -605,7 +553,6 @@ class QuizApiService {
           responseData
         });
         const fallbackQuiz = this.createFallbackQuiz("mapping_fallback", options);
-        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error(`Mapping error: ${String(mapError)}`));
         return fallbackQuiz;
       }
     } catch (error) {
@@ -635,7 +582,6 @@ class QuizApiService {
             const retryErrorMessage = retryError instanceof Error ? retryError.message : String(retryError);
             console.error(`[QuizApiService.generateQuiz] Retry with fewer subtopics failed: ${retryErrorMessage}`, retryError);
             const fallbackQuiz = this.createFallbackQuiz("retry_json_fallback", options);
-            flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error(`Retry after invalid JSON failed: ${retryErrorMessage}`));
             return fallbackQuiz;
           }
         } else {
@@ -645,7 +591,6 @@ class QuizApiService {
           
           console.warn(`[QuizApiService.generateQuiz] ${reason} Generating fallback quiz due to invalid JSON.`);
           const fallbackQuiz = this.createFallbackQuiz("invalid_json_fallback", options);
-          flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', new Error(`Invalid JSON response, no retry: ${reason}`));
           return fallbackQuiz;
         }
       } else if (axios.isAxiosError(error)) {
@@ -666,7 +611,6 @@ class QuizApiService {
             responseData
           );
         }
-        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', apiError);
         throw apiError;
         
       } else {
@@ -676,7 +620,6 @@ class QuizApiService {
           undefined, 
           { originalError: error } 
         );
-        flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.generateQuiz', genericError);
         throw genericError;
       }
     }
@@ -686,7 +629,6 @@ class QuizApiService {
    * Sınav cevaplarını gönderir ve sonuçları alır
    * Backend ile iletişimde yaşanabilecek sorunlara karşı güçlü hata yakalama ve geri dönüş mekanizmaları içerir
    */
-  @LogMethod('QuizApiService', FlowCategory.API)
   async submitQuiz(payload: QuizSubmissionPayload): Promise<QuizSubmissionResponse> {
     // Quiz ID kontrolü - geçersiz ID varsa yerel sonuca dön
     if (!payload.quizId || payload.quizId === 'undefined') {
@@ -702,14 +644,8 @@ class QuizApiService {
       return this.createLocalQuizSubmission(payload); 
     }
 
-    const flowStepId = `submitQuiz_${payload.quizId}`;
-    flowTracker.markStart(flowStepId);
-    logger.debug(`Sınav gönderiliyor: ID=${payload.quizId}`, 'QuizApiService.submitQuiz', undefined, undefined, { 
-      quizId: payload.quizId,
-      userAnswersCount: Object.keys(payload.userAnswers).length,
-      elapsedTime: payload.elapsedTime
-    });
     
+
     try {
       return await this.apiService.safeRequest(
         // Ana API isteği - formatı backend ile uyumlu hale getiriyoruz
@@ -800,7 +736,6 @@ class QuizApiService {
               
               const result = await this.apiService.post<QuizSubmissionResponse>(endpoint, payloadForSubmission);
               console.log('[QuizApiService.submitQuiz] API yanıtı başarılı:', result);
-              logger.info(`Sınav başarıyla gönderildi: ID=${payload.quizId}`, 'QuizApiService.submitQuiz');
               return result as QuizSubmissionResponse;
             } catch (error) {
               console.error('[QuizApiService.submitQuiz] API hatası:', error);
@@ -821,13 +756,7 @@ class QuizApiService {
                   "Sunucu Hatası"
                 );
                 
-                logger.error(
-                  `Sınav gönderimi başarısız: ID=${payload.quizId}, Status=${statusCode}`, 
-                  'QuizApiService.submitQuiz', 
-                  error,
-                  undefined,
-                  { errorMessage, statusCode }
-                );
+              
                 
                 // Backend hatası durumunda yerel sonuca geçiş yap
                 console.warn(`[QuizApiService.submitQuiz] Backend hatası, lokalde sonuç oluşturuluyor`);
@@ -862,8 +791,6 @@ class QuizApiService {
       console.error('[QuizApiService.submitQuiz] En dış blok hatası:', error);
       ErrorService.showToast("Beklenmeyen bir hata oluştu, yerel analiz kullanılıyor", "error", "Sınav Gönderimi");
       return this.createLocalQuizSubmission(payload);
-    } finally {
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.submitQuiz');
     }
   }
   
@@ -874,10 +801,7 @@ class QuizApiService {
    */
   private prepareQuestionsForSubmission(questions: Question[], userAnswers: Record<string, string>): Question[] {
     const startTime = Date.now();
-    logger.debug('Sorular backend formatına hazırlanıyor', 'prepareQuestionsForSubmission', undefined, undefined, {
-      questionCount: questions?.length || 0,
-      userAnswersCount: Object.keys(userAnswers || {}).length
-    });
+ 
     
     // Boş array kontrolü
     if (!Array.isArray(questions) || questions.length === 0) {
@@ -897,9 +821,7 @@ class QuizApiService {
         metadata: { generatedForSubmission: true, timestamp: new Date().toISOString() }
       }));
       
-      logger.warn('Varsayılan sorular oluşturuldu', 'prepareQuestionsForSubmission', undefined, undefined, {
-        fallbackQuestionCount: fallbackQuestions.length
-      });
+ 
       
       return fallbackQuestions;
     }
@@ -1009,11 +931,7 @@ class QuizApiService {
     });
     
     const elapsedTime = Date.now() - startTime;
-    logger.debug('Sorular başarıyla hazırlandı', 'prepareQuestionsForSubmission', undefined, undefined, {
-      processedQuestionCount: preparedQuestions.length,
-      elapsedTimeMs: elapsedTime
-    });
-    
+
     return preparedQuestions;
   }
 
@@ -1021,20 +939,13 @@ class QuizApiService {
    * Sınavı siler
    * @param id Quiz ID
    */
-  @LogMethod('QuizApiService', FlowCategory.API)
   async deleteQuiz(id: string) {
-    const flowStepId = `deleteQuiz_${id}`;
-    flowTracker.markStart(flowStepId);
+
     
     try {
-      logger.debug(`Sınav siliniyor: ID=${id}`, 'QuizApiService.deleteQuiz', undefined, undefined, { id });
       await apiService.delete(`${this.basePath}/${id}`);
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.deleteQuiz', new Error('Success'));
-      logger.info(`Sınav silindi: ID=${id}`, 'QuizApiService.deleteQuiz', undefined, undefined, { id });
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      flowTracker.markEnd(flowStepId, FlowCategory.API, 'QuizApiService.deleteQuiz', err);
-      logger.error(`Sınav silinemedi: ID=${id}`, 'QuizApiService.deleteQuiz', err, undefined, { id });
       const apiError = ErrorService.createApiError("Sınav silinirken bir hata oluştu.", 
         err.message || String(err), { 
           original: { 
@@ -1243,7 +1154,6 @@ class QuizApiService {
       uniqueSubTopics: Array.from(subTopics)
     };
     
-    console.log('[QuizApiService] Yerel analiz oluşturuldu:', analysis);
     
     return analysis;
   }
@@ -1254,7 +1164,6 @@ class QuizApiService {
       if (!storedQuizJson) return null;
       return JSON.parse(storedQuizJson);
     } catch (error) {
-      console.error('LocalStorage okuma hatası:', error);
       return null;
     }
   }

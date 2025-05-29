@@ -2,8 +2,6 @@
 
 import React, { ReactNode, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import Navbar from './Navbar';
-import Footer from './Footer';
 import { getLogger, trackFlow } from '@/lib/logger.utils';
 import { FlowCategory } from '@/constants/logging.constants';
 import { NextUIProvider } from '@nextui-org/react';

@@ -22,15 +22,15 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <div className="text-center py-10 sm:py-16 px-6 flex flex-col items-center">
       {icon && (
-        <div className="inline-flex items-center justify-center p-4 bg-gradient-to-tr from-sky-100 to-indigo-100 dark:from-sky-800/50 dark:to-indigo-800/50 rounded-full shadow-lg mb-6">
+        <div className="inline-flex items-center justify-center p-4 bg-tertiary rounded-full shadow-md mb-6">
           {icon}
         </div>
       )}
-      <h3 className="text-2xl font-semibold text-slate-800 dark:text-white mb-3">
+      <h3 className="text-2xl font-semibold text-primary mb-3">
         {title}
       </h3>
       {description && (
-        <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto">
+        <p className="text-secondary mb-8 max-w-md mx-auto">
           {description}
         </p>
       )}
@@ -38,15 +38,15 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         actionLink ? (
           <Link
             href={actionLink}
-            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-lg font-semibold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transform hover:scale-105"
+            className="inline-flex items-center justify-center px-6 py-3 bg-brand-primary text-white rounded-lg font-semibold text-base transition-all duration-normal shadow-sm hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
           >
             {actionText}
           </Link>
         ) : (
           <button
             onClick={onActionClick}
-            type="button" // Explicitly set button type
-            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-lg font-semibold text-base transition-all duration-300 ease-in-out shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transform hover:scale-105"
+            type="button"
+            className="inline-flex items-center justify-center px-6 py-3 bg-brand-primary text-white rounded-lg font-semibold text-base transition-all duration-normal shadow-sm hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2"
           >
             {actionText}
           </button>

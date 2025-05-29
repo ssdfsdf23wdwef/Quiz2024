@@ -54,14 +54,14 @@ const LearningProgress: React.FC<LearningProgressProps> = ({
       <div
         className={`p-4 border rounded-lg shadow-sm ${
           status === "mastered"
-            ? "border-green-200 bg-green-50"
-            : "border-amber-200 bg-amber-50"
+            ? "border-state-success-border bg-state-success-bg"
+            : "border-state-warning-border bg-state-warning-bg"
         }`}
       >
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-medium">{topic}</h3>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-secondary mt-1">
               {status === "mastered"
                 ? "Uzmanlaşıldı"
                 : `Gelişim aşamasında (${successRate}%)`}
@@ -69,32 +69,32 @@ const LearningProgress: React.FC<LearningProgressProps> = ({
           </div>
           <div>
             {status === "mastered" ? (
-              <FiCheckCircle className="text-green-500 text-xl" />
+              <FiCheckCircle className="text-state-success text-xl" />
             ) : (
-              <FiTarget className="text-amber-500 text-xl" />
+              <FiTarget className="text-state-warning text-xl" />
             )}
           </div>
         </div>
 
         {data && (
           <div className="mt-3">
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <div className="flex justify-between text-xs text-secondary mb-1">
               <span>İlerleme</span>
               <span>{successRate}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-secondary/30 rounded-full h-2">
               <div
                 className={`h-2 rounded-full ${
                   successRate >= 80
-                    ? "bg-green-500"
+                    ? "bg-state-success"
                     : successRate >= 60
-                      ? "bg-amber-500"
-                      : "bg-red-500"
+                      ? "bg-state-warning"
+                      : "bg-state-error"
                 }`}
                 style={{ width: `${successRate}%` }}
               ></div>
             </div>
-            <div className="flex justify-between mt-2 text-xs text-gray-500">
+            <div className="flex justify-between mt-2 text-xs text-secondary">
               <span>Başarılı: {data.successCount || 0}</span>
               <span>Başarısız: {data.failCount}</span>
             </div>
@@ -107,8 +107,8 @@ const LearningProgress: React.FC<LearningProgressProps> = ({
   return (
     <div className="space-y-6">
       {/* Genel İlerleme */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="bg-elevated rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold mb-4 flex items-center text-primary">
           <FiTrendingUp className="mr-2" /> Genel İlerleme
         </h2>
 
@@ -120,7 +120,7 @@ const LearningProgress: React.FC<LearningProgressProps> = ({
                   a 15.9155 15.9155 0 0 1 0 31.831
                   a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#E5E7EB"
+                stroke="rgb(var(--color-border-primary))"
                 strokeWidth="3"
                 strokeDasharray="100, 100"
               />
@@ -131,10 +131,10 @@ const LearningProgress: React.FC<LearningProgressProps> = ({
                 fill="none"
                 stroke={
                   masteryPercentage >= 80
-                    ? "#10B981"
+                    ? "rgb(var(--color-state-success))"
                     : masteryPercentage >= 60
-                      ? "#F59E0B"
-                      : "#EF4444"
+                      ? "rgb(var(--color-state-warning))"
+                      : "rgb(var(--color-state-error))"
                 }
                 strokeWidth="3"
                 strokeDasharray={`${masteryPercentage}, 100`}
@@ -144,7 +144,8 @@ const LearningProgress: React.FC<LearningProgressProps> = ({
                 y="20.5"
                 textAnchor="middle"
                 fontSize="8"
-                fill="#374151"
+                fill="currentColor"
+                className="text-primary"
                 fontWeight="bold"
               >
                 %{masteryPercentage}

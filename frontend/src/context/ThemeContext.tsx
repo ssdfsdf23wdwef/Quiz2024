@@ -9,6 +9,7 @@ import React, {
   ReactNode,
 } from "react";
 import { getLogger, getFlowTracker } from "@/lib/logger.utils";
+import { ThemeMode, cssVars, getTheme } from "@/styles/theme";
 
 // Logger ve flowTracker nesnelerini elde et
 const logger = getLogger();
@@ -32,24 +33,12 @@ const trackThemeStep = (message: string, context: string, metadata?: Record<stri
   }
 };
 
-// Tema seçenekleri
-export type ThemeMode = "light" | "dark" | "system";
-
-// Tema renkleri
-export type ThemeColors = {
-  primary: string;
-  secondary: string;
-  accent: string;
-  // Diğer tema renkleri...
-};
-
 // Tema özellikleri
 export type ThemePreferences = {
   mode: ThemeMode;
   fontSize: "small" | "medium" | "large";
   reducedMotion: boolean;
   highContrast: boolean;
-  colors: ThemeColors;
 };
 
 // Context tipi
@@ -69,12 +58,7 @@ const defaultThemePreferences: ThemePreferences = {
   mode: "system",
   fontSize: "medium",
   reducedMotion: false,
-  highContrast: false,
-  colors: {
-    primary: "#3B82F6", // Mavi
-    secondary: "#8B5CF6", // Mor
-    accent: "#10B981", // Yeşil
-  }
+  highContrast: false
 };
 
 // Context oluşturma
@@ -292,10 +276,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('theme-preferences', JSON.stringify(updatedTheme));
       
       // Azaltılmış hareket sınıfını değiştir
+      const root = document.documentElement;
       if (!theme.reducedMotion) {
-        document.documentElement.classList.add('reduce-motion');
+        root.classList.add('reduce-motion');
       } else {
-        document.documentElement.classList.remove('reduce-motion');
+        root.classList.remove('reduce-motion');
       }
     } catch (error) {
       logger.warn(
@@ -335,10 +320,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('theme-preferences', JSON.stringify(updatedTheme));
       
       // Yüksek kontrast sınıfını değiştir
+      const root = document.documentElement;
       if (!theme.highContrast) {
-        document.documentElement.classList.add('high-contrast');
+        root.classList.add('high-contrast');
       } else {
-        document.documentElement.classList.remove('high-contrast');
+        root.classList.remove('high-contrast');
       }
     } catch (error) {
       logger.warn(
@@ -401,44 +387,45 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   
   // Tema değişikliklerini DOM'a uygula
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const root = document.documentElement;
+    
     // Dark/Light modu ayarla
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
+      root.classList.add('dark');
+      root.classList.remove('light');
     } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
+      root.classList.add('light');
+      root.classList.remove('dark');
     }
     
     // Font boyutunu ayarla
-    document.documentElement.classList.remove('text-sm', 'text-base', 'text-lg');
+    root.classList.remove('text-sm', 'text-base', 'text-lg');
     
     if (theme.fontSize === 'small') {
-      document.documentElement.classList.add('text-sm');
+      root.classList.add('text-sm');
     } else if (theme.fontSize === 'large') {
-      document.documentElement.classList.add('text-lg');
+      root.classList.add('text-lg');
     } else {
-      document.documentElement.classList.add('text-base');
+      root.classList.add('text-base');
     }
     
     // Azaltılmış hareket ve kontrast ayarları
     if (theme.reducedMotion) {
-      document.documentElement.classList.add('reduce-motion');
+      root.classList.add('reduce-motion');
     } else {
-      document.documentElement.classList.remove('reduce-motion');
+      root.classList.remove('reduce-motion');
     }
     
     if (theme.highContrast) {
-      document.documentElement.classList.add('high-contrast');
+      root.classList.add('high-contrast');
     } else {
-      document.documentElement.classList.remove('high-contrast');
+      root.classList.remove('high-contrast');
     }
     
-    // CSS değişkenlerini ayarla
-    const root = document.documentElement;
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      root.style.setProperty(`--color-${key}`, value);
-    });
+    // CSS değişkenlerini açıkça ayarlamaya gerek yok, tema CSS sınıflarından uygulanacak
+    // CSS dosyasında tanımlanmış değişkenler kullanılacak
     
     logger.debug(
       'Tema DOM\'a uygulandı',

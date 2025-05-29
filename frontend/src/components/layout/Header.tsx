@@ -3,8 +3,6 @@
 import React, { memo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
-  FiMoon,
-  FiSun,
   FiLogIn,
   FiUser,
   FiLogOut,
@@ -74,8 +72,8 @@ const HeaderComponent: React.FC<HeaderProps> = () => {
   }, []);
 
   return (
-    <header className="bg-elevated border-b border-primary sticky top-0 z-sticky shadow-sm">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+    <header className="bg-elevated border-b border-primary fixed top-0 left-0 right-0 z-50 shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3 h-16 flex items-center">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" prefetch={true} className="flex items-center group">
@@ -96,37 +94,40 @@ const HeaderComponent: React.FC<HeaderProps> = () => {
             {isLoading ? (
               <div className="h-9 w-9 bg-secondary border border-primary rounded-full animate-pulse"></div>
             ) : isAuthenticated ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-9 h-9 rounded-full bg-brand-primary text-white font-semibold flex items-center justify-center hover:bg-brand-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-primary shadow-sm"
-                >
-                  {getInitials()}
-                </button>
-                
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-elevated rounded-lg shadow-xl py-2 z-dropdown border border-primary">
-                    <div className="px-4 py-3 border-b border-primary">
-                      <p className="text-sm font-semibold text-primary truncate">{displayName}</p>
-                      {user?.email && <p className="text-xs text-secondary truncate">{user.email}</p>}
-                    </div>
-                    <nav className="py-1">
-                      <Link href="/profile" prefetch={true}>
-                        <div className="flex items-center px-4 py-2.5 text-sm text-primary hover:bg-interactive-hover cursor-pointer transition-colors">
-                          <FiUser className="mr-3 text-secondary" />
-                          Profil
-                        </div>
-                      </Link>
-                      <div 
-                        onClick={handleLogout}
-                        className="flex items-center px-4 py-2.5 text-sm text-primary hover:bg-interactive-hover cursor-pointer transition-colors"
-                      >
-                        <FiLogOut className="mr-3 text-state-error" />
-                        Çıkış Yap
+              <div className="flex items-center space-x-2">
+                {/* Only show the avatar button, no standalone logout button */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-9 h-9 rounded-full bg-brand-primary text-white font-semibold flex items-center justify-center hover:bg-brand-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-primary shadow-sm"
+                  >
+                    {getInitials()}
+                  </button>
+                  
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-elevated rounded-lg shadow-xl py-2 z-dropdown border border-primary">
+                      <div className="px-4 py-3 border-b border-primary">
+                        <p className="text-sm font-semibold text-primary truncate">{displayName}</p>
+                        {user?.email && <p className="text-xs text-secondary truncate">{user.email}</p>}
                       </div>
-                    </nav>
-                  </div>
-                )}
+                      <nav className="py-1">
+                        <Link href="/profile" prefetch={true}>
+                          <div className="flex items-center px-4 py-2.5 text-sm text-primary hover:bg-interactive-hover cursor-pointer transition-colors">
+                            <FiUser className="mr-3 text-secondary" />
+                            Profil
+                          </div>
+                        </Link>
+                        <button 
+                          onClick={handleLogout}
+                          className="w-full flex items-center px-4 py-2.5 text-sm text-primary hover:bg-interactive-hover cursor-pointer transition-colors"
+                        >
+                          <FiLogOut className="mr-3 text-state-error" />
+                          Çıkış Yap
+                        </button>
+                      </nav>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center space-x-2">

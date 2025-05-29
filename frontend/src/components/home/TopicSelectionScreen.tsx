@@ -29,41 +29,41 @@ export const getStatusStyle = (status: LearningTargetStatusLiteral | undefined):
   switch (status) {
     case "pending":
       return {
-        color: "text-gray-500",
-        bgColor: "bg-gray-100",
-        borderColor: "border-gray-200",
+        color: "text-tertiary",
+        bgColor: "bg-secondary",
+        borderColor: "border-primary",
         label: "Başlamadı",
         icon: FiBook,
       };
     case "medium":
       return {
-        color: "text-blue-500",
-        bgColor: "bg-blue-100",
-        borderColor: "border-blue-200",
+        color: "text-state-info",
+        bgColor: "bg-state-info-bg",
+        borderColor: "border-state-info-border",
         label: "Devam Ediyor",
         icon: FiLoader,
       };
     case "failed":
       return {
-        color: "text-yellow-500",
-        bgColor: "bg-yellow-100",
-        borderColor: "border-yellow-200",
+        color: "text-state-warning",
+        bgColor: "bg-state-warning-bg",
+        borderColor: "border-state-warning-border",
         label: "Gözden Geçirilmeli",
         icon: FiAlertTriangle,
       };
     case "mastered":
       return {
-        color: "text-green-500",
-        bgColor: "bg-green-100",
-        borderColor: "border-green-200",
+        color: "text-state-success",
+        bgColor: "bg-state-success-bg",
+        borderColor: "border-state-success-border",
         label: "Tamamlandı",
         icon: FiCheck,
       };
     default:
       return {
-        color: "text-gray-500",
-        bgColor: "bg-gray-100",
-        borderColor: "border-gray-200",
+        color: "text-tertiary",
+        bgColor: "bg-secondary",
+        borderColor: "border-primary",
         label: "Bilinmiyor",
         icon: FiInfo,
       };
@@ -628,42 +628,48 @@ function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
 
   return (
     <div
-      className={`p-2 border rounded-lg cursor-pointer transition-colors ${
+      className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 shadow-sm hover:shadow ${
         topic.isSelected
-          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30"
-          : "border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700"
+          ? "border-brand-primary bg-brand-primary/5"
+          : "border-border-secondary bg-elevated hover:border-brand-primary/50"
       }`}
       onClick={() => onToggle(topic.id)}
     >
-      <div className="flex items-center">
+      <div className="flex items-center gap-3">
         <div
-          className={`rounded-full min-w-5 w-5 h-5 mr-3 flex items-center justify-center ${
+          className={`rounded-md min-w-6 w-6 h-6 flex items-center justify-center transition-all duration-200 ${{
             topic.isSelected
-              ? "bg-indigo-500 text-white"
-              : "bg-gray-200 dark:bg-gray-700"
+              ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
+              : "bg-surface border border-border-secondary"
           }`}
         >
-          {topic.isSelected && <FiCheck className="w-3 h-3" />}
+          {topic.isSelected ? (
+            <FiCheck className="w-3.5 h-3.5" />
+          ) : (
+            <span className="w-3.5 h-3.5"></span>
+          )}
         </div>
+        
         <div className="flex-1">
-          <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200">
+          <h3 className="font-medium text-sm text-primary">
             {displayTopicName()}
           </h3>
           {topic.parentTopic && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-tertiary mt-0.5">
               {topic.parentTopic}
             </p>
           )}
         </div>
-        <div className="flex items-center ml-2">
+        
+        <div className="flex items-center gap-2">
           <div
-            className={`text-xs rounded-full px-2 py-0.5 flex items-center whitespace-nowrap ${statusInfo.bgColor} ${statusInfo.color}`}
+            className={`text-xs rounded-lg px-2.5 py-1 flex items-center whitespace-nowrap ${statusInfo.bgColor} ${statusInfo.color} border ${statusInfo.borderColor}`}
           >
-            <StatusIcon className="w-3 h-3 mr-1" />
+            <StatusIcon className="w-3 h-3 mr-1.5" />
             {statusInfo.label}
           </div>
           {topic.isNew && (
-            <div className="ml-1 text-xs rounded-full px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 whitespace-nowrap">
+            <div className="text-xs rounded-lg px-2.5 py-1 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 whitespace-nowrap font-medium">
               Yeni
             </div>
           )}

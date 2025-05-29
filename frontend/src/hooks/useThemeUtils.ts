@@ -1,45 +1,61 @@
 import { useTheme } from '@/context/ThemeProvider';
-import { lightTheme, darkTheme, getTheme, type ThemeMode } from '@/styles';
+import { lightTheme, darkTheme, getTheme, getCssVar, getThemeValue, media, type ThemeMode } from '@/styles/theme';
+import { breakpoints } from '@/styles/variables';
 
 /**
  * Theme utilities hook
  * Tema ile ilgili yardımcı fonksiyonlar ve değerler sağlar
  */
 export const useThemeUtils = () => {
-  const { theme, setTheme, toggleTheme } = useTheme();
+  const { theme, setTheme, toggleTheme, isDarkMode, isSystemTheme } = useTheme();
 
   // Mevcut tema objesini al
-  const currentTheme = getTheme(theme);
+  const currentTheme = getTheme(isDarkMode ? 'dark' : 'light');
 
   // Tema değerlerine kolay erişim
   const colors = currentTheme.colors;
   const shadows = currentTheme.shadows;
-
-  // Tema durumu kontrolleri
-  const isDark = theme === 'dark';
-  const isLight = theme === 'light';
+  const responsive = currentTheme.responsive;
 
   // CSS custom property değerlerini al
-  const getCSSVar = (property: string): string => {
+  const getVar = (property: string): string => {
     if (typeof window === 'undefined') return '';
     return getComputedStyle(document.documentElement)
       .getPropertyValue(property)
       .trim();
   };
 
+  // Theme CSS değişkenlerini al (--theme-colors-brand-primary gibi)
+  const getThemeVar = (varName: string): string => {
+    return getVar(`--theme-${varName}`);
+  };
+
   // Renk değerlerini RGB formatında al
-  const getRGBColor = (cssVar: string): string => {
-    return `rgb(${getCSSVar(cssVar)})`;
+  const getRGBColor = (themeVar: string): string => {
+    return `rgb(${getThemeVar(themeVar)})`;
   };
 
   // Renk değerlerini alpha ile al
-  const getRGBAColor = (cssVar: string, alpha: number): string => {
-    return `rgba(${getCSSVar(cssVar)}, ${alpha})`;
+  const getRGBAColor = (themeVar: string, alpha: number): string => {
+    return `rgba(${getThemeVar(themeVar)}, ${alpha})`;
+  };
+
+  // Tema değerine dot notation ile erişim (örn: "colors.brand.primary")
+  const getValue = (path: string) => {
+    return getThemeValue(path, isDarkMode ? 'dark' : 'light');
   };
 
   // Conditional theme classes
   const getThemeClass = (lightClass: string, darkClass: string): string => {
-    return isDark ? darkClass : lightClass;
+    return isDarkMode ? darkClass : lightClass;
+  };
+
+  // Media query helpers
+  const getMediaQuery = {
+    up: (breakpoint: keyof typeof breakpoints) => media.up(breakpoint),
+    down: (breakpoint: keyof typeof breakpoints) => media.down(breakpoint), 
+    between: (min: keyof typeof breakpoints, max: keyof typeof breakpoints) => 
+      media.between(min, max),
   };
 
   // Sistem tercihi algılama
@@ -56,23 +72,23 @@ export const useThemeUtils = () => {
 
   // Tema sıfırlama (sistem tercihine dön)
   const resetToSystemTheme = () => {
-    const systemTheme = getSystemTheme();
-    setTheme(systemTheme);
-    localStorage.removeItem('theme');
+    setTheme('system');
   };
 
   return {
     // Theme state
     theme,
     currentTheme,
-    isDark,
-    isLight,
+    isDark: isDarkMode,
+    isLight: !isDarkMode,
+    isSystemTheme,
     
     // Theme objects
     lightTheme,
     darkTheme,
     colors,
     shadows,
+    responsive,
     
     // Theme actions
     setTheme,
@@ -80,11 +96,51 @@ export const useThemeUtils = () => {
     resetToSystemTheme,
     
     // Utilities
-    getCSSVar,
+    getVar,
+    getThemeVar,
     getRGBColor,
     getRGBAColor,
+    getValue,
     getThemeClass,
+    getMediaQuery,
     getSystemTheme,
     getSavedTheme,
+    
+    // CSS Variables access
+    cssVars: {
+      // Background colors
+      bgPrimary: 'colors-background-primary',
+      bgSecondary: 'colors-background-secondary', 
+      bgTertiary: 'colors-background-tertiary',
+      bgElevated: 'colors-background-elevated',
+      
+      // Text colors
+      textPrimary: 'colors-text-primary',
+      textSecondary: 'colors-text-secondary',
+      textTertiary: 'colors-text-tertiary',
+      textDisabled: 'colors-text-disabled',
+      textInverse: 'colors-text-inverse',
+      
+      // Border colors
+      borderPrimary: 'colors-border-primary',
+      borderSecondary: 'colors-border-secondary',
+      borderFocus: 'colors-border-focus',
+      
+      // Brand colors
+      brandPrimary: 'colors-brand-primary',
+      brandSecondary: 'colors-brand-secondary',
+      brandAccent: 'colors-brand-accent',
+      
+      // State colors
+      success: 'colors-state-success',
+      warning: 'colors-state-warning',
+      error: 'colors-state-error',
+      info: 'colors-state-info',
+      
+      // Shadows
+      shadowSm: 'shadows-sm',
+      shadowMd: 'shadows-md',
+      shadowLg: 'shadows-lg',
+    }
   };
 };

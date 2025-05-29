@@ -1,4 +1,28 @@
 import { colors } from './colors';
+import { breakpoints } from './variables';
+
+// Define theme types
+export type ThemeMode = 'light' | 'dark' | 'system';
+
+// CSS variable mapping helper
+function createCssVarNames(prefix: string, obj: Record<string, any>, path: string[] = []): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  for (const key in obj) {
+    const newPath = [...path, key];
+    const value = obj[key];
+
+    if (typeof value === 'object' && value !== null) {
+      const nestedVars = createCssVarNames(prefix, value, newPath);
+      Object.assign(result, nestedVars);
+    } else {
+      const varName = `--${prefix}-${newPath.join('-')}`;
+      result[newPath.join('.')] = varName;
+    }
+  }
+
+  return result;
+}
 
 // Light theme configuration
 export const lightTheme = {
@@ -76,6 +100,27 @@ export const lightTheme = {
     '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     none: 'none',
   },
+
+  // Responsive values for different screen sizes
+  responsive: {
+    spacing: {
+      container: {
+        xs: '1rem',
+        sm: '2rem',
+        md: '3rem',
+        lg: '4rem',
+        xl: '5rem',
+        '2xl': '6rem',
+      },
+      gutter: {
+        xs: '1rem',
+        sm: '1.5rem',
+        md: '2rem',
+        lg: '2.5rem',
+        xl: '3rem',
+      }
+    }
+  }
 } as const;
 
 // Dark theme configuration
@@ -154,8 +199,72 @@ export const darkTheme = {
     '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
     none: 'none',
   },
+
+  // Responsive values for different screen sizes (same as light theme)
+  responsive: {
+    spacing: {
+      container: {
+        xs: '1rem',
+        sm: '2rem',
+        md: '3rem',
+        lg: '4rem',
+        xl: '5rem',
+        '2xl': '6rem',
+      },
+      gutter: {
+        xs: '1rem',
+        sm: '1.5rem',
+        md: '2rem',
+        lg: '2.5rem',
+        xl: '3rem',
+      }
+    }
+  }
 } as const;
 
+// Generate CSS variable mapping for themes
+export const cssVars = {
+  light: createCssVarNames('theme', lightTheme),
+  dark: createCssVarNames('theme', darkTheme),
+};
+
+// Helper to get a theme by its mode
+export const getTheme = (mode: ThemeMode = 'light') => {
+  return mode === 'dark' ? darkTheme : lightTheme;
+};
+
+// Helper to get CSS variables value from theme
+export const getCssVar = (themeKey: string, mode: ThemeMode = 'light') => {
+  const vars = mode === 'dark' ? cssVars.dark : cssVars.light;
+  return vars[themeKey] || '';
+};
+
+// Helper to get a value from the theme using dot notation
+export const getThemeValue = (path: string, mode: ThemeMode = 'light') => {
+  const theme = getTheme(mode);
+  const keys = path.split('.');
+  let value: any = theme;
+  
+  for (const key of keys) {
+    value = value[key];
+    if (value === undefined) return undefined;
+  }
+  
+  return value;
+};
+
+// Media query helpers for responsive design
+export const media = {
+  up: (breakpoint: keyof typeof breakpoints) => 
+    `@media (min-width: ${breakpoints[breakpoint]})`,
+  down: (breakpoint: keyof typeof breakpoints) => 
+    `@media (max-width: ${breakpoints[breakpoint]})`,
+  between: (min: keyof typeof breakpoints, max: keyof typeof breakpoints) => 
+    `@media (min-width: ${breakpoints[min]}) and (max-width: ${breakpoints[max]})`,
+};
+
+// Types
 export type Theme = typeof lightTheme;
 export type ThemeColors = Theme['colors'];
 export type ThemeShadows = Theme['shadows'];
+export type ThemeResponsive = Theme['responsive'];
