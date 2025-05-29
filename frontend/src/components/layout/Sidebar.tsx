@@ -11,6 +11,7 @@ import {
   FiBarChart2,
 } from "react-icons/fi";
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -116,30 +117,40 @@ export default function Sidebar() {
             </div>
             
             {/* Ayarlar butonu - En altta sabit */}
-            <div className="sticky bottom-0 left-0 right-0 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md">
-              <Link
-                href="/settings"
-                onClick={(e) => e.stopPropagation()}
-                className={`py-4 px-6 flex items-center transition-all duration-200 group ${
-                  isActive("/settings")
-                    ? "text-brand-primary font-medium bg-brand-primary/5"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/50"
-                }`}
-              >
-                <FiSettings 
-                  size={20} 
-                  className={`mr-3 transition-colors ${
-                    isActive("/settings") 
-                      ? "text-brand-primary" 
-                      : "text-gray-500 dark:text-gray-400 group-hover:text-brand-primary"
-                  }`} 
-                />
-                <span className="text-sm font-medium">Ayarlar</span>
-                {isActive("/settings") && (
-                  <span className="ml-auto h-2 w-2 rounded-full bg-brand-primary"></span>
-                )}
-              </Link>
-            </div>
+              <div className="border-t border-gray-200/30 dark:border-gray-700/30 bg-gradient-to-r from-gray-50/50 to-blue-50/30 dark:from-gray-900/50 dark:to-blue-900/20 backdrop-blur-sm">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Link
+                    href="/settings"
+                    onClick={(e) => e.stopPropagation()}
+                    className={`group flex items-center py-4 px-6 transition-all duration-300 ${
+                      isActive("/settings")
+                        ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/50"
+                    }`}
+                  >
+                    <div className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300 ${
+                      isActive("/settings")
+                        ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-blue-500 group-hover:text-white"
+                    }`}>
+                      <FiSettings size={18} />
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <span className="text-sm font-medium">Ayarlar</span>
+                    </div>
+                    {isActive("/settings") && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="w-2 h-2 rounded-full bg-blue-500"
+                      />
+                    )}
+                  </Link>
+                </motion.div>
+              </div>
           </>
         )}
       </div>
