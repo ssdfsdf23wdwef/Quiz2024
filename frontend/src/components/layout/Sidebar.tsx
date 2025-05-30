@@ -82,26 +82,26 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
       initial={false}
       animate={{ width: isCollapsed ? "68px" : "240px" }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed top-0 left-0 h-full z-30 border-r border-gray-800/30 bg-[#111827]/95 shadow-lg backdrop-blur-sm transition-colors duration-normal flex flex-col"
+      className="fixed top-0 left-0 h-full z-30 border-r border-border-primary bg-surface-secondary/95 shadow-lg backdrop-blur-sm transition-colors duration-200 flex flex-col"
       style={{ 
         WebkitOverflowScrolling: 'touch',
         scrollbarWidth: 'thin',
         scrollbarColor: 'rgba(75, 85, 99, 0.3) transparent'
       }}
     >
-      {/* Toggle Button - Sağ üst köşede, arka plan olmayan minimal tasarım */}
+      {/* Toggle Button - Sağ üst köşede, tamamen renksiz ve aynı boyutta kalacak şekilde */}
       <button
         onClick={handleToggle}
-        className="absolute top-4 right-2 w-6 h-6 flex items-center justify-center text-gray-400/60 hover:text-gray-300 dark:text-gray-500 dark:hover:text-gray-400 transition-colors duration-200 z-10"
+        className="absolute top-3 right-1.5 w-7 h-7 flex items-center justify-center text-transparent hover:text-text-tertiary/30 transition-colors duration-300 z-10"
         aria-label={isCollapsed ? "Sidebar'ı Aç" : "Sidebar'ı Kapat"}
       >
         <motion.div
           initial={false}
           style={{ width: 16, height: 16 }}
           animate={{ rotate: isCollapsed ? 0 : 180 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
         >
-          <FiChevronLeft size={16} className="stroke-[1.5px]" />
+          <FiChevronLeft size={16} className="stroke-[1.25px] text-inherit" />
         </motion.div>
       </button>
 

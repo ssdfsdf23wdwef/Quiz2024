@@ -14,7 +14,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   size = 'md',
   showLabel = false,
 }) => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, isDarkMode, currentMode } = useTheme();
 
   const sizeClasses = {
     sm: 'w-8 h-8 text-sm',
@@ -32,32 +32,32 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     <button
       onClick={toggleTheme}
       className={`
-        ${sizeClasses[size]}        ${className}
+        ${sizeClasses[size]}
+        ${className}
         inline-flex items-center justify-center
         rounded-md
-        bg-secondary
-        text-primary 
-        border border-primary
-        hover:bg-interactive-hover
+        bg-surface-secondary
+        text-text-primary 
+        border border-border-primary
+        hover:bg-surface-tertiary
         focus:outline-none
         focus:ring-2
-        focus:ring-border-focus
+        focus:ring-blue-500
         focus:ring-offset-2
         shadow-sm
-        transition-all duration-normal
+        transition-all duration-200
         group
       `}
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
-      title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+      aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} theme`}
+      title={`Current: ${currentMode} theme${theme.mode === 'system' ? ' (system)' : ''}`}
     >
       <div className="relative">
-        {/* Sun icon - visible in dark mode */}
-        <svg
+        {/* Sun icon - visible in dark mode */}        <svg
           className={`
             ${iconSize[size]}
             absolute inset-0
-            transform transition-all duration-normal
-            ${theme === 'dark' 
+            transform transition-all duration-200
+            ${isDarkMode 
               ? 'rotate-0 scale-100 opacity-100' 
               : 'rotate-90 scale-0 opacity-0'
             }
@@ -79,8 +79,8 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           className={`
             ${iconSize[size]}
             absolute inset-0
-            transform transition-all duration-normal
-            ${theme === 'light' 
+            transform transition-all duration-200
+            ${!isDarkMode 
               ? 'rotate-0 scale-100 opacity-100' 
               : '-rotate-90 scale-0 opacity-0'
             }
@@ -96,11 +96,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
           />
         </svg>
-      </div>
-
-      {showLabel && (
+      </div>      {showLabel && (
         <span className="ml-2 text-sm font-medium">
-          {theme === 'light' ? 'Koyu' : 'Açık'} Tema
+          {isDarkMode ? 'Light' : 'Dark'} Mode
         </span>
       )}
     </button>

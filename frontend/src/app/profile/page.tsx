@@ -13,7 +13,7 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeProvider";
 import axios from "axios";
 import authService from "@/services/auth.service";
 

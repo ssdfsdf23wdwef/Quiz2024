@@ -66,15 +66,7 @@ function MainLayoutBase({ children }: MainLayoutProps) {
               <Sidebar isCollapsed={isSidebarCollapsed} onToggleCollapse={toggleSidebar} />
               
               {/* Toggle Sidebar Button - Positioned in top-right of sidebar */}
-              <button
-                onClick={toggleSidebar}
-                className={`fixed z-40 p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                  isSidebarCollapsed ? 'top-3 left-3' : 'top-3 right-3'
-                }`}
-                aria-label={isSidebarCollapsed ? "Menüyü Aç" : "Menüyü Kapat"}
-              >
-                <FiMenu className="w-4 h-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
-              </button>
+  
             </div>
           )}
 
