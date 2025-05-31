@@ -8,6 +8,7 @@ import {
   FiAward,
   FiArrowLeft,
   FiArrowRight,
+  FiInfo,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { DocumentUploader } from "../document";
@@ -111,6 +112,23 @@ export default function ExamCreationWizard({
   const [personalizedQuizType, setPersonalizedQuizType] = useState<
     "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive"
   >("comprehensive");
+
+  const handlePersonalizedQuizTypeSelect = (
+    type: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive",
+  ) => {
+    console.log(`🔄 Kişiselleştirilmiş sınav alt türü değişiyor: ${personalizedQuizType} -> ${type}`);
+    setPersonalizedQuizType(type);
+    
+    // Tip uyumluluğunu sağlamak için preferences'ı uygun tipte güncelliyoruz
+    const updatedPreferences: QuizPreferences = {
+      ...preferences,
+      // TypeScript ile uyumlu olması için tip dönüşümü yapıyoruz
+      personalizedQuizType: type as "weakTopicFocused" | "newTopicFocused" | "comprehensive" | undefined,
+    };
+    
+    console.log(`✅ Quiz tercihleri güncellendi: personalizedQuizType = ${type}`);
+    setPreferences(updatedPreferences);
+  };
 
   // Tercihler
   const [preferences, setPreferences] = useState<QuizPreferences>({
@@ -264,7 +282,6 @@ export default function ExamCreationWizard({
           topicIds: [...selectedTopicIds],
           subTopicIds: [...validSubTopicIds],
         };
-        console.log('[ECW useEffect] Preferences updated (due to subTopicIds change):', JSON.stringify(newPrefs));
         return newPrefs;
       });
     } else {
@@ -278,7 +295,6 @@ export default function ExamCreationWizard({
         };
         // Log only if there's a meaningful change to preferences from selectedTopicIds part
         if (JSON.stringify(prev.topicIds) !== JSON.stringify(selectedTopicIds) || JSON.stringify(prev.subTopicIds) !== JSON.stringify(validSubTopicIds)) {
-            console.log('[ECW useEffect] Preferences updated (potentially from selectedTopicIds directly or ensuring consistency):', JSON.stringify(newPrefs));
         }
         return newPrefs;
       });
@@ -298,15 +314,13 @@ export default function ExamCreationWizard({
 
   // Dosya yükleme hatası
   const handleFileUploadError = (errorMsg: string) => {
-    console.error(`❌ HATA: Dosya yükleme hatası: ${errorMsg}`);
     setUploadStatus("error");
     ErrorService.showToast(errorMsg, "error");
   };
 
   // Konuları tespit et
   const handleTopicsDetected = (selectedTopics: string[], courseId: string) => {
-    console.log('[ECW handleTopicsDetected] Received selectedTopics:', JSON.stringify(selectedTopics));
-    console.log('[ECW handleTopicsDetected] Received courseId:', courseId);
+   
 
     if (courseId) {
       setSelectedCourseId(courseId);
@@ -488,21 +502,6 @@ export default function ExamCreationWizard({
   };
 
   // Kişiselleştirilmiş sınav alt türü
-  const handlePersonalizedQuizTypeSelect = (
-    type: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive",
-  ) => {
-    console.log(`🔄 Kişiselleştirilmiş sınav alt türü değişiyor: ${personalizedQuizType} -> ${type}`);
-    setPersonalizedQuizType(type);
-    
-    // Tip hatası giderme: QuizPreferences tipine uygun olacak şekilde
-    const updatedPreferences: QuizPreferences = {
-      ...preferences,
-      personalizedQuizType: type,
-    };
-    
-    console.log(`✅ Quiz tercihleri güncellendi: personalizedQuizType = ${type}`);
-    setPreferences(updatedPreferences);
-  };
 
   // Tercih işlemleri
   const handlePreferenceChange = (
@@ -1040,7 +1039,6 @@ export default function ExamCreationWizard({
       setSelectedSubTopicIds([defaultTopicId]);
       setSelectedTopics([subTopicItem]);
       
-      console.log("[ECW handleFinalSubmit] Varsayılan konu eklendi:", subTopicItem);
     }
 
     if (quizType === "quick") {
@@ -1067,22 +1065,18 @@ export default function ExamCreationWizard({
     }
 
     try {
-      console.log("[ECW handleFinalSubmit] Kontrol: selectedTopics dizisi:", selectedTopics);
-      console.log("[ECW handleFinalSubmit] selectedTopics uzunluğu:", selectedTopics.length);
       
       // Çalışacağımız konuların listesi - varsayılan bir konu eklememiz gerekebilir
       let topicsToUse = [...selectedTopics];
       
       // Eğer topicsToUse boşsa ve bir belge yüklenmişse, otomatik bir konu oluştur
       if (topicsToUse.length === 0 && (uploadedDocumentId || selectedFile)) {
-        console.log("[ECW handleFinalSubmit] Konu seçilmedi ama belge var, otomatik konu oluşturuluyor");
         const fileName = selectedFile?.name || 'belge';
         const defaultTopicId = `belge-${uploadedDocumentId ? uploadedDocumentId.substring(0, 8) : new Date().getTime()}`;
         topicsToUse = [{
           subTopic: `${fileName.replace(/\.[^/.]+$/, "")} İçeriği`,
           normalizedSubTopic: defaultTopicId
         }];
-        console.log("[ECW handleFinalSubmit] Otomatik oluşturulan konu:", topicsToUse);
         
         // State güncellemesi - gerçek bir uygulamada burada yapılmaz ama tutarlılık için ekleyelim
         setSelectedTopicIds([defaultTopicId]);
@@ -1096,23 +1090,14 @@ export default function ExamCreationWizard({
           normalizedSubTopic: topic.normalizedSubTopic,
         };
       });
-      
-      console.log("[ECW handleFinalSubmit] Hazırlanan alt konu nesneleri:", mappedSubTopics);
-      console.log("[ECW handleFinalSubmit] Alt konuların sayısı:", mappedSubTopics.length);
+
       
       // HATA KONTROLÜ: Alt konu sayısı 0 ise, belge ID kontrolü yap
       if (mappedSubTopics.length === 0) {
-        console.error("[ECW handleFinalSubmit] KRİTİK HATA: Alt konu nesneleri boş!");
         
         if (uploadedDocumentId || selectedFile) {
-          console.log("[ECW handleFinalSubmit] Belge var, varsayılan bir konu ekleniyor");
-          mappedSubTopics.push({
-            subTopic: `${fileName.replace(/\.[^/.]+$/, "")} İçeriği`,
-            normalizedSubTopic: `belge-${uploadedDocumentId || Date.now()}`
-          });
-          console.log("[ECW handleFinalSubmit] Varsayılan konu eklendi:", mappedSubTopics);
+          
         } else {
-          console.error("[ECW handleFinalSubmit] Ne konu seçimi ne de belge var! İşlem durduruluyor.");
           toast.error("Lütfen en az bir konu seçin veya bir belge yükleyin.");
           setIsSubmitting(false);
           return;
@@ -1121,7 +1106,6 @@ export default function ExamCreationWizard({
       
       // preferences.subTopicIds var mı kontrol et
       if (!preferences.subTopicIds || preferences.subTopicIds.length === 0) {
-        console.warn("[ECW handleFinalSubmit] preferences.subTopicIds boş, otomatik dolduruyoruz");
         
         // preferences nesnesini güncelle - doğrudan güncellemek yerine setPreferences kullanmak daha güvenli
         const updatedPreferences = {
@@ -1129,7 +1113,6 @@ export default function ExamCreationWizard({
           subTopicIds: mappedSubTopics.map(topic => topic.normalizedSubTopic)
         };
         setPreferences(updatedPreferences);
-        console.log("[ECW handleFinalSubmit] preferences.subTopicIds güncellendi:", updatedPreferences.subTopicIds);
       }
       
     // Sınav oluşturma seçenekleri
@@ -1138,8 +1121,8 @@ export default function ExamCreationWizard({
       courseId: selectedCourseId || undefined,
       personalizedQuizType:
         quizType === "personalized" ? personalizedQuizType : undefined,
-        selectedSubTopics: mappedSubTopics, // Reverted, will fix based on type definition
-        selectedSubTopics: mappedSubTopics.map(topic => topic.normalizedSubTopic),
+      // Kullanılan API'ye göre doğru formatı seçiyoruz
+      selectedSubTopics: mappedSubTopics.map(topic => topic.normalizedSubTopic),
       documentId: uploadedDocumentId || undefined,
       preferences: {
         questionCount: preferences.questionCount,
@@ -1149,35 +1132,13 @@ export default function ExamCreationWizard({
       },
     };
 
-      console.log("[ECW handleFinalSubmit] quizService.generateQuiz çağrılıyor. Seçenekler:", JSON.stringify(quizOptions, null, 2));
 
     try {
-        // Sınav oluştur
-        console.log("[ECW handleFinalSubmit] Sınav oluşturma öncesi son kontroller:");
-        console.log("[ECW handleFinalSubmit] quizOptions:", JSON.stringify(quizOptions, null, 2));
-        console.log("[ECW handleFinalSubmit] selectedSubTopics uzunluğu:", quizOptions.selectedSubTopics?.length);
-        console.log("[ECW handleFinalSubmit] documentId:", quizOptions.documentId);
-        console.log("[ECW handleFinalSubmit] preferences:", JSON.stringify(quizOptions.preferences, null, 2));
-        
-        // API çağrısını izle
-        console.time("[ECW handleFinalSubmit] quizService.generateQuiz süresi");
+      
         const quiz = await quizService.generateQuiz(quizOptions);
-        console.timeEnd("[ECW handleFinalSubmit] quizService.generateQuiz süresi");
+    
         
-        // Detaylı sonuç kontrolü
-        console.log("[ECW handleFinalSubmit] Sınav oluşturma sonucu:", quiz);
-        console.log("[ECW handleFinalSubmit] Quiz ID:", quiz?.id);
-        console.log("[ECW handleFinalSubmit] Quiz soru sayısı:", quiz?.questions?.length || 0);
-        
-        if (!quiz) {
-          console.error("[ECW handleFinalSubmit] KRİTİK HATA: quiz nesnesi boş veya undefined!");
-          throw new Error("Quiz oluşturulamadı - API yanıtı boş");
-        }
-        
-        if (!quiz.id) {
-          console.error("[ECW handleFinalSubmit] KRİTİK HATA: quiz.id yok veya boş!");
-          throw new Error("Quiz ID alınamadı");
-        }
+    
 
       const wizardResultData = {
           file: selectedFile,
@@ -1195,32 +1156,20 @@ export default function ExamCreationWizard({
           error: quiz?.id ? undefined : new ApiError("Sınav oluşturulamadı veya ID alınamadı."),
       };
 
-        console.log("[ECW handleFinalSubmit] Wizard sonuç verisi oluşturuldu:", 
-          JSON.stringify({
-            ...wizardResultData,
-            file: wizardResultData.file ? `File: ${wizardResultData.file.name}` : null 
-          }, null, 2)
-        );
+      
 
         // Başarı durumuna göre yönlendir
         if (quiz?.id) {
-          // Yükleme toast mesajını kapat ve başarı mesajı göster
-          toast.dismiss("quiz-generation-toast");
-          toast.success("Sınav başarıyla oluşturuldu! Yönlendiriliyorsunuz...");
           
           if (onComplete) {
-            console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu çağrılıyor, quizId: ${quiz.id}`);
             onComplete(wizardResultData);
           } else {
-            console.log(`[ECW handleFinalSubmit] onComplete fonksiyonu tanımlı değil, manuel yönlendirme yapılıyor: /exams/${quiz.id}/results`);
             router.push(`/exams/${quiz.id}/results`);
           }
         } else {
-          console.error("[ECW handleFinalSubmit] Sınav ID alınamadı!");
           setErrorMessage("Sınav oluşturuldu ancak ID alınamadı.");
         }
       } catch (error) {
-        console.error("[ECW handleFinalSubmit] Sınav oluşturma hatası:", error);
         
         // Detaylı hata bilgisi
         const errorDetails = {
@@ -1233,28 +1182,19 @@ export default function ExamCreationWizard({
             message: error.message
           } : undefined
         };
-        console.error("[ECW handleFinalSubmit] Hata detayları:", errorDetails);
         
         // Daha detaylı hata bilgisi
         if (error instanceof ApiError) {
-          console.error("[ECW handleFinalSubmit] API Hatası:", error.message, error.cause);
           setErrorMessage(`API Hatası: ${error.message}`);
         } else {
-          console.error("[ECW handleFinalSubmit] Genel hata:", error);
           setErrorMessage(`Hata: ${error instanceof Error ? error.message : String(error)}`);
         }
         
-        // Yükleme mesajını kapat
-        toast.dismiss("quiz-generation-toast");
-        toast.error(`Sınav oluşturulurken bir hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+    
       }
     } catch (error) {
-      console.error("[ECW handleFinalSubmit] Beklenmeyen genel hata:", error);
       setErrorMessage(`Beklenmeyen hata: ${error instanceof Error ? error.message : String(error)}`);
-      
-      // Yükleme mesajını kapat
-      toast.dismiss("quiz-generation-toast");
-      toast.error("Beklenmeyen bir hata oluştu.");
+
     } finally {
       setIsSubmitting(false);
     }
@@ -1315,7 +1255,6 @@ export default function ExamCreationWizard({
                         
                         if (docTextResponse && docTextResponse.text && docTextResponse.text.trim() !== '') {
                           setDocumentTextContent(docTextResponse.text);
-                          console.log(`Belge metni manuel olarak yüklendi: ${docTextResponse.text.length} karakter`);
                           toast.dismiss();
                           toast.success("Belge metni başarıyla yüklendi!");
                         } else {
@@ -1323,7 +1262,6 @@ export default function ExamCreationWizard({
                           toast.error("Belge metni yüklenemedi, metin boş veya geçersiz!");
                         }
                       } catch (error) {
-                        console.error("Belge metni yükleme hatası:", error);
                         toast.dismiss();
                         toast.error("Belge metni yüklenirken hata oluştu!");
                       }
@@ -1473,9 +1411,16 @@ export default function ExamCreationWizard({
 
   // Render
   return (
-    <div className="max-w-3xl mx-auto bg-primary shadow-lg rounded-xl overflow-hidden border border-primary">
-      <div className="p-6 border-b border-primary bg-secondary">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+    <div className="max-w-3xl mx-auto overflow-hidden relative backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-xl dark:shadow-gray-900/30 border border-gray-100 dark:border-gray-800">
+      {/* Decorative gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white/80 to-indigo-50/50 dark:from-gray-800/50 dark:via-gray-900/80 dark:to-indigo-900/30 -z-10 opacity-80"></div>
+      
+      {/* Header with gradient border */}
+      <div className="p-6 border-b border-gray-200/70 dark:border-gray-800/70 bg-white/90 dark:bg-gray-900/90 relative overflow-hidden">
+        {/* Subtle accent gradient */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 opacity-80"></div>
+        
+        <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-100 dark:to-blue-100">
           {quizType === "quick" ? "Hızlı Sınav Oluştur" : "Kişiselleştirilmiş Sınav Oluştur"}
         </h2>
         <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
@@ -1483,12 +1428,15 @@ export default function ExamCreationWizard({
         </p>
       </div>
 
-      <div className="p-6 md:p-8">
-        <ExamCreationProgress 
-          currentStep={currentStep} 
-          totalSteps={totalSteps} 
-          quizType={quizType} 
-        />
+      <div className="p-6 md:p-8 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
+        {/* Progress indicator with enhanced styling */}
+        <div className="mb-8">
+          <ExamCreationProgress 
+            currentStep={currentStep} 
+            totalSteps={totalSteps} 
+            quizType={quizType} 
+          />
+        </div>
 
         <AnimatePresence mode="wait">
           {/* Adım 1: Belge Yükleme */}
@@ -1521,16 +1469,21 @@ export default function ExamCreationWizard({
                 </p>
               )}
               
-              {/* Konu tespiti yüklenme durumu */}
+              {/* Konu tespiti yüklenme durumu - modern glass effect */}
               {topicDetectionStatus === "loading" && (
-                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-md">
+                <div className="mt-6 p-5 backdrop-blur-sm bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 rounded-xl shadow-sm relative overflow-hidden">
+                  {/* Animated gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 -z-10 animate-pulse"></div>
+                  
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
-                    <p className="text-blue-600 dark:text-blue-400 text-sm font-medium">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 mr-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 dark:border-blue-400 border-b-transparent"></div>
+                    </div>
+                    <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
                       Belge içeriği analiz ediliyor ve konular tespit ediliyor...
                     </p>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 text-center">
                     Bu işlem belge boyutuna bağlı olarak 10-30 saniye sürebilir. Lütfen bekleyin.
                   </p>
                 </div>
@@ -1549,31 +1502,39 @@ export default function ExamCreationWizard({
             >
               {quizType === "personalized" && (
                 <>
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                    2. Sınav Odağı ve Konu Seçimi
-                  </h3>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-800 dark:from-blue-300 dark:to-indigo-400">
+                      2. Sınav Odağı ve Konu Seçimi
+                    </h3>
+                    <div className="h-0.5 w-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 opacity-80"></div>
+                  </div>
                   
                   {/* Kişiselleştirilmiş Sınav Alt Türleri */}
                   <div className="mt-2 mb-6">
-                    <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">
+                    <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center">
+                      <FiTarget className="mr-2 text-indigo-500 dark:text-indigo-400" />
                       Sınav Odağı Seçin:
                     </h4>
 
-                    <div className="grid grid-cols-1 gap-3">
-                      {/* Zayıf/Orta Odaklı Sınav */}
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Zayıf/Orta Odaklı Sınav - Glass card with gradient */}
                       <div
                         className={`
-                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
                           ${
                             personalizedQuizType === "weakTopicFocused"
-                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
-                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                              ? "bg-gradient-to-r from-indigo-50/90 to-blue-50/90 dark:from-indigo-900/30 dark:to-blue-900/30 border border-indigo-200/70 dark:border-indigo-700/50 shadow-md"
+                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
                           }
                         `}
                         onClick={() =>
                           handlePersonalizedQuizTypeSelect("weakTopicFocused")
                         }
                       >
+                        {/* Accent gradient line at top */}
+                        {personalizedQuizType === "weakTopicFocused" && (
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-t-xl"></div>
+                        )}
                         <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-red-600 dark:text-red-400">
                           <FiZap />
                         </div>
@@ -1587,20 +1548,24 @@ export default function ExamCreationWizard({
                         </div>
                       </div>
 
-                      {/* Öğrenme Hedefi Odaklı Sınav */}
+                      {/* Öğrenme Hedefi Odaklı Sınav - Glass card with gradient */}
                       <div
                         className={`
-                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
                           ${
                             personalizedQuizType === "learningObjectiveFocused"
-                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
-                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                              ? "bg-gradient-to-r from-violet-50/90 to-indigo-50/90 dark:from-violet-900/30 dark:to-indigo-900/30 border border-violet-200/70 dark:border-violet-700/50 shadow-md"
+                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
                           }
                         `}
                         onClick={() =>
                           handlePersonalizedQuizTypeSelect("learningObjectiveFocused")
                         }
                       >
+                        {/* Accent gradient line at top */}
+                        {personalizedQuizType === "learningObjectiveFocused" && (
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-t-xl"></div>
+                        )}
                         <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-green-600 dark:text-green-400">
                           <FiTarget />
                         </div>
@@ -1614,20 +1579,24 @@ export default function ExamCreationWizard({
                         </div>
                       </div>
 
-                      {/* Yeni Konu Odaklı Sınav */}
+                      {/* Yeni Konu Odaklı Sınav - Glass card with gradient */}
                       <div
                         className={`
-                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
                           ${
                             personalizedQuizType === "newTopicFocused"
-                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
-                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                              ? "bg-gradient-to-r from-blue-50/90 to-cyan-50/90 dark:from-blue-900/30 dark:to-cyan-900/30 border border-blue-200/70 dark:border-blue-700/50 shadow-md"
+                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
                           }
                         `}
                         onClick={() =>
                           handlePersonalizedQuizTypeSelect("newTopicFocused")
                         }
                       >
+                        {/* Accent gradient line at top */}
+                        {personalizedQuizType === "newTopicFocused" && (
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-t-xl"></div>
+                        )}
                         <div className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-yellow-600 dark:text-yellow-400">
                           <FiZap />
                         </div>
@@ -1641,20 +1610,24 @@ export default function ExamCreationWizard({
                         </div>
                       </div>
 
-                      {/* Kapsamlı Sınav */}
+                      {/* Kapsamlı Sınav - Glass card with gradient */}
                       <div
                         className={`
-                          flex items-center border rounded-lg p-4 cursor-pointer transition-all duration-200 ease-in-out
+                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
                           ${
                             personalizedQuizType === "comprehensive"
-                              ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700 ring-1 ring-indigo-500/50 shadow-sm"
-                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                              ? "bg-gradient-to-r from-purple-50/90 to-indigo-50/90 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200/70 dark:border-purple-700/50 shadow-md"
+                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
                           }
                         `}
                         onClick={() =>
                           handlePersonalizedQuizTypeSelect("comprehensive")
                         }
                       >
+                        {/* Accent gradient line at top */}
+                        {personalizedQuizType === "comprehensive" && (
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-t-xl"></div>
+                        )}
                         <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-blue-600 dark:text-blue-400">
                           <FiAward />
                         </div>
@@ -1677,14 +1650,21 @@ export default function ExamCreationWizard({
              
 
                 {personalizedQuizType === "weakTopicFocused" ? (
-                  <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-md text-yellow-800 dark:text-yellow-200">
-                    <p className="text-sm font-medium">Bilgi:</p>
-                    <p className="text-sm">
-                      Zayıf/Orta Odaklı Sınav seçildiğinde, durumu
-                      &lsquo;başarısız&apos; veya &#39;orta&#39; olan mevcut
-                      öğrenme hedefleriniz otomatik olarak kullanılır. Bu
-                      adımda ek konu seçimi gerekmez.
-                    </p>
+                  <div className="mb-6 p-5 backdrop-blur-sm bg-gradient-to-r from-amber-50/90 to-yellow-50/90 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-100/80 dark:border-amber-800/30 rounded-xl shadow-sm text-amber-800 dark:text-amber-200 relative overflow-hidden">
+                    {/* Decorative elements */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-yellow-400 dark:from-amber-500 dark:to-yellow-500"></div>
+                    <div className="pl-4">
+                      <div className="flex items-center mb-2">
+                        <FiInfo className="mr-2 text-amber-500 dark:text-amber-400" />
+                        <p className="text-sm font-medium">Bilgi:</p>
+                      </div>
+                      <p className="text-sm leading-relaxed">
+                        Zayıf/Orta Odaklı Sınav seçildiğinde, durumu
+                        &lsquo;başarısız&apos; veya &#39;orta&#39; olan mevcut
+                        öğrenme hedefleriniz otomatik olarak kullanılır. Bu
+                        adımda ek konu seçimi gerekmez.
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -1700,11 +1680,7 @@ export default function ExamCreationWizard({
                       isLoading={topicDetectionStatus === "loading"}
                       error={undefined}
                       onTopicsSelected={(selectedTopics, courseId) => {
-                        // Konsolda detaylı log göster
-                        console.log("[ECW TopicSelectionScreen.onTopicsSelected] Seçilen konular:", JSON.stringify(selectedTopics));
-                        console.log("[ECW TopicSelectionScreen.onTopicsSelected] Seçilen kurs ID:", courseId);
-
-                        // Alt konuları da güncelle - direkt olarak handleTopicSelectionChange çağır
+                      
                         handleTopicSelectionChange(selectedTopics);
                         
                         // topicId ve courseId parametrelerini birleştir
@@ -1759,40 +1735,48 @@ export default function ExamCreationWizard({
           )}
         </AnimatePresence>
 
-        {/* Gezinme Butonları */}
-        <div className="flex justify-between mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
+        {/* Navigation Buttons with modern styling */}
+        <div className="flex justify-between mt-10 pt-6 border-t border-gray-200/50 dark:border-gray-800/30">
+          {/* Back button with subtle glass effect */}
           <button
             onClick={prevStep}
             disabled={currentStep === 1}
-            className={`px-4 py-2 rounded-md flex items-center text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              currentStep === 1
-                ? "text-gray-400 dark:text-gray-600"
-                : "text-primary bg-secondary hover:bg-interactive-hover"
-            }`}
+            className={`px-5 py-2.5 rounded-xl flex items-center text-sm font-medium transition-all duration-300 backdrop-blur-sm relative ${currentStep === 1
+              ? "text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+              : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white/50 dark:bg-gray-800/30 hover:bg-white/80 dark:hover:bg-gray-800/50 shadow-sm hover:shadow"}`}
           >
-            <FiArrowLeft className="mr-1.5" size={16} /> Geri
+            <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 opacity-0 ${currentStep !== 1 ? "group-hover:opacity-10" : ""} -z-10`}></div>
+            <FiArrowLeft className="mr-2" size={16} /> Geri
           </button>
 
+          {/* Next/Submit button with gradient */}
           <button
             onClick={nextStep}
-            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md text-sm flex items-center transition-colors shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+            className={`px-6 py-2.5 text-white font-medium rounded-xl text-sm flex items-center transition-all duration-300 shadow-sm hover:shadow relative overflow-hidden ${(currentStep === 1 && uploadStatus !== "success") || topicDetectionStatus === "loading" || quizCreationLoading
+              ? "opacity-70 cursor-not-allowed bg-indigo-500"
+              : "bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700"}`}
             disabled={
               (currentStep === 1 && uploadStatus !== "success") || // İlk adımda yükleme bitmeden ilerlemeyi engelle
               topicDetectionStatus === "loading" || // Konu tespiti devam ederken ilerlemeyi engelle
               quizCreationLoading // Sınav oluşturma devam ederken butonu devre dışı bırak
             }
           >
-            {currentStep === totalSteps 
-              ? quizCreationLoading 
-                ? "Sınav Oluşturuluyor..."
-                : "Sınavı Oluştur" 
-              : "Devam Et"
-            }{" "}
-            {topicDetectionStatus === "loading" || quizCreationLoading ? (
-              <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : (
-            <FiArrowRight className="ml-1.5" size={16} />
-            )}
+            {/* Subtle animated glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+            
+            <span className="relative z-10 flex items-center">
+              {currentStep === totalSteps 
+                ? quizCreationLoading 
+                  ? "Sınav Oluşturuluyor..."
+                  : "Sınavı Oluştur" 
+                : "Devam Et"
+              }{" "}
+              {topicDetectionStatus === "loading" || quizCreationLoading ? (
+                <div className="ml-2 animate-spin rounded-full h-4 w-4 border-2 border-white border-b-transparent"></div>
+              ) : (
+                <FiArrowRight className="ml-2" size={16} />
+              )}
+            </span>
           </button>
         </div>
       </div>

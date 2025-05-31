@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FiFilter, FiRefreshCw } from "react-icons/fi";
 import LearningProgress from "@/components/ui/LearningProgress";
+import { ThemeProvider } from "../../context/ThemeContext";
 import courseService from "../../services/course.service";
 import { useLearningTargets } from "../../hooks/useLearningTargetQuery";
 import { useQuery } from "@tanstack/react-query";
@@ -85,13 +86,16 @@ export default function LearningGoalsPage() {
   // Kullanıcı giriş yapmamışsa yükleniyor göster
   if (!user) {
     return (
+      <ThemeProvider>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
+      </ThemeProvider>
     );
   }
 
   return (
+    <ThemeProvider>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
           Öğrenme Hedefleri
@@ -123,6 +127,13 @@ export default function LearningGoalsPage() {
           </button>
         </div>
       </div>
-     
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+      ) : (
+        <LearningProgress weakTopics={weakTopics} strongTopics={strongTopics} />
+      )}
+    </ThemeProvider>
   );
 }
