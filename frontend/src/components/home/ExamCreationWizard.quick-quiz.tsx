@@ -13,10 +13,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { DocumentUploader } from "../document";
 import TopicSelectionScreen from "./TopicSelectionScreen";
-import { ErrorService } from "@/services/error.service";
 import ExamCreationProgress from "./ExamCreationProgress";
-import CourseTopicSelector from "./CourseTopicSelector";
-import courseService from "@/services/course.service";
 import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
 import axios from "axios";
@@ -192,7 +189,6 @@ export default function ExamCreationWizard({
         })
         .catch(error => {
           console.error('[ECW useEffect] Belge metni yüklenirken hata:', error);
-          ErrorService.showToast("Belge içeriği yüklenemedi, lütfen tekrar deneyin.", "error");
         });
     }
     
@@ -218,30 +214,8 @@ export default function ExamCreationWizard({
     }
   }, [initialDocumentId, initialTopics, currentStep]);
 
-  // Kursları yükle
-  useEffect(() => {
-    courseService.getCourses().then((data) => {
-      setCourses(data);
-      if (!selectedCourseId && data.length > 0) {
-        setSelectedCourseId(data[0].id);
-      }
-    });
-  }, []);
+ 
 
-  // Seçili kurs değişince konuları yükle
-  useEffect(() => {
-    if (!selectedCourseId) return;
-    learningTargetService.getLearningTargets(selectedCourseId).then((targets: LearningTarget[]) => {
-      // DetectedSubTopic tipine dönüştür
-      const detected: DetectedSubTopic[] = targets.map((t: LearningTarget) => ({
-        id: t.id,
-        subTopicName: t.subTopicName,
-        normalizedSubTopicName: t.normalizedSubTopicName,
-        status: t.status,
-      }));
-      setCourseTopics(detected);
-    });
-  }, [selectedCourseId]);
 
   // Seçili konulara göre alt konuları filtrele (örnek: burada alt konu = konu ile aynı, gerçek alt konu ilişkisi yoksa)
   useEffect(() => {
@@ -253,11 +227,7 @@ export default function ExamCreationWizard({
 
   // Konu seçimi değiştiğinde alt konu seçimlerini güncelle
   useEffect(() => {
-    console.log('[ECW useEffect] selectedTopicIds changed:', JSON.stringify(selectedTopicIds));
-    console.log('[ECW useEffect] selectedSubTopicIds before processing:', JSON.stringify(selectedSubTopicIds));
-    console.log('[ECW useEffect] topicSubTopics for filtering:', JSON.stringify(topicSubTopics.map(t => t.id)));
-
-    // Önceki seçilen alt konuları filtrele
+ 
     const validSubTopicIds = selectedSubTopicIds.filter((id) => {
       const subTopic = topicSubTopics.find(
         (st: DetectedSubTopic) => st.id === id,
@@ -273,7 +243,9 @@ export default function ExamCreationWizard({
     const isSame = validSubTopicIds.length === selectedSubTopicIds.length &&
       validSubTopicIds.every((id, idx) => id === selectedSubTopicIds[idx]);
 
-    if (!isSame) {
+    // Sonsuz döngüyü önlemek için, topicDetectionStatus === "success" durumunda bu güncellemeyi atlayalım
+    // Bu, konu tespiti tamamlandıktan hemen sonraki ilk render'da bu güncellemeyi atlamak anlamına gelir
+    if (!isSame && topicDetectionStatus !== 'success') {
       setSelectedSubTopicIds(validSubTopicIds);
       console.log('[ECW useEffect] setSelectedSubTopicIds called with:', JSON.stringify(validSubTopicIds));
       setPreferences((prev) => {
@@ -315,7 +287,6 @@ export default function ExamCreationWizard({
   // Dosya yükleme hatası
   const handleFileUploadError = (errorMsg: string) => {
     setUploadStatus("error");
-    ErrorService.showToast(errorMsg, "error");
   };
 
   // Konuları tespit et
@@ -419,15 +390,22 @@ export default function ExamCreationWizard({
 
   // Konu seçimlerini değiştirme fonksiyonu - topicSelectionScreen için
   const handleTopicSelectionChange = (selectedTopicIds: string[]) => {
+    // Eğer önceki seçimlerle aynıysa, hiçbir şey yapma (sonsuz döngüyü önlemek için)
+    if (JSON.stringify(selectedTopicIds) === JSON.stringify(selectedTopicsList)) {
+      console.log(`[ECW handleTopicSelectionChange] Konu seçimleri değişmedi, işlem atlanıyor`);
+      return;
+    }
+    
     console.log(`[ECW handleTopicSelectionChange] Konu seçimleri değişiyor: ${selectedTopicIds.length} konu seçildi`);
     
-    // Seçilen konu ID'lerini güncelle
-    setSelectedTopicIds(selectedTopicIds);
+    // Konu tespiti başarılı olduğunda topicDetectionStatus'ı değiştirelim
+    // Bu, useEffect'teki sonsuz döngüyü önlemek için
+    if (topicDetectionStatus === 'success') {
+      setTopicDetectionStatus('idle');
+    }
     
-    // Seçilen konuların listesini de güncelleyelim
-    setSelectedTopicsList(selectedTopicIds);
-    
-    // Konu listesini güncelle
+    // Tüm state güncellemelerini bir seferde yapalım
+    // React'ın bunları birleştirmesi için
     const updatedTopics: SubTopic[] = selectedTopicIds.map(topicId => {
       const topic = detectedTopics.find(t => t.id === topicId);
       return {
@@ -437,17 +415,22 @@ export default function ExamCreationWizard({
     });
     
     console.log(`[ECW handleTopicSelectionChange] Güncellenmiş konu listesi: ${JSON.stringify(updatedTopics)}`);
-    setSelectedTopics(updatedTopics);
     
-    // Alt konuları da güncelle
-    setSelectedSubTopicIds(selectedTopicIds);
-    
-    // Tercihleri güncelle
-    setPreferences(prev => ({
-      ...prev,
+    // React 18'de state güncellemelerini batch'leme davranışı değişti
+    // Tüm state güncellemelerini bir arada yapmak daha güvenli
+    // Bu, gereksiz yeniden render'ları önler
+    const newPreferences = {
+      ...preferences,
       topicIds: selectedTopicIds,
       subTopicIds: selectedTopicIds
-    }));
+    };
+    
+    // Tüm state güncellemelerini bir kerede yapalım
+    setSelectedTopicIds(selectedTopicIds);
+    setSelectedTopicsList(selectedTopicIds);
+    setSelectedTopics(updatedTopics);
+    setSelectedSubTopicIds(selectedTopicIds);
+    setPreferences(newPreferences);
   };
 
   // Alt konu seçimini değiştir
@@ -548,7 +531,6 @@ export default function ExamCreationWizard({
     // Adım 1 Doğrulama: Dosya Yükleme
     if (currentStep === 1 && (!selectedFile || uploadStatus !== "success")) {
       console.error(`❌ HATA: Dosya yükleme başarısız. Durum: ${uploadStatus}`);
-      ErrorService.showToast("Lütfen geçerli bir dosya yükleyin.", "error");
       return;
     }
 
@@ -577,7 +559,6 @@ export default function ExamCreationWizard({
       selectedTopicIds.length === 0
     ) {
       console.error(`❌ HATA: Konu seçimi yapılmadı. Seçilen konular: ${selectedTopicIds.length}`);
-      ErrorService.showToast("Lütfen en az bir konu seçin.", "error");
       return;
     }
 
@@ -755,11 +736,7 @@ export default function ExamCreationWizard({
           // Metin yükleme hatası olsa bile konu tespiti devam edebilir
         }
       } catch (uploadError) {
-        console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: Dosya yükleme başarısız! ${uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata'}`);
-        ErrorService.showToast(
-          `Dosya yükleme hatası: ${uploadError instanceof Error ? uploadError.message : 'Bilinmeyen hata'}`,
-          "error"
-        );
+       
         setTopicDetectionStatus("error");
         return;
       }
@@ -793,7 +770,6 @@ export default function ExamCreationWizard({
           
           if (!response.data) {
             console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: Boş yanıt alındı!`);
-            ErrorService.showToast("Yanıt alınamadı. Lütfen tekrar deneyin.", "error");
             setTopicDetectionStatus("error");
             return;
           }
@@ -886,13 +862,12 @@ export default function ExamCreationWizard({
             }));
             
             setDetectedTopics(selectedTopics);
-            setTopicDetectionStatus("success");
-            console.log(`[ECW detectTopicsFromUploadedFile] ✅ Konu tespiti başarılı, adım 2'ye geçiliyor.`);
-            setCurrentStep(2); 
-            ErrorService.showToast(`${processedTopics.length} konu tespit edildi.`, "success");
-
+            
             // Tüm konuları otomatik olarak seç
             const allTopicIds = selectedTopics.map(topic => topic.id);
+            
+            // Tüm state güncellemelerini tek bir batch'te yapalım
+            // React'ın state güncellemelerini birleştirmesi için
             setSelectedTopicIds(allTopicIds);
             setSelectedSubTopicIds(allTopicIds); 
             setPreferences(prev => ({ 
@@ -900,10 +875,15 @@ export default function ExamCreationWizard({
               topicIds: allTopicIds,
               subTopicIds: allTopicIds 
             }));
+            
+            // Adım 2'ye geçiş ve başarı durumunu en son güncelleyelim
+            // Bu sayede useEffect'teki kontroller çalışmadan önce diğer state'ler güncellenmiş olur
+            console.log(`[ECW detectTopicsFromUploadedFile] ✅ Konu tespiti başarılı, adım 2'ye geçiliyor.`);
+            setCurrentStep(2);
+            setTopicDetectionStatus("success");
             console.log(`[ECW detectTopicsFromUploadedFile] Tüm konular (${allTopicIds.length}) otomatik seçildi.`);
           } else { 
             console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ UYARI: Tespit edilen konu yok!`);
-            ErrorService.showToast("Belgede konu tespit edilemedi. Varsayılan konular kullanılacak.", "info");
             
             // Varsayılan bir konu oluştur
             const defaultTopicId = `default-${uploadedDocumentId.substring(0, 8)}`;
@@ -940,38 +920,18 @@ export default function ExamCreationWizard({
               subTopicIds: [defaultTopicId]
             }));
             
-            console.log('[ECW detectTopicsFromUploadedFile] ℹ️ Varsayılan konu oluşturuldu, adım 2\'ye geçiliyor.');
               setCurrentStep(2);
-            console.log(`[ECW detectTopicsFromUploadedFile] Varsayılan konu ID: ${defaultTopicId}, isim: ${defaultTopicName}`);
           }
         } catch (error: unknown) {
-          console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: API isteği başarısız!`, error);
           setTopicDetectionStatus("error");
           
           // Hata AxiosError tipinde mi kontrol et
           const isAxiosError = axios.isAxiosError(error);
           
-          // Hata detaylarını kapsamlı bir şekilde logla
-          console.error(`🔍 Hata detayları:`, { 
-            message: isAxiosError ? error.message : String(error),
-            status: isAxiosError && error.response ? error.response.status : 'N/A',
-            statusText: isAxiosError && error.response ? error.response.statusText : 'N/A',
-            data: isAxiosError && error.response ? error.response.data : {},
-            config: isAxiosError ? {
-              url: error.config?.url,
-              method: error.config?.method,
-              headers: error.config?.headers,
-            } : {}
-          });
-          
-              ErrorService.showToast(
-            `Konu tespiti başarısız oldu: ${isAxiosError && error.response ? error.response.status : 'Bağlantı hatası'}`,
-                "error"
-              );
+     
           
           // Hızlı sınav için hatasız devam et (PRD'ye göre hata toleransı yüksek olmalı)
           if (quizType === "quick") {
-            console.log("🚀 Hızlı sınav için boş konu listesiyle devam ediliyor");
             const defaultTopics = generateDefaultTopicsFromFileName(file.name);
             setDetectedTopics(defaultTopics);
             setTopicDetectionStatus("success");
@@ -979,20 +939,12 @@ export default function ExamCreationWizard({
           }
         }
       } else {
-        console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: Belge ID bulunamadı!`);
         setTopicDetectionStatus("error");
-        ErrorService.showToast(
-          "Belge yüklendi ancak ID alınamadı. Lütfen tekrar deneyin.",
-          "error"
-        );
+       
       }
     } catch (error) {
-      console.error(`[ECW detectTopicsFromUploadedFile] ❌ HATA: Dosya işleme genel hata! ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
       setTopicDetectionStatus("error");
-      ErrorService.showToast(
-        `Dosya işlenirken bir hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
-        "error"
-      );
+    
     }
   };
 
@@ -1170,27 +1122,9 @@ export default function ExamCreationWizard({
           setErrorMessage("Sınav oluşturuldu ancak ID alınamadı.");
         }
       } catch (error) {
-        
-        // Detaylı hata bilgisi
-        const errorDetails = {
-          errorType: error instanceof Error ? error.constructor.name : typeof error,
-          message: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          apiError: error instanceof ApiError ? {
-            cause: error.cause,
-            name: error.name,
-            message: error.message
-          } : undefined
-        };
-        
-        // Daha detaylı hata bilgisi
-        if (error instanceof ApiError) {
-          setErrorMessage(`API Hatası: ${error.message}`);
-        } else {
-          setErrorMessage(`Hata: ${error instanceof Error ? error.message : String(error)}`);
-        }
-        
     
+        
+   
       }
     } catch (error) {
       setErrorMessage(`Beklenmeyen hata: ${error instanceof Error ? error.message : String(error)}`);
@@ -1717,27 +1651,7 @@ export default function ExamCreationWizard({
                   </>
                 )}
 
-                {/* Ders ve Alt Konu Seçici - Kişiselleştirilmiş sınav için gerekli */}
-                {quizType === "personalized" && personalizedQuizType !== "weakTopicFocused" && (
-                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Ders ve Alt Konu Seçimi
-                    </h4>
-                    <CourseTopicSelector
-                      courses={courses}
-                      selectedCourseId={selectedCourseId}
-                      handleCourseChange={handleCourseChangeAdapter}
-                      courseTopics={courseTopics}
-                      selectedTopicIds={selectedTopicIds}
-                      handleTopicToggle={handleTopicToggle}
-                      topicSubTopics={topicSubTopics}
-                      selectedSubTopicIds={selectedSubTopicIds}
-                      handleSubTopicToggle={handleSubTopicToggle}
-                      quizType={quizType}
-                      personalizedQuizType={personalizedQuizType}
-                    />
-                  </div>
-                )}
+                
               </div>
             </motion.div>
           )}

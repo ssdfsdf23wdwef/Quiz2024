@@ -145,8 +145,8 @@ export default function TopicSelectionScreen({
       return;
     }
 
-    let baseTopicsRaw: Omit<TopicData, 'isSelected'>[] = [];
     const existingTopicIds = new Set(existingTopics.map((t) => t.id));
+    let baseTopicsRaw: TopicData[] = [];
 
     if (quizType === "quick") {
       baseTopicsRaw = [...detectedTopics];
@@ -175,7 +175,6 @@ export default function TopicSelectionScreen({
       if (initialSelectedTopicIds && initialSelectedTopicIds.length > 0) {
         initialSelectionIds = initialSelectedTopicIds;
       } else {
-        // Başlangıçta seçili ID yoksa ve zayıf konu odaklı değilse tüm konuları seç (orijinal davranış)
         if (personalizedQuizType !== 'weakTopicFocused') {
             initialSelectionIds = baseTopicsRaw.map(t => t.id);
         } else {
@@ -188,7 +187,10 @@ export default function TopicSelectionScreen({
         isSelected: initialSelectionIds.includes(topic.id),
       }));
       
-      onTopicSelectionChange(initialSelectionIds);
+      // Sonsuz döngüyü önlemek için useEffect'in dışında bir kez çağıralım
+      setTimeout(() => {
+        onTopicSelectionChange(initialSelectionIds);
+      }, 0);
       setOnInitialLoad(false);
     } else {
       // Başlangıç yüklemesi değilse (örn: detectedTopics değişti),
@@ -198,8 +200,12 @@ export default function TopicSelectionScreen({
         ...topic,
         isSelected: true, // Orijinal davranış: bağımlılıklar değişince tümünü seç
       }));
+      
+      // Sonsuz döngüyü önlemek için useEffect'in dışında bir kez çağıralım
       const selectedIds = finalTopicsWithSelection.filter(t => t.isSelected).map(t => t.id);
-      onTopicSelectionChange(selectedIds);
+      setTimeout(() => {
+        onTopicSelectionChange(selectedIds);
+      }, 0);
     }
     
     setFilteredTopics(finalTopicsWithSelection);

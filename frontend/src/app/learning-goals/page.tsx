@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FiFilter, FiRefreshCw } from "react-icons/fi";
 import LearningProgress from "@/components/ui/LearningProgress";
-import { ThemeProvider } from "../../context/ThemeContext";
+import { ThemeProvider } from "../../context/ThemeProvider";
 import courseService from "../../services/course.service";
 import { useLearningTargets } from "../../hooks/useLearningTargetQuery";
 import { useQuery } from "@tanstack/react-query";
