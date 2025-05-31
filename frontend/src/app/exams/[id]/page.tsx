@@ -2,10 +2,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTheme } from "@/context/ThemeProvider";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Clock, Flag, CheckCircle, XCircle, Info, ChevronLeft, ChevronRight, Award, ListChecks, BarChart3 } from "lucide-react";
+import { Clock, Flag, CheckCircle, XCircle, Info, ChevronLeft, Award, ListChecks, BarChart3 } from "lucide-react";
 import { Quiz, Question, QuizType, QuizSubmissionPayload, DifficultyLevel } from "@/types/quiz.type";
 import quizService from "@/services/quiz.service";
 import { ErrorService } from "@/services/error.service";
@@ -44,6 +45,7 @@ export default function ExamPage() {
   const [remainingTime, setRemainingTime] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const { isDarkMode, theme } = useTheme();
 
   // Sınav verilerini yükle
   useEffect(() => {
@@ -110,18 +112,6 @@ export default function ExamPage() {
     loadQuiz();
   }, [params.id]); // ensureQuestionSubTopics bağımlılıklardan çıkarıldı, çünkü sayfa içinde tanımlı ve değişmiyor.
 
-  // Quiz state değiştiğinde logla
-  useEffect(() => {
-    if (quiz) {
-      console.log("[DEBUG] Quiz state güncellendi:", JSON.stringify(quiz, null, 2));
-      // Özellikle soruları ve alt konularını kontrol edelim
-      if (quiz.questions) {
-        quiz.questions.forEach((q, index) => {
-          console.log(`[DEBUG] Quiz state - Soru ${index + 1} (${q.id}): subTopic='${q.subTopic}', normalizedSubTopic='${q.normalizedSubTopic}'`);
-        });
-      }
-    }
-  }, [quiz]);
 
   // Timer
   useEffect(() => {
@@ -1069,11 +1059,11 @@ export default function ExamPage() {
   // Yükleme durumu
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-primary p-4">
-        <div className="text-center">
-          <div className="w-20 h-20 border-t-4 border-b-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <h2 className="text-2xl font-semibold mb-2">Sınav Yükleniyor...</h2>
-          <p className="text-secondary">Lütfen bekleyin, sınavınız hazırlanıyor.</p>
+      <div className={`flex flex-col items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900 text-gray-200' : 'bg-gray-50 text-gray-800'} p-4`}>
+        <div className={`text-center p-8 rounded-2xl shadow-xl ${isDarkMode ? 'bg-gray-800/70 border border-gray-700/50' : 'bg-white/90 border border-gray-200/50'} backdrop-blur-lg`}>
+          <div className={`w-20 h-20 border-4 ${isDarkMode ? 'border-blue-500 border-t-blue-500/20' : 'border-blue-600 border-t-blue-600/20'} rounded-full animate-spin mx-auto mb-6`}></div>
+          <h2 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400' : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600'}`}>Sınav Yükleniyor...</h2>
+          <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Lütfen bekleyin, sınavınız hazırlanıyor.</p>
         </div>
       </div>
     );
@@ -1082,21 +1072,28 @@ export default function ExamPage() {
   // Sınav bulunamadı
   if (!quiz) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-surface text-primary p-4">
-        <div className="text-center p-8 bg-elevated rounded-xl shadow-2xl max-w-md">
-          <XCircle className="w-16 h-16 text-state-error mx-auto mb-6" />
-          <h2 className="text-3xl font-bold text-primary mb-4">Sınav Bulunamadı</h2>
-          <p className="text-tertiary mb-8">
+      <div className={`flex flex-col items-center justify-center min-h-screen ${isDarkMode ? 'bg-gray-900 text-gray-200' : 'bg-gray-50 text-gray-800'} p-4`}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className={`text-center p-8 rounded-xl shadow-xl max-w-md ${isDarkMode ? 'bg-gray-800/80 border border-gray-700/60' : 'bg-white/90 border border-gray-200/60'} backdrop-blur-lg`}
+        >
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${isDarkMode ? 'bg-red-500/10' : 'bg-red-500/10'}`}>
+            <XCircle className="w-16 h-16 text-red-500 mx-auto" />
+          </div>
+          <h2 className={`text-3xl font-bold mb-4 ${isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-300' : 'text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500'}`}>Sınav Bulunamadı</h2>
+          <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-8`}>
             Aradığınız sınav mevcut değil veya erişim yetkiniz bulunmuyor. Lütfen sınav listesine geri dönün.
           </p>
           <Link
             href="/exams"
-            className="inline-flex items-center px-6 py-3 bg-brand-primary text-inverse font-semibold rounded-lg hover:bg-brand-primary/90 transition-colors duration-150 shadow-md hover:shadow-lg"
+            className={`inline-flex items-center px-6 py-3 font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
           >
             <ChevronLeft size={20} className="mr-2" />
             Sınav Listesine Dön
           </Link>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -1200,21 +1197,23 @@ export default function ExamPage() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface to-brand-primary/10 text-primary selection:bg-brand-primary selection:text-inverse pt-20 relative z-0"> {/* z-0 ekleyerek header altında kalmasını sağlıyoruz */}
+    <div className={`min-h-screen pt-20 relative z-0 selection:bg-blue-500/30 ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-800'}`}>
       <div className="container mx-auto px-4 py-4 md:py-8">
         {/* Sayfa başlığı ve geri butonu */}
-        <div className="sticky top-[72px] z-10 bg-surface/95 backdrop-blur-sm py-3 px-4 rounded-lg shadow-sm mb-6 flex items-center">
-          <Link href="/exams" className="mr-3 p-2 bg-surface rounded-full hover:bg-surface-hover transition-colors">
-            <ChevronLeft size={20} className="text-tertiary" />
+        <div className={`sticky top-[72px] z-10 py-3 px-4 rounded-lg mb-6 flex items-center ${isDarkMode ? 'bg-gray-800/80 backdrop-blur-md shadow-lg border border-gray-700/50' : 'bg-white/90 backdrop-blur-md shadow-md border border-gray-200/50'}`}>
+          <Link href="/exams" className={`mr-3 p-2 rounded-full transition-all duration-200 ${isDarkMode ? 'bg-gray-700/70 hover:bg-gray-600/70 text-gray-300 hover:text-white' : 'bg-gray-100/70 hover:bg-gray-200/70 text-gray-600 hover:text-gray-800'}`}>
+            <ChevronLeft size={20} />
           </Link>
-          <h1 className="text-xl font-medium text-primary">Sınav</h1>
+          <h1 className={`text-xl font-medium ${isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300' : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500'}`}>Sınav</h1>
           
           {/* Timer gösterimi */}
           {remainingTime !== null && (
             <div className="ml-auto flex items-center">
-              <div className="flex items-center px-3 py-1.5 rounded-full bg-state-infoBg text-state-info text-sm font-medium">
-                <Clock size={14} className="mr-1.5" />
-                {formatTime(remainingTime)}
+              <div className={`flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all ${remainingTime < 60 
+                ? (isDarkMode ? 'bg-red-900/40 text-red-300 border border-red-700/50' : 'bg-red-100 text-red-700 border border-red-200/70') 
+                : (isDarkMode ? 'bg-blue-900/30 text-blue-300 border border-blue-700/40' : 'bg-blue-50 text-blue-700 border border-blue-200/70')}`}>
+                <Clock size={14} className={`mr-1.5 ${remainingTime < 60 ? (isDarkMode ? 'text-red-400' : 'text-red-500') : ''}`} />
+                <span className={`font-mono ${remainingTime < 60 ? 'font-bold' : ''}`}>{formatTime(remainingTime)}</span>
               </div>
             </div>
           )}
