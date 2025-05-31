@@ -848,25 +848,46 @@ export default function ExamPage() {
     const processedQuestion = ensureQuestionSubTopics(question);
     const subTopicName = processedQuestion.subTopic || "Belirtilmemiş";
     const difficultyMap = {
-      easy: { text: "Kolay", color: "text-state-success", bg: "bg-state-successBg" },
-      medium: { text: "Orta", color: "text-state-warning", bg: "bg-state-warningBg" },
-      hard: { text: "Zor", color: "text-state-error", bg: "bg-state-errorBg" },
-      mixed: { text: "Karma", color: "text-state-info", bg: "bg-state-infoBg" },
+      easy: { 
+        text: "Kolay", 
+        color: isDarkMode ? "text-green-400" : "text-green-600", 
+        bg: isDarkMode ? "bg-green-900/30" : "bg-green-100" 
+      },
+      medium: { 
+        text: "Orta", 
+        color: isDarkMode ? "text-yellow-400" : "text-yellow-600", 
+        bg: isDarkMode ? "bg-yellow-900/30" : "bg-yellow-100" 
+      },
+      hard: { 
+        text: "Zor", 
+        color: isDarkMode ? "text-red-400" : "text-red-600", 
+        bg: isDarkMode ? "bg-red-900/30" : "bg-red-100" 
+      },
+      mixed: { 
+        text: "Karma", 
+        color: isDarkMode ? "text-blue-400" : "text-blue-600", 
+        bg: isDarkMode ? "bg-blue-900/30" : "bg-blue-100" 
+      },
     };
     const difficultyInfo = difficultyMap[processedQuestion.difficulty || 'medium'] || difficultyMap.medium;
 
     return (
-      <div className="bg-elevated rounded-md shadow-sm p-4 max-w-3xl mx-auto">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`rounded-lg p-5 max-w-3xl mx-auto mb-6 shadow-lg ${isDarkMode ? 'bg-gray-800/80 backdrop-blur-sm border border-gray-700/50' : 'bg-white/90 backdrop-blur-sm border border-gray-200/50'}`}
+      >
         {/* Soru Başlığı */}
-        <div className="flex flex-wrap items-center justify-between mb-3 gap-2">
+        <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
           <div className="flex items-center">
-            <span className="bg-brand-primary text-inverse w-8 h-8 rounded-full flex items-center justify-center font-bold mr-2">
+            <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-2 ${isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`}>
               {index + 1}
             </span>
-            <span className={`text-xs px-2 py-1 rounded-full ${difficultyInfo.bg} ${difficultyInfo.color}`}>
+            <span className={`text-xs px-2 py-1 rounded-full ${difficultyInfo.bg} ${difficultyInfo.color} border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               {difficultyInfo.text}
             </span>
-            <span className="text-xs text-tertiary ml-2">
+            <span className={`text-xs ml-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               {subTopicName}
             </span>
           </div>
@@ -882,10 +903,9 @@ export default function ExamPage() {
                 }
                 setFlaggedQuestions(newFlagged);
               }}
-              className={`p-1.5 rounded-full transition-colors ${
-                flaggedQuestions.has(index)
-                  ? "bg-state-errorBg text-state-error"
-                  : "bg-surface text-tertiary hover:bg-surface-hover"
+              className={`p-1.5 rounded-full transition-all ${flaggedQuestions.has(index)
+                ? (isDarkMode ? "bg-red-900/40 text-red-400 hover:bg-red-900/60" : "bg-red-100 text-red-500 hover:bg-red-200")
+                : (isDarkMode ? "bg-gray-700 text-gray-400 hover:bg-gray-600" : "bg-gray-100 text-gray-500 hover:bg-gray-200")
               }`}
             >
               <Flag size={16} />
@@ -894,18 +914,18 @@ export default function ExamPage() {
         </div>
         
         {/* Soru Metni */}
-        <p className="text-primary text-base mb-4 font-medium">{processedQuestion.questionText}</p>
+        <p className={`text-base mb-5 font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{processedQuestion.questionText}</p>
 
         {/* Şıklar */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {processedQuestion.options.map((option, optionIndex) => (
             <div
               key={optionIndex}
-              className={`py-2 px-3 rounded cursor-pointer transition-all duration-150 ease-in-out
+              className={`py-2.5 px-4 rounded-lg cursor-pointer transition-all duration-200 ease-in-out
                         flex items-center
                         ${userAnswers[processedQuestion.id] === option
-                            ? "bg-brand-primary bg-opacity-10"
-                            : "hover:bg-surface-hover"
+                            ? (isDarkMode ? "bg-blue-900/30 border border-blue-700/50" : "bg-blue-50 border border-blue-200")
+                            : (isDarkMode ? "hover:bg-gray-700/80 border border-gray-700/50" : "hover:bg-gray-50 border border-gray-200/60")
                         }`}
               onClick={() => {
                 setUserAnswers((prev) => ({
@@ -915,16 +935,20 @@ export default function ExamPage() {
               }}
             >
               <span className={`mr-3 flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center
-                              ${userAnswers[processedQuestion.id] === option ? 'border-brand-primary bg-brand-primary' : 'border-border-secondary'}`}>
-                {userAnswers[processedQuestion.id] === option && <CheckCircle size={12} className="text-inverse" />}
+                              ${userAnswers[processedQuestion.id] === option 
+                                ? (isDarkMode ? 'border-blue-500 bg-blue-500' : 'border-blue-500 bg-blue-500') 
+                                : (isDarkMode ? 'border-gray-600' : 'border-gray-300')}`}>
+                {userAnswers[processedQuestion.id] === option && <CheckCircle size={12} className="text-white" />}
               </span>
-              <span className={`${userAnswers[processedQuestion.id] === option ? 'text-primary font-medium' : 'text-secondary'}`}>
+              <span className={`${userAnswers[processedQuestion.id] === option 
+                ? (isDarkMode ? 'text-blue-300 font-medium' : 'text-blue-700 font-medium') 
+                : (isDarkMode ? 'text-gray-300' : 'text-gray-700')}`}>
                 {option}
               </span>
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   };
   
@@ -932,7 +956,7 @@ export default function ExamPage() {
     const score = calculateScore();
     // Analiz sonuçlarını localStorage'dan al
     if (!quiz) {
-      return <div className="text-center p-8 text-secondary">Sınav sonuçları yükleniyor veya bulunamadı...</div>;
+      return <div className={`text-center p-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Sınav sonuçları yükleniyor veya bulunamadı...</div>;
     }
     const quizAnalysisData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(`quizAnalysis_${quiz.id}`) || '{}') : {};
     const analysis = quizAnalysisData.analysisResult || {};
@@ -943,23 +967,31 @@ export default function ExamPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-elevated p-6 sm:p-8 rounded-xl shadow-2xl max-w-3xl mx-auto"
+        className={`p-6 sm:p-8 rounded-xl shadow-xl max-w-3xl mx-auto ${isDarkMode ? 'bg-gray-800/80 backdrop-blur-sm border border-gray-700/50' : 'bg-white/90 backdrop-blur-sm border border-gray-200/50'}`}
       >
         <div className="text-center mb-10">
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 120 }}
-            className="w-28 h-28 mx-auto bg-gradient-to-br from-brand-primary to-brand-accent rounded-full flex flex-col items-center justify-center shadow-lg mb-6"
+            className={`w-28 h-28 mx-auto rounded-full flex flex-col items-center justify-center shadow-lg mb-6 ${score >= 70 
+              ? (isDarkMode ? 'bg-gradient-to-br from-green-600 to-emerald-500' : 'bg-gradient-to-br from-green-500 to-emerald-400') 
+              : score >= 50 
+                ? (isDarkMode ? 'bg-gradient-to-br from-yellow-600 to-amber-500' : 'bg-gradient-to-br from-yellow-500 to-amber-400')
+                : (isDarkMode ? 'bg-gradient-to-br from-red-600 to-orange-500' : 'bg-gradient-to-br from-red-500 to-orange-400')}`}
           >
-            <Award size={40} className="text-inverse mb-1" />
-            <span className="text-3xl font-bold text-inverse">{score}%</span>
+            <Award size={40} className="text-white mb-1" />
+            <span className="text-3xl font-bold text-white">{score}%</span>
           </motion.div>
-          <h2 className="text-4xl font-bold text-primary mb-3">
+          <h2 className={`text-4xl font-bold mb-3 ${isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300' : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500'}`}>
             Sınav Tamamlandı!
           </h2>
-          <p className="text-lg text-secondary">
-            Toplam puanınız: <span className="font-bold text-primary">{score}%</span> (
+          <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            Toplam puanınız: <span className={`font-bold ${score >= 70 
+              ? (isDarkMode ? 'text-green-400' : 'text-green-600') 
+              : score >= 50 
+                ? (isDarkMode ? 'text-yellow-400' : 'text-yellow-600')
+                : (isDarkMode ? 'text-red-400' : 'text-red-600')}`}>{score}%</span> (
             {
               quiz?.questions?.filter(
                 (q) => userAnswersFromStorage[q.id] === q.correctAnswer,
