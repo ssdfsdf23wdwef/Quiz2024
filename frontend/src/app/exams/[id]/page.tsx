@@ -1028,61 +1028,96 @@ export default function ExamPage() {
         )}
 
         <div className="space-y-6 mb-10">
-          <h3 className="text-xl font-semibold text-primary mb-4">Yanıtlarınızın İncelenmesi</h3>
+          <h3 className={`text-xl font-semibold mb-5 ${isDarkMode ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300' : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500'}`}>Yanıtlarınızın İncelenmesi</h3>
           {quiz.questions.map((question, index) => {
             const userAnswer = userAnswersFromStorage[question.id]; // userAnswersFromStorage kullanıldı
             const isCorrect = userAnswer === question.correctAnswer;
             const questionData = ensureQuestionSubTopics(question); // Ensure subtopics are present
 
             return (
-              <div key={question.id} className={`p-5 rounded-lg shadow-md ${isCorrect ? 'bg-state-successBg border-l-4 border-state-success' : 'bg-state-errorBg border-l-4 border-state-error'}`}>
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-md font-semibold text-primary">
-                    Soru {index + 1}: <span className="text-sm text-secondary">({questionData.subTopic || "Genel Konu"})</span>
+              <motion.div 
+                key={question.id} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className={`p-5 rounded-lg shadow-md mb-4 ${isCorrect 
+                  ? (isDarkMode ? 'bg-green-900/20 border-l-4 border-green-500' : 'bg-green-50 border-l-4 border-green-500') 
+                  : (isDarkMode ? 'bg-red-900/20 border-l-4 border-red-500' : 'bg-red-50 border-l-4 border-red-500')}`}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className={`text-md font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                    Soru {index + 1}: <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>({questionData.subTopic || "Genel Konu"})</span>
                   </h4>
-                  {isCorrect ? (
-                    <CheckCircle className="w-6 h-6 text-state-success flex-shrink-0" />
-                  ) : (
-                    <XCircle className="w-6 h-6 text-state-error flex-shrink-0" />
-                  )}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isCorrect 
+                    ? (isDarkMode ? 'bg-green-900/30 text-green-400' : 'bg-green-100 text-green-600') 
+                    : (isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-100 text-red-600')}`}>
+                    {isCorrect ? (
+                      <CheckCircle className="w-5 h-5" />
+                    ) : (
+                      <XCircle className="w-5 h-5" />
+                    )}
+                  </div>
                 </div>
-                <p className="text-primary mb-3">{question.questionText}</p>
-                <div className="space-y-2 text-sm">
-                  <p className={`font-medium ${isCorrect ? 'text-state-success' : 'text-state-error'}`}>
-                    Sizin Cevabınız: <span className="font-normal">{userAnswer || "Boş bırakıldı"}</span>
-                  </p>
-                  {!isCorrect && (
-                    <p className="text-state-success font-medium">
-                      Doğru Cevap: <span className="font-normal">{question.correctAnswer}</span>
+                <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{question.questionText}</p>
+                <div className="space-y-3 text-sm">
+                  <div className={`p-3 rounded-md ${isCorrect 
+                    ? (isDarkMode ? 'bg-green-900/20 border border-green-800/50' : 'bg-green-50 border border-green-200') 
+                    : (isDarkMode ? 'bg-red-900/20 border border-red-800/50' : 'bg-red-50 border border-red-200')}`}>
+                    <p className={`font-medium ${isCorrect 
+                      ? (isDarkMode ? 'text-green-400' : 'text-green-600') 
+                      : (isDarkMode ? 'text-red-400' : 'text-red-600')}`}>
+                      Sizin Cevabınız: <span className={`font-normal ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{userAnswer || "Boş bırakıldı"}</span>
                     </p>
+                  </div>
+                  {!isCorrect && (
+                    <div className={`p-3 rounded-md ${isDarkMode ? 'bg-green-900/20 border border-green-800/50' : 'bg-green-50 border border-green-200'}`}>
+                      <p className={`font-medium ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        Doğru Cevap: <span className={`font-normal ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{question.correctAnswer}</span>
+                      </p>
+                    </div>
                   )}
                 </div>
                 {question.explanation && (
-                  <div className="mt-3 pt-3 border-t border-border-secondary">
-                    <p className="text-xs text-secondary font-medium">Açıklama:</p>
-                    <p className="text-xs text-tertiary">{question.explanation}</p>
+                  <div className={`mt-4 pt-3 ${isDarkMode ? 'border-t border-gray-700' : 'border-t border-gray-200'}`}>
+                    <p className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Açıklama:</p>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{question.explanation}</p>
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/exams"
-            className="flex items-center justify-center px-6 py-3 border border-border-primary rounded-lg hover:bg-surface-hover text-secondary font-medium transition-colors duration-150 shadow-sm hover:shadow-md"
+        <div className="flex flex-col sm:flex-row gap-5 justify-center mt-10 mb-6">
+          <motion.div 
+            whileHover={{ scale: 1.03 }} 
+            whileTap={{ scale: 0.98 }}
+            className="relative group"
           >
-            <ListChecks size={18} className="mr-2" />
-            Sınav Listesi
-          </Link>
-          <Link
-            href={`/performance/quiz/${quiz.id}`} // Dinamik performans sayfasına yönlendirme
-            className="flex items-center justify-center px-6 py-3 bg-brand-primary text-inverse font-semibold rounded-lg hover:bg-brand-primaryHover transition-colors duration-150 shadow-md hover:shadow-lg"
+            <div className={`absolute inset-0 rounded-lg blur opacity-30 group-hover:opacity-40 transition-opacity ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
+            <Link
+              href="/exams"
+              className={`relative flex items-center justify-center px-7 py-3.5 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg ${isDarkMode ? 'bg-gray-800/90 hover:bg-gray-700/90 text-gray-300 border border-gray-700/50' : 'bg-white/90 hover:bg-gray-50/90 text-gray-700 border border-gray-200/50'}`}
+            >
+              <ListChecks size={18} className={`mr-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              Sınav Listesi
+            </Link>
+          </motion.div>
+          
+          <motion.div 
+            whileHover={{ scale: 1.03 }} 
+            whileTap={{ scale: 0.98 }}
+            className="relative group"
           >
-            <BarChart3 size={18} className="mr-2" />
-            Detaylı Performans Analizi
-          </Link>
+            <div className={`absolute inset-0 rounded-lg blur opacity-40 group-hover:opacity-60 transition-opacity ${isDarkMode ? 'bg-blue-500' : 'bg-blue-400'}`}></div>
+            <Link
+              href={`/performance/quiz/${quiz.id}`}
+              className={`relative flex items-center justify-center px-7 py-3.5 font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg ${isDarkMode ? 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white' : 'bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white'}`}
+            >
+              <BarChart3 size={18} className="mr-2" />
+              Detaylı Performans Analizi
+            </Link>
+          </motion.div>
         </div>
       </motion.div>
     );
