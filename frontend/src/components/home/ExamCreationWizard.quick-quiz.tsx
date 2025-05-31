@@ -14,7 +14,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DocumentUploader } from "../document";
 import TopicSelectionScreen from "./TopicSelectionScreen";
 import ExamCreationProgress from "./ExamCreationProgress";
-import learningTargetService from "@/services/learningTarget.service";
 import documentService from "@/services/document.service";
 import axios from "axios";
 import {
@@ -26,9 +25,7 @@ import {
 import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
 import { SubTopicItem as SubTopic } from "@/types/quiz.type"; // Updated import
-import { LearningTarget } from "@/types/learningTarget.type";
 import { useRouter } from "next/navigation";
-import { ApiError } from "@/services/error.service"; 
 import { Quiz } from "@/types";
 
 
@@ -51,7 +48,6 @@ interface ExamCreationWizardProps {
     quizId?: string;
     documentId?: string;
     status?: 'success' | 'error';
-    error?: Error | ApiError; // Hata durumu
   }) => void;
 }
 
@@ -105,27 +101,8 @@ export default function ExamCreationWizard({
   // Seçilen konular (alt konu olarak)
   const [selectedTopics, setSelectedTopics] = useState<SubTopic[]>([]);
 
-  // Kişiselleştirilmiş sınav alt türü - sadece personalized modda kullanılıyor
-  const [personalizedQuizType, setPersonalizedQuizType] = useState<
-    "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive"
-  >("comprehensive");
 
-  const handlePersonalizedQuizTypeSelect = (
-    type: "weakTopicFocused" | "learningObjectiveFocused" | "newTopicFocused" | "comprehensive",
-  ) => {
-    console.log(`🔄 Kişiselleştirilmiş sınav alt türü değişiyor: ${personalizedQuizType} -> ${type}`);
-    setPersonalizedQuizType(type);
-    
-    // Tip uyumluluğunu sağlamak için preferences'ı uygun tipte güncelliyoruz
-    const updatedPreferences: QuizPreferences = {
-      ...preferences,
-      // TypeScript ile uyumlu olması için tip dönüşümü yapıyoruz
-      personalizedQuizType: type as "weakTopicFocused" | "newTopicFocused" | "comprehensive" | undefined,
-    };
-    
-    console.log(`✅ Quiz tercihleri güncellendi: personalizedQuizType = ${type}`);
-    setPreferences(updatedPreferences);
-  };
+
 
   // Tercihler
   const [preferences, setPreferences] = useState<QuizPreferences>({
@@ -537,7 +514,7 @@ export default function ExamCreationWizard({
     // Eğer adım 1'den 2'ye geçiyorsak ve dosya yüklüyse konu tespitini başlat
     if (currentStep === 1 && selectedFile && uploadStatus === "success" && topicDetectionStatus !== "loading") {
       // Zayıf/Orta odaklı kişiselleştirilmiş sınav için konu tespiti atlanabilir
-      if (quizType === "personalized" && personalizedQuizType === "weakTopicFocused") {
+      if (quizType === "personalized" ) {
         console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 1'den Adım 3'e atlıyoruz`);
         setCurrentStep(3);
         return;
@@ -555,7 +532,6 @@ export default function ExamCreationWizard({
     if (
       currentStep === 2 &&
       quizType === "personalized" &&
-      personalizedQuizType !== "weakTopicFocused" &&
       selectedTopicIds.length === 0
     ) {
       console.error(`❌ HATA: Konu seçimi yapılmadı. Seçilen konular: ${selectedTopicIds.length}`);
@@ -569,7 +545,6 @@ export default function ExamCreationWizard({
       // Zayıf/Orta Odaklı: Adım 1'den Adım 3'e atla (Konu Seçimi yok)
       if (
         quizType === "personalized" &&
-        personalizedQuizType === "weakTopicFocused" &&
         currentStep === 1
       ) {
         console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 1'den Adım 3'e atlıyoruz`);
@@ -594,7 +569,6 @@ export default function ExamCreationWizard({
       // Konu Seçimini Atlayan Durumlar İçin Geri Gitme Mantığı
       if (
         quizType === "personalized" &&
-        personalizedQuizType === "weakTopicFocused" &&
         currentStep === 3
       ) {
         console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 3'ten Adım 1'e dönüyoruz`);
@@ -1071,8 +1045,7 @@ export default function ExamCreationWizard({
       const quizOptions: QuizGenerationOptions = {
       quizType: quizType === "quick" ? "general" : quizType,
       courseId: selectedCourseId || undefined,
-      personalizedQuizType:
-        quizType === "personalized" ? personalizedQuizType : undefined,
+     
       // Kullanılan API'ye göre doğru formatı seçiyoruz
       selectedSubTopics: mappedSubTopics.map(topic => topic.normalizedSubTopic),
       documentId: uploadedDocumentId || undefined,
@@ -1095,7 +1068,6 @@ export default function ExamCreationWizard({
       const wizardResultData = {
           file: selectedFile,
           quizType: quizType,
-          personalizedQuizType,
           preferences: preferences,
           topicNameMap: selectedTopics.reduce((acc, item) => {
             acc[item.normalizedSubTopic] = item.subTopic;
@@ -1105,7 +1077,6 @@ export default function ExamCreationWizard({
           quizId: quiz?.id,
         documentId: uploadedDocumentId || undefined,
           status: quiz?.id ? 'success' as const : 'error' as const,
-          error: quiz?.id ? undefined : new ApiError("Sınav oluşturulamadı veya ID alınamadı."),
       };
 
       
@@ -1420,7 +1391,6 @@ export default function ExamCreationWizard({
               {quizType === "personalized" && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   <b>Not:</b> Kişiselleştirilmiş sınav türü için farklı odak seçenekleri bir sonraki adımda sunulacaktır.
-                  {personalizedQuizType === "weakTopicFocused" ? " Zayıf/Orta Odaklı sınav türü için belge yüklemeniz gerekmez." : ""}
                 </p>
               )}
               
@@ -1464,139 +1434,7 @@ export default function ExamCreationWizard({
                     <div className="h-0.5 w-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 opacity-80"></div>
                   </div>
                   
-                  {/* Kişiselleştirilmiş Sınav Alt Türleri */}
-                  <div className="mt-2 mb-6">
-                    <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center">
-                      <FiTarget className="mr-2 text-indigo-500 dark:text-indigo-400" />
-                      Sınav Odağı Seçin:
-                    </h4>
-
-                    <div className="grid grid-cols-1 gap-4">
-                      {/* Zayıf/Orta Odaklı Sınav - Glass card with gradient */}
-                      <div
-                        className={`
-                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
-                          ${
-                            personalizedQuizType === "weakTopicFocused"
-                              ? "bg-gradient-to-r from-indigo-50/90 to-blue-50/90 dark:from-indigo-900/30 dark:to-blue-900/30 border border-indigo-200/70 dark:border-indigo-700/50 shadow-md"
-                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
-                          }
-                        `}
-                        onClick={() =>
-                          handlePersonalizedQuizTypeSelect("weakTopicFocused")
-                        }
-                      >
-                        {/* Accent gradient line at top */}
-                        {personalizedQuizType === "weakTopicFocused" && (
-                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-t-xl"></div>
-                        )}
-                        <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-red-600 dark:text-red-400">
-                          <FiZap />
-                        </div>
-                        <div>
-                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                            Zayıf/Orta Odaklı
-                          </h5>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                            Yapay zeka, geçmiş performansınıza göre zayıf olduğunuz konulara odaklanır. (Belge gerekmez)
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Öğrenme Hedefi Odaklı Sınav - Glass card with gradient */}
-                      <div
-                        className={`
-                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
-                          ${
-                            personalizedQuizType === "learningObjectiveFocused"
-                              ? "bg-gradient-to-r from-violet-50/90 to-indigo-50/90 dark:from-violet-900/30 dark:to-indigo-900/30 border border-violet-200/70 dark:border-violet-700/50 shadow-md"
-                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
-                          }
-                        `}
-                        onClick={() =>
-                          handlePersonalizedQuizTypeSelect("learningObjectiveFocused")
-                        }
-                      >
-                        {/* Accent gradient line at top */}
-                        {personalizedQuizType === "learningObjectiveFocused" && (
-                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-t-xl"></div>
-                        )}
-                        <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-green-600 dark:text-green-400">
-                          <FiTarget />
-                        </div>
-                        <div>
-                                                   <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                            Öğrenme Hedefi Odaklı
-                          </h5>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                            Belirlediğiniz öğrenme hedeflerine ulaşma durumunuzu yapay zeka yardımıyla ölçer. (Belge gerekir)
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Yeni Konu Odaklı Sınav - Glass card with gradient */}
-                      <div
-                        className={`
-                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
-                          ${
-                            personalizedQuizType === "newTopicFocused"
-                              ? "bg-gradient-to-r from-blue-50/90 to-cyan-50/90 dark:from-blue-900/30 dark:to-cyan-900/30 border border-blue-200/70 dark:border-blue-700/50 shadow-md"
-                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
-                          }
-                        `}
-                        onClick={() =>
-                          handlePersonalizedQuizTypeSelect("newTopicFocused")
-                        }
-                      >
-                        {/* Accent gradient line at top */}
-                        {personalizedQuizType === "newTopicFocused" && (
-                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-t-xl"></div>
-                        )}
-                        <div className="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-yellow-600 dark:text-yellow-400">
-                          <FiZap />
-                        </div>
-                        <div>
-                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                            Yeni Konu Odaklı
-                          </h5>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                            Yüklenen belgeden yapay zeka ile tespit edilen yeni konuları test eder. (Belge gerekir)
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Kapsamlı Sınav - Glass card with gradient */}
-                      <div
-                        className={`
-                          flex items-center p-4 cursor-pointer transition-all duration-300 rounded-xl relative backdrop-blur-sm
-                          ${
-                            personalizedQuizType === "comprehensive"
-                              ? "bg-gradient-to-r from-purple-50/90 to-indigo-50/90 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200/70 dark:border-purple-700/50 shadow-md"
-                              : "bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 hover:bg-white/90 dark:hover:bg-gray-800/70 shadow-sm hover:shadow"
-                          }
-                        `}
-                        onClick={() =>
-                          handlePersonalizedQuizTypeSelect("comprehensive")
-                        }
-                      >
-                        {/* Accent gradient line at top */}
-                        {personalizedQuizType === "comprehensive" && (
-                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-t-xl"></div>
-                        )}
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3 flex-shrink-0 text-blue-600 dark:text-blue-400">
-                          <FiAward />
-                        </div>
-                        <div>
-                          <h5 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                            Kapsamlı
-                          </h5>
-                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                            Yapay zeka, yeni içerik ile mevcut öğrenme hedeflerinizi birleştiren karma bir sınav oluşturur. (Belge gerekir)
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+               
                 </>
               )}
 
@@ -1604,25 +1442,7 @@ export default function ExamCreationWizard({
               <div className={quizType === "personalized" ? "mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" : ""}>
              
 
-                {personalizedQuizType === "weakTopicFocused" ? (
-                  <div className="mb-6 p-5 backdrop-blur-sm bg-gradient-to-r from-amber-50/90 to-yellow-50/90 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-100/80 dark:border-amber-800/30 rounded-xl shadow-sm text-amber-800 dark:text-amber-200 relative overflow-hidden">
-                    {/* Decorative elements */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-yellow-400 dark:from-amber-500 dark:to-yellow-500"></div>
-                    <div className="pl-4">
-                      <div className="flex items-center mb-2">
-                        <FiInfo className="mr-2 text-amber-500 dark:text-amber-400" />
-                        <p className="text-sm font-medium">Bilgi:</p>
-                      </div>
-                      <p className="text-sm leading-relaxed">
-                        Zayıf/Orta Odaklı Sınav seçildiğinde, durumu
-                        &lsquo;başarısız&apos; veya &#39;orta&#39; olan mevcut
-                        öğrenme hedefleriniz otomatik olarak kullanılır. Bu
-                        adımda ek konu seçimi gerekmez.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
+            
                    
                     {/* AI Konu Tespiti ve Seçim Ekranı */}
                     <TopicSelectionScreen
@@ -1631,7 +1451,6 @@ export default function ExamCreationWizard({
                       availableCourses={courses}
                       selectedCourseId={selectedCourseId}
                       quizType={quizType}
-                      personalizedQuizType={personalizedQuizType}
                       isLoading={topicDetectionStatus === "loading"}
                       error={undefined}
                       onTopicsSelected={(selectedTopics, courseId) => {
@@ -1648,8 +1467,7 @@ export default function ExamCreationWizard({
                       onInitialLoad={onInitialLoad}
                       setOnInitialLoad={setOnInitialLoad}
                     />
-                  </>
-                )}
+              
 
                 
               </div>
