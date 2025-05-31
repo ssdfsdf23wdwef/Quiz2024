@@ -1285,9 +1285,18 @@ export default function ExamCreationWizard({
             )}
           </div>
 
-          {/* Soru sayısı seçimi ve diğer tercihler */}
-          <div className="space-y-6">
-            <div>
+          {/* Soru sayısı seçimi ve diğer tercihler - Modern glass styling */}
+          <div className="space-y-8 mt-4">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-800 dark:from-blue-300 dark:to-indigo-400">
+                Sınav Parametreleri
+              </h3>
+              <div className="h-0.5 w-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 opacity-80"></div>
+            </div>
+            
+            <div className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 rounded-xl p-6 shadow-sm">
+              <div className="space-y-6">
+                <div className="mb-4">
               <label
                 htmlFor="questionCount"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -1320,92 +1329,104 @@ export default function ExamCreationWizard({
               </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="difficulty"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Zorluk Seviyesi
-              </label>
-              <select
-                id="difficulty"
-                value={preferences.difficulty}
-                onChange={(e) =>
-                  handlePreferenceChange(
-                    "difficulty",
-                    e.target.value as
-                      | "easy"
-                      | "medium"
-                      | "hard"
-                      | "mixed",
-                  )
-                }
-                className="w-full px-3 py-2 border border-primary rounded-md bg-primary text-primary focus:outline-none focus:ring-2 focus:ring-border-focus focus:border-brand-primary text-sm"
-              >
-                <option value="easy">Kolay</option>
-                <option value="medium">Orta</option>
-                <option value="hard">Zor</option>
-                <option value="mixed">Karışık (Önerilen)</option>
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Sınavdaki soruların zorluk seviyesini belirler.
+                <div className="mb-6">
+                  <label
+                    htmlFor="difficulty"
+                    className="block text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300 mb-2"
+                  >
+                    Zorluk Seviyesi
+                  </label>
+                  <select
+                    id="difficulty"
+                    value={preferences.difficulty}
+                    onChange={(e) =>
+                      handlePreferenceChange(
+                        "difficulty",
+                        e.target.value as
+                          | "easy"
+                          | "medium"
+                          | "hard"
+                          | "mixed",
+                      )
+                    }
+                    className="w-full px-3 py-2.5 border border-gray-200/80 dark:border-gray-700/30 rounded-lg bg-white/70 dark:bg-gray-800/40 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/60 text-sm backdrop-blur-sm shadow-sm"
+                  >
+                    <option value="easy">Kolay</option>
+                    <option value="medium">Orta</option>
+                    <option value="hard">Zor</option>
+                    <option value="mixed">Karışık (Önerilen)</option>
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
+                    Sınavdaki soruların zorluk seviyesini belirler.
               </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Zaman Sınırı
-              </label>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="useTimeLimit"
-                    checked={useTimeLimit}
-                    onChange={(e) =>
-                      handleUseTimeLimitChange(e.target.checked)
-                    }
-                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 focus:ring-indigo-500"
-                  />
-                  <label
-                    htmlFor="useTimeLimit"
-                    className="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                  >
-                    Zaman sınırı uygula
+                <div className="mb-2">
+                  <label className="block text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300 mb-2">
+                    Zaman Sınırı
                   </label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          id="useTimeLimit"
+                          checked={useTimeLimit}
+                          onChange={(e) =>
+                            handleUseTimeLimitChange(e.target.checked)
+                          }
+                          className="h-4 w-4 text-blue-600 dark:text-blue-400 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:ring-offset-1 relative z-10"
+                        />
+                        {useTimeLimit && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded animate-pulse"></div>
+                        )}
+                      </div>
+                      <label
+                        htmlFor="useTimeLimit"
+                        className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium"
+                      >
+                        Zaman sınırı uygula
+                      </label>
+                    </div>
+                    {useTimeLimit && (
+                      <motion.div
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="flex items-center overflow-hidden"
+                      >
+                        <div className="relative">
+                          <input
+                            type="number"
+                            id="timeLimitInput"
+                            min="1"
+                            max="180"
+                            value={preferences.timeLimit || ""}
+                            onChange={(e) =>
+                              handleTimeLimitInputChange(e.target.value)
+                            }
+                            className="w-20 px-3 py-1.5 border border-gray-200/80 dark:border-gray-700/30 rounded-lg bg-white/70 dark:bg-gray-800/40 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/60 text-sm backdrop-blur-sm shadow-sm"
+                            placeholder="örn: 30"
+                          />
+                          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/5 to-indigo-500/5 pointer-events-none"></div>
+                        </div>
+                        <span className="ml-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          dakika
+                        </span>
+                      </motion.div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
+                    Sınav için bir süre belirleyebilirsiniz.
+                  </p>
                 </div>
-                {useTimeLimit && (
-                  <motion.div
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    transition={{ duration: 0.3 }}
-                    className="flex items-center overflow-hidden"
-                  >
-                    <input
-                      type="number"
-                      id="timeLimitInput"
-                      min="1"
-                      max="180"
-                      value={preferences.timeLimit || ""}
-                      onChange={(e) =>
-                        handleTimeLimitInputChange(e.target.value)
-                      }
-                      className="w-20 px-2 py-1 border border-primary rounded-md bg-primary text-primary focus:outline-none focus:ring-1 focus:ring-border-focus text-sm"
-                      placeholder="örn: 30"
-                    />
-                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                      dakika
-                    </span>
-                  </motion.div>
-                )}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Sınav için bir süre belirleyebilirsiniz.
-              </p>
             </div>
           </div>
         </div>
       </div>
+   
+ 
     );
   };
 
