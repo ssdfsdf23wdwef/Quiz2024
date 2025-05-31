@@ -39,28 +39,28 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
   const { isDarkMode } = useTheme();
   
   return (
-  <div className={`mb-8 rounded-xl p-6 relative overflow-hidden backdrop-blur-sm border shadow-lg ${isDarkMode ? 'bg-gray-900/80 border-gray-800/50 shadow-gray-950/20' : 'bg-white/90 border-gray-200/60 shadow-gray-200/30'}`}>
+  <div className={`mb-8 rounded-2xl p-6 relative overflow-hidden backdrop-blur-lg border ${isDarkMode ? 'bg-gray-900/70 border-gray-700/40 shadow-2xl shadow-gray-950/30' : 'bg-white/80 border-gray-200/50 shadow-2xl shadow-gray-300/40'}`}>
     {/* Decorative gradient accent */}
-    <div className="absolute left-0 top-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80"></div>
+    <div className={`absolute left-0 top-0 w-full h-1.5 bg-gradient-to-r ${isDarkMode ? 'from-blue-600 via-indigo-600 to-purple-600' : 'from-blue-500 via-indigo-500 to-purple-500'} opacity-90`}></div>
     
-    <h3 className="text-lg font-semibold mb-4 flex items-center bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300">
-      <span className="w-8 h-8 rounded-full flex items-center justify-center mr-2 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/50 shadow-sm">
+    <h3 className={`text-xl font-semibold mb-5 flex items-center ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+      <span className={`w-9 h-9 rounded-xl flex items-center justify-center mr-3 shadow-md ${isDarkMode ? 'bg-gradient-to-br from-blue-700/50 to-indigo-700/60' : 'bg-gradient-to-br from-blue-100 to-indigo-100'}`}>
         <FiTarget className="text-blue-600 dark:text-blue-400" />
       </span>
       İçerik Seçimi
     </h3>
     
     <div className="mb-6">
-      <label className="block text-sm font-medium mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300">
+      <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
         Ders Seçimi
       </label>
       <div className="relative">
         <select
           value={selectedCourseId}
           onChange={handleCourseChange}
-          className={`w-full px-4 py-3 pr-10 border rounded-xl appearance-none transition-all duration-300 cursor-pointer shadow-sm backdrop-blur-sm ${isDarkMode ? 
-            'bg-gray-800/60 border-gray-700/50 text-gray-200 focus:border-blue-500/70 hover:border-blue-600/50' : 
-            'bg-white/70 border-gray-200/70 text-gray-800 focus:border-blue-500/50 hover:border-blue-400/80'} focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+          className={`w-full px-4 py-3 pr-10 border rounded-lg appearance-none transition-all duration-300 cursor-pointer shadow-sm backdrop-blur-md ${isDarkMode ? 
+            'bg-gray-800/50 border-gray-700/60 text-gray-200 focus:border-blue-500/80 hover:border-blue-600/70 focus:ring-blue-500/30' : 
+            'bg-white/60 border-gray-300/80 text-gray-800 focus:border-blue-500/70 hover:border-blue-400/90 focus:ring-blue-500/30'} focus:outline-none focus:ring-2`}
         >
           <option value="" className={isDarkMode ? 'bg-gray-800' : 'bg-white'}>Ders seçin</option>
           {courses.map((course) => (
@@ -69,8 +69,8 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
             </option>
           ))}
         </select>
-        <div className="absolute inset-0 pointer-events-none rounded-xl opacity-10 bg-gradient-to-r from-blue-500/10 to-indigo-500/10"></div>
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-blue-500/70 dark:text-blue-400/70">
+        {/* Removed subtle gradient overlay as backdrop-blur is more prominent now */}
+        <div className={`absolute right-3.5 top-1/2 transform -translate-y-1/2 pointer-events-none ${isDarkMode ? 'text-blue-400/80' : 'text-blue-500/90'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
@@ -80,33 +80,33 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
     </div>
 
     {quizType === "personalized" && personalizedQuizType === "learningObjectiveFocused" && (
-      <div className={`mb-6 p-4 rounded-xl relative overflow-hidden ${isDarkMode ? 'bg-blue-900/20 border border-blue-800/30' : 'bg-blue-50/80 border border-blue-200/50'}`}>
+      <div className={`mb-6 p-4 rounded-xl relative overflow-hidden backdrop-blur-md border ${isDarkMode ? 'bg-blue-900/30 border-blue-700/40 shadow-lg shadow-blue-950/20' : 'bg-blue-50/70 border-blue-200/60 shadow-lg shadow-blue-200/30'}`}>
         {/* Gradient accent */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-600 opacity-80"></div>
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${isDarkMode ? 'from-blue-600 to-indigo-600' : 'from-blue-500 to-indigo-500'} opacity-90 rounded-l-xl`}></div>
         
-        <div className="flex items-center gap-2 mb-2 pl-3">
-          <div className="p-1.5 rounded-full bg-blue-100/80 dark:bg-blue-800/40">
+        <div className="flex items-center gap-2.5 mb-2 pl-4">
+          <div className={`p-2 rounded-lg shadow-sm ${isDarkMode ? 'bg-blue-800/50' : 'bg-blue-100/90'}`}>
             <FiTarget className="text-blue-600 dark:text-blue-400" size={16} />
           </div>
-          <h4 className="font-medium text-blue-800 dark:text-blue-300">Öğrenme Hedefi Odaklı Sınav</h4>
+          <h4 className={`font-semibold ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>Öğrenme Hedefi Odaklı Sınav</h4>
         </div>
-        <p className="text-sm text-gray-700 dark:text-gray-300 ml-10 pl-0.5">
+        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} ml-11 pl-0.5`}>
           Yapay zeka, seçtiğiniz konuların öğrenme hedeflerine uygun sorular oluşturacak ve ilerlemenizi ölçecektir.
         </p>
       </div>
     )}
 
     <div className="mb-6">
-      <label className="block text-sm font-medium mb-3 flex items-center bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300">
-        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/40 flex items-center justify-center mr-2 shadow-sm">
+      <label className={`block text-base font-semibold mb-3 flex items-center ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
+        <span className={`w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 shadow-md ${isDarkMode ? 'bg-gradient-to-br from-blue-700/40 to-indigo-700/50' : 'bg-gradient-to-br from-blue-100 to-indigo-100'}`}>
           <span className="text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
         </span>
         Konu Seçimi
       </label>
       <div className="flex flex-wrap gap-2 mb-2">
         {courseTopics.length === 0 ? (
-          <div className={`w-full p-4 rounded-xl border text-sm flex items-center justify-center backdrop-blur-sm ${isDarkMode ? 'bg-gray-800/40 border-gray-700/50 text-gray-400' : 'bg-gray-50/70 border-gray-200/60 text-gray-500'}`}>
-            <div className="p-1 rounded-full bg-gray-100/80 dark:bg-gray-700/40 mr-2">
+          <div className={`w-full p-4 rounded-xl border text-sm flex items-center justify-center backdrop-blur-md ${isDarkMode ? 'bg-gray-800/50 border-gray-700/60 text-gray-400 shadow-md shadow-gray-950/10' : 'bg-gray-50/80 border-gray-200/70 text-gray-500 shadow-md shadow-gray-200/20'}`}>
+            <div className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-100/90'} mr-2.5 shadow-sm`}>
               <FiTarget className="text-gray-500 dark:text-gray-400" size={15} />
             </div>
             Henüz konu bulunmuyor veya ders seçilmedi
@@ -145,16 +145,16 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
                 onClick={() => handleTopicToggle(topic.id)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`relative px-4 py-2 rounded-xl border text-sm transition-all duration-200 flex items-center gap-2 ${hoverEffect} ${isDarkMode ? 'shadow-gray-950/10' : 'shadow-gray-200/60'} shadow-sm`}
+                className={`relative px-4 py-2 rounded-xl border text-sm transition-all duration-300 flex items-center gap-2 ${hoverEffect} ${isDarkMode ? 'border-gray-700/50 shadow-lg shadow-gray-950/20' : 'border-gray-300/70 shadow-lg shadow-gray-300/30'}`}
               >
                 {/* Background and styling */}
-                <div className={`absolute inset-0 rounded-xl transition-all duration-300 ${selectedTopicIds.includes(topic.id) 
-                  ? `bg-gradient-to-r ${bgGradient || 'from-blue-500 to-indigo-600'} opacity-90 ${isDarkMode ? 'opacity-80' : 'opacity-90'}` 
-                  : 'opacity-0'}`}></div>
+                <div className={`absolute inset-0 rounded-xl transition-all duration-300 group-hover:opacity-100 ${selectedTopicIds.includes(topic.id) 
+                  ? `bg-gradient-to-r ${bgGradient || (isDarkMode ? 'from-blue-600 to-indigo-700' : 'from-blue-500 to-indigo-600')} ${isDarkMode ? 'opacity-85 shadow-md shadow-blue-950/20' : 'opacity-90 shadow-md shadow-blue-400/30'}` 
+                  : `${isDarkMode ? 'bg-gray-800/40' : 'bg-white/60'} opacity-0`}`}></div>
                 
                 {/* Icon and text */}
                 {StatusIcon && (
-                  <div className={`relative z-10 p-1 rounded-full transition-all duration-300 ${selectedTopicIds.includes(topic.id) ? 'bg-white/20' : isDarkMode ? 'bg-gray-700/60' : 'bg-gray-100/80'}`}>
+                  <div className={`relative z-10 p-1.5 rounded-lg transition-all duration-300 ${selectedTopicIds.includes(topic.id) ? (isDarkMode ? 'bg-white/25' : 'bg-white/30') : (isDarkMode ? 'bg-gray-700/70 group-hover:bg-gray-600/50' : 'bg-gray-100/90 group-hover:bg-gray-200/70')} shadow-sm`}>
                     <StatusIcon className={`w-3.5 h-3.5 ${selectedTopicIds.includes(topic.id) ? 'text-white' : statusColor}`} />
                   </div>
                 )}
@@ -174,13 +174,13 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
 
     {topicSubTopics.length > 0 && (
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-3 flex items-center bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300">
-          <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/40 flex items-center justify-center mr-2 shadow-sm">
+        <label className={`block text-base font-semibold mb-3 flex items-center ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
+          <span className={`w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 shadow-md ${isDarkMode ? 'bg-gradient-to-br from-blue-700/40 to-indigo-700/50' : 'bg-gradient-to-br from-blue-100 to-indigo-100'}`}>
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
           </span>
           Alt Konu Seçimi
         </label>
-        <div className={`flex flex-wrap gap-2 p-4 rounded-xl border backdrop-blur-sm ${isDarkMode ? 'bg-gray-800/30 border-gray-700/40' : 'bg-white/50 border-gray-200/60'}`}>
+        <div className={`flex flex-wrap gap-2 p-4 rounded-2xl border backdrop-blur-lg ${isDarkMode ? 'bg-gray-800/50 border-gray-700/60 shadow-xl shadow-gray-950/20' : 'bg-white/70 border-gray-200/60 shadow-xl shadow-gray-300/30'}`}>
           {topicSubTopics.map((subTopic) => {
             // Alt konu durumuna göre simge ve renk belirle
             let StatusIcon = null;
@@ -214,17 +214,17 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
                 onClick={() => handleSubTopicToggle(subTopic.id)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`relative px-3 py-1.5 rounded-lg border text-xs transition-all duration-200 flex items-center gap-1.5 ${hoverEffect} ${isDarkMode ? 'shadow-gray-950/10' : 'shadow-gray-200/50'} shadow-sm`}
+                className={`group relative px-4 py-2 rounded-xl border text-sm transition-all duration-300 flex items-center gap-2 ${hoverEffect} ${isDarkMode ? 'border-gray-700/50 shadow-lg shadow-gray-950/20' : 'border-gray-300/70 shadow-lg shadow-gray-300/30'}`}
               >
                 {/* Background and styling */}
-                <div className={`absolute inset-0 rounded-lg transition-all duration-300 ${selectedSubTopicIds.includes(subTopic.id) 
-                  ? `bg-gradient-to-r ${bgGradient || 'from-blue-500 to-indigo-600'} opacity-90 ${isDarkMode ? 'opacity-80' : 'opacity-90'}` 
-                  : 'opacity-0'}`}></div>
+                <div className={`absolute inset-0 rounded-xl transition-all duration-300 group-hover:opacity-100 ${selectedSubTopicIds.includes(subTopic.id) 
+                  ? `bg-gradient-to-r ${bgGradient || (isDarkMode ? 'from-blue-600 to-indigo-700' : 'from-blue-500 to-indigo-600')} ${isDarkMode ? 'opacity-85 shadow-md shadow-blue-950/20' : 'opacity-90 shadow-md shadow-blue-400/30'}` 
+                  : `${isDarkMode ? 'bg-gray-800/40' : 'bg-white/60'} opacity-0`}`}></div>
                 
                 {/* Icon and text */}
                 {StatusIcon && (
-                  <div className={`relative z-10 p-0.5 rounded-full transition-all duration-300 ${selectedSubTopicIds.includes(subTopic.id) ? 'bg-white/20' : isDarkMode ? 'bg-gray-700/60' : 'bg-gray-100/80'}`}>
-                    <StatusIcon className={`w-3 h-3 ${selectedSubTopicIds.includes(subTopic.id) ? 'text-white' : statusColor}`} />
+                  <div className={`relative z-10 p-1.5 rounded-lg transition-all duration-300 ${selectedSubTopicIds.includes(subTopic.id) ? (isDarkMode ? 'bg-white/25' : 'bg-white/30') : (isDarkMode ? 'bg-gray-700/70 group-hover:bg-gray-600/50' : 'bg-gray-100/90 group-hover:bg-gray-200/70')} shadow-sm`}>
+                    <StatusIcon className={`w-3.5 h-3.5 ${selectedSubTopicIds.includes(subTopic.id) ? 'text-white' : statusColor}`} />
                   </div>
                 )}
                 <span className={`relative z-10 font-medium transition-all duration-300 ${selectedSubTopicIds.includes(subTopic.id) 

@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-31T14:37:14.528Z
-Trace ID: quiz-1748702219587-oxju5
-Yanıt Uzunluğu: 9214 karakter
+Tarih: 2025-05-31T17:39:01.878Z
+Trace ID: quiz-1748713130025-a6cyr
+Yanıt Uzunluğu: 7034 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,173 +11,173 @@ Yanıt Uzunluğu: 9214 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Aşağıdakilerden hangisi eksaskala sistemlerde verimliliği artırmak için kullanılan temel yaklaşımlardan biridir?",
+      "questionText": "Aşağıdakilerden hangisi süperbilgisayarların performansını değerlendiren temel listelerden biridir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Tek çekirdekli işlemci kullanımı",
-        "Paralellikten yararlanma",
-        "Bellek erişimini en aza indirme",
-        "Seri programlama"
+        "Big500",
+        "TOP500",
+        "Fast500",
+        "Global500"
       ],
-      "correctAnswer": "Paralellikten yararlanma",
-      "explanation": "Eksaskala sistemlerde verimliliği artırmak için paralellik gücünden yararlanılır. İşlemler küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülür. Diğer seçenekler ise bu sistemlerin verimliliğini azaltır.",
-      "subTopicName": "Paralel Programlama Paradigmaları",
-      "normalizedSubTopicName": "paralel_programlama_paradigmaları",
-      "difficulty": "medium"
+      "correctAnswer": "TOP500",
+      "explanation": "TOP500, dünyanın en hızlı 500 süperbilgisayarını hesaplama gücüne göre sıralayan bir listedir. Diğer seçenekler listede yer almamaktadır.",
+      "subTopicName": "Süperbilgisayar Sıralama Listeleri",
+      "normalizedSubTopicName": "superbilgisayar_siralama_listeleri",
+      "difficulty": "easy"
     },
     {
       "id": "q2",
-      "questionText": "Paralel programlama paradigması nedir?",
+      "questionText": "Süperbilgisayarların kullanım alanlarına bir örnek veriniz.",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Bir işlemin tek bir işlemcide sıralı olarak yürütülmesini sağlayan yazılımlardır.",
-        "Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır.",
-        "Sadece tek çekirdekli işlemcilerde çalışan yazılımlardır.",
-        "Sadece grafik işlem birimlerinde (GPU) çalışan yazılımlardır."
+        "Sadece ofis uygulamaları",
+        "Sadece web tarama",
+        "Bilimsel araştırmalar ve yapay zeka",
+        "Sadece e-posta işlemleri"
       ],
-      "correctAnswer": "Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır.",
-      "explanation": "Paralel programlama paradigması, bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır. Bu, büyük ölçekli hesaplamalarda performansı maksimize etmek için kritik bir bileşendir.",
-      "subTopicName": "Paralel Programlama Paradigmaları",
-      "normalizedSubTopicName": "paralel_programlama_paradigmaları",
+      "correctAnswer": "Bilimsel araştırmalar ve yapay zeka",
+      "explanation": "Süperbilgisayarlar, yüksek hesaplama gücü sayesinde bilimsel araştırmalardan yapay zekaya kadar pek çok alanda kullanılmaktadır.",
+      "subTopicName": "Süperbilgisayar Sıralama Listeleri",
+      "normalizedSubTopicName": "superbilgisayar_siralama_listeleri",
       "difficulty": "easy"
     },
     {
       "id": "q3",
-      "questionText": "Paylaşımlı bellek paradigması için aşağıdakilerden hangisi doğrudur?",
+      "questionText": "Aşağıdakilerden hangisi süper bilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren listelerden biri değildir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Her işlemci kendi özel belleğine sahiptir.",
-        "Tüm işlemciler ortak bir belleğe erişir.",
-        "Veri iletişimi mesajlaşma yoluyla sağlanır.",
-        "Sadece dağıtık sistemlerde kullanılır."
+        "TOP500",
+        "HPCG",
+        "Green500",
+        "Blue500"
       ],
-      "correctAnswer": "Tüm işlemciler ortak bir belleğe erişir.",
-      "explanation": "Paylaşımlı bellek paradigmasında tüm işlemciler ortak belleğe erişir, bu da onu çok çekirdekli işlemciler için ideal kılar. OpenMP bu paradigmayı destekleyen bir API'dir.",
-      "subTopicName": "Paylaşımlı Bellek Paradigması",
-      "normalizedSubTopicName": "paylasimli_bellek_paradigmasi",
+      "correctAnswer": "Blue500",
+      "explanation": "TOP500, HPCG ve Green500 süper bilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren temel listelerdir. Blue500 diye bir liste bulunmamaktadır.",
+      "subTopicName": "Süperbilgisayar Sıralama Listeleri",
+      "normalizedSubTopicName": "superbilgisayar_siralama_listeleri",
       "difficulty": "easy"
     },
     {
       "id": "q4",
-      "questionText": "OpenMP'nin paylaşımlı bellek paradigmasındaki rolü nedir?",
+      "questionText": "TOP500 listesi hangi aralıklarla yayınlanmaktadır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Dağıtık bellekli sistemlerde veri transferini yönetmek.",
-        "Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırmak.",
-        "İşlemciler arasında mesajlaşmayı sağlamak.",
-        "Sadece tek çekirdekli uygulamaları optimize etmek."
+        "Yılda bir kez",
+        "İki yılda bir",
+        "Yılda iki kez",
+        "Üç ayda bir"
       ],
-      "correctAnswer": "Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırmak.",
-      "explanation": "OpenMP, mevcut koda direktifler ekleyerek paylaşımlı bellek mimarilerinde paralel uygulamalar geliştirmeyi kolaylaştırır. Örneğin, #pragma omp parallel direktifi paralel bir bölge başlatır.",
-      "subTopicName": "Paylaşımlı Bellek Paradigması",
-      "normalizedSubTopicName": "paylasimli_bellek_paradigmasi",
-      "difficulty": "medium"
+      "correctAnswer": "Yılda iki kez",
+      "explanation": "TOP500 listesi, 1993'ten bu yana yılda iki kez (Haziran ve Kasım aylarında) yayınlanmaktadır.",
+      "subTopicName": "Top500ün Amacı Ve Ölçütü",
+      "normalizedSubTopicName": "top500un_amaci_ve_olcutu",
+      "difficulty": "easy"
     },
     {
       "id": "q5",
-      "questionText": "Dağıtık bellek paradigmasında veri değişimi nasıl sağlanır?",
+      "questionText": "TOP500 listesinin temel amacı nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Ortak bir bellek alanı üzerinden",
-        "Mesajlaşma ile",
-        "Paylaşımlı değişkenler aracılığıyla",
-        "Sanal bellek yönetimi ile"
+        "En enerji verimli süperbilgisayarları belirlemek",
+        "En hızlı süperbilgisayarları belirlemek",
+        "Bellek performansını en iyi olan süperbilgisayarları belirlemek",
+        "En ucuz süperbilgisayarları belirlemek"
       ],
-      "correctAnswer": "Mesajlaşma ile",
-      "explanation": "Dağıtık bellek paradigmasında her işlemci kendi düğümünün belleğine erişir ve veri değişimi mesajlaşma ile sağlanır. MPI bu paradigmanın yaygın bir örneğidir.",
-      "subTopicName": "Dağıtık Bellek Paradigması",
-      "normalizedSubTopicName": "dagitik_bellek_paradigmasi",
+      "correctAnswer": "En hızlı süperbilgisayarları belirlemek",
+      "explanation": "TOP500 listesinin temel amacı, en yüksek hesaplama gücüne sahip, yani en hızlı süperbilgisayarları belirlemektir.",
+      "subTopicName": "Top500ün Amacı Ve Ölçütü",
+      "normalizedSubTopicName": "top500un_amaci_ve_olcutu",
       "difficulty": "easy"
     },
     {
       "id": "q6",
-      "questionText": "MPI'ın (Message Passing Interface) temel amacı nedir?",
+      "questionText": "TOP500 listesinde sıralama ölçütü olarak hangi test kullanılmaktadır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Paylaşımlı bellek mimarilerinde paralellik sağlamak",
-        "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek",
-        "Tek çekirdekli işlemcilerde performansı artırmak",
-        "Grafik işlem birimlerinde (GPU) hesaplama yapmak"
+        "HPCG testi",
+        "LINPACK testi",
+        "Green500 testi",
+        "STREAM testi"
       ],
-      "correctAnswer": "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek",
-      "explanation": "MPI (Message Passing Interface), dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır. İşlemler arasında veri alışverişi ve paralel görev koordinasyonu sağlar.",
-      "subTopicName": "Dağıtık Bellek Paradigması",
-      "normalizedSubTopicName": "dagitik_bellek_paradigmasi",
-      "difficulty": "medium"
+      "correctAnswer": "LINPACK testi",
+      "explanation": "TOP500 listesinde sıralama ölçütü olarak LINPACK testi kullanılmaktadır. Bu test, süperbilgisayarın ne kadar hızlı işlem yapabildiğini ölçer.",
+      "subTopicName": "Top500ün Amacı Ve Ölçütü",
+      "normalizedSubTopicName": "top500un_amaci_ve_olcutu",
+      "difficulty": "easy"
     },
     {
       "id": "q7",
-      "questionText": "Hibrit paralel programlama yaklaşımının temel özelliği nedir?",
+      "questionText": "HPCG'nin (High Performance Conjugate Gradient) temel amacı nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Sadece paylaşımlı bellek paradigmasını kullanması",
-        "Sadece dağıtık bellek paradigmasını kullanması",
-        "Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmesi",
-        "Sadece tek çekirdekli işlemcilerde çalışması"
+        "Enerji verimliliğini ölçmek",
+        "Ham hesaplama gücünü ölçmek",
+        "Bellek, iletişim ve veri akış performansını test etmek",
+        "Grafik işlemci performansını ölçmek"
       ],
-      "correctAnswer": "Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmesi",
-      "explanation": "Hibrit paralellik, farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirir. Eksaskala bilişimde MPI ve OpenMP kombinasyonu yaygın bir örnektir.",
-      "subTopicName": "Hibrit Paralel Programlama",
-      "normalizedSubTopicName": "hibrit_paralel_programlama",
+      "correctAnswer": "Bellek, iletişim ve veri akış performansını test etmek",
+      "explanation": "HPCG, bellek, iletişim ve veri akış performansını test etmeyi amaçlar ve gerçek dünya uygulamalarına odaklanır.",
+      "subTopicName": "Hpcgnin Amacı Ve Ölçütü",
+      "normalizedSubTopicName": "hpcgnin_amaci_ve_olcutu",
       "difficulty": "easy"
     },
     {
       "id": "q8",
-      "questionText": "MPI ve OpenMP'nin hibrit kullanımında, her bir teknolojinin rolü nedir?",
+      "questionText": "HPCG sıralamasında kullanılan test, hangi matematiksel yöntemi kullanır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "MPI: Düğüm içindeki paralellik, OpenMP: İşlemler arası iletişim",
-        "MPI: İşlemler arası iletişim, OpenMP: Düğüm içindeki paralellik",
-        "Her ikisi de sadece düğüm içindeki paralelliği sağlar",
-        "Her ikisi de sadece işlemler arası iletişimi sağlar"
+        "Hızlı Fourier Dönüşümü",
+        "Konjugat Gradyan yöntemi",
+        "Monte Carlo simülasyonu",
+        "Dinamik Programlama"
       ],
-      "correctAnswer": "MPI: İşlemler arası iletişim, OpenMP: Düğüm içindeki paralellik",
-      "explanation": "MPI + OpenMP kombinasyonunda MPI işlemciler arası iletişim sağlarken (dış paralelleştirme), OpenMP çok çekirdekli işlemciler içinde iş parçacıklarını yönetir (iç paralelleştirme).",
-      "subTopicName": "Hibrit Paralel Programlama",
-      "normalizedSubTopicName": "hibrit_paralel_programlama",
-      "difficulty": "medium"
+      "correctAnswer": "Konjugat Gradyan yöntemi",
+      "explanation": "HPCG testi, iteratif bir doğrusal denklem çözme yöntemi olan Konjugat Gradyan yöntemini kullanır.",
+      "subTopicName": "Hpcgnin Amacı Ve Ölçütü",
+      "normalizedSubTopicName": "hpcgnin_amaci_ve_olcutu",
+      "difficulty": "easy"
     },
     {
       "id": "q9",
-      "questionText": "Döngü açma (Loop Unrolling) tekniğinin temel amacı nedir?",
+      "questionText": "Green500 listesi süperbilgisayarları hangi kritere göre sıralar?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Döngü kontrol yapılarının yükünü azaltmak",
-        "Döngüleri birleştirerek bellek erişimini artırmak",
-        "Döngüleri vektörleştirerek SIMD paralelliği sağlamak",
-        "Döngüleri tamamen ortadan kaldırmak"
+        "İşlemci hızına",
+        "Bellek kapasitesine",
+        "Enerji verimliliğine",
+        "Depolama alanına"
       ],
-      "correctAnswer": "Döngü kontrol yapılarının yükünü azaltmak",
-      "explanation": "Döngü açma (Loop Unrolling), döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici optimizasyon tekniğidir. Birden fazla iterasyon tek bir döngüde açılır.",
-      "subTopicName": "Döngü Açma Loop Unrolling",
-      "normalizedSubTopicName": "dongu_acma_loop_unrolling",
+      "correctAnswer": "Enerji verimliliğine",
+      "explanation": "Green500 listesi, enerji verimliliğini temel alarak süperbilgisayarları sıralar.",
+      "subTopicName": "Green500ün Amacı Ve Ölçütü",
+      "normalizedSubTopicName": "green500un_amaci_ve_olcutu",
       "difficulty": "easy"
     },
     {
       "id": "q10",
-      "questionText": "Döngü açma (Loop Unrolling) uygularken döngü sınırlarına dikkat etmenin nedeni nedir?",
+      "questionText": "Green500 sıralamasında kullanılan ölçüt nedir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "analyzing",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Sonsuz döngü oluşmasını engellemek",
-        "Döngü değişkeninin yanlış değerler almasını önlemek",
-        "Sınır dışı bellek erişimini engellemek",
-        "Döngünün daha yavaş çalışmasını önlemek"
+        "FLOPS/Watt",
+        "CPU çekirdek sayısı",
+        "Bellek bant genişliği",
+        "GPU işlem gücü"
       ],
-      "correctAnswer": "Sınır dışı bellek erişimini engellemek",
-      "explanation": "Döngü açmada dikkat edilmesi gereken en temel faktör döngü sınırlarıdır. Özellikle döngüdeki eleman sayısı döngü açma işlemine uygun değilse (örneğin tek sayı ise), sınır dışı bellek erişimi gibi sorunlar ortaya çıkabilir.",
-      "subTopicName": "Döngü Açma Loop Unrolling",
-      "normalizedSubTopicName": "dongu_acma_loop_unrolling",
-      "difficulty": "medium"
+      "correctAnswer": "FLOPS/Watt",
+      "explanation": "Green500 sıralama ölçütü olarak FLOPS/Watt oranına bakar. Yani, 1 watt enerji başına ne kadar işlem yapıldığı değerlendirilir.",
+      "subTopicName": "Green500ün Amacı Ve Ölçütü",
+      "normalizedSubTopicName": "green500un_amaci_ve_olcutu",
+      "difficulty": "easy"
     }
   ]
 }

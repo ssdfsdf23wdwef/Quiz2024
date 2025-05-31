@@ -1,31 +1,25 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-31T14:36:59.598Z
+## Tarih: 2025-05-31T17:38:50.040Z
 
-## Trace ID: quiz-1748702219587-oxju5
+## Trace ID: quiz-1748713130025-a6cyr
 
-## Alt Konular (9 adet):
+## Alt Konular (4 adet):
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Paralel Programlama Paradigmaları** (2 soru)
-2. **Paylaşımlı Bellek Paradigması** (2 soru)
-3. **Dağıtık Bellek Paradigması** (2 soru)
-4. **Hibrit Paralel Programlama** (2 soru)
-5. **Döngü Açma Loop Unrolling** (2 soru)
+1. **Süperbilgisayar Sıralama Listeleri** (3 soru)
+2. **Top500ün Amacı Ve Ölçütü** (3 soru)
+3. **Hpcgnin Amacı Ve Ölçütü** (2 soru)
+4. **Green500ün Amacı Ve Ölçütü** (2 soru)
 
-**Toplam Aktif: 5 alt konu, 10 soru**
+**Toplam Aktif: 4 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
-**Aşağıdaki konulardan soru üretilmeyecektir:**
-
-1. Döngü Birleştirme Loop Fusion
-2. Vektörizasyon Vectorization
-3. Profilleme Araçları
-4. Hata Ayıklama Araçları
+Bekleyen konu yok.
 
 ```
 
@@ -51,22 +45,16 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Paralel Programlama Paradigmaları** (2 soru)
-2. **Paylaşımlı Bellek Paradigması** (2 soru)
-3. **Dağıtık Bellek Paradigması** (2 soru)
-4. **Hibrit Paralel Programlama** (2 soru)
-5. **Döngü Açma Loop Unrolling** (2 soru)
+1. **Süperbilgisayar Sıralama Listeleri** (3 soru)
+2. **Top500ün Amacı Ve Ölçütü** (3 soru)
+3. **Hpcgnin Amacı Ve Ölçütü** (2 soru)
+4. **Green500ün Amacı Ve Ölçütü** (2 soru)
 
-**Toplam Aktif: 5 alt konu, 10 soru**
+**Toplam Aktif: 4 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
-**Aşağıdaki konulardan soru üretilmeyecektir:**
-
-1. Döngü Birleştirme Loop Fusion
-2. Vektörizasyon Vectorization
-3. Profilleme Araçları
-4. Hata Ayıklama Araçları
+Bekleyen konu yok.
 
   *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
 - **Eğitim İçeriği:** 
@@ -74,346 +62,86 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 Bilgisayar Mühendisliği Bölümü
 Bahar –2025(ÖÖ.,İÖ.)
 MBM7-452 -Eksaskala Bilgisayar Sistemleri
-(Sunu 3)
+(Sunu 6)
 Dr. Öğr. Üyesi Esra Çelik
 
-Günün Sorusu
-Eksaskala bilgisayarlarda kullanılan
-programlama modelleri ve araçları
-nelerdir?
+Süperbilgisayar Dünyasında Sıralama
+•Süperbilgisayarlar, yüksek hesaplama gücüyle bilimsel
+araştırmalardan yapay zekaya kadar pek çok alanda kullanılır.
+•Bu sistemlerin hızını, verimliliğini ve gerçek performansını
+değerlendiren üç temel liste vardır:
+•TOP500
+•HPCG (High Performance Conjugate Gradient)
+•Green500
 
-Programlama Modelleri ve Araçları
-•Programlama modelleri ve araçları,
-•tasarımcılara eksaskala sistemlerin yüksek hesaplama gücünü
-kullanabilmeleri için bir köprü görevi görür.
-•Eksaskala bilgisayar sistemleri için kritik bir roloynar.
-•Programlamada kullanılan en temel modeller ve araçlar:
-•Paralel Programlama Paradigmaları
-•Derleyici Optimizasyonları
-•Performans Profilleme ve Hata Ayıklama’dir.
+TOP500
+•TOP500,
+•dünyanın en hızlı 500 süperbilgisayarını hesaplama gücüne göre
+sıralar.
+•1993’ten bu yana yılda iki kez (Haziran ve Kasım aylarında)
+yayımlanmaktadır.
+•Performansodaklıdır.
+•En yüksek hesaplama gücü kimde?sorusunun cevabını verir.
 
-Paralel Programlama Paradigmaları
-•Eksaskala sistemlerde verimliliği artırmak için paralellikgücünden yararlanılır.
-•Paralel programlama paradigması:
-•Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide
-yürütülmesini sağlayan yazılımlardır.
-•Büyük ölçekli hesaplamalarda performansı maksimize etmek için kritik bir
-bileşendir.
+TOP500
+•Sıralama ölçütü olarak LINPACK testi kullanılır.
+•Bu test:
+•Süperbilgisayarın ne kadar hızlı işlem yapabildiğini yanisistemin
+floating-point işlemleri (FLOPS) performansını ölçer.
+•Matris çözümlemeye dayalıdır.
+•Bellek kullanımı, veri aktarımı veya gerçek dünya uygulamalarındaki
+performansı tam olarak yansıtmaz.
 
-Paralel Programlama Paradigmaları
-•Eksaskala sistemlerde kullanılan başlıca paralel programlama
-paradigmaları şunlardır:
-•Paylaşımlı Bellek Paradigması
-•Dağıtık Bellek Paradigması
-•Hibrit Paralel Programlama
+TOP500
+•Kasım 2024 TOP500 listesinde ElCapiton ilk sırada yer alır.
 
-Paralel Programlama Paradigmaları
-•Paylaşımlı bellek paradigması:
-•Çok çekirdekli işlemciler için idealdir;
-tüm işlemciler ortak belleğe erişir.
-•Bu paradigmada:
-•OpenMP, mevcut koda direktifler
-ekleyerek uygulama geliştirmeyi
-kolaylaştırır.
-•Düşük iletişim gecikmesi avantajıdır.
+HPCG
+•HPCG,
+•bellek, iletişim ve veri akış performansını test eder.
+•Gerçek dünya uygulamalarına odaklanır.
+•TOP500’ün eksik kaldığı noktaları tamamlamak için alternatif olarak
+geliştirilmiştir.
+•Gerçek dünya uygulamalarına (mühendislik hesaplamaları vb.) daha
+yakındır.
 
-Paralel Programlama Paradigmaları
-•OpenMP (Open Multi-Processing),
-•çok çekirdekli işlemciler ve paylaşımlı bellek mimarileriile paralel uygulamalar
-geliştirmek için kullanılır.
-•Eksaskala sistemlerde, her düğümdeki yüksek çekirdek sayısı sayesinde görevlerin paralel
-çalıştırılmasına olanak tanır.
-•Paralellik sağlamak için derleyici direktiflerikullanılır. Örneğin,
-•#pragma omp parallel direktifi, paralel bir bölge başlatır ve derleyici, kapsanan görevleri
-paralel çalıştırmak için kod üretir.
-•#pragma omp for direktifi, for-döngülerinin paralelleştirilmesi için kullanılır.
+HPCG
+•Sıralama ölçütü olarak HPCG testi kullanılır.
+•Bu test:
+•İteratif bir doğrusal denklem çözme yöntemi olan Konjugat
+Gradyanyöntemini kullanılır.
+•Bellek erişimi, iletişim yeteneği ve veri transfer performansını test
+eder
 
-Paralel Programlama Paradigmaları
-•Dağıtık bellek paradigması
-•Her işlemci kendi düğümünün
-belleğine erişir; veri değişimi
-mesajlaşmaile sağlanır.
-•Bu paradigmada:
-•MPI,yaygın olarak kullanılır.
-•Mesajlaşma ek yük getirebilir.
+HPCG
+•Kasım 2024 HPCG listesinde Fugaku ilk sırada yer alır.
 
-Paralel Programlama Paradigmaları
-•Message Passing Interface (MPI),
-•dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır.
-•Eksaskala sistemlerde bağımsız işlemciler arasında veri alışverişi ve paralel görev
-koordinasyonu sağlanır.
-•MPI, işlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim
-mekanizmaları sunar.
-•Örneğin MPI_Send ve MPI_Recv fonksiyonları.
-MPI
+Green500
+•Green500,
+•enerji verimliliğini temel alarak süperbilgisayarları sıralayan
+listedir.
+•Çevreci yaklaşıma odaklanır.
+•Verimli, sürdürülebilir HPC sistemlerini teşvik eder.
+•Sıralama ölçütü olarak FLOPS/Wattoranına bakar.
+•Yani, 1 watt enerji başına ne kadar işlem yapıldığı değerlendirilir.
 
-Paralel Programlama Paradigmaları
-•Hibrit paralellik,
-•farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla
-paradigma birleştirir.
-•Eksaskala bilişimde,
-•MPI ve OpenMP paralellik modellerinin kombinasyonu yaygın bir hibrit
-yaklaşımdır.
-•Bu hibrit yaklaşım,
-•hem her bir düğümlerdeki paralel işlem hemde tüm sistem genelindeki paralel
-işlemlerinverimli bir şekilde yapılmasını sağlar.
-•MPI, işlemler arası iletişimsağlarken, OpenMP, düğüm içindeki paralellikten faydalanarak
-paralelleme verimliliğini artırır.
-MPI
+Green500
+•Kasım 2024 Green500 listesinde JEDI ilk sırada yer alır.
 
-Paralel Programlama Paradigmaları
-•MPI + OpenMP kombinasyonunda:
-•MPI:İşlemciler arası iletişim sağlar (dış paralelleştirme).
-•OpenMP: Çok çekirdekli işlemciler içinde iş parçacıklarını yönetir (iç
-paralelleştirme).
-•Avantajı:
-•Daha fazla işlem gücü ve daha hızlı veri işleme.
-•Kaynak kullanımını optimize eder.
-•OpenMP, paylaşımlı bellek içinde çalışarak MPI’nin iletişim yükünü azaltır ve
-performansı artırır.
-
-Derleyici Optimizasyonları
-•Derleyici optimizasyonları:
-•kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecidir.
-•Eksaskala sistemlerde amaç,
-•hesaplama verimliliğini artırmak ve bellek erişim gecikmesini azaltılmaktır.
-•Derleyici optimizasyonu ile performans iyileştirimesinde,
-•döngü açma,
-•döngü birleştirme
-•ve döngü vektörleştirme teknikleri kullanılır.
-•Bu optimizasyonlar, eksaskala sistemlerde optimal performanssağlamak için gereklidir.
-Derleyici
-Optimizasyonu
-Kaynak
-kodu
-Makine
-kodu
-(yüksek
-verimli)
-Hatalar
-
-Derleyici Optimizasyonları
-•Döngü açma (Loop Unrolling),
-•döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici
-optimizasyon tekniğidir.
-•Birden fazla iterasyon tek bir döngüde açılır ve bu da işlemcinin birden fazla talimatı
-aynı anda çalıştırmasını mümkün kılar.
-•Döngü açma, derleyicinin daha fazla talimat seviyesinde paralellik açığa çıkarmasını
-sağlar.
-
-Peki ama
-nasıl?
-
-Derleyici Optimizasyonları
-•Örneğin, N çift sayı olsun:
-for (int i = 0; i < N; i++) {
-array[i] = array[i] * 2;
-}
-•Yukarıdakidöngüde döngü kontrolü (i'nin artırılması ve i < N koşulunun kontrolü) her
-iterasyonda bir kez çalışır.
-•Her iterasyon bir dizi elemanını işler, toplamda N iterasyon yapılır.
-
-Bu döngüyü nasıl
-açabilirsiniz?
-
-Derleyici Optimizasyonları
-Çözüm:
-•Her iterasyonda tek eleman yerine iki eleman işleyerek toplam iterasyon sayısını
-yarıyaindirebilirsiniz. Bunun için:
-•i değerini 2 artırılarak döngüye giriş yapılır(i += 2).
-•N yerine N/2 iterasyon gerçekleşir.
-•Bu şekildebirbirine bağlı olmayaniki eleman(array[i]ve array[i + 1])aynı anda
-işlenirve paralellikoluşur.
-for (int i = 0; i < N; i += 2) {örneğin bu satır core 1 ile işlenir.
-array[i] = array[i] * 2;
-array[i + 1] = array[i + 1] * 2;bu satır core 2 ile işlenir.
-}
-
-Derleyici Optimizasyonları
-Döngü koşulunun kontrol edilmesi ve i'nin artırılması daha az
-yapılır.
-Her iterasyonda işlenen eleman sayısı arttırılır.
-Paralellik sağlanır.
-Daha az işlem daha hızlı sonuç alınır.
-
-
-Döngü açma ile birlikte:
-
-
-
-Derleyici Optimizasyonları
-•Döngü açmada dikkat edilmesi gereken en temel faktör döngü sınırlarıdır.
-•Örneğin:
-for (int i = 0; i < N; i++) {
-array[i] = array[i] * 2;
-}
-•Yukarıdaki döndü yapısında N tek sayıise,
-•son iterasyon (yani i == N -1) array[i + 1]'e erişmeye çalışacaktır,
-•bu da sınır dışı bellek erişimine yol açabilir.
-
-Bu sorunu nasıl
-çözersiniz?
-
-Derleyici Optimizasyonları
-Çözüm:
-•N tek olduğunda döngü içindeki elemanlar (örneğin array[0] ve array[1], array[2] ve
-array[3]) çifter çifter işlenir.
-•Sadece son eleman (örneğin array[N-1]) döngü dışındabir kez işlenir.
-for (int i = 0; i < N -1; i += 2) {
-array[i] = array[i] * 2; örneğin bu satır core 1 ile işlenir.
-array[i + 1] = array[i + 1] * 2; bu satır core 2 ile işlenir.
-}
-array[N -1] = array[N -1] * 2;
-
-Derleyici Optimizasyonları
-•Döngü birleştirme (Loop Fusion),
-•iki veya daha fazla döngünün tek bir döngüde birleştirilmesi işlemidir.
-•Eksaskala sistemlerde bu optimizasyon,
-•bellek erişimini iyileştirmek ve döngü başlatma maliyetlerini azaltmakiçin
-kullanılır.
-
-Peki ama
-nasıl?
-
-Derleyici Optimizasyonları
-•Örneğin, aşağıdaki iki ayrı döngüolsun:
-for (int i = 0; i < N; i++) {
-A[i] = B[i] * 2;
-}
-for (int i = 0; i < N; i++) {
-C[i] = A[i]+ 5;
-}
-•Bu kodda ilk döngü A dizisini hesaplar, ikinci döngü ise A'nın sonuçlarını C dizisine
-işler.
-•A dizisine iki kez erişilir:
-•Birinci döngüde yazılır, ikinci döngüde okunur.
-•Bu da gereksiz bellek erişimine neden olur.
-
-Derleyici Optimizasyonları
-Çözüm:
-•Bu iki döngüyü tek bir döngüyebirleştirerek bellek erişimini optimize edebiliriz:
-for (int i = 0; i < N; i++) {
-A[i]= B[i] * 2;
-C[i] = A[i] + 5;
-}
-•A[i] birinci satırda hesaplanır ve hemen ikinci satırda kullanılır.
-•Tek bir döngü başlatılır.
-•Bellek erişimi azaltılır.
-Seri
-programlama
-kullanılmakta
-
-Derleyici Optimizasyonları
-Bağımsız işlem adımları içeren döngüler varsa (Örneğin A[i]
-önce hesaplanıp sonra C[i]'de kullanılıyorsa)
-Diziler arasındaki veri bağımlılığı yoksa
-Yada veri bağımlılığı kontrol ediliyorsa
-Bellek performansı artırılmak isteniyorsa
-
-
-Döngü birleştirme ne zaman kullanılır?
-
-
-
-Derleyici Optimizasyonları
-•Vektörizasyon (Vectorization):
-•Tek Komut Çoklu Veri (SIMD) paralelliğiolarak da bilinen bir
-optimizasyon tekniğidir.
-•Bu teknik,
-•aynı işlemci komutunun birden fazla veri elemanına aynı anda
-uygulanmasını sağlar
-•Özellikle diziler veya vektörler üzerinde çalışan döngüler için oldukça
-etkilidir.
-•Modern işlemciler, SIMD komut setleri (SSE, AVX, Neon vb.) ile vektör
-işlemlerini hızlandırır.
-
-Derleyici Optimizasyonları
-•Örneğin 8 elemanlı bir dizininher elemanı 2 ile çarpılmak istensin:
-•Skaler işlem yapılır. Yani standart bir for döngüsüyle her elemanı tek tek çarpılır:
-int array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-for (int i = 0; i < 8; i++) {
-array[i] = array[i] * 2;
-}
-•İşlem Adımları:
-•İlk iterasyon: array[0] = 1 * 2
-•İkinci iterasyon: array[1] = 2 * 2
-•Üçüncü iterasyon: array[2] = 3 * 2
-•...
-•Sekizinci iterasyon: array[7] = 8 * 2
-•Toplamda 8 işlem yapılır (8 döngü turu).
-
-Bu işlem
-vektörleştirme
-ile nasıl olur?
-
-Derleyici Optimizasyonları
-Çözüm 1:
-•4’lü SIMDile Vektörizasyonda4 tane sayı tek seferde işlenebilir.
-int array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-#pragma omp simd
-for (int i = 0; i < 8; i++) {
-array[i] = array[i] * 2;
-}
-•İşlem adımları:
-•İlk adımda işlemci 4 elemanı aynı andaçarpar: {1, 2, 3, 4} * 2 → {2, 4, 6, 8}
-•İkinci adımda diğer 4 elemanı aynı anda çarpar: {5, 6, 7, 8} * 2 → {10, 12, 14, 16}
-•Toplamda 2 döngü turu ile işlem tamamlanır.
-
-Derleyici Optimizasyonları
-Çözüm 2:
-•8’lü SIMDile Vektörizasyonda8tane sayı tek seferde işlenebilir.
-int array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-#pragma omp simd
-for (int i = 0; i < 8; i++) {
-array[i] = array[i] * 2;
-}
-•İşlem adımları:
-•Tek adımda işlemci 8elemanı aynı andaçarpar:
-•{1, 2, 3, 4, 5, 6, 7, 8} * 2 → {2, 4, 6, 8, 10, 12, 14, 16}
-•Toplamda 1 döngü turu ile işlem tamamlanır.
-
-Derleyici Optimizasyonları
-Tek bir saat döngüsünde birden fazla veri elemanını işler.
-İşlem süresini hızlandırır.
-Bellekten okuma ve yazma işlemlerinin sayısını azaltır.
-Güç tüketimini azaltır.
-
-
-Vektörizasyonun avantajları nelerdir?
-
-
-
-Performans Profilleme ve Hata Ayıklama
-•Eksaskala sistemlerde, işlemci veya çekirdek sayısı arttıkça uygulamanın
-performansı analiz edilir.
-•Profilleme ve hata ayıklama,
-•Eksaskala sistemlerde kod verimliliğini optimize etmek ve performans
-sorunlarını tespit etmek için kullanılır.
-•Profilleme,
-•programın çalışma zamanı davranışını analiz etmeye ve darboğazları tespit
-etmeyeyardımcı olur.
-•Hata ayıklama,
-•performans, eşzamanlılık ve kaynak kullanımıyla ilgili hataları giderir ve
-programın doğruluğunu sağlar.
-
-Performans Profilleme ve Hata Ayıklama
-•Eksaskala sistemlerde profilleme araçları genel olarak işlemci, bellek ve I/O
-kullanımıgibi farklı kaynakların nasıl kullanıldığını analiz eder.
-•Eksaskala sistemlerde en sık kullanılan profilleme araçlar:
-•Intel VTune Amplifier
-•Cray Pat
-•TAU (Tuning and Analysis Utilities)
-•gprof
-•perf
-
-Performans Profilleme ve Hata Ayıklama
-•Eksaskala sistemlerde hata ayıklama araçları genel olarak bellek hataları, veri
-yarışları gibi hataları analiz eder.
-•Eksaskala sistemlerde en sık kullanılan hata ayıklama araçları:
-•TotalView
-•GDB (GNU Debugger)
-•Allinea DDT
-•Intel Debugger (IDB)
+Listelerin Karşılaştırılması
+ListeOdak NoktasıTest (Benchmark)Amaç
+TOP500Ham hesaplama gücü
+(FLOPS)
+LINPACKEn hızlı
+süperbilgisayarları
+belirlemek
+HPCGBellek, iletişim ve
+gerçekçi yük
+HPCGGerçek
+uygulamalardaki
+performansı ölçmek
+Green500Enerji verimliliğiFLOPS/WattEn verimli
+süperbilgisayarları
+sıralamak
 - **İstenen Toplam Soru Sayısı:** 10 soru
 - **Zorluk Seviyesi:** mixed
 
@@ -588,42 +316,35 @@ yarışları gibi hataları analiz eder.
 - Toplam Soru Sayısı: 10
 - Alt Konu Dağılımı:
 
-  - Paralel Programlama Paradigmaları: 2 soru
-  - Paylaşımlı Bellek Paradigması: 2 soru
-  - Dağıtık Bellek Paradigması: 2 soru
-  - Hibrit Paralel Programlama: 2 soru
-  - Döngü Açma Loop Unrolling: 2 soru
+  - Süperbilgisayar Sıralama Listeleri: 3 soru
+  - Top500ün Amacı Ve Ölçütü: 3 soru
+  - Hpcgnin Amacı Ve Ölçütü: 2 soru
+  - Green500ün Amacı Ve Ölçütü: 2 soru
 
 
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
-#### Paralel Programlama Paradigmaları:
-- Soru: Aşağıdakilerden hangisi eksaskala sistemlerde verimliliği artırmak için kullanılan temel yaklaşımlardan biridir?
-- Seçenekler: Tek çekirdekli işlemci kullanımı | Paralellikten yararlanma | Bellek erişimini en aza indirme | Seri programlama
-- Doğru Cevap: Paralellikten yararlanma
-- Zorluk: medium
-
-#### Paylaşımlı Bellek Paradigması:
-- Soru: Paylaşımlı bellek paradigması için aşağıdakilerden hangisi doğrudur?
-- Seçenekler: Her işlemci kendi özel belleğine sahiptir. | Tüm işlemciler ortak bir belleğe erişir. | Veri iletişimi mesajlaşma yoluyla sağlanır. | Sadece dağıtık sistemlerde kullanılır.
-- Doğru Cevap: Tüm işlemciler ortak bir belleğe erişir.
+#### Süperbilgisayar Sıralama Listeleri:
+- Soru: Aşağıdakilerden hangisi süperbilgisayarların performansını değerlendiren temel listelerden biridir?
+- Seçenekler: Big500 | TOP500 | Fast500 | Global500
+- Doğru Cevap: TOP500
 - Zorluk: easy
 
-#### Dağıtık Bellek Paradigması:
-- Soru: Dağıtık bellek paradigmasında veri değişimi nasıl sağlanır?
-- Seçenekler: Ortak bir bellek alanı üzerinden | Mesajlaşma ile | Paylaşımlı değişkenler aracılığıyla | Sanal bellek yönetimi ile
-- Doğru Cevap: Mesajlaşma ile
+#### Top500ün Amacı Ve Ölçütü:
+- Soru: TOP500 listesi hangi aralıklarla yayınlanmaktadır?
+- Seçenekler: Yılda bir kez | İki yılda bir | Yılda iki kez | Üç ayda bir
+- Doğru Cevap: Yılda iki kez
 - Zorluk: easy
 
-#### Hibrit Paralel Programlama:
-- Soru: Hibrit paralel programlama yaklaşımının temel özelliği nedir?
-- Seçenekler: Sadece paylaşımlı bellek paradigmasını kullanması | Sadece dağıtık bellek paradigmasını kullanması | Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmesi | Sadece tek çekirdekli işlemcilerde çalışması
-- Doğru Cevap: Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmesi
+#### Hpcgnin Amacı Ve Ölçütü:
+- Soru: HPCG'nin (High Performance Conjugate Gradient) temel amacı nedir?
+- Seçenekler: Enerji verimliliğini ölçmek | Ham hesaplama gücünü ölçmek | Bellek, iletişim ve veri akış performansını test etmek | Grafik işlemci performansını ölçmek
+- Doğru Cevap: Bellek, iletişim ve veri akış performansını test etmek
 - Zorluk: easy
 
-#### Döngü Açma Loop Unrolling:
-- Soru: Döngü açma (Loop Unrolling) tekniğinin temel amacı nedir?
-- Seçenekler: Döngü kontrol yapılarının yükünü azaltmak | Döngüleri birleştirerek bellek erişimini artırmak | Döngüleri vektörleştirerek SIMD paralelliği sağlamak | Döngüleri tamamen ortadan kaldırmak
-- Doğru Cevap: Döngü kontrol yapılarının yükünü azaltmak
+#### Green500ün Amacı Ve Ölçütü:
+- Soru: Green500 listesi süperbilgisayarları hangi kritere göre sıralar?
+- Seçenekler: İşlemci hızına | Bellek kapasitesine | Enerji verimliliğine | Depolama alanına
+- Doğru Cevap: Enerji verimliliğine
 - Zorluk: easy
 

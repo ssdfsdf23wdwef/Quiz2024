@@ -1,9 +1,9 @@
-  "use client";
+"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useTheme } from "../../context/ThemeProvider";
 import {
   FiCheck,
-  FiAlertCircle,
   FiLoader,
   FiInfo,
   FiBook,
@@ -105,26 +105,24 @@ export default function TopicSelectionScreen({
   quizType,
   personalizedQuizType = "comprehensive",
   isLoading = false,
-  error,
+  error, // error prop'u şu an kullanılmıyor, ancak gelecekte kullanılabilir.
   onTopicsSelected,
   onCourseChange,
-  onCancel,
+  onCancel, // onCancel prop'u şu an kullanılmıyor.
   initialSelectedTopicIds,
   onTopicSelectionChange = () => {},
   onInitialLoad = true,
   setOnInitialLoad = () => {},
 }: TopicSelectionScreenProps) {
-  // Mevcut konuları tut
-  const [filteredTopics, setFilteredTopics] = useState<TopicData[]>(detectedTopics);
-  const [selectedFilter, setSelectedFilter] = useState("all"); // Filtre durumunu ekleyelim
+  const [filteredTopics, setFilteredTopics] = useState<TopicData[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState("all");
   const router = useRouter();
+  const { isDarkMode } = useTheme();
 
-  // Seçili kurs kontrolü
   const [currentCourseId, setCurrentCourseId] = useState(
     selectedCourseId || ""
   );
 
-  // Kurs değişikliğini bildir
   const handleCourseChange = useCallback(
     (courseId: string) => {
       setCurrentCourseId(courseId);
@@ -132,8 +130,7 @@ export default function TopicSelectionScreen({
     },
     [onCourseChange],
   );
-  
-  // Filtre değişikliğini yönet
+
   const handleFilterChange = useCallback(
     (filter: "all" | "new" | "existing") => {
       setSelectedFilter(filter);
@@ -141,150 +138,112 @@ export default function TopicSelectionScreen({
     [],
   );
 
-  // Tüm konuları seç/kaldır
-  const handleToggleAll = useCallback((selectAll: boolean) => {
-    console.log('[TopicSelectionScreen] handleToggleAll çağrıldı, selectAll:', selectAll);
-    const updatedTopics = filteredTopics.map(topic => ({
-      ...topic,
-      isSelected: selectAll
-    }));
-    
-    setFilteredTopics(updatedTopics);
-    
-    // Seçilen konu ID'lerini props olarak ilet
-    const selectedIds = selectAll ? updatedTopics.map(t => t.id) : [];
-    console.log('[TopicSelectionScreen] Tüm konular için seçim güncellendi:', selectedIds);
-    onTopicSelectionChange(selectedIds);
-  }, [filteredTopics, onTopicSelectionChange]);
-
-  // İlk render sırasında konuların seçim durumunu kontrol et
   useEffect(() => {
-    if (filteredTopics.length > 0 && initialSelectedTopicIds && initialSelectedTopicIds.length > 0 && onInitialLoad) {
-      console.log('[TopicSelectionScreen] Başlangıç seçili konuları ayarlanıyor:', initialSelectedTopicIds);
-      
-      // Başlangıçta seçilmiş konular varsa bunları işaretle
-      const updatedTopics = filteredTopics.map(topic => ({
-        ...topic,
-        isSelected: initialSelectedTopicIds.includes(topic.id)
-      }));
-      
-      setFilteredTopics(updatedTopics);
-      setOnInitialLoad(false);
+    if (isLoading) {
+      // Yükleme sırasında konuları temizleyebilir veya bir yükleme göstergesi gösterebilirsiniz.
+      // setFilteredTopics([]); // İsteğe bağlı: yüklenirken listeyi temizle
+      return;
     }
-  }, [filteredTopics, initialSelectedTopicIds, onInitialLoad, setOnInitialLoad]);
 
-  // Seçilen konuları takip et
-  const handleTopicToggle = useCallback((id: string) => {
-    console.log('[TopicSelectionScreen] handleTopicToggle çağrıldı:', id);
-    const updatedTopics = filteredTopics.map(topic => {
-      if (topic.id === id) {
-        return { ...topic, isSelected: !topic.isSelected };
-      }
-      return topic;
-    });
-    
-    setFilteredTopics(updatedTopics);
-    
-    // Seçilen konu ID'lerini props olarak ilet
-    const selectedIds = updatedTopics.filter(t => t.isSelected).map(t => t.id);
-    console.log('[TopicSelectionScreen] Seçilen konular güncellendi:', selectedIds);
-    onTopicSelectionChange(selectedIds);
-  }, [filteredTopics, onTopicSelectionChange]);
-
-  // Sınav türüne göre görüntülenecek konuları filtrele
-  useEffect(() => {
-    if (isLoading) return;
-
-    let topics: TopicData[] = [];
+    let baseTopicsRaw: Omit<TopicData, 'isSelected'>[] = [];
+    const existingTopicIds = new Set(existingTopics.map((t) => t.id));
 
     if (quizType === "quick") {
-      topics = [...detectedTopics];
+      baseTopicsRaw = [...detectedTopics];
     } else if (personalizedQuizType === "newTopicFocused") {
-      topics = [...detectedTopics];
+      baseTopicsRaw = [...detectedTopics];
     } else if (personalizedQuizType === "learningObjectiveFocused") {
-      // Öğrenme hedefi odaklı: Tüm mevcut konular + yeni konular
-      topics = [...existingTopics, ...detectedTopics];
+      const uniqueDetected = detectedTopics.filter(
+        (t) => !existingTopicIds.has(t.id),
+      );
+      baseTopicsRaw = [...existingTopics, ...uniqueDetected];
     } else if (personalizedQuizType === "weakTopicFocused") {
-      topics = existingTopics.filter(
+      baseTopicsRaw = existingTopics.filter(
         (topic) => topic.status === "failed" || topic.status === "medium",
       );
     } else if (personalizedQuizType === "comprehensive") {
-      const existingIds = new Set(existingTopics.map((t) => t.id));
-      const uniqueDetectedTopics = detectedTopics.filter(
-        (t) => !existingIds.has(t.id),
+      const uniqueDetected = detectedTopics.filter(
+        (t) => !existingTopicIds.has(t.id),
       );
-      topics = [...uniqueDetectedTopics, ...existingTopics];
+      baseTopicsRaw = [...uniqueDetected, ...existingTopics];
     }
 
-    // Tüm konuları otomatik olarak seçili hale getir (her koşulda)
-    topics = topics.map((topic) => ({
-      ...topic,
-      isSelected: true
-    }));
+    let finalTopicsWithSelection: TopicData[];
 
-    setFilteredTopics(topics);
-    console.log('[TSS useEffect] Detected topics prop:', JSON.stringify(detectedTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
-    console.log('[TSS useEffect] Existing topics prop:', JSON.stringify(existingTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
-    console.log('[TSS useEffect] quizType:', quizType, 'personalizedQuizType:', personalizedQuizType);
-    console.log('[TSS useEffect] Final topics for setFilteredTopics:', JSON.stringify(topics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
-    
-    // Frontend'de tespit edilen konuları console'a yazdır
-    console.log('\n=== FRONTEND - TESPİT EDİLEN KONULAR ===');
-    console.log('Algılanan Konular:', detectedTopics.length);
-    detectedTopics.forEach((topic, index) => {
-      console.log(`\n[${index + 1}] ${topic.subTopicName || topic.name || 'İsimsiz Konu'}`);
-      if (topic.parentTopic) {
-        console.log(`  Ana Konu: ${topic.parentTopic}`);
+    if (onInitialLoad) {
+      let initialSelectionIds: string[];
+      if (initialSelectedTopicIds && initialSelectedTopicIds.length > 0) {
+        initialSelectionIds = initialSelectedTopicIds;
+      } else {
+        // Başlangıçta seçili ID yoksa ve zayıf konu odaklı değilse tüm konuları seç (orijinal davranış)
+        if (personalizedQuizType !== 'weakTopicFocused') {
+            initialSelectionIds = baseTopicsRaw.map(t => t.id);
+        } else {
+            initialSelectionIds = []; // Zayıf konu odaklıysa başlangıçta hiçbirini seçme (veya özel bir mantık)
+        }
       }
-      console.log(`  ID: ${topic.id.substring(0, 8)}...`);
-    });
-    console.log('\n============================\n');
+      
+      finalTopicsWithSelection = baseTopicsRaw.map(topic => ({
+        ...topic,
+        isSelected: initialSelectionIds.includes(topic.id),
+      }));
+      
+      onTopicSelectionChange(initialSelectionIds);
+      setOnInitialLoad(false);
+    } else {
+      // Başlangıç yüklemesi değilse (örn: detectedTopics değişti),
+      // orijinal kod tüm konuları tekrar seçili yapıyordu. Bu davranışı koruyoruz.
+      // İstenirse, mevcut seçimler korunabilir.
+      finalTopicsWithSelection = baseTopicsRaw.map(topic => ({
+        ...topic,
+        isSelected: true, // Orijinal davranış: bağımlılıklar değişince tümünü seç
+      }));
+      const selectedIds = finalTopicsWithSelection.filter(t => t.isSelected).map(t => t.id);
+      onTopicSelectionChange(selectedIds);
+    }
+    
+    setFilteredTopics(finalTopicsWithSelection);
+
   }, [
     detectedTopics,
     existingTopics,
     quizType,
     personalizedQuizType,
     isLoading,
+    initialSelectedTopicIds,
+    onInitialLoad,
+    setOnInitialLoad,
+    onTopicSelectionChange,
   ]);
 
-  // useEffect ile tespit edilen konuların otomatik işaretlenmesi
-  useEffect(() => {
-    if (onInitialLoad && initialSelectedTopicIds && initialSelectedTopicIds.length > 0) {
-      console.log('[TopicSelectionScreen] initialSelectedTopicIds var, bu konuları seçeceğiz:', initialSelectedTopicIds);
-      // Burada kullanılacak güncel filteredTopics, props'tan gelen veya initialSelectedTopicIds'den filtrelenen olabilir
-      const newFilteredTopics = filteredTopics.map(topic => ({
-        ...topic,
-        isSelected: initialSelectedTopicIds.includes(topic.id)
-      }));
-      
-      setFilteredTopics(newFilteredTopics);
-      
-      // Seçili konu yoksa ve konular varsa ilk konuyu otomatik seç
-      const hasAnySelected = newFilteredTopics.some(t => t.isSelected);
-      if (!hasAnySelected && newFilteredTopics.length > 0) {
-        console.log('[TopicSelectionScreen] Hiç seçili konu yok, ilk konu otomatik seçilecek:', newFilteredTopics[0].id);
-        const updatedTopics = [...newFilteredTopics];
-        updatedTopics[0].isSelected = true;
-        setFilteredTopics(updatedTopics);
-        // Seçim değişikliğini üst bileşene bildir
-        const selectedIds = [updatedTopics[0].id];
-        onTopicSelectionChange(selectedIds);
-      } else if (hasAnySelected) {
-        // Seçilen konuları üst bileşene bildir
-        const selectedIds = newFilteredTopics.filter(t => t.isSelected).map(t => t.id);
-        onTopicSelectionChange(selectedIds);
-      }
-      
-      setOnInitialLoad(false);
-    }
-  }, [filteredTopics, initialSelectedTopicIds, onInitialLoad, onTopicSelectionChange]);
 
-  // Çeşitli konu sayıları
+  const handleToggleAll = useCallback((selectAll: boolean) => {
+    const updatedTopics = filteredTopics.map(topic => ({
+      ...topic,
+      isSelected: selectAll
+    }));
+    setFilteredTopics(updatedTopics);
+    const selectedIds = selectAll ? updatedTopics.map(t => t.id) : [];
+    onTopicSelectionChange(selectedIds);
+  }, [filteredTopics, onTopicSelectionChange]);
+
+  const handleTopicToggle = useCallback((id: string) => {
+    const updatedTopics = filteredTopics.map(topic => {
+      if (topic.id === id) {
+        return { ...topic, isSelected: !topic.isSelected };
+      }
+      return topic;
+    });
+    setFilteredTopics(updatedTopics);
+    const selectedIds = updatedTopics.filter(t => t.isSelected).map(t => t.id);
+    onTopicSelectionChange(selectedIds);
+  }, [filteredTopics, onTopicSelectionChange]);
+
   const topicCounts = useMemo(
     () => ({
       all: filteredTopics.length,
-      new: filteredTopics.filter((t) => t.isNew).length,
-      existing: filteredTopics.filter((t) => !t.isNew).length,
+      new: filteredTopics.filter((t) => t.isNew).length, // isNew property TopicData'da olmalı
+      existing: filteredTopics.filter((t) => !t.isNew).length, // isNew property TopicData'da olmalı
       selected: filteredTopics.filter((t) => t.isSelected).length,
       weak: filteredTopics.filter((t) => t.status === "failed").length,
       medium: filteredTopics.filter((t) => t.status === "medium").length,
@@ -293,21 +252,18 @@ export default function TopicSelectionScreen({
     [filteredTopics],
   );
 
-  // Görüntülenecek konuları filtrele
   const displayTopics = useMemo(
     () =>
       selectedFilter === "all"
         ? filteredTopics
         : selectedFilter === "new"
-          ? filteredTopics.filter((t) => t.isNew)
-          : filteredTopics.filter((t) => !t.isNew),
+          ? filteredTopics.filter((t) => t.isNew) // isNew property TopicData'da olmalı
+          : filteredTopics.filter((t) => !t.isNew), // isNew property TopicData'da olmalı
     [filteredTopics, selectedFilter],
   );
 
-  // Konuları ana konulara göre grupla
   const groupedTopics = useMemo(() => {
     const groups: Record<string, TopicData[]> = {};
-    
     displayTopics.forEach((topic) => {
       const parentTopic = topic.parentTopic || 'Diğer Konular';
       if (!groups[parentTopic]) {
@@ -315,13 +271,11 @@ export default function TopicSelectionScreen({
       }
       groups[parentTopic].push(topic);
     });
-    
     return groups;
   }, [displayTopics]);
 
-  // Konuları seçip devam etme fonksiyonu
   const handleContinue = () => {
-    if (!currentCourseId && quizType === 'personalized') { // Kişiselleştirilmiş sınav için kurs ID zorunlu
+    if (!currentCourseId && quizType === 'personalized') {
       alert("Lütfen bir ders seçin");
       return;
     }
@@ -329,43 +283,30 @@ export default function TopicSelectionScreen({
     const topicsToSubmit = filteredTopics
       .filter((t) => t.isSelected)
       .map((t) => t.id);
-      
-    console.log('[TSS handleContinue] filteredTopics:', JSON.stringify(filteredTopics.map(t => ({id: t.id, name: t.subTopicName, selected: t.isSelected}))));
-    console.log('[TSS handleContinue] Topics being submitted to onTopicsSelected:', JSON.stringify(topicsToSubmit));
-    console.log('[TSS handleContinue] currentCourseId:', currentCourseId);
 
-    if (topicsToSubmit.length === 0 && personalizedQuizType !== 'weakTopicFocused') { // Zayıf odaklı değilse konu seçimi zorunlu
+    if (topicsToSubmit.length === 0 && personalizedQuizType !== 'weakTopicFocused') {
       alert("Lütfen en az bir konu seçin");
       return;
     }
     
-    // Hızlı sınav için kurs ID'si "quick" veya boş string olabilir, backend bunu handle etmeli. Şimdilik boş gönderelim.
     onTopicsSelected(topicsToSubmit, quizType === 'quick' ? "" : currentCourseId);
   };
 
-  // Durum bilgisi için stil
   const getStatusInfo = useCallback((status?: LearningTargetStatusLiteral | string) => {
     if (!status) {
       return {
         color: "text-indigo-600 dark:text-indigo-400",
         bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
         borderColor: "border-indigo-200 dark:border-indigo-700",
-        label: "Yeni",
+        label: "Yeni", // Varsayılan olarak 'Yeni' etiketi, eğer konu durumu yoksa
         icon: FiPlus,
       };
     }
-
-    // Desteklenen değerlerle eşleştir
     const validStatusValues: LearningTargetStatusLiteral[] = ["pending", "medium", "failed", "mastered"];
-    
-    // String değerine dönüştür
     const statusStr = typeof status === 'string' ? status : String(status);
-    
-    // Desteklenen değerlerle eşleştir
     const statusLiteral = validStatusValues.includes(statusStr as LearningTargetStatusLiteral) 
       ? statusStr as LearningTargetStatusLiteral 
-      : "pending";
-    
+      : "pending"; // Bilinmeyen bir durum gelirse 'pending' varsay
     return getStatusStyle(statusLiteral);
   }, []);
 
@@ -380,7 +321,7 @@ export default function TopicSelectionScreen({
     );
   }
 
-  if (filteredTopics.length === 0) {
+  if (filteredTopics.length === 0) { // isLoading false ise ve konu yoksa bu blok çalışır
     return (
       <div className="py-8 px-6 flex flex-col items-center justify-center border rounded-lg bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700">
         <FiInfo className="w-8 h-8 text-blue-500 dark:text-blue-400 mb-4" />
@@ -414,7 +355,7 @@ export default function TopicSelectionScreen({
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
               Çalışmak istediğiniz konuları kendiniz ekleyerek devam edebilirsiniz.
             </p>
-            <Button 
+            <Button
               variant="secondary"
               className="w-full"
               onClick={() => router.push('/learning-goals/dashboard')}
@@ -429,10 +370,10 @@ export default function TopicSelectionScreen({
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
               Daha fazla kavramsal içerik içeren bir ders materyali veya dokümandan tekrar yükleme yapabilirsiniz.
             </p>
-            <Button 
+            <Button
               variant="outline"
               className="w-full"
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/')} // Belge yükleme sayfasına yönlendirme
             >
               Belge Yükleme Ekranına Dön
             </Button>
@@ -450,39 +391,41 @@ export default function TopicSelectionScreen({
   }
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+    <div className={`relative p-6 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl border ${isDarkMode ? 'bg-gray-900/70 border-gray-700/40 shadow-gray-950/30' : 'bg-white/80 border-gray-200/50 shadow-gray-400/20'}`}>
+      <div className={`absolute left-0 top-0 w-full h-1.5 bg-gradient-to-r ${isDarkMode ? 'from-sky-600 via-cyan-600 to-teal-600' : 'from-sky-500 via-cyan-500 to-teal-500'} opacity-90`}></div>
+      <div className="mb-6 pt-2">
+        <h2 className={`text-2xl font-bold mb-2 flex items-center ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+          <span className={`w-9 h-9 rounded-xl flex items-center justify-center mr-3 shadow-md ${isDarkMode ? 'bg-gradient-to-br from-sky-700/50 to-cyan-700/60' : 'bg-gradient-to-br from-sky-100 to-cyan-100'}`}>
+            <FiBook className={`${isDarkMode ? 'text-sky-400' : 'text-sky-600'}`} />
+          </span>
           Konu Seçimi
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">
+        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
           {quizType === "quick"
             ? "Yüklediğiniz belgedeki tespit edilen konular aşağıdadır. Sınava dahil etmek istediklerinizi seçin."
             : personalizedQuizType === "weakTopicFocused"
             ? "Geliştirmeniz gereken alanları içeren özel bir sınav oluşturulacak."
             : personalizedQuizType === "learningObjectiveFocused"
             ? "Öğrenme hedeflerinize göre özel bir sınav oluşturulacak."
-              : personalizedQuizType === "newTopicFocused"
+            : personalizedQuizType === "newTopicFocused"
             ? "Henüz çalışmadığınız yeni konulara odaklanan bir sınav oluşturulacak."
             : "Çalışma durumunuza uygun kapsamlı bir sınav oluşturulacak."}
         </p>
-        
-        {/* Maksimum konu sınırı bilgisi */}
-        <div className="mt-3 p-3 border border-blue-300 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800 text-blue-700 dark:text-blue-300 rounded-md flex items-center">
-          <FiInfo className="min-w-5 w-5 h-5 mr-2" />
+        <div className={`mt-4 p-3.5 rounded-xl border flex items-center backdrop-blur-md shadow-md ${isDarkMode ? 'bg-sky-900/30 border-sky-700/50 text-sky-300 shadow-sky-950/20' : 'bg-sky-50/80 border-sky-200/70 text-sky-700 shadow-sky-300/30'}`}>
+          <FiInfo className={`min-w-5 w-5 h-5 mr-2.5 ${isDarkMode ? 'text-sky-400' : 'text-sky-600'}`} />
           <span className="text-sm">En fazla <strong>10 konu</strong> seçebilirsiniz. Bu sınır, AI'nin daha odaklı ve kaliteli sorular oluşturabilmesi için gereklidir.</span>
         </div>
       </div>
 
       {availableCourses && availableCourses.length > 0 && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="mb-6 pt-1">
+          <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
             Ders Seçimi
           </label>
           <select
             value={currentCourseId}
             onChange={(e) => handleCourseChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 backdrop-blur-md focus:ring-2 ${isDarkMode ? 'bg-gray-800/60 border-gray-600/80 focus:ring-sky-500 focus:border-sky-500 text-gray-100 placeholder-gray-500' : 'bg-white/70 border-gray-300/80 focus:ring-sky-500 focus:border-sky-500 text-gray-900 placeholder-gray-400'} shadow-sm focus:shadow-md`}
           >
             <option value="">Ders seçin</option>
             {availableCourses.map((course) => (
@@ -494,16 +437,14 @@ export default function TopicSelectionScreen({
         </div>
       )}
 
-      {/* Konu Listesi Başlığı ve Filtreler */}
       <div className="mb-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => handleFilterChange("all")}
-              className={`px-3 py-1 text-sm rounded-full ${
-                selectedFilter === "all"
-                  ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+              className={`px-4 py-1.5 text-sm rounded-full transition-all duration-200 shadow-sm hover:shadow-md ${selectedFilter === "all"
+                  ? (isDarkMode ? 'bg-sky-600 text-white hover:bg-sky-500' : 'bg-sky-500 text-white hover:bg-sky-600')
+                  : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')
               }`}
             >
               Tümü ({topicCounts.all})
@@ -511,10 +452,9 @@ export default function TopicSelectionScreen({
             {topicCounts.new > 0 && (
               <button
                 onClick={() => handleFilterChange("new")}
-                className={`px-3 py-1 text-sm rounded-full ${
-                  selectedFilter === "new"
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                className={`px-4 py-1.5 text-sm rounded-full transition-all duration-200 shadow-sm hover:shadow-md ${selectedFilter === "new"
+                    ? (isDarkMode ? 'bg-teal-600 text-white hover:bg-teal-500' : 'bg-teal-500 text-white hover:bg-teal-600')
+                    : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')
                 }`}
               >
                 Yeni ({topicCounts.new})
@@ -523,10 +463,9 @@ export default function TopicSelectionScreen({
             {topicCounts.existing > 0 && (
               <button
                 onClick={() => handleFilterChange("existing")}
-                className={`px-3 py-1 text-sm rounded-full ${
-                  selectedFilter === "existing"
-                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                className={`px-4 py-1.5 text-sm rounded-full transition-all duration-200 shadow-sm hover:shadow-md ${selectedFilter === "existing"
+                    ? (isDarkMode ? 'bg-indigo-600 text-white hover:bg-indigo-500' : 'bg-indigo-500 text-white hover:bg-indigo-600')
+                    : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')
                 }`}
               >
                 Mevcut ({topicCounts.existing})
@@ -535,7 +474,7 @@ export default function TopicSelectionScreen({
           </div>
           <button
             onClick={() => handleToggleAll(true)}
-            className="px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-sm hover:shadow flex items-center justify-center"
+            className={`px-4 py-1.5 text-sm rounded-full transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center ${isDarkMode ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white' : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -545,22 +484,21 @@ export default function TopicSelectionScreen({
         </div>
       </div>
 
-      {/* Ana konulara göre gruplandırılmış liste */}
       <div className="space-y-6 mb-6">
         {Object.entries(groupedTopics).map(([parentTopic, topics]) => (
-          <div key={parentTopic} className="border rounded-lg p-3 dark:border-gray-700 hover:shadow-md transition-shadow">
-            <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 border-b pb-2 dark:border-gray-700 flex items-center">
-              <span className="inline-block w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
+          <div key={parentTopic} className={`rounded-xl p-4 transition-all duration-300 ease-in-out ${isDarkMode ? 'bg-gray-800/50 border border-gray-700/60 shadow-lg shadow-gray-950/20 hover:shadow-gray-900/30' : 'bg-white/70 border border-gray-200/70 shadow-lg shadow-gray-300/30 hover:shadow-gray-300/50'}`}>
+            <h3 className={`text-lg font-semibold mb-3 border-b pb-2.5 flex items-center ${isDarkMode ? 'text-sky-300 border-gray-700' : 'text-sky-700 border-gray-200'}`}>
+              <span className={`inline-block w-2.5 h-2.5 rounded-full mr-2.5 ${isDarkMode ? 'bg-sky-500' : 'bg-sky-600'}`}></span>
               {parentTopic}
               <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({topics.length})</span>
             </h3>
             <div className="space-y-2">
               {topics.map((topic, index) => (
-                <TopicCard 
-                  key={`${topic.id}-${index}`} 
-                  topic={topic} 
-                  onToggle={handleTopicToggle} 
-                  statusInfo={getStatusInfo(topic.status)}
+                <TopicCard
+                  key={`${topic.id}-${index}`} // Index kullanımı ideal değil, ID'ler zaten eşsiz olmalı.
+                  topic={topic}
+                  onToggle={handleTopicToggle}
+                  statusInfo={getStatusInfo(topic.status || (topic.isNew ? undefined : "pending"))} // isNew varsa ve status yoksa 'Yeni' göster
                 />
               ))}
             </div>
@@ -568,59 +506,45 @@ export default function TopicSelectionScreen({
         ))}
       </div>
 
-      {/* Tek bir merkezi "Devam Et" butonu */}
-      <div className="flex justify-center mt-8">
-        <button 
+      <div className="flex justify-center mt-10">
+        <button
           onClick={handleContinue}
-          className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors shadow-md hover:shadow-lg flex items-center justify-center"
-          disabled={topicCounts.selected === 0}
+          className={`px-10 py-3.5 rounded-xl text-base font-semibold transition-all duration-300 ease-in-out flex items-center justify-center shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDarkMode ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-emerald-500 focus:ring-offset-gray-900 disabled:from-gray-600 disabled:to-gray-700' : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-emerald-500 focus:ring-offset-white disabled:from-gray-400 disabled:to-gray-500'}`}
+          disabled={topicCounts.selected === 0 && personalizedQuizType !== 'weakTopicFocused'} // Zayıf konu odaklı değilse ve seçili konu yoksa disable et
         >
-          <span>{topicCounts.selected > 0 ? `${topicCounts.selected} Konu ile Devam Et` : "Konu Seçin"}</span>
+          <span>{topicCounts.selected > 0 ? `${topicCounts.selected} Konu ile Devam Et` : (personalizedQuizType === 'weakTopicFocused' ? "Devam Et (Zayıf Konular)" : "Konu Seçin")}</span>
         </button>
       </div>
     </div>
   );
 }
 
-// Konu kartı bileşeni
 interface TopicCardProps {
-  topic: TopicData;
+  topic: TopicData & { isSelected?: boolean }; // isSelected TopicData'da olabilir veya olmayabilir.
   onToggle: (id: string) => void;
   statusInfo: StatusStyle;
 }
 
 function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
-  // Konu adını düzgün bir şekilde göster
+  const { isDarkMode } = useTheme();
   const displayTopicName = () => {
-    // '```json' gibi metinlerle başlayan konuları temizle
     let name = '';
-    
-    // Eğer subTopicName alanı varsa ve bir string ise
     if (typeof topic.subTopicName === 'string') {
       name = topic.subTopicName;
-      
-      // JSON formatı veya teknik bir değer ise, temizle
       if (name.startsWith('```') || name.startsWith('"```') || name.includes('subTopicName') || name.includes('normalizedSubTopicName')) {
         name = 'Konu ' + topic.id.substring(0, 8);
       }
     }
-    // Eğer name alanı varsa
-    else if (topic.name) {
+    else if (topic.name) { // 'name' alanı TopicData'da olmayabilir, kontrol ekledim.
       name = topic.name;
     }
-    // Hiçbir şey yoksa ID'yi kullan
     else {
       name = 'Konu ' + topic.id.substring(0, 8);
     }
-    
-    // Özel karakterleri ve fazla boşlukları temizle
     name = name.replace(/^\W+/, '').replace(/\s+/g, ' ').trim();
-    
-    // Eğer name hala boşsa veya çok kısaysa, ön tanımlı bir metin kullan
     if (!name || name.length < 3) {
       return 'Konu ' + topic.id.substring(0, 8);
     }
-    
     return name;
   };
 
@@ -628,52 +552,53 @@ function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
 
   return (
     <div
-      className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 shadow-sm hover:shadow ${
-        topic.isSelected
-          ? "border-brand-primary bg-brand-primary/5"
-          : "border-border-secondary bg-elevated hover:border-brand-primary/50"
-      }`}
+      className={`group flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out border hover:shadow-lg
+        ${topic.isSelected
+          ? `bg-gradient-to-r ${statusInfo.bgColor || (isDarkMode ? 'from-sky-600 to-cyan-700' : 'from-sky-500 to-cyan-600')} ${isDarkMode ? 'opacity-90 shadow-md shadow-sky-950/30' : 'opacity-95 shadow-md shadow-sky-400/40'} border-transparent`
+          : `${isDarkMode ? 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-700/60 shadow-sm shadow-gray-950/10' : 'bg-white/50 border-gray-200/60 hover:bg-gray-50/70 shadow-sm shadow-gray-300/20'}`
+        }`}
       onClick={() => onToggle(topic.id)}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-1 min-w-0"> {/* Added flex-1 min-w-0 for better text wrapping */}
         <div
           className={`rounded-md min-w-6 w-6 h-6 flex items-center justify-center transition-all duration-200 ${
             topic.isSelected
-              ? "bg-brand-primary text-white ring-2 ring-brand-primary/20"
-              : "bg-surface border border-border-secondary"
+              ? (isDarkMode ? 'bg-white/20 text-white border border-white/30' : 'bg-white/30 text-white border border-white/40')
+              : (isDarkMode ? 'bg-gray-700 border-gray-500' : 'bg-gray-100 border-gray-300')
           }`}
         >
-          {topic.isSelected ? (
-            <FiCheck className="w-3.5 h-3.5" />
-          ) : (
-            <span className="w-3.5 h-3.5"></span>
-          )}
+          {topic.isSelected && <FiCheck className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white' : 'text-white'}`} />}
         </div>
-        
-        <div className="flex-1">
-          <h3 className="font-medium text-sm text-primary">
+
+        <div className="flex-1 min-w-0"> {/* Added flex-1 min-w-0 */}
+          <h3 className="font-medium text-sm text-primary truncate"> {/* Added truncate for very long names */}
             {displayTopicName()}
           </h3>
           {topic.parentTopic && (
-            <p className="text-xs text-tertiary mt-0.5">
+            <p className="text-xs text-tertiary mt-0.5 truncate"> {/* Added truncate */}
               {topic.parentTopic}
             </p>
           )}
         </div>
-        
-        <div className="flex items-center gap-2">
-          <div
-            className={`text-xs rounded-lg px-2.5 py-1 flex items-center whitespace-nowrap ${statusInfo.bgColor} ${statusInfo.color} border ${statusInfo.borderColor}`}
-          >
-            <StatusIcon className="w-3 h-3 mr-1.5" />
-            {statusInfo.label}
-          </div>
-          {topic.isNew && (
-            <div className="text-xs rounded-lg px-2.5 py-1 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 whitespace-nowrap font-medium">
-              Yeni
-            </div>
-          )}
+      </div> {/* Moved closing div for left part */}
+
+      {/* Right part (status and new badge) */}
+      <div className="flex items-center gap-2 ml-2 flex-shrink-0"> {/* Added ml-2 and flex-shrink-0 */}
+        <div
+          className={`flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap
+          ${topic.isSelected
+            ? (isDarkMode ? 'bg-white/20 text-white border border-white/30' : 'bg-white/30 text-white border border-white/40')
+            : `${statusInfo.bgColor} ${statusInfo.color} border ${statusInfo.borderColor}`
+          }
+        `}>
+          <StatusIcon className="w-3 h-3 mr-1.5" />
+          {statusInfo.label}
         </div>
+        {topic.isNew && ( // isNew property TopicData'da olmalı
+          <div className="text-xs rounded-lg px-2.5 py-1 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 whitespace-nowrap font-medium">
+            Yeni
+          </div>
+        )}
       </div>
     </div>
   );
