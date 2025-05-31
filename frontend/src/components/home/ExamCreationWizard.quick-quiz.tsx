@@ -3,12 +3,8 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  FiTarget,
-  FiZap,
-  FiAward,
   FiArrowLeft,
   FiArrowRight,
-  FiInfo,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { DocumentUploader } from "../document";
