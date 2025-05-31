@@ -29,79 +29,80 @@ export const lightTheme = {
   colors: {
     // Background colors
     background: {
-      primary: colors.neutral[50],
-      secondary: colors.neutral[0],
-      tertiary: colors.neutral[100],
-      elevated: colors.neutral[0],
-      overlay: 'rgba(0, 0, 0, 0.4)',
+      primary: '#f9fafe', // Slightly bluish white for a fresh look
+      secondary: '#ffffff',
+      tertiary: '#f0f4fa', // Slightly cooler tone
+      elevated: '#ffffff',
+      overlay: 'rgba(15, 23, 42, 0.45)', // Slightly darker, more readable overlay
     },
 
     // Text colors
     text: {
-      primary: colors.neutral[900],
-      secondary: colors.neutral[700],
-      tertiary: colors.neutral[500],
-      disabled: colors.neutral[400],
-      inverse: colors.neutral[0],
-      link: colors.primary[600],
-      'link-hover': colors.primary[700],
+      primary: '#0f172a', // Deep navy for better readability
+      secondary: '#334155', // Still dark but slightly lighter
+      tertiary: '#64748b',
+      disabled: '#94a3b8',
+      inverse: '#ffffff', // Pure white for contrast on dark backgrounds
+      link: '#2563eb', // Vibrant blue for links
+      'link-hover': '#1d4ed8',
     },
 
     // Border colors
     border: {
-      primary: colors.neutral[200],
-      secondary: colors.neutral[300],
-      tertiary: colors.neutral[400],
-      focus: colors.primary[500],
+      primary: '#e2e8f0',
+      secondary: '#f1f5f9',
+      tertiary: '#cbd5e1',
+      focus: '#3b82f6',
     },
 
     // Brand colors
     brand: {
-      primary: colors.primary[500],
-      'primary-hover': colors.primary[600],
-      'primary-active': colors.primary[700],
-      secondary: colors.secondary[500],
-      'secondary-hover': colors.secondary[600],
-      accent: colors.accent[500],
-      'accent-hover': colors.accent[600],
+      primary: '#3b82f6', // Bright blue as primary brand color
+      'primary-hover': '#2563eb',
+      'primary-active': '#1d4ed8',
+      secondary: '#8b5cf6', // Purple as secondary
+      'secondary-hover': '#7c3aed',
+      accent: '#f59e0b', // Warm yellow-orange as accent
+      'accent-hover': '#d97706',
     },
 
     // State colors
     state: {
-      success: colors.success[600],
-      'success-bg': colors.success[50],
-      'success-border': colors.success[200],
-      warning: colors.warning[500],
-      'warning-bg': colors.warning[50],
-      'warning-border': colors.warning[200],
-      error: colors.error[600],
-      'error-bg': colors.error[50],
-      'error-border': colors.error[200],
-      info: colors.info[600],
-      'info-bg': colors.info[50],
-      'info-border': colors.info[200],
+      success: '#10b981', // Vibrant green
+      'success-bg': '#ecfdf5', // Subtle green background
+      'success-border': '#6ee7b7', // Visible but not harsh border
+      warning: '#f59e0b', // Warm amber
+      'warning-bg': '#fffbeb', // Soft yellow background
+      'warning-border': '#fcd34d', // Clear border
+      error: '#ef4444', // Bright red
+      'error-bg': '#fef2f2', // Light red background
+      'error-border': '#fca5a5', // Noticeable red border
+      info: '#3b82f6', // Bright blue
+      'info-bg': '#eff6ff', // Light blue background
+      'info-border': '#93c5fd', // Blue border
     },
 
     // Interactive colors
     interactive: {
-      hover: colors.neutral[100],
-      active: colors.neutral[200],
-      disabled: colors.neutral[100],
-      selected: colors.primary[100],
-      focus: 'rgba(59, 130, 246, 0.3)',
+      hover: '#f1f5f9', // Slightly darker on hover for better feedback
+      active: '#e2e8f0', // Darker on active for clear press state
+      disabled: '#f1f5f9',
+      selected: '#dbeafe', // Light blue selected state
+      focus: 'rgba(59, 130, 246, 0.25)', // Slightly more visible focus outline
     },
   },
 
   // Shadows
   shadows: {
-    xs: '0 1px 2px rgba(0, 0, 0, 0.04)',
-    sm: '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.06)',
-    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.06)',
-    '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.12)',
-    inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+    xs: '0 1px 2px rgba(15, 23, 42, 0.04)', // More subtle shadow
+    sm: '0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04)',
+    md: '0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03)',
+    lg: '0 10px 15px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.04)',
+    xl: '0 20px 25px -5px rgba(15, 23, 42, 0.06), 0 10px 10px -5px rgba(15, 23, 42, 0.03)',
+    '2xl': '0 25px 50px -12px rgba(15, 23, 42, 0.12)',
+    inner: 'inset 0 2px 4px 0 rgba(15, 23, 42, 0.04)',
     none: 'none',
+    highlight: '0 0 0 3px rgba(59, 130, 246, 0.3)', // Slightly more visible highlight
   },
 
   // Blur effects

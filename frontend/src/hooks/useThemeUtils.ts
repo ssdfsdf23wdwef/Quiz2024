@@ -1,6 +1,5 @@
 import { useTheme } from '@/context/ThemeProvider';
 import { lightTheme, darkTheme, getTheme, getCssVar, getThemeValue, media, type ThemeMode } from '@/styles/theme';
-import { breakpoints } from '@/styles/variables';
 
 /**
  * Theme utilities hook
@@ -50,13 +49,7 @@ export const useThemeUtils = () => {
     return isDarkMode ? darkClass : lightClass;
   };
 
-  // Media query helpers
-  const getMediaQuery = {
-    up: (breakpoint: keyof typeof breakpoints) => media.up(breakpoint),
-    down: (breakpoint: keyof typeof breakpoints) => media.down(breakpoint), 
-    between: (min: keyof typeof breakpoints, max: keyof typeof breakpoints) => 
-      media.between(min, max),
-  };
+
 
   // Sistem tercihi algılama
   const getSystemTheme = (): ThemeMode => {
@@ -102,7 +95,6 @@ export const useThemeUtils = () => {
     getRGBAColor,
     getValue,
     getThemeClass,
-    getMediaQuery,
     getSystemTheme,
     getSavedTheme,
     

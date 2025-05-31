@@ -57,56 +57,56 @@
 
 /* Light theme specific variables */
 .light {
-  --theme-colors-background-primary: #ffffff;
-  --theme-colors-background-secondary: #f9fafb;
-  --theme-colors-background-tertiary: #f3f4f6;
+  --theme-colors-background-primary: #f9fafe; /* Slightly bluish white for a fresh look */
+  --theme-colors-background-secondary: #ffffff;
+  --theme-colors-background-tertiary: #f0f4fa; /* Slightly cooler tone */
   --theme-colors-background-elevated: #ffffff;
-  --theme-colors-background-overlay: rgba(0, 0, 0, 0.5);
+  --theme-colors-background-overlay: rgba(15, 23, 42, 0.45); /* Slightly darker overlay */
 
-  --theme-colors-text-primary: #111827;
-  --theme-colors-text-secondary: #374151;
-  --theme-colors-text-tertiary: #6b7280;
-  --theme-colors-text-disabled: #9ca3af;
-  --theme-colors-text-inverse: #ffffff;
+  --theme-colors-text-primary: #0f172a; /* Deep navy for better readability */
+  --theme-colors-text-secondary: #334155; /* Still dark but slightly lighter */
+  --theme-colors-text-tertiary: #64748b;
+  --theme-colors-text-disabled: #94a3b8;
+  --theme-colors-text-inverse: #ffffff; /* Pure white for contrast */
 
-  --theme-colors-border-primary: #e5e7eb;
-  --theme-colors-border-secondary: #d1d5db;
+  --theme-colors-border-primary: #e2e8f0;
+  --theme-colors-border-secondary: #f1f5f9;
   --theme-colors-border-focus: #3b82f6;
   --theme-colors-border-error: #ef4444;
-  --theme-colors-border-success: #22c55e;
+  --theme-colors-border-success: #10b981;
 
-  --theme-colors-brand-primary: #3b82f6;
+  --theme-colors-brand-primary: #3b82f6; /* Bright blue as primary brand color */
   --theme-colors-brand-primaryHover: #2563eb;
   --theme-colors-brand-primaryActive: #1d4ed8;
-  --theme-colors-brand-secondary: #22c55e;
-  --theme-colors-brand-secondaryHover: #16a34a;
-  --theme-colors-brand-accent: #a855f7;
-  --theme-colors-brand-accentHover: #9333ea;
+  --theme-colors-brand-secondary: #8b5cf6; /* Purple as secondary */
+  --theme-colors-brand-secondaryHover: #7c3aed;
+  --theme-colors-brand-accent: #f59e0b; /* Warm yellow-orange as accent */
+  --theme-colors-brand-accentHover: #d97706;
 
-  --theme-colors-state-success: #22c55e;
-  --theme-colors-state-successBg: #f0fdf4;
-  --theme-colors-state-successBorder: #bbf7d0;
-  --theme-colors-state-warning: #f97316;
-  --theme-colors-state-warningBg: #fff7ed;
-  --theme-colors-state-warningBorder: #fed7aa;
-  --theme-colors-state-error: #ef4444;
-  --theme-colors-state-errorBg: #fef2f2;
-  --theme-colors-state-errorBorder: #fecaca;
-  --theme-colors-state-info: #3b82f6;
-  --theme-colors-state-infoBg: #eff6ff;
-  --theme-colors-state-infoBorder: #bfdbfe;
+  --theme-colors-state-success: #10b981; /* Vibrant green */
+  --theme-colors-state-successBg: #ecfdf5; /* Subtle green background */
+  --theme-colors-state-successBorder: #6ee7b7; /* Visible but not harsh border */
+  --theme-colors-state-warning: #f59e0b; /* Warm amber */
+  --theme-colors-state-warningBg: #fffbeb; /* Soft yellow background */
+  --theme-colors-state-warningBorder: #fcd34d; /* Clear border */
+  --theme-colors-state-error: #ef4444; /* Bright red */
+  --theme-colors-state-errorBg: #fef2f2; /* Light red background */
+  --theme-colors-state-errorBorder: #fca5a5; /* Noticeable red border */
+  --theme-colors-state-info: #3b82f6; /* Bright blue */
+  --theme-colors-state-infoBg: #eff6ff; /* Light blue background */
+  --theme-colors-state-infoBorder: #93c5fd; /* Blue border */
 
-  --theme-colors-interactive-hover: #f3f4f6;
-  --theme-colors-interactive-active: #e5e7eb;
-  --theme-colors-interactive-disabled: #f3f4f6;
-  --theme-colors-interactive-selected: #dbeafe;
+  --theme-colors-interactive-hover: #f1f5f9; /* Slightly darker on hover for better feedback */
+  --theme-colors-interactive-active: #e2e8f0; /* Darker on active for clear press state */
+  --theme-colors-interactive-disabled: #f1f5f9;
+  --theme-colors-interactive-selected: #dbeafe; /* Light blue selected state */
 
-  --theme-shadows-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --theme-shadows-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --theme-shadows-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --theme-shadows-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --theme-shadows-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  --theme-shadows-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --theme-shadows-xs: 0 1px 2px rgba(15, 23, 42, 0.04); /* More subtle shadow */
+  --theme-shadows-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --theme-shadows-md: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+  --theme-shadows-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+  --theme-shadows-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.06), 0 10px 10px -5px rgba(15, 23, 42, 0.03);
+  --theme-shadows-2xl: 0 25px 50px -12px rgba(15, 23, 42, 0.12);
   --theme-shadows-none: none;
 }
 

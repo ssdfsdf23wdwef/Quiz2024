@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-29T22:14:23.697Z
-Trace ID: quiz-1748556846446-rc1dw
-Yanıt Uzunluğu: 8172 karakter
+Tarih: 2025-05-31T14:37:14.528Z
+Trace ID: quiz-1748702219587-oxju5
+Yanıt Uzunluğu: 9214 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,172 +11,172 @@ Yanıt Uzunluğu: 8172 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Metinde, Cezayirlilerin Fransa'da karşılaştığı hangi temel sorunlardan bahsedilmektedir?",
+      "questionText": "Aşağıdakilerden hangisi eksaskala sistemlerde verimliliği artırmak için kullanılan temel yaklaşımlardan biridir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Yüksek maaş alamama",
-        "Konut bulma zorluğu",
-        "Irkçı muamele ve keyfi tutuklamalar",
-        "Eğitim olanaklarından yararlanamama"
+        "Tek çekirdekli işlemci kullanımı",
+        "Paralellikten yararlanma",
+        "Bellek erişimini en aza indirme",
+        "Seri programlama"
       ],
-      "correctAnswer": "Irkçı muamele ve keyfi tutuklamalar",
-      "explanation": "Metinde Cezayirlilerin ırkçı muamelelere maruz kaldığı ve keyfi tutuklamalar yaşadığı belirtilmektedir. Diğer seçenekler metinde doğrudan bahsedilmemektedir.",
-      "subTopicName": "الغربة ومعاملة الجزائريين في فرنسا",
-      "normalizedSubTopicName": "الغربة_ومعاملة_الجزائريين_في_فرنسا",
+      "correctAnswer": "Paralellikten yararlanma",
+      "explanation": "Eksaskala sistemlerde verimliliği artırmak için paralellik gücünden yararlanılır. İşlemler küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülür. Diğer seçenekler ise bu sistemlerin verimliliğini azaltır.",
+      "subTopicName": "Paralel Programlama Paradigmaları",
+      "normalizedSubTopicName": "paralel_programlama_paradigmaları",
       "difficulty": "medium"
     },
     {
       "id": "q2",
-      "questionText": "Mevlüt'ün polis tarafından tutuklanmasının temel nedeni ne olarak belirtilmiştir?",
+      "questionText": "Paralel programlama paradigması nedir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Yasadışı faaliyetlerde bulunması",
-        "Vergi kaçırması",
-        "Herhangi bir neden belirtilmemesi, keyfi bir tutuklama olması",
-        "Müşterileriyle tartışması"
+        "Bir işlemin tek bir işlemcide sıralı olarak yürütülmesini sağlayan yazılımlardır.",
+        "Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır.",
+        "Sadece tek çekirdekli işlemcilerde çalışan yazılımlardır.",
+        "Sadece grafik işlem birimlerinde (GPU) çalışan yazılımlardır."
       ],
-      "correctAnswer": "Herhangi bir neden belirtilmemesi, keyfi bir tutuklama olması",
-      "explanation": "Metinde Mevlüt'ün herhangi bir suç işlememesine rağmen, sebepsiz yere tutuklandığı belirtilmektedir. Bu durum, keyfi tutuklamaların bir örneğidir.",
-      "subTopicName": "الغربة ومعاملة الجزائريين في فرنسا",
-      "normalizedSubTopicName": "الغربة_ومعاملة_الجزائريين_في_فرنسا",
+      "correctAnswer": "Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır.",
+      "explanation": "Paralel programlama paradigması, bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır. Bu, büyük ölçekli hesaplamalarda performansı maksimize etmek için kritik bir bileşendir.",
+      "subTopicName": "Paralel Programlama Paradigmaları",
+      "normalizedSubTopicName": "paralel_programlama_paradigmaları",
       "difficulty": "easy"
     },
     {
       "id": "q3",
-      "questionText": "Metinde, Cezayirli işçilerin keyfi tutuklanmalarına ilişkin polis merkezindeki genel uygulama nasıldır?",
+      "questionText": "Paylaşımlı bellek paradigması için aşağıdakilerden hangisi doğrudur?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Hızlı bir şekilde sorgulanıp serbest bırakılmaları",
-        "Uzun süre sorgulanmadan tutulmaları ve sonra serbest bırakılmaları",
-        "Ağır işkencelere maruz kalmaları",
-        "Hemen sınır dışı edilmeleri"
+        "Her işlemci kendi özel belleğine sahiptir.",
+        "Tüm işlemciler ortak bir belleğe erişir.",
+        "Veri iletişimi mesajlaşma yoluyla sağlanır.",
+        "Sadece dağıtık sistemlerde kullanılır."
       ],
-      "correctAnswer": "Uzun süre sorgulanmadan tutulmaları ve sonra serbest bırakılmaları",
-      "explanation": "Metinde, Cezayirli işçilerin genellikle uzun süre sorgulanmadan tutulduğu ve bazen günlerce bekletildikten sonra serbest bırakıldığı belirtilmektedir.",
-      "subTopicName": "الاعتقالات التعسفية للجزائريين",
-      "normalizedSubTopicName": "الاعتقالات_التعسفية_للجزائريين",
-      "difficulty": "medium"
+      "correctAnswer": "Tüm işlemciler ortak bir belleğe erişir.",
+      "explanation": "Paylaşımlı bellek paradigmasında tüm işlemciler ortak belleğe erişir, bu da onu çok çekirdekli işlemciler için ideal kılar. OpenMP bu paradigmayı destekleyen bir API'dir.",
+      "subTopicName": "Paylaşımlı Bellek Paradigması",
+      "normalizedSubTopicName": "paylasimli_bellek_paradigmasi",
+      "difficulty": "easy"
     },
     {
       "id": "q4",
-      "questionText": "Mevlüt, tutuklanmasıyla ilgili olarak hangi endişesini dile getirmiştir?",
+      "questionText": "OpenMP'nin paylaşımlı bellek paradigmasındaki rolü nedir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "applying",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Ailesinin geçimini sağlayamaması",
-        "Dükkanının yokluğunda başına bir şey gelmesi ve sorumluluğu",
-        "Hapis cezasından korkması",
-        "Fransa'dan sınır dışı edilmesi"
+        "Dağıtık bellekli sistemlerde veri transferini yönetmek.",
+        "Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırmak.",
+        "İşlemciler arasında mesajlaşmayı sağlamak.",
+        "Sadece tek çekirdekli uygulamaları optimize etmek."
       ],
-      "correctAnswer": "Dükkanının yokluğunda başına bir şey gelmesi ve sorumluluğu",
-      "explanation": "Mevlüt, tutuklanmasıyla ilgili olarak dükkanının yokluğunda başına bir şey gelmesi durumunda kimin sorumlu olacağı endişesini dile getirmiştir.",
-      "subTopicName": "الاعتقالات التعسفية للجزائريين",
-      "normalizedSubTopicName": "الاعتقالات_التعسفية_للجزائريين",
+      "correctAnswer": "Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırmak.",
+      "explanation": "OpenMP, mevcut koda direktifler ekleyerek paylaşımlı bellek mimarilerinde paralel uygulamalar geliştirmeyi kolaylaştırır. Örneğin, #pragma omp parallel direktifi paralel bir bölge başlatır.",
+      "subTopicName": "Paylaşımlı Bellek Paradigması",
+      "normalizedSubTopicName": "paylasimli_bellek_paradigmasi",
       "difficulty": "medium"
     },
     {
       "id": "q5",
-      "questionText": "Hikayede, Cezayirli askerin savaş alanında yaralandıktan sonra zihninde canlanan köy manzaraları hangi duyguyu yoğunlaştırmaktadır?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "analyzing",
-      "options": [
-        "Öfke",
-        "Umutsuzluk",
-        "Memleket özlemi ( الحنين إلى الوطن )",
-        "Korku"
-      ],
-      "correctAnswer": "Memleket özlemi ( الحنين إلى الوطن )",
-      "explanation": "Askerin zihninde canlanan köy manzaraları, özellikle akan kanla ilişkilendirilmesi, memleket özlemini ve köklerine bağlılık duygusunu yoğunlaştırmaktadır.",
-      "subTopicName": "الحنين إلى الوطن",
-      "normalizedSubTopicName": "الحنين_إلى_الوطن",
-      "difficulty": "medium"
-    },
-    {
-      "id": "q6",
-      "questionText": "Yaralı askerin rüyasında veya hayalinde gördüğü 'kırmızı' renk neyi sembolize etmektedir?",
+      "questionText": "Dağıtık bellek paradigmasında veri değişimi nasıl sağlanır?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Umut",
-        "Aşk",
-        "Kan ve acı",
-        "Özgürlük"
+        "Ortak bir bellek alanı üzerinden",
+        "Mesajlaşma ile",
+        "Paylaşımlı değişkenler aracılığıyla",
+        "Sanal bellek yönetimi ile"
       ],
-      "correctAnswer": "Kan ve acı",
-      "explanation": "Hikayede kırmızı renk, akan kan, gözyaşları ve savaşın acılarıyla ilişkilendirilerek acı ve kayıpları sembolize etmektedir.",
-      "subTopicName": "الحنين إلى الوطن",
-      "normalizedSubTopicName": "الحنين_إلى_الوطن",
+      "correctAnswer": "Mesajlaşma ile",
+      "explanation": "Dağıtık bellek paradigmasında her işlemci kendi düğümünün belleğine erişir ve veri değişimi mesajlaşma ile sağlanır. MPI bu paradigmanın yaygın bir örneğidir.",
+      "subTopicName": "Dağıtık Bellek Paradigması",
+      "normalizedSubTopicName": "dagitik_bellek_paradigmasi",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q6",
+      "questionText": "MPI'ın (Message Passing Interface) temel amacı nedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Paylaşımlı bellek mimarilerinde paralellik sağlamak",
+        "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek",
+        "Tek çekirdekli işlemcilerde performansı artırmak",
+        "Grafik işlem birimlerinde (GPU) hesaplama yapmak"
+      ],
+      "correctAnswer": "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek",
+      "explanation": "MPI (Message Passing Interface), dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır. İşlemler arasında veri alışverişi ve paralel görev koordinasyonu sağlar.",
+      "subTopicName": "Dağıtık Bellek Paradigması",
+      "normalizedSubTopicName": "dagitik_bellek_paradigmasi",
       "difficulty": "medium"
     },
     {
       "id": "q7",
-      "questionText": "Mevlüt'ün Fransa'daki hayatında karşılaştığı en büyük zorluklardan biri olarak ne gösterilebilir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "analyzing",
-      "options": [
-        "Dil öğrenme güçlüğü",
-        "Fransız kültürüne uyum sağlama zorluğu",
-        "Cezayirli kimliğini koruma ve ayrımcılıkla baş etme",
-        "Ekonomik sıkıntılar"
-      ],
-      "correctAnswer": "Cezayirli kimliğini koruma ve ayrımcılıkla baş etme",
-      "explanation": "Mevlüt'ün hikayesi, Cezayirli kimliğini koruma ve Fransız toplumunda maruz kaldığı ayrımcılıkla baş etme zorluğunu vurgulamaktadır. Keyfi tutuklamalar ve haksız muameleler bu zorluğun bir parçasıdır.",
-      "subTopicName": "فقدان الهوية الثقافية",
-      "normalizedSubTopicName": "فقدان_الهوية_الثقافية",
-      "difficulty": "hard"
-    },
-    {
-      "id": "q8",
-      "questionText": "Mevlüt'ün Fransa'daki deneyimi, kültürel kimlik kaybı bağlamında neyi temsil etmektedir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "analyzing",
-      "options": [
-        "Başka bir kültüre tamamen entegre olmayı",
-        "Kendi kültüründen tamamen kopmayı",
-        "Kendi kültürüyle yeni kültür arasında sıkışıp kalmayı",
-        "Küresel bir vatandaş olmayı"
-      ],
-      "correctAnswer": "Kendi kültürüyle yeni kültür arasında sıkışıp kalmayı",
-      "explanation": "Mevlüt'ün hikayesi, kendi kültürüyle yeni kültür arasında sıkışıp kalmayı ve her iki kültüre de tam olarak ait olamama duygusunu temsil etmektedir.",
-      "subTopicName": "فقدان الهوية الثقافية",
-      "normalizedSubTopicName": "فقدان_الهوية_الثقافية",
-      "difficulty": "hard"
-    },
-    {
-      "id": "q9",
-      "questionText": "Mevlüt'ün polis tarafından serbest bırakıldıktan sonra Cezayir'e geri gönderilmesi, Fransa'daki Cezayirlilere yönelik hangi tür bir ayrımcılığı göstermektedir?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "analyzing",
-      "options": [
-        "Ekonomik ayrımcılık",
-        "Siyasi ayrımcılık",
-        "Irkçı ayrımcılık ( التمييز العنصري )",
-        "Dini ayrımcılık"
-      ],
-      "correctAnswer": "Irkçı ayrımcılık ( التمييز العنصري )",
-      "explanation": "Mevlüt'ün sebepsiz yere tutuklanıp sınır dışı edilmesi, sadece Cezayirli olduğu için maruz kaldığı ırkçı ayrımcılığın bir örneğidir.",
-      "subTopicName": "التمييز العنصري",
-      "normalizedSubTopicName": "التمييز_العنصري",
-      "difficulty": "medium"
-    },
-    {
-      "id": "q10",
-      "questionText": "Metinde, Cezayirlilere yönelik ırkçı ayrımcılığın en belirgin sonuçlarından biri olarak ne gösterilmektedir?",
+      "questionText": "Hibrit paralel programlama yaklaşımının temel özelliği nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Ekonomik refahın artması",
-        "Sosyal uyumun sağlanması",
-        "Sürekli bir güvensizlik ve yabancılaşma hissi",
-        "Siyasi katılımın artması"
+        "Sadece paylaşımlı bellek paradigmasını kullanması",
+        "Sadece dağıtık bellek paradigmasını kullanması",
+        "Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmesi",
+        "Sadece tek çekirdekli işlemcilerde çalışması"
       ],
-      "correctAnswer": "Sürekli bir güvensizlik ve yabancılaşma hissi",
-      "explanation": "Metinde, Cezayirlilere yönelik ırkçı ayrımcılığın, sürekli bir güvensizlik ve yabancılaşma hissi yarattığı vurgulanmaktadır. Mevlüt'ün deneyimi bu durumu açıkça göstermektedir.",
-      "subTopicName": "التمييز العنصري",
-      "normalizedSubTopicName": "التمييز_العنصري",
+      "correctAnswer": "Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmesi",
+      "explanation": "Hibrit paralellik, farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirir. Eksaskala bilişimde MPI ve OpenMP kombinasyonu yaygın bir örnektir.",
+      "subTopicName": "Hibrit Paralel Programlama",
+      "normalizedSubTopicName": "hibrit_paralel_programlama",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q8",
+      "questionText": "MPI ve OpenMP'nin hibrit kullanımında, her bir teknolojinin rolü nedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "MPI: Düğüm içindeki paralellik, OpenMP: İşlemler arası iletişim",
+        "MPI: İşlemler arası iletişim, OpenMP: Düğüm içindeki paralellik",
+        "Her ikisi de sadece düğüm içindeki paralelliği sağlar",
+        "Her ikisi de sadece işlemler arası iletişimi sağlar"
+      ],
+      "correctAnswer": "MPI: İşlemler arası iletişim, OpenMP: Düğüm içindeki paralellik",
+      "explanation": "MPI + OpenMP kombinasyonunda MPI işlemciler arası iletişim sağlarken (dış paralelleştirme), OpenMP çok çekirdekli işlemciler içinde iş parçacıklarını yönetir (iç paralelleştirme).",
+      "subTopicName": "Hibrit Paralel Programlama",
+      "normalizedSubTopicName": "hibrit_paralel_programlama",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q9",
+      "questionText": "Döngü açma (Loop Unrolling) tekniğinin temel amacı nedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "understanding",
+      "options": [
+        "Döngü kontrol yapılarının yükünü azaltmak",
+        "Döngüleri birleştirerek bellek erişimini artırmak",
+        "Döngüleri vektörleştirerek SIMD paralelliği sağlamak",
+        "Döngüleri tamamen ortadan kaldırmak"
+      ],
+      "correctAnswer": "Döngü kontrol yapılarının yükünü azaltmak",
+      "explanation": "Döngü açma (Loop Unrolling), döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici optimizasyon tekniğidir. Birden fazla iterasyon tek bir döngüde açılır.",
+      "subTopicName": "Döngü Açma Loop Unrolling",
+      "normalizedSubTopicName": "dongu_acma_loop_unrolling",
+      "difficulty": "easy"
+    },
+    {
+      "id": "q10",
+      "questionText": "Döngü açma (Loop Unrolling) uygularken döngü sınırlarına dikkat etmenin nedeni nedir?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "analyzing",
+      "options": [
+        "Sonsuz döngü oluşmasını engellemek",
+        "Döngü değişkeninin yanlış değerler almasını önlemek",
+        "Sınır dışı bellek erişimini engellemek",
+        "Döngünün daha yavaş çalışmasını önlemek"
+      ],
+      "correctAnswer": "Sınır dışı bellek erişimini engellemek",
+      "explanation": "Döngü açmada dikkat edilmesi gereken en temel faktör döngü sınırlarıdır. Özellikle döngüdeki eleman sayısı döngü açma işlemine uygun değilse (örneğin tek sayı ise), sınır dışı bellek erişimi gibi sorunlar ortaya çıkabilir.",
+      "subTopicName": "Döngü Açma Loop Unrolling",
+      "normalizedSubTopicName": "dongu_acma_loop_unrolling",
       "difficulty": "medium"
     }
   ]
