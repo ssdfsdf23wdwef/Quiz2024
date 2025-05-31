@@ -35,7 +35,7 @@ const storeQuizResultsInStorage = (quizId: string, resultsToStore: Quiz) => {
 export default function ExamPage() {
   const router = useRouter();
   const params = useParams();
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quiz, setQuiz] = useState<Quiz>();
   const [loading, setLoading] = useState(true);
   // Removed currentQuestionIndex as we're now showing all questions at once
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
@@ -389,20 +389,7 @@ export default function ExamPage() {
           userAnswers: validatedUserAnswers,
           elapsedTime: preparedQuiz.preferences?.timeLimit 
             ? (preparedQuiz.preferences.timeLimit * 60) - (remainingTime || 0) 
-            : 0,
-          quizType: preparedQuiz.quizType || "quick",
-          personalizedQuizType: preparedQuiz.personalizedQuizType || null,
-          courseId: preparedQuiz.courseId || null,
-          sourceDocument: preparedQuiz.sourceDocument || null,
-          selectedSubTopics: preparedQuiz.selectedSubTopics || null,
-          preferences: preparedQuiz.preferences || {
-            questionCount: preparedQuestions.length,
-            difficulty: "mixed",
-            timeLimit: null,
-            prioritizeWeakAndMediumTopics: null
-          },
-          questions: preparedQuestions // Backend'e soruları da gönderiyoruz
-        };
+            : 0};
       
         console.log(`🔄 Sınav yanıtları gönderiliyor: Quiz ID=${payload.quizId}, Cevap Sayısı=${Object.keys(payload.userAnswers).length}`);
       
@@ -435,11 +422,13 @@ export default function ExamPage() {
             // duration: quizResult?.duration || 0,
             score: quizResult?.score || 0,
             userId: quizResult?.userId || "anonim",
-            // ID'yi kesinlikle string olarak garantile
-            id: quizId,
+
             // Quiz tipinde gerekli olan eksik alanlar
             courseId: quizResult?.courseId || "",
-            preferences: quizResult?.preferences || {},
+            preferences: quizResult?.preferences || {
+              questionCount: quizResult?.totalQuestions || quizResult?.questions?.length || 0,
+              difficulty: 'mixed',
+            },
             correctCount: quizResult?.correctCount || 0,
             totalQuestions: quizResult?.totalQuestions || (quizResult?.questions?.length || 0),
             // Analiz sonuçlarını ekle
@@ -706,7 +695,6 @@ export default function ExamPage() {
         score: 0,
         elapsedTime: 0,
         timestamp: new Date().toISOString(),
-        error: String(error),
         analysisResult: {
           overallScore: 0,
           performanceBySubTopic: {},
@@ -715,7 +703,12 @@ export default function ExamPage() {
             medium: [],
             failed: []
           },
-          performanceByDifficulty: {},
+          performanceByDifficulty: {
+            easy: { count: 0, correct: 0, score: 0 },
+            medium: { count: 0, correct: 0, score: 0 },
+            hard: { count: 0, correct: 0, score: 0 },
+            mixed: { count: 0, correct: 0, score: 0 },
+          },
           recommendations: []
         }
       };
@@ -738,6 +731,9 @@ export default function ExamPage() {
   };
   
   const renderQuestionNavigation = () => {
+    if (!quiz) {
+      return null;
+    }
     // Alt konuları grupla ve renklendir
     const subTopicColors: Record<string, { bg: string; text: string; ring: string; }> = {};
     const subTopicMap: Record<string, {count: number; displayName: string; normalizedName: string}> = {};
@@ -945,6 +941,9 @@ export default function ExamPage() {
   const renderResults = () => {
     const score = calculateScore();
     // Analiz sonuçlarını localStorage'dan al
+    if (!quiz) {
+      return <div className="text-center p-8 text-secondary">Sınav sonuçları yükleniyor veya bulunamadı...</div>;
+    }
     const quizAnalysisData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(`quizAnalysis_${quiz.id}`) || '{}') : {};
     const analysis = quizAnalysisData.analysisResult || {};
     const userAnswersFromStorage = quizAnalysisData.userAnswers || userAnswers; // API hatası durumunda local userAnswers kullanılır
@@ -972,11 +971,11 @@ export default function ExamPage() {
           <p className="text-lg text-secondary">
             Toplam puanınız: <span className="font-bold text-primary">{score}%</span> (
             {
-              quiz.questions.filter(
-                (q) => userAnswersFromStorage[q.id] === q.correctAnswer, // userAnswersFromStorage kullanıldı
-              ).length
+              quiz?.questions?.filter(
+                (q) => userAnswersFromStorage[q.id] === q.correctAnswer,
+              )?.length || 0
             }
-            /{quiz.questions.length} doğru)
+            /{quiz?.questions?.length || 0} doğru)
           </p>
         </div>
 
@@ -1142,24 +1141,7 @@ export default function ExamPage() {
               </div>
             )}
 
-            {/* Submit button */}
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-150 flex items-center ${isSubmitting
-                ? "bg-interactive-disabled text-disabled cursor-not-allowed"
-                : "bg-brand-primary hover:bg-brand-primaryHover text-inverse shadow-md hover:shadow-lg"
-                }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-text-inverse border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Gönderiliyor...
-                </>
-              ) : (
-                "Sınavı Bitir"
-              )}
-            </button>
+           
           </div>
         </div>
 
@@ -1180,9 +1162,7 @@ export default function ExamPage() {
               <span className="font-medium text-brand-primary">{Object.keys(userAnswers).length}</span>
               <span className="text-tertiary"> / {quiz.questions.length} cevaplandı</span>
             </div>
-            <div className="text-sm text-tertiary">
-              Tüm sorular tek sayfada gösteriliyor
-            </div>
+         
           </div>
         </div>
 

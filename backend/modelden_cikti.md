@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-31T17:39:01.878Z
-Trace ID: quiz-1748713130025-a6cyr
-Yanıt Uzunluğu: 7034 karakter
+Tarih: 2025-05-31T17:59:50.609Z
+Trace ID: quiz-1748714377151-zfh4a
+Yanıt Uzunluğu: 7991 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,172 +11,172 @@ Yanıt Uzunluğu: 7034 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Aşağıdakilerden hangisi süperbilgisayarların performansını değerlendiren temel listelerden biridir?",
+      "questionText": "Aşağıdakilerden hangisi eksaskala bilgisayarların temel özelliklerinden biridir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Big500",
-        "TOP500",
-        "Fast500",
-        "Global500"
+        "Saniyede 10^9 hesaplama yapabilme",
+        "Saniyede 10^12 hesaplama yapabilme",
+        "Saniyede 10^15 hesaplama yapabilme",
+        "Saniyede 10^18 hesaplama yapabilme"
       ],
-      "correctAnswer": "TOP500",
-      "explanation": "TOP500, dünyanın en hızlı 500 süperbilgisayarını hesaplama gücüne göre sıralayan bir listedir. Diğer seçenekler listede yer almamaktadır.",
-      "subTopicName": "Süperbilgisayar Sıralama Listeleri",
-      "normalizedSubTopicName": "superbilgisayar_siralama_listeleri",
+      "correctAnswer": "Saniyede 10^18 hesaplama yapabilme",
+      "explanation": "Eksaskala bilgisayarlar, saniyede 10^18 hesaplama yapabilen sistemlerdir. Diğer seçeneklerdeki değerler daha düşük performanslı bilgisayar sistemlerine aittir.",
+      "subTopicName": "Eksaskala Bilgisayar Sistemleri",
+      "normalizedSubTopicName": "eksaskala_bilgisayar_sistemleri",
       "difficulty": "easy"
     },
     {
       "id": "q2",
-      "questionText": "Süperbilgisayarların kullanım alanlarına bir örnek veriniz.",
+      "questionText": "Günümüzdeki en güncel eksaskala bilgisayar modelleri hangileridir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Sadece ofis uygulamaları",
-        "Sadece web tarama",
-        "Bilimsel araştırmalar ve yapay zeka",
-        "Sadece e-posta işlemleri"
+        "Summit ve Sierra",
+        "Titan ve Sequoia",
+        "Frontier ve El Capitan",
+        "Sunway TaihuLight ve Tianhe-2"
       ],
-      "correctAnswer": "Bilimsel araştırmalar ve yapay zeka",
-      "explanation": "Süperbilgisayarlar, yüksek hesaplama gücü sayesinde bilimsel araştırmalardan yapay zekaya kadar pek çok alanda kullanılmaktadır.",
-      "subTopicName": "Süperbilgisayar Sıralama Listeleri",
-      "normalizedSubTopicName": "superbilgisayar_siralama_listeleri",
+      "correctAnswer": "Frontier ve El Capitan",
+      "explanation": "Metinde belirtildiği gibi, günümüzün en güncel eksaskala bilgisayar modelleri Frontier (2022) ve El Capitan (2023)'dır.",
+      "subTopicName": "Eksaskala Bilgisayar Sistemleri",
+      "normalizedSubTopicName": "eksaskala_bilgisayar_sistemleri",
       "difficulty": "easy"
     },
     {
       "id": "q3",
-      "questionText": "Aşağıdakilerden hangisi süper bilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren listelerden biri değildir?",
+      "questionText": "Eksaskala bilgisayarların tanımı aşağıdakilerden hangisidir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "TOP500",
-        "HPCG",
-        "Green500",
-        "Blue500"
+        "Petaskala sistemlerden 10 kat daha güçlü bilgisayarlar",
+        "Saniyede 1 trilyon işlem yapabilen bilgisayarlar",
+        "Petaskala sistemlerden yaklaşık 1000 kat daha güçlü bilgisayarlar",
+        "Yapay zeka uygulamalarında kullanılan özel bilgisayarlar"
       ],
-      "correctAnswer": "Blue500",
-      "explanation": "TOP500, HPCG ve Green500 süper bilgisayarların hızını, verimliliğini ve gerçek performansını değerlendiren temel listelerdir. Blue500 diye bir liste bulunmamaktadır.",
-      "subTopicName": "Süperbilgisayar Sıralama Listeleri",
-      "normalizedSubTopicName": "superbilgisayar_siralama_listeleri",
-      "difficulty": "easy"
+      "correctAnswer": "Petaskala sistemlerden yaklaşık 1000 kat daha güçlü bilgisayarlar",
+      "explanation": "Eksaskala bilgisayarlar, petaskala sistemlerden yaklaşık 1000 kat daha güçlüdür. Bu, onların yüksek performanslı hesaplama yeteneklerini vurgular.",
+      "subTopicName": "Eksaskala Bilgisayar Tanımı",
+      "normalizedSubTopicName": "eksaskala_bilgisayar_tanimi",
+      "difficulty": "medium"
     },
     {
       "id": "q4",
-      "questionText": "TOP500 listesi hangi aralıklarla yayınlanmaktadır?",
+      "questionText": "Eksaskala bilgisayarların temel işlevi nedir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Yılda bir kez",
-        "İki yılda bir",
-        "Yılda iki kez",
-        "Üç ayda bir"
+        "Oyun oynamak",
+        "Ofis işlerini yapmak",
+        "Saniyede 10^18 işlem yapmak",
+        "İnternette gezinmek"
       ],
-      "correctAnswer": "Yılda iki kez",
-      "explanation": "TOP500 listesi, 1993'ten bu yana yılda iki kez (Haziran ve Kasım aylarında) yayınlanmaktadır.",
-      "subTopicName": "Top500ün Amacı Ve Ölçütü",
-      "normalizedSubTopicName": "top500un_amaci_ve_olcutu",
+      "correctAnswer": "Saniyede 10^18 işlem yapmak",
+      "explanation": "Eksaskala bilgisayarların temel işlevi, saniyede 10^18 işlem yapabilme kapasitesine sahip olmaktır. Bu, onları yüksek performanslı hesaplama gerektiren görevler için ideal kılar.",
+      "subTopicName": "Eksaskala Bilgisayar Tanımı",
+      "normalizedSubTopicName": "eksaskala_bilgisayar_tanimi",
       "difficulty": "easy"
     },
     {
       "id": "q5",
-      "questionText": "TOP500 listesinin temel amacı nedir?",
+      "questionText": "Aşağıdakilerden hangisi eksaskala bilgisayarların avantajlarından biri değildir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "En enerji verimli süperbilgisayarları belirlemek",
-        "En hızlı süperbilgisayarları belirlemek",
-        "Bellek performansını en iyi olan süperbilgisayarları belirlemek",
-        "En ucuz süperbilgisayarları belirlemek"
+        "Doğal afetlerin daha etkili yönetilmesi",
+        "Akıllı şehirlerin gelişiminin hızlandırılması",
+        "Yapay zeka ve büyük veri analitiği uygulamalarından daha hızlı sonuçlar elde edilmesi",
+        "Sosyal medya kullanımının kolaylaştırılması"
       ],
-      "correctAnswer": "En hızlı süperbilgisayarları belirlemek",
-      "explanation": "TOP500 listesinin temel amacı, en yüksek hesaplama gücüne sahip, yani en hızlı süperbilgisayarları belirlemektir.",
-      "subTopicName": "Top500ün Amacı Ve Ölçütü",
-      "normalizedSubTopicName": "top500un_amaci_ve_olcutu",
-      "difficulty": "easy"
+      "correctAnswer": "Sosyal medya kullanımının kolaylaştırılması",
+      "explanation": "Eksaskala bilgisayarların avantajları arasında doğal afetlerin yönetimi, akıllı şehirlerin geliştirilmesi ve yapay zeka/büyük veri analizlerinin hızlandırılması yer alır. Sosyal medya kullanımı doğrudan bir avantaj olarak belirtilmemiştir.",
+      "subTopicName": "Eksaskala Bilgisayar Avantajları",
+      "normalizedSubTopicName": "eksaskala_bilgisayar_avantajlari",
+      "difficulty": "medium"
     },
     {
       "id": "q6",
-      "questionText": "TOP500 listesinde sıralama ölçütü olarak hangi test kullanılmaktadır?",
-      "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
-      "options": [
-        "HPCG testi",
-        "LINPACK testi",
-        "Green500 testi",
-        "STREAM testi"
-      ],
-      "correctAnswer": "LINPACK testi",
-      "explanation": "TOP500 listesinde sıralama ölçütü olarak LINPACK testi kullanılmaktadır. Bu test, süperbilgisayarın ne kadar hızlı işlem yapabildiğini ölçer.",
-      "subTopicName": "Top500ün Amacı Ve Ölçütü",
-      "normalizedSubTopicName": "top500un_amaci_ve_olcutu",
-      "difficulty": "easy"
-    },
-    {
-      "id": "q7",
-      "questionText": "HPCG'nin (High Performance Conjugate Gradient) temel amacı nedir?",
+      "questionText": "Eksaskala bilgisayarların STEM alanlarına katkısı en iyi nasıl açıklanır?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Enerji verimliliğini ölçmek",
-        "Ham hesaplama gücünü ölçmek",
-        "Bellek, iletişim ve veri akış performansını test etmek",
-        "Grafik işlemci performansını ölçmek"
+        "Bilimsel okuryazarlığı azaltarak",
+        "Bilimsel okuryazarlığı artırarak",
+        "STEM alanlarına olan ilgiyi azaltarak",
+        "Sadece mühendislik alanında katkı sağlayarak"
       ],
-      "correctAnswer": "Bellek, iletişim ve veri akış performansını test etmek",
-      "explanation": "HPCG, bellek, iletişim ve veri akış performansını test etmeyi amaçlar ve gerçek dünya uygulamalarına odaklanır.",
-      "subTopicName": "Hpcgnin Amacı Ve Ölçütü",
-      "normalizedSubTopicName": "hpcgnin_amaci_ve_olcutu",
+      "correctAnswer": "Bilimsel okuryazarlığı artırarak",
+      "explanation": "Eksaskala bilgisayarlar, STEM (Fen, Teknoloji, Mühendislik, Matematik) alanları ile ilgili bilimsel okuryazarlığın artırılmasına katkı sağlar.",
+      "subTopicName": "Eksaskala Bilgisayar Avantajları",
+      "normalizedSubTopicName": "eksaskala_bilgisayar_avantajlari",
+      "difficulty": "medium"
+    },
+    {
+      "id": "q7",
+      "questionText": "Von Neumann mimarisinde program komutları ve veriler nerede saklanır?",
+      "questionType": "multiple_choice",
+      "cognitiveDomain": "remembering",
+      "options": [
+        "Ayrı belleklerde",
+        "Aynı bellekte",
+        "Sadece işlemcide",
+        "Sadece ekran kartında"
+      ],
+      "correctAnswer": "Aynı bellekte",
+      "explanation": "Von Neumann mimarisinde, program komutları ve veriler aynı bellek içinde saklanır. Bu, mimarinin temel özelliklerinden biridir.",
+      "subTopicName": "Von Neumann Mimarisi",
+      "normalizedSubTopicName": "von_neumann_mimarisi",
       "difficulty": "easy"
     },
     {
       "id": "q8",
-      "questionText": "HPCG sıralamasında kullanılan test, hangi matematiksel yöntemi kullanır?",
+      "questionText": "Von Neumann mimarisinin performansını sınırlayan temel faktör nedir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "Hızlı Fourier Dönüşümü",
-        "Konjugat Gradyan yöntemi",
-        "Monte Carlo simülasyonu",
-        "Dinamik Programlama"
+        "İşlemci hızı",
+        "Bellek kapasitesi",
+        "Bellek ile işlemci arasındaki veri aktarım hızı",
+        "Ekran kartı performansı"
       ],
-      "correctAnswer": "Konjugat Gradyan yöntemi",
-      "explanation": "HPCG testi, iteratif bir doğrusal denklem çözme yöntemi olan Konjugat Gradyan yöntemini kullanır.",
-      "subTopicName": "Hpcgnin Amacı Ve Ölçütü",
-      "normalizedSubTopicName": "hpcgnin_amaci_ve_olcutu",
-      "difficulty": "easy"
+      "correctAnswer": "Bellek ile işlemci arasındaki veri aktarım hızı",
+      "explanation": "Von Neumann mimarisinde bellek ile işlemci arasındaki veri aktarım hızı, sistemin performansını sınırlar. Bu durum, mimarinin darboğazlarından biridir.",
+      "subTopicName": "Von Neumann Mimarisi",
+      "normalizedSubTopicName": "von_neumann_mimarisi",
+      "difficulty": "medium"
     },
     {
       "id": "q9",
-      "questionText": "Green500 listesi süperbilgisayarları hangi kritere göre sıralar?",
+      "questionText": "GPU'lar (Grafik İşleme Birimi) hangi tür işlemler için CPU'lardan daha hızlıdır?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "remembering",
+      "cognitiveDomain": "understanding",
       "options": [
-        "İşlemci hızına",
-        "Bellek kapasitesine",
-        "Enerji verimliliğine",
-        "Depolama alanına"
+        "Genel amaçlı işlemler",
+        "Tekil ve karmaşık işlemler",
+        "Büyük matris işlemleri",
+        "Veritabanı işlemleri"
       ],
-      "correctAnswer": "Enerji verimliliğine",
-      "explanation": "Green500 listesi, enerji verimliliğini temel alarak süperbilgisayarları sıralar.",
-      "subTopicName": "Green500ün Amacı Ve Ölçütü",
-      "normalizedSubTopicName": "green500un_amaci_ve_olcutu",
-      "difficulty": "easy"
+      "correctAnswer": "Büyük matris işlemleri",
+      "explanation": "GPU'lar, binlerce çekirdeğe sahip oldukları için büyük matris işlemlerini CPU'lardan daha hızlı gerçekleştirebilirler. Bu özellikleri, onları süper bilgisayarlar için kritik bir rol oynamaya yöneltir.",
+      "subTopicName": "Gpu Ve Tpu Hızlandırıcılar",
+      "normalizedSubTopicName": "gpu_ve_tpu_hizlandiricilar",
+      "difficulty": "medium"
     },
     {
       "id": "q10",
-      "questionText": "Green500 sıralamasında kullanılan ölçüt nedir?",
+      "questionText": "Tensor İşleme Birimi (TPU) hangi amaç için Google tarafından özel olarak tasarlanmıştır?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "remembering",
       "options": [
-        "FLOPS/Watt",
-        "CPU çekirdek sayısı",
-        "Bellek bant genişliği",
-        "GPU işlem gücü"
+        "Grafik işleme",
+        "Video oluşturma",
+        "Makine öğrenmesi",
+        "Veri tabanı yönetimi"
       ],
-      "correctAnswer": "FLOPS/Watt",
-      "explanation": "Green500 sıralama ölçütü olarak FLOPS/Watt oranına bakar. Yani, 1 watt enerji başına ne kadar işlem yapıldığı değerlendirilir.",
-      "subTopicName": "Green500ün Amacı Ve Ölçütü",
-      "normalizedSubTopicName": "green500un_amaci_ve_olcutu",
+      "correctAnswer": "Makine öğrenmesi",
+      "explanation": "Tensor İşleme Birimi (TPU), Google tarafından makine öğrenmesi için özel olarak tasarlanmış işlemcilerdir. GPU'lardan daha hızlı ve enerji verimli çalışabilirler.",
+      "subTopicName": "Gpu Ve Tpu Hızlandırıcılar",
+      "normalizedSubTopicName": "gpu_ve_tpu_hizlandiricilar",
       "difficulty": "easy"
     }
   ]

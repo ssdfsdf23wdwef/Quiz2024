@@ -1,25 +1,32 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-31T17:38:50.040Z
+## Tarih: 2025-05-31T17:59:37.165Z
 
-## Trace ID: quiz-1748713130025-a6cyr
+## Trace ID: quiz-1748714377151-zfh4a
 
-## Alt Konular (4 adet):
+## Alt Konular (10 adet):
 ```
 ## AKTİF KONULAR (SORU ÜRETİLECEK)
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Süperbilgisayar Sıralama Listeleri** (3 soru)
-2. **Top500ün Amacı Ve Ölçütü** (3 soru)
-3. **Hpcgnin Amacı Ve Ölçütü** (2 soru)
-4. **Green500ün Amacı Ve Ölçütü** (2 soru)
+1. **Eksaskala Bilgisayar Sistemleri** (2 soru)
+2. **Eksaskala Bilgisayar Tanımı** (2 soru)
+3. **Eksaskala Bilgisayar Avantajları** (2 soru)
+4. **Von Neumann Mimarisi** (2 soru)
+5. **Gpu Ve Tpu Hızlandırıcılar** (2 soru)
 
-**Toplam Aktif: 4 alt konu, 10 soru**
+**Toplam Aktif: 5 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
-Bekleyen konu yok.
+**Aşağıdaki konulardan soru üretilmeyecektir:**
+
+1. Simd Ve Mimd Paralelleştirme
+2. Hbm Bellek Teknolojisi
+3. 3d Bellek Yığınlama
+4. Fat Tree Topolojisi
+5. Dragonfly Topolojisi
 
 ```
 
@@ -45,16 +52,23 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Süperbilgisayar Sıralama Listeleri** (3 soru)
-2. **Top500ün Amacı Ve Ölçütü** (3 soru)
-3. **Hpcgnin Amacı Ve Ölçütü** (2 soru)
-4. **Green500ün Amacı Ve Ölçütü** (2 soru)
+1. **Eksaskala Bilgisayar Sistemleri** (2 soru)
+2. **Eksaskala Bilgisayar Tanımı** (2 soru)
+3. **Eksaskala Bilgisayar Avantajları** (2 soru)
+4. **Von Neumann Mimarisi** (2 soru)
+5. **Gpu Ve Tpu Hızlandırıcılar** (2 soru)
 
-**Toplam Aktif: 4 alt konu, 10 soru**
+**Toplam Aktif: 5 alt konu, 10 soru**
 
 ## BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)
 
-Bekleyen konu yok.
+**Aşağıdaki konulardan soru üretilmeyecektir:**
+
+1. Simd Ve Mimd Paralelleştirme
+2. Hbm Bellek Teknolojisi
+3. 3d Bellek Yığınlama
+4. Fat Tree Topolojisi
+5. Dragonfly Topolojisi
 
   *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
 - **Eğitim İçeriği:** 
@@ -62,86 +76,271 @@ Bekleyen konu yok.
 Bilgisayar Mühendisliği Bölümü
 Bahar –2025(ÖÖ.,İÖ.)
 MBM7-452 -Eksaskala Bilgisayar Sistemleri
-(Sunu 6)
+(Sunu 2)
 Dr. Öğr. Üyesi Esra Çelik
 
-Süperbilgisayar Dünyasında Sıralama
-•Süperbilgisayarlar, yüksek hesaplama gücüyle bilimsel
-araştırmalardan yapay zekaya kadar pek çok alanda kullanılır.
-•Bu sistemlerin hızını, verimliliğini ve gerçek performansını
-değerlendiren üç temel liste vardır:
-•TOP500
-•HPCG (High Performance Conjugate Gradient)
-•Green500
+Eksaskala Bilgisayarlar
+•Exascale bilgisayarlar,
+•saniyedeퟏퟎ
+ퟏퟖ
+hesaplama yapabilen sistemlerdir.
+•Petaskalasistemlerden yaklaşık 1000 kat daha güçlüdür.
+•Günümüzün en güncel eksaskala bilgisayar modelleri
+•Frontier(2022–saniyede 1.1 exaflopperformans) ve
+•El Capitan (2023-saniyede 2exaflopperformans)’dır.
 
-TOP500
-•TOP500,
-•dünyanın en hızlı 500 süperbilgisayarını hesaplama gücüne göre
-sıralar.
-•1993’ten bu yana yılda iki kez (Haziran ve Kasım aylarında)
-yayımlanmaktadır.
-•Performansodaklıdır.
-•En yüksek hesaplama gücü kimde?sorusunun cevabını verir.
+Eksaskala Bilgisayarlar
+Doğal afetlerin daha etkili yönetilmesi
+Akıllı şehirlerin gelişimini hızlandırılması
+Yapay zeka ve büyük veri analitiği uygulamalarından daha
+hızlı ve verimli sonuçlar elde edilmesi
+STEM (Fen, Teknoloji, Mühendislik, Matematik) alanları ile ilgili
+bilimsel okuryazarlığın artırıması
+1
+2
+3
+4
+Eksaskala bilgisayarların en önemli avantajları aşağıda listelenir:
 
-TOP500
-•Sıralama ölçütü olarak LINPACK testi kullanılır.
-•Bu test:
-•Süperbilgisayarın ne kadar hızlı işlem yapabildiğini yanisistemin
-floating-point işlemleri (FLOPS) performansını ölçer.
-•Matris çözümlemeye dayalıdır.
-•Bellek kullanımı, veri aktarımı veya gerçek dünya uygulamalarındaki
-performansı tam olarak yansıtmaz.
+Günün Sorusu
+Eksaskala bilgisayarları son kullanıcı
+dizüstü/masaüstü bilgisayarlardan
+daha hızlı yapan temel faktörler
+nelerdir?
 
-TOP500
-•Kasım 2024 TOP500 listesinde ElCapiton ilk sırada yer alır.
+Eksaskala Bilgisayarlarda İşlemciler
+•Von Neumann Mimarisi
+•Program komutları ve veriler aynı bellekiçinde saklanır.
+•İşlemci, komutları bellekte sırayla alır, işler ve yürütür.
+•Komutlar, bellekte saklanan yazılımlar aracılığıyla yürütülür.
+•Programlar ve veriler aynı hafızada saklanabildiği için esnekliksağlar.
+•Genel amaçlı bilgisayarlar (PC, dizüstüvb.)için uygundur.
+•Bellek ile işlemci arasındaki veri aktarım hızı, sistemin performansını sınırlar.
+Input
+Device
+Output
+Device
+Central Processing Unit
+(CPU)
+Memory Unit
+Arithmetic/Logic Unit
+(ALU)
+Control Unit (CU)
 
-HPCG
-•HPCG,
-•bellek, iletişim ve veri akış performansını test eder.
-•Gerçek dünya uygulamalarına odaklanır.
-•TOP500’ün eksik kaldığı noktaları tamamlamak için alternatif olarak
-geliştirilmiştir.
-•Gerçek dünya uygulamalarına (mühendislik hesaplamaları vb.) daha
-yakındır.
+Eksaskala Bilgisayarlarda İşlemciler
+•Eksaskala bilgisayarlarda,
+•geleneksel Von Neumann mimarisinden farklı olarak
+•CPU’nun yanı sıra
+•heterojen hesaplama kaynakları olan GPU, TPUgibi hızlandırıcılar
+daişlem sürecine dahil edilir.
+Input
+Device
+Output
+Device
+Central Processing Unit
+(CPU)
+Memory Unit
+Graphics Processing Unit
+(GPU)
+Tensor Processing Units
+(TPU)
+
+GPU ve TPU
+nedir?
 
-HPCG
-•Sıralama ölçütü olarak HPCG testi kullanılır.
-•Bu test:
-•İteratif bir doğrusal denklem çözme yöntemi olan Konjugat
-Gradyanyöntemini kullanılır.
-•Bellek erişimi, iletişim yeteneği ve veri transfer performansını test
-eder
+Eksaskala Bilgisayarlarda İşlemciler
+Input
+Device
+Output
+Device
+Central Processing Unit
+(CPU)
+Memory Unit
+Graphics Processing Unit
+(GPU)
+Tensor Processing Units
+(TPU)
+•Grafik İşleme Birimi (GPU),
+•CPU ile birlikte çalışan, grafik ve hesaplama işlemlerini hızlandıran özel
+işlemcidir.
+•Binlerce çekirdeğe sahiptir.
+•Yüksek işlem gücü ile CPU’dan daha hızlı hesaplamalar yapabilirler.
+•Aynı anda birçok görevi yürüterek paralel işlem yapabilir.
+•Büyük matris işlemlerini hızlandırarak süper bilgisayarlar için kritik rol oynar.
+•Grafik işleme, video oluşturma, yapay zekaalanlarında sıkça kullanılır.
 
-HPCG
-•Kasım 2024 HPCG listesinde Fugaku ilk sırada yer alır.
+Eksaskala Bilgisayarlarda İşlemciler
+Input
+Device
+Output
+Device
+Central Processing Unit
+(CPU)
+Memory Unit
+Graphics Processing Unit
+(GPU)
+Tensor Processing Units
+(TPU)
+•Tensor İşleme Birimi (TPU),
+•Google tarafından makine öğrenmesi için özel olarak tasarlanmış
+işlemcilerdir.
+•GPU’lardan daha hızlı ve enerji verimli çalışabilir.
+•Yoğun vektör ve matris hesaplamaları için optimize edilmiştir.
+•Aşırı paralel hesaplama kapasitesine sahiptir.
 
-Green500
-•Green500,
-•enerji verimliliğini temel alarak süperbilgisayarları sıralayan
-listedir.
-•Çevreci yaklaşıma odaklanır.
-•Verimli, sürdürülebilir HPC sistemlerini teşvik eder.
-•Sıralama ölçütü olarak FLOPS/Wattoranına bakar.
-•Yani, 1 watt enerji başına ne kadar işlem yapıldığı değerlendirilir.
+Eksaskala Bilgisayarlarda İşlemciler
+•Eksaskala bilgisayarlarda,
+•geleneksel Von Neumann mimarisindeki sıralı işlem yapısından
+farklı olarak
+•SIMD ve MIMD gibi paralelleştirme teknikleri kullanılarak
+•büyük ölçekli işlemler aynı anda çalıştırılabilir.
+
+SIMD ve MIMD
+teknikleri nedir?
 
-Green500
-•Kasım 2024 Green500 listesinde JEDI ilk sırada yer alır.
+Eksaskala Bilgisayarlarda İşlemciler
+•Tek Komut Çoklu Veri(Single Instruction Multiple Data-SIMD),
+•Tek bir komut aynı anda birden fazla veri üzerinde çalışır.Buna veri paralelliği denir.
+•Vektör işlemciler ve GPU tarafından kullanılır.
+•Paralelleştirme ile büyük veri setlerinde yüksek verimlilik sağlar.
+•Örneğin,
+•1, 2 ve 3 verilerinin (çoklu veri)
+•aynı anda (paralel)
+•4 katının hesaplanması işlemi (tek komut)
+•SIMD tekniği ile aşağıdaki gibi gerçekleştirilebilir:
+123
+x4
+4812
+Çoklu Veri
+Tek Komut
+Sonuç
+Tüm çıktılar
+tek seferde
+alınır.
 
-Listelerin Karşılaştırılması
-ListeOdak NoktasıTest (Benchmark)Amaç
-TOP500Ham hesaplama gücü
-(FLOPS)
-LINPACKEn hızlı
-süperbilgisayarları
-belirlemek
-HPCGBellek, iletişim ve
-gerçekçi yük
-HPCGGerçek
-uygulamalardaki
-performansı ölçmek
-Green500Enerji verimliliğiFLOPS/WattEn verimli
-süperbilgisayarları
-sıralamak
+Eksaskala Bilgisayarlarda İşlemciler
+•ÇokluKomut Çoklu Veri(MultipleInstruction Multiple Data-MIMD),
+•Farklı komutlar aynı anda farklı veriler üzerinde çalıştırılır. Buna görev paralelliği denir.
+•Çok çekirdekli CPU’lar ve süper bilgisayarlar bu yapıyı kullanır.
+•Karmaşık işlemleri paralelşekilde gerçekleştirebilir.
+•Örneğin,
+•1, 2ve 3verilerinin (çoklu veri)
+•aynı anda (paralel)
+•4 katının, 5 fazlasının, 3 eksiğinin hesaplanması işlemi (çoklu komut)
+•MIMD tekniği ile aşağıdaki gibi gerçekleştirilebilir:
+123
+x4
+470
+Çoklu Veri
+Çoklu Komut
+Sonuç
+Tüm çıktılar
+tek seferde
+alınır.
++5-3
+
+Eksaskala Bilgisayarlarda Bellek Mimarileri
+•Eksaskala bilgisayarlarda,
+•geleneksel Von Neumann mimarisindeki tek bellek yolundan farklı
+olarak
+•HBM (High Bandwidth Memory)ve
+•3D bellek yığınlamagibi
+•yüksek hızlı bellek teknolojilerini kullanır.
+
+HBM ve 3D bellek
+yığınlama nedir?
+
+Eksaskala Bilgisayarlarda Bellek Mimarileri
+•Yüksek Bant Genişlikli Bellek(High Bandwidth Memory-HBM),
+•bellek ile işlemci arasındaki veri aktarım hızını artırmak için kullanılan bir bellek teknolojisidir.
+•HBM, geleneksel belleklere göre,
+•bellek yongalarını yatay yerleştirerekdaha yüksek bant genişliği sağlar. Bu yatay ölçeklemenin bir
+türüdür.
+•işlemci ile bellek arasındaki veri iletim hızını artırarak daha hızlı erişim sağlar.
+•Yüksek performanslı hesaplama uygulamalarında kullanılır.
+•Yongaların yatay yerleştirilmesi nedeniyle sınırlı bir alan kullanımı ve kapasiteye sahiptir.
+
+Eksaskala Bilgisayarlarda Bellek Mimarileri
+•3D bellek yığınlama,
+•HBM'in bir türüdür.
+•Bellek yongalarının dikey yerleştirilmesiyle oluşturulur. Bu dikey ölçeklemenin bir
+türüdür.
+•Bu, daha az alan kullanarak daha fazla:
+•bellek kapasitesi, bant genişliği, hızlı veri iletimi ve verimli bir tasarımsağlar.
+•HBM ile aynı alanlarda kullanılır ve daha maliyetlidir.
+
+Eksaskala Bilgisayarlarda Bağlantı Teknolojileri
+•Exascale bilgisayarlar için ağ topolojileri,
+•veri aktarımının gecikmesini minimize edecek şekilde optimize edilmiştir.
+•Bu kapsamda:
+•Fat-tree,
+•Dragonfly,
+•Hypercube ve
+•HyperXtopolojileri
+•hesaplama düğümleri arasındaki bağlantıyı güçlendirmekiçin yaygın olarak
+kullanılmaktadır.
+
+Fat-tree, Dragonfly,
+Hypercubeve HyperX
+topolojilerinedir?
+
+Eksaskala Bilgisayarlarda Bağlantı Teknolojileri
+•Fat-tree,
+•Yüksek bant genişliği ve düşük tıkanıklıksağlamak için tasarlanmışbir topolojidir.
+•Klasikağaç topolojisindeüst katmanlara çıkıldıkça bant genişliği daralır, fat-tree’de ise bağlantılar
+güçlendirilir vebant genişiği artar.
+•Fat-treetopolojide 3 katman bulunur:
+•Core Layer,bant genişliğinin en yüksek olduğu katmandır.
+•Aggregation Layer, trafiği optimize eder.
+•Edge Layer, serverlar için bağlantı noktasıdır ve bant genişliği düşüktür.
+•Süper bilgisayarlar için Core ve Aggregation Layer kritik öneme sahiptir.
+Bant
+genişliği
+artar.
+
+Eksaskala Bilgisayarlarda Bağlantı Teknolojileri
+•Dragonfly
+•düşük gecikme ve yüksek bant
+genişliği sunan ölçeklenebilir bir ağ
+topolojisidir.
+•Fat-Tree‘den farkılı olarak:
+•daha az switch ve kablo ile
+•aynı veya daha yüksek performans
+sağlar.
+•Ölçeklenebilirlik artarken maliyet ve
+enerji tüketimi azalır.
+
+Eksaskala Bilgisayarlarda Bağlantı Teknolojileri
+•Hypercube topolojisinde:
+•Düğümler,küp yapısında birbirine
+bağlanır.
+•Hızlı veri iletimi sağlar.
+•Bağlantı kopmalarında bile çalışır.
+•Süper bilgisayarlar ve paralel hesaplama
+için idealdir.
+•Yeni düğümler eklenerek genişletilebilir.
+
+Eksaskala Bilgisayarlarda Bağlantı Teknolojileri
+•HyperX,
+•süper bilgisayarlar için tasarlanmış,
+hiyerarşik yapılar ve paralel bağlantılar
+kullanan topolojidir.
+•Bağlantılar, hiyerarşik yapılar ile organize
+edilir.
+•Veri iletimi paralel yollarile yapılır.
+•Hızlı veri iletimi sağlar.
+•Ağda bağlantı kopmaları olsa da çalışmaya
+devam eder.
+•Kolayca genişletilebilir, büyük sistemlere
+uygundur.
+
+Eksaskala Bilgisayarlarda Enerji Verimliliği Stratejileri
+•Eksaskala bilgisayarlarda enerji verimliliği için:
+•düşük güç tüketimli işlemciler ve hızlandırıcılar,
+•güç farkındalıklı zamanlama algoritmaları,
+•dinamik yük yönetimi,
+•sıvı soğutma, faz değişimli soğutma ve adaptif soğutma sistemleri
+kullanılır.
 - **İstenen Toplam Soru Sayısı:** 10 soru
 - **Zorluk Seviyesi:** mixed
 
@@ -316,35 +515,42 @@ sıralamak
 - Toplam Soru Sayısı: 10
 - Alt Konu Dağılımı:
 
-  - Süperbilgisayar Sıralama Listeleri: 3 soru
-  - Top500ün Amacı Ve Ölçütü: 3 soru
-  - Hpcgnin Amacı Ve Ölçütü: 2 soru
-  - Green500ün Amacı Ve Ölçütü: 2 soru
+  - Eksaskala Bilgisayar Sistemleri: 2 soru
+  - Eksaskala Bilgisayar Tanımı: 2 soru
+  - Eksaskala Bilgisayar Avantajları: 2 soru
+  - Von Neumann Mimarisi: 2 soru
+  - Gpu Ve Tpu Hızlandırıcılar: 2 soru
 
 
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
-#### Süperbilgisayar Sıralama Listeleri:
-- Soru: Aşağıdakilerden hangisi süperbilgisayarların performansını değerlendiren temel listelerden biridir?
-- Seçenekler: Big500 | TOP500 | Fast500 | Global500
-- Doğru Cevap: TOP500
+#### Eksaskala Bilgisayar Sistemleri:
+- Soru: Aşağıdakilerden hangisi eksaskala bilgisayarların temel özelliklerinden biridir?
+- Seçenekler: Saniyede 10^9 hesaplama yapabilme | Saniyede 10^12 hesaplama yapabilme | Saniyede 10^15 hesaplama yapabilme | Saniyede 10^18 hesaplama yapabilme
+- Doğru Cevap: Saniyede 10^18 hesaplama yapabilme
 - Zorluk: easy
 
-#### Top500ün Amacı Ve Ölçütü:
-- Soru: TOP500 listesi hangi aralıklarla yayınlanmaktadır?
-- Seçenekler: Yılda bir kez | İki yılda bir | Yılda iki kez | Üç ayda bir
-- Doğru Cevap: Yılda iki kez
+#### Eksaskala Bilgisayar Tanımı:
+- Soru: Eksaskala bilgisayarların tanımı aşağıdakilerden hangisidir?
+- Seçenekler: Petaskala sistemlerden 10 kat daha güçlü bilgisayarlar | Saniyede 1 trilyon işlem yapabilen bilgisayarlar | Petaskala sistemlerden yaklaşık 1000 kat daha güçlü bilgisayarlar | Yapay zeka uygulamalarında kullanılan özel bilgisayarlar
+- Doğru Cevap: Petaskala sistemlerden yaklaşık 1000 kat daha güçlü bilgisayarlar
+- Zorluk: medium
+
+#### Eksaskala Bilgisayar Avantajları:
+- Soru: Aşağıdakilerden hangisi eksaskala bilgisayarların avantajlarından biri değildir?
+- Seçenekler: Doğal afetlerin daha etkili yönetilmesi | Akıllı şehirlerin gelişiminin hızlandırılması | Yapay zeka ve büyük veri analitiği uygulamalarından daha hızlı sonuçlar elde edilmesi | Sosyal medya kullanımının kolaylaştırılması
+- Doğru Cevap: Sosyal medya kullanımının kolaylaştırılması
+- Zorluk: medium
+
+#### Von Neumann Mimarisi:
+- Soru: Von Neumann mimarisinde program komutları ve veriler nerede saklanır?
+- Seçenekler: Ayrı belleklerde | Aynı bellekte | Sadece işlemcide | Sadece ekran kartında
+- Doğru Cevap: Aynı bellekte
 - Zorluk: easy
 
-#### Hpcgnin Amacı Ve Ölçütü:
-- Soru: HPCG'nin (High Performance Conjugate Gradient) temel amacı nedir?
-- Seçenekler: Enerji verimliliğini ölçmek | Ham hesaplama gücünü ölçmek | Bellek, iletişim ve veri akış performansını test etmek | Grafik işlemci performansını ölçmek
-- Doğru Cevap: Bellek, iletişim ve veri akış performansını test etmek
-- Zorluk: easy
-
-#### Green500ün Amacı Ve Ölçütü:
-- Soru: Green500 listesi süperbilgisayarları hangi kritere göre sıralar?
-- Seçenekler: İşlemci hızına | Bellek kapasitesine | Enerji verimliliğine | Depolama alanına
-- Doğru Cevap: Enerji verimliliğine
-- Zorluk: easy
+#### Gpu Ve Tpu Hızlandırıcılar:
+- Soru: GPU'lar (Grafik İşleme Birimi) hangi tür işlemler için CPU'lardan daha hızlıdır?
+- Seçenekler: Genel amaçlı işlemler | Tekil ve karmaşık işlemler | Büyük matris işlemleri | Veritabanı işlemleri
+- Doğru Cevap: Büyük matris işlemleri
+- Zorluk: medium
 
