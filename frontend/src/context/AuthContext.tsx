@@ -126,31 +126,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const seqId = flowTracker.startSequence('AuthStateMonitoring');
-    
-    logger.info(
-      'Oturum durumu izleme başlatıldı',
-      'AuthContext.onAuthStateChange',
-      'AuthContext.tsx',
-      264
-    );
-    
     // Yükleniyor durumunu ayarla
     setIsInitializing(true);
     setLoading(true);
     
-    // Sunucu tarafında işlem yapma
-    if (!auth) {
-      logger.warn(
-        'Firebase auth nesnesi bulunamadı',
-        'AuthContext.onAuthStateChange',
-        'AuthContext.tsx',
-        275
-      );
-      setIsInitializing(false);
-      setLoading(false);
-      return;
-    }
-    
+
     // Firebase Auth durumunu dinle
     const unsubscribe = authService.onAuthStateChange(async (firebaseUser: FirebaseUser | null) => {
       try {

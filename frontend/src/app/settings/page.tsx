@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiSave,
   FiMoon,
@@ -9,12 +9,27 @@ import {
   FiEye,
   FiEyeOff,
   FiRefreshCw,
+  FiMonitor,
+  FiCheck,
+  FiType,
+  FiSettings,
+  FiBell,
+  FiHelpCircle
 } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/context/ThemeProvider";
+import { ThemeMode } from "@/styles/theme";
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme();
+  const {
+    theme,
+    currentMode,
+    isDarkMode,
+    isSystemTheme,
+    setTheme,
+    setFontSize,
+  } = useTheme();
+  
   const [mounted, setMounted] = useState(false);
 
   const [settings, setSettings] = useState({
@@ -24,7 +39,6 @@ export default function SettingsPage() {
     language: "tr",
   });
 
-  // Only show the theme toggle UI after mounting to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -35,7 +49,8 @@ export default function SettingsPage() {
     confirmPassword: "",
   });
 
-  const [showPasswords, setShowPasswords] = useState({
+  // Şifre alanlarının gösterilip gösterilmeyeceğini tutan state
+  const [showField, setShowField] = useState({
     current: false,
     new: false,
     confirm: false,
@@ -45,9 +60,10 @@ export default function SettingsPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [themeChanged, setThemeChanged] = useState(false);
 
-  const toggleShowPassword = (field: "current" | "new" | "confirm") => {
-    setShowPasswords((prev) => ({
+  const toggleShowPassword = (field: keyof typeof showField) => {
+    setShowField((prev) => ({
       ...prev,
       [field]: !prev[field],
     }));
@@ -61,13 +77,6 @@ export default function SettingsPage() {
     if (type === "checkbox") {
       const { checked } = e.target as HTMLInputElement;
       setSettings((prev) => ({ ...prev, [name]: checked }));
-
-      // Tema değişikliği için setThemeMode'u çağır
-      if (name === "darkMode") {
-        const toggleTheme = () => {
-          setTheme(theme === 'dark' ? 'light' : 'dark');
-        };
-      }
     } else {
       setSettings((prev) => ({ ...prev, [name]: value }));
     }
@@ -83,26 +92,10 @@ export default function SettingsPage() {
 
   const saveSettings = async () => {
     setIsSubmitting(true);
-
-    try {
-      // Burada normalde Firebase kullanacaktık
-      // Ancak bu kısım Firebase entegrasyonu için bekletilecek
-
-      // Şimdilik mock bir davranış uygulayalım
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
       setSavedSuccess(true);
-
-      // 3 saniye sonra başarı mesajını gizle
-      setTimeout(() => {
-        setSavedSuccess(false);
-      }, 3000);
-    } catch (error) {
-      console.error("Ayarları kaydetme hatası:", error);
-      alert("Ayarlar kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.");
-    } finally {
+    setTimeout(() => setSavedSuccess(false), 3000);
       setIsSubmitting(false);
-    }
   };
 
   const changePassword = async () => {
@@ -110,322 +103,374 @@ export default function SettingsPage() {
       setPasswordError("Şifreler eşleşmiyor.");
       return;
     }
-
     if (passwordData.newPassword.length < 6) {
       setPasswordError("Şifre en az 6 karakter olmalıdır.");
       return;
     }
-
     setIsChangingPassword(true);
-
-    try {
-      // Burada normalde Firebase Authentication kullanacaktık
-      // Ancak bu kısım Firebase entegrasyonu için bekletilecek
-
-      // Şimdilik mock bir davranış uygulayalım
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Başarılı değişiklik sonrası
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-
+    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       alert("Şifreniz başarıyla değiştirildi.");
-    } catch (error) {
-      console.error("Şifre değiştirme hatası:", error);
-      setPasswordError(
-        "Şifre değiştirilirken bir hata oluştu. Lütfen tekrar deneyin.",
-      );
-    } finally {
       setIsChangingPassword(false);
-    }
   };
 
+  // Tema değiştirme işlevi
+  const handleThemeChange = (mode: ThemeMode) => {
+    setTheme(mode);
+    setThemeChanged(true);
+    
+    // Kullanıcıya görsel bildirim göster
+    const toast = document.createElement('div');
+    toast.className = 
+      `fixed top-4 right-4 z-50 
+       ${mode === 'dark' ? 'bg-[#172554]/80' : 'bg-primary-50'} 
+       ${mode === 'dark' ? 'text-[#60a5fa]' : 'text-primary-600'} 
+       px-4 py-2 rounded-md shadow-md 
+       ${mode === 'dark' ? 'border border-[#3b82f6]/40' : 'border border-primary-200'} 
+       backdrop-blur-sm flex items-center gap-2`;
+    toast.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-check">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span>${mode === 'light' ? 'Açık' : mode === 'dark' ? 'Koyu' : 'Sistem'} tema uygulandı</span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-20px)';
+      toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 500);
+    }, 3000);
+    
+    setTimeout(() => {
+      setThemeChanged(false);
+    }, 3000);
+  };
+
+  // Hızlı tema değiştirme
+  const handleToggleTheme = () => {
+    if (currentMode === 'dark') {
+      setTheme('light');
+    } else {
+      setTheme('dark');
+    }
+    setThemeChanged(true);
+    
+    // Geçiş animasyonu ekleme
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
+    
+    setTimeout(() => {
+      root.classList.remove('theme-transition');
+      setThemeChanged(false);
+    }, 3000);
+  };
+
+  const fadeInVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  // Kart stilini merkezi olarak tanımla
+  const cardClassName = "bg-surface-secondary dark:bg-[#1e293b] rounded-lg shadow-sm dark:shadow-md border border-border-primary dark:border-[#334155]/60 p-6 backdrop-blur-[2px] dark:backdrop-blur-[4px]";
+
+  // Form öğeleri için genel stil
+  const inputClassName = "w-full text-sm px-3 py-2.5 bg-surface-primary dark:bg-[#0f172a] border border-border-secondary dark:border-[#334155]/60 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 dark:focus:ring-[#3b82f6] focus:border-primary-500 dark:focus:border-[#3b82f6] transition-colors";
+
+  // Toggle butonu stilini merkezi olarak tanımla
+  const toggleClassName = "w-10 h-5 bg-border-secondary dark:bg-[#1e293b] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-[#3b82f6]/40 rounded-full peer dark:bg-border-secondary peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-white after:border-border-tertiary dark:after:border-[#334155] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500 dark:peer-checked:bg-[#3b82f6]";
+
+  // Bölüm başlığı stili
+  const sectionHeaderClassName = "flex justify-between items-center mb-6 pb-4 border-b border-border-secondary dark:border-[#334155]/60";
+
+  if (!mounted) {
+    return null; // veya bir yükleme göstergesi
+  }
+
   return (
-    <>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Ayarlar</h1>
-        <p className="text-gray-600">
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+      className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8"
+    >
+      {themeChanged && (
+        <div className="fixed top-4 right-4 z-50 bg-state-success-bg dark:bg-[#065f46]/20 text-success dark:text-[#34d399] px-4 py-2 rounded-md shadow-md border border-state-success-border dark:border-[#065f46] backdrop-blur-sm">
+          Tema değiştirildi: {currentMode === 'light' ? 'Açık' : currentMode === 'dark' ? 'Koyu' : 'Sistem'}
+        </div>
+      )}
+
+      <motion.div variants={fadeInVariants} className="mb-10 text-center sm:text-left">
+        <h1 className="text-4xl font-bold text-text-primary mb-2">Ayarlar</h1>
+        <p className="text-lg text-text-secondary">
           Hesap ayarlarınızı ve tercihlerinizi yönetin.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg shadow-md p-6"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-medium text-gray-800">
-                Uygulama Tercihleri
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-10">
+        <div className="md:col-span-2 space-y-8">
+          <motion.section variants={fadeInVariants} className={cardClassName}>
+            <header className={sectionHeaderClassName}>
+              <h2 className="text-xl font-semibold text-text-primary flex items-center gap-3">
+                <FiSettings className="text-primary-500 dark:text-[#3b82f6]" />
+                Görünüm Ayarları
               </h2>
-
               {savedSuccess && (
-                <div className="text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm flex items-center">
-                  <FiRefreshCw className="animate-spin mr-1" />
-                  Kaydedildi!
+                <div className="text-sm text-success dark:text-[#34d399] bg-state-success-bg dark:bg-[#065f46]/20 px-3 py-1.5 rounded-md flex items-center border border-state-success-border dark:border-[#065f46] backdrop-blur-sm">
+                  <FiCheck className="mr-1.5" />
+                  Kaydedildi
                 </div>
               )}
+            </header>
+
+            <div className="bg-surface-tertiary dark:bg-[#0f172a]/80 rounded-md p-4 mb-6 flex items-center gap-4 border border-transparent dark:border-[#334155]/40">
+              {isDarkMode ? (
+                <FiMoon className="text-2xl text-primary-400 dark:text-[#60a5fa]" />
+              ) : (
+                <FiSun className="text-2xl text-warning-500 dark:text-[#fbbf24]" />
+              )}
+              <div>
+                <h3 className="font-medium text-text-primary">
+                  Mevcut Tema: <span className="capitalize font-semibold">{currentMode === 'light' ? 'Açık' : currentMode === 'dark' ? 'Koyu' : 'Sistem'}</span>
+                </h3>
+                <p className="text-sm text-text-secondary">
+                  {isSystemTheme 
+                    ? 'Sistem tercihini takip ediyor' 
+                    : `Manuel olarak ${theme.mode === 'dark' ? 'koyu' : 'açık'} tema ayarlandı`}
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-gray-800 font-medium">Karanlık Mod</h3>
-                  <p className="text-gray-500 text-sm">
-                    Uygulamada karanlık temayı etkinleştirin
-                  </p>
-                </div>
-                <div className="flex items-center justify-between py-3 px-4 bg-secondary/50 rounded-lg">
-                  <span className="text-sm font-medium">Koyu Tema</span>
+            <div className="space-y-3 mb-6">
+              <h3 className="text-base font-medium text-text-primary mb-2 flex items-center gap-2">
+                <FiMonitor className="text-primary-500 dark:text-[#3b82f6]" />
+                Tema Modu
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                {(['light', 'dark', 'system'] as const).map((mode) => (
                   <button
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                      theme === 'dark' ? "bg-primary" : "bg-gray-200"
-                    }`}
-                    disabled={!mounted}
+                    key={mode}
+                    onClick={() => handleThemeChange(mode)}
+                    className={`
+                      relative p-3 rounded-md border transition-all duration-150 group
+                      ${theme.mode === mode
+                        ? 'border-primary-500 dark:border-[#3b82f6] bg-primary-50 dark:bg-[#172554]/40 shadow-sm'
+                        : 'border-border-secondary dark:border-[#334155]/60 hover:border-primary-400 dark:hover:border-[#60a5fa]/70 hover:bg-surface-tertiary dark:hover:bg-[#1e293b]/70'
+                      }
+                    `}
                   >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
-                        theme === 'dark' ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    >
-                      {mounted && (theme === 'dark' ? (
-                        <FiMoon className="h-full w-full p-0.5 text-primary" />
-                      ) : (
-                        <FiSun className="h-full w-full p-0.5 text-yellow-500" />
-                      ))}
-                    </span>
+                    <div className="flex flex-col items-center gap-1.5">
+                      {mode === 'light' && <FiSun className={`text-lg ${theme.mode === mode ? 'text-warning-500 dark:text-[#fbbf24]' : 'text-text-secondary group-hover:text-warning-500 dark:group-hover:text-[#fbbf24]'}`} />}
+                      {mode === 'dark' && <FiMoon className={`text-lg ${theme.mode === mode ? 'text-primary-400 dark:text-[#60a5fa]' : 'text-text-secondary group-hover:text-primary-400 dark:group-hover:text-[#60a5fa]'}`} />}
+                      {mode === 'system' && <FiMonitor className={`text-lg ${theme.mode === mode ? 'text-text-primary' : 'text-text-secondary group-hover:text-text-primary'}`} />}
+                      <span className={`text-xs font-medium ${theme.mode === mode ? 'text-primary-600 dark:text-[#93c5fd]' : 'text-text-secondary group-hover:text-text-primary'} capitalize`}>
+                        {mode === 'light' ? 'Açık' : mode === 'dark' ? 'Koyu' : 'Sistem'}
+                      </span>
+                      {theme.mode === mode && (
+                        <FiCheck className="text-primary-500 dark:text-[#60a5fa] absolute top-1.5 right-1.5 text-sm" />
+                      )}
+                    </div>
                   </button>
-                </div>
+                ))}
               </div>
+              <button
+                onClick={handleToggleTheme}
+                className="mt-3 w-full text-sm px-4 py-2 bg-primary-500 dark:bg-[#3b82f6] hover:bg-primary-600 dark:hover:bg-[#2563eb] text-white rounded-md transition-colors duration-150 flex items-center justify-center gap-2"
+              >
+                <FiRefreshCw className="text-xs"/>
+                Hızlı Tema Değiştir
+              </button>
+            </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-gray-800 font-medium">
-                    E-posta Bildirimleri
-                  </h3>
-                  <p className="text-gray-500 text-sm">
-                    Yeni sınavlar ve öneriler için bildirimler alın
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="emailNotifications"
-                    className="sr-only peer"
-                    checked={settings.emailNotifications}
-                    onChange={handleSettingChange}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
+            <div className="space-y-3">
+              <h3 className="text-base font-medium text-text-primary mb-2 flex items-center gap-2">
+                <FiType className="text-success dark:text-[#34d399]" />
+                Yazı Boyutu
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                {(['small', 'medium', 'large'] as const).map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setFontSize(size)}
+                    className={`
+                      relative p-3 rounded-md border transition-all duration-150 group
+                      ${theme.fontSize === size
+                        ? 'border-success dark:border-[#34d399] bg-state-success-bg dark:bg-[#065f46]/20 shadow-sm'
+                        : 'border-border-secondary dark:border-[#334155]/60 hover:border-success/70 dark:hover:border-[#34d399]/60 hover:bg-surface-tertiary dark:hover:bg-[#1e293b]/70'
+                      }
+                    `}
+                  >
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className={`
+                        ${size === 'small' && 'text-xs'}
+                        ${size === 'medium' && 'text-sm'}
+                        ${size === 'large' && 'text-base'}
+                        font-semibold ${theme.fontSize === size ? 'text-success-dark dark:text-[#34d399]' : 'text-text-secondary group-hover:text-text-primary'}`}
+                      >
+                        Aa
+                      </div>
+                      <span className={`text-xs font-medium ${theme.fontSize === size ? 'text-success-dark dark:text-[#34d399]' : 'text-text-secondary group-hover:text-text-primary'} capitalize`}>
+                        {size === 'small' ? 'Küçük' : size === 'medium' ? 'Orta' : 'Büyük'}
+                      </span>
+                      {theme.fontSize === size && (
+                        <FiCheck className="text-success dark:text-[#34d399] absolute top-1.5 right-1.5 text-sm" />
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
+            </div>
+          </motion.section>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-gray-800 font-medium">
-                    Otomatik Zamanlayıcı
-                  </h3>
-                  <p className="text-gray-500 text-sm">
-                    Sınavlarda zamanlayıcıyı otomatik başlat
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="autoStartTimer"
-                    className="sr-only peer"
-                    checked={settings.autoStartTimer}
-                    onChange={handleSettingChange}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
-              </div>
+          <motion.section variants={fadeInVariants} className={cardClassName}>
+            <header className={sectionHeaderClassName}>
+              <h2 className="text-xl font-semibold text-text-primary flex items-center gap-3">
+                <FiBell className="text-accent-500 dark:text-[#f59e0b]" />
+                Uygulama Tercihleri
+              </h2>
+            </header>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-gray-800 font-medium">
-                    İpuçlarını Göster
-                  </h3>
-                  <p className="text-gray-500 text-sm">
-                    Uygulama içi yardımcı ipuçlarını göster
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="showHints"
-                    className="sr-only peer"
-                    checked={settings.showHints}
-                    onChange={handleSettingChange}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
-              </div>
+            <div className="space-y-5">
+              {(['emailNotifications', 'autoStartTimer', 'showHints'] as const).map((key) => {
+                const labels = {
+                  emailNotifications: "E-posta Bildirimleri",
+                  autoStartTimer: "Otomatik Zamanlayıcı",
+                  showHints: "İpuçlarını Göster"
+                };
+                const descriptions = {
+                  emailNotifications: "Yeni sınavlar ve öneriler için bildirimler alın",
+                  autoStartTimer: "Sınavlarda zamanlayıcıyı otomatik başlat",
+                  showHints: "Uygulama içi yardımcı ipuçlarını göster"
+                };
+                return (
+                  <div key={key} className="flex items-center justify-between p-3.5 bg-surface-tertiary dark:bg-[#0f172a]/80 rounded-md border border-border-secondary dark:border-[#334155]/40">
+                    <div>
+                      <h3 className="text-sm font-medium text-text-primary">{labels[key]}</h3>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        {descriptions[key]}
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name={key}
+                        className="sr-only peer"
+                        checked={settings[key]}
+                        onChange={handleSettingChange}
+                      />
+                      <div className={toggleClassName}></div>
+                    </label>
+                  </div>
+                );
+              })}
 
-              <div>
+              <div className="p-3.5 bg-surface-tertiary dark:bg-[#0f172a]/80 rounded-md border border-border-secondary dark:border-[#334155]/40">
                 <label
                   htmlFor="language"
-                  className="block text-gray-800 font-medium mb-1"
+                  className="block text-sm font-medium text-text-primary mb-1.5"
                 >
                   Dil
                 </label>
                 <select
                   id="language"
                   name="language"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className={inputClassName}
                   value={settings.language}
                   onChange={handleSettingChange}
                 >
                   <option value="tr">Türkçe</option>
+                  <option value="en">English</option>
                 </select>
               </div>
             </div>
 
             <button
-              className={`px-4 py-2 bg-indigo-600 text-white rounded-md ${
+              className={`mt-6 w-full sm:w-auto text-sm px-5 py-2.5 bg-primary-500 dark:bg-[#3b82f6] text-white rounded-md transition-colors duration-150 ${
                 isSubmitting
-                  ? "opacity-70 cursor-not-allowed"
-                  : "hover:bg-indigo-700"
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-primary-600 dark:hover:bg-[#2563eb] focus:ring-2 focus:ring-primary-300 dark:focus:ring-[#3b82f6]/40 focus:outline-none"
               }`}
               onClick={saveSettings}
               disabled={isSubmitting}
             >
-              <FiSave className="inline-block mr-2" />
+              <FiSave className="inline-block mr-1.5 text-xs" />
               {isSubmitting ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
             </button>
-          </motion.div>
+          </motion.section>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="bg-white rounded-lg shadow-md p-6"
-          >
-            <h2 className="text-lg font-medium text-gray-800 mb-6">
-              Şifre Değiştir
-            </h2>
+          <motion.section variants={fadeInVariants} className={cardClassName}>
+            <header className={sectionHeaderClassName}>
+              <h2 className="text-xl font-semibold text-text-primary flex items-center gap-3">
+                <FiLock className="text-error dark:text-[#f87171]" />
+                Şifre Değiştir
+              </h2>
+            </header>
 
             {passwordError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
+              <div className="mb-4 p-3 bg-state-error-bg dark:bg-[#991b1b]/20 text-sm text-error dark:text-[#f87171] rounded-md border border-state-error-border dark:border-[#991b1b]">
                 {passwordError}
               </div>
             )}
 
             <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="currentPassword"
-                  className="block text-gray-700 text-sm font-medium mb-2"
-                >
-                  Mevcut Şifre
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="text-gray-400" />
+              {(Object.keys(passwordData) as Array<keyof typeof passwordData>).map((field) => {
+                const labels = {
+                  currentPassword: "Mevcut Şifre",
+                  newPassword: "Yeni Şifre",
+                  confirmPassword: "Yeni Şifre (Tekrar)"
+                };
+                const fieldName = field.replace("Password", "").toLowerCase() as keyof typeof showField;
+                return (
+                  <div key={field}>
+                    <label
+                      htmlFor={field}
+                      className="block text-sm font-medium text-text-primary mb-1.5"
+                    >
+                      {labels[field]}
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FiLock className="text-text-tertiary text-sm" />
+                      </div>
+                      <input
+                        type={showField[fieldName] ? "text" : "password"}
+                        id={field}
+                        name={field}
+                        className={`${inputClassName} pl-10 pr-10`}
+                        placeholder="••••••••"
+                        value={passwordData[field]}
+                        onChange={handlePasswordChange}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-tertiary hover:text-text-primary transition-colors"
+                        onClick={() => toggleShowPassword(fieldName)}
+                      >
+                        {showField[fieldName] ? <FiEyeOff className="text-sm" /> : <FiEye className="text-sm" />}
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    type={showPasswords.current ? "text" : "password"}
-                    id="currentPassword"
-                    name="currentPassword"
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="••••••••"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => toggleShowPassword("current")}
-                  >
-                    {showPasswords.current ? (
-                      <FiEyeOff className="text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <FiEye className="text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="newPassword"
-                  className="block text-gray-700 text-sm font-medium mb-2"
-                >
-                  Yeni Şifre
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="text-gray-400" />
-                  </div>
-                  <input
-                    type={showPasswords.new ? "text" : "password"}
-                    id="newPassword"
-                    name="newPassword"
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="••••••••"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => toggleShowPassword("new")}
-                  >
-                    {showPasswords.new ? (
-                      <FiEyeOff className="text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <FiEye className="text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-gray-700 text-sm font-medium mb-2"
-                >
-                  Yeni Şifre (Tekrar)
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="text-gray-400" />
-                  </div>
-                  <input
-                    type={showPasswords.confirm ? "text" : "password"}
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="••••••••"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => toggleShowPassword("confirm")}
-                  >
-                    {showPasswords.confirm ? (
-                      <FiEyeOff className="text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <FiEye className="text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                </div>
-              </div>
+                );
+              })}
             </div>
 
             <button
-              className={`mt-6 px-4 py-2 bg-indigo-600 text-white rounded-md ${
+              className={`mt-6 w-full sm:w-auto text-sm px-5 py-2.5 bg-error dark:bg-[#f87171] text-white rounded-md transition-colors duration-150 ${
                 isChangingPassword
-                  ? "opacity-70 cursor-not-allowed"
-                  : "hover:bg-indigo-700"
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-error/90 dark:hover:bg-[#ef4444] focus:ring-2 focus:ring-error/50 dark:focus:ring-[#f87171]/40 focus:outline-none"
               }`}
               onClick={changePassword}
               disabled={
@@ -439,9 +484,30 @@ export default function SettingsPage() {
                 ? "Şifre Değiştiriliyor..."
                 : "Şifre Değiştir"}
             </button>
-          </motion.div>
+          </motion.section>
         </div>
+
+        <aside className="md:col-span-1">
+          <motion.div
+            variants={fadeInVariants}
+            className={`${cardClassName} sticky top-8`}
+          >
+            <h2 className="text-lg font-semibold text-text-primary mb-3 flex items-center gap-2">
+              <FiHelpCircle className="text-info dark:text-[#60a5fa]"/>
+              Yardım & Destek
+              </h2>
+            <p className="text-sm text-text-secondary mb-5">
+              Ayarlar veya hesap yönetimi ile ilgili sorun yaşıyorsanız, destek merkezimizi ziyaret edebilir veya bizimle iletişime geçebilirsiniz.
+            </p>
+            <a 
+              href="#" 
+              className="block w-full text-center text-sm px-4 py-2.5 bg-primary-50 dark:bg-[#172554]/40 text-primary-600 dark:text-[#93c5fd] border border-primary-200 dark:border-[#3b82f6]/30 rounded-md hover:bg-primary-100 dark:hover:bg-[#172554]/60 hover:border-primary-300 dark:hover:border-[#3b82f6]/50 transition-colors duration-150"
+            >
+              Destek Merkezini Ziyaret Et
+            </a>
+          </motion.div>
+        </aside>
       </div>
-    </>
+    </motion.div>
   );
 }

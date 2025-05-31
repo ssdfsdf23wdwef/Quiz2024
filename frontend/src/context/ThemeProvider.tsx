@@ -54,13 +54,37 @@ export const useTheme = () => {
 interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: ThemeMode;
+  storageKey?: string;
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
   defaultTheme = 'system',
+  storageKey = 'vite-ui-theme',
 }) => {
-  const [theme, setThemeState] = useState<ThemePreferences>(defaultThemePreferences);
+  const [theme, setThemeState] = useState<ThemePreferences>(() => {
+    if (typeof window === 'undefined') {
+      return { ...defaultThemePreferences, mode: defaultTheme };
+    }
+    
+    try {
+      const savedPreferences = localStorage.getItem('theme-preferences');
+      if (savedPreferences) {
+        return JSON.parse(savedPreferences) as ThemePreferences;
+      }
+      
+      // Eski tema depolama şeklini kontrol et
+      const oldTheme = localStorage.getItem(storageKey);
+      if (oldTheme && ['light', 'dark', 'system'].includes(oldTheme)) {
+        return { ...defaultThemePreferences, mode: oldTheme as ThemeMode };
+      }
+    } catch (error) {
+      console.warn('Failed to load theme preferences:', error);
+    }
+    
+    return { ...defaultThemePreferences, mode: defaultTheme };
+  });
+  
   const [currentMode, setCurrentMode] = useState<ThemeMode>('system');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -146,6 +170,19 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     root.classList.remove('light', 'dark');
     root.classList.add(effectiveMode);
 
+    // Apply CSS root variables for themes
+    if (effectiveMode === 'dark') {
+      root.style.setProperty('--background', '#0f172a');
+      root.style.setProperty('--foreground', '#f8fafc');
+      root.style.setProperty('--color-background', '#0f172a');
+      root.style.setProperty('--color-foreground', '#f8fafc');
+    } else {
+      root.style.setProperty('--background', '#f8fafc');
+      root.style.setProperty('--foreground', '#0f172a');
+      root.style.setProperty('--color-background', '#f8fafc');
+      root.style.setProperty('--color-foreground', '#0f172a');
+    }
+
     // Apply font size classes
     root.classList.remove('text-sm', 'text-base', 'text-lg');
     switch (theme.fontSize) {
@@ -172,16 +209,29 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     } else {
       root.classList.remove('high-contrast');
     }
-  }, [theme.fontSize, theme.reducedMotion, theme.highContrast]);
+
+    // Temayı HTML elementine uygula
+    root.setAttribute('data-theme', effectiveMode);
+    
+    // Hem tema-preferences hem de eski tema formatını kaydet
+    try {
+      localStorage.setItem('theme-preferences', JSON.stringify(theme));
+      localStorage.setItem(storageKey, effectiveMode);
+    } catch (error) {
+      console.warn('Failed to save theme preferences:', error);
+    }
+  }, [theme, theme.fontSize, theme.reducedMotion, theme.highContrast, storageKey]);
 
   // Save preferences to localStorage
   const savePreferences = useCallback((newPreferences: ThemePreferences) => {
     try {
       localStorage.setItem('theme-preferences', JSON.stringify(newPreferences));
+      // Eski tema formatı için de kaydet (uyumluluk için)
+      localStorage.setItem(storageKey, newPreferences.mode);
     } catch (error) {
       console.warn('Failed to save theme preferences:', error);
     }
-  }, []);
+  }, [storageKey]);
 
   // Theme mode controls
   const setTheme = useCallback((newMode: ThemeMode) => {
