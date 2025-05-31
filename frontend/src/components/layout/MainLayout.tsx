@@ -4,12 +4,14 @@ import { ReactNode, memo, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import DevLoggerProvider from "@/components/providers/DevLoggerProvider";
 import UserControls from "./UserControls";
-import { FiMenu } from "react-icons/fi";
+import { FiMenu, FiChevronRight } from "react-icons/fi";
 import { usePathname } from "next/navigation";
+import { useTheme } from "@/context/ThemeProvider";
+import { motion } from "framer-motion";
 
 const LoadingPlaceholder = () => (
-  <div className="animate-pulse">
-    <div className="h-16 bg-secondary border border-primary rounded-md"></div> 
+  <div className="animate-pulse h-full">
+    <div className="h-full w-64 bg-gray-100 dark:bg-gray-800 bg-opacity-60 dark:bg-opacity-60 border-r border-gray-200 dark:border-gray-800 rounded-r-md"></div> 
   </div>
 );
 

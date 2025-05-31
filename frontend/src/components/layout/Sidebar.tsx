@@ -141,54 +141,71 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
       </div>
       <div className="flex-1 flex flex-col">
         {isInitializing ? (
-          // Yükleme durumunda placeholder göster
+          // Loading placeholder with light theme styling
           <div className="flex flex-col gap-2 p-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="h-10 bg-tertiary rounded-lg animate-pulse"
+                className={`h-10 ${isDarkMode ? 'bg-gray-800/70' : 'bg-gray-100/90'} rounded-lg animate-pulse`}
               ></div>
             ))}
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-              {/* Ana menü öğeleri */}
-              <nav className="py-2 px-3 space-y-0.5">
+            <div className="flex-1 overflow-y-auto">
+              {/* Main menu items with glass styling and gradients */}
+              <nav className="py-3 px-3 space-y-1">
                 {menuItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={(e) => e.stopPropagation()}
-                    className={`py-2.5 px-4 rounded-md flex items-center transition-all duration-200 group relative ${
-                      isActive(item.href)
-                        ? "bg-blue-900/20 text-blue-300 font-medium"
-                        : "text-gray-400 hover:bg-gray-800/30 hover:text-gray-200"
-                    } ${isCollapsed ? "justify-center" : ""}`}
+                    className={`group flex items-center py-2.5 px-4 rounded-xl transition-all duration-300 relative ${isCollapsed ? "justify-center" : ""}`}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <span className={`${isActive(item.href) ? "text-blue-400" : "text-gray-400"} ${isCollapsed ? "" : "mr-3"} transition-colors group-hover:text-blue-300`}>
+                    {/* Active/Inactive state styling with gradients and glass effect */}
+                    <div className={`absolute inset-0 rounded-xl transition-all duration-300 ${isActive(item.href) 
+                      ? `bg-gradient-to-r ${item.gradient} opacity-15 ${isDarkMode ? 'opacity-25' : 'opacity-10'} shadow-md` 
+                      : `${isDarkMode ? 'group-hover:bg-gray-800/30' : 'group-hover:bg-gray-100/70'} opacity-0 group-hover:opacity-100`}`}></div>
+                    
+                    {/* Icon container with conditional gradient background */}
+                    <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 ${isActive(item.href)
+                        ? `bg-gradient-to-r ${item.gradient} text-white shadow-sm` 
+                        : `${isDarkMode ? 'text-gray-400' : 'text-gray-500'} ${isDarkMode ? 'group-hover:text-gray-300' : 'group-hover:text-gray-700'}`
+                      }`}
+                    >
                       {item.icon}
-                    </span>
-                    <motion.span 
+                    </div>
+                    
+                    <motion.div 
                       initial={false}
                       animate={{ 
                         opacity: isCollapsed ? 0 : 1,
-                        width: isCollapsed ? 0 : "auto"
+                        width: isCollapsed ? 0 : "auto",
+                        marginLeft: isCollapsed ? 0 : "0.75rem"
                       }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm overflow-hidden whitespace-nowrap"
+                      className="overflow-hidden whitespace-nowrap"
                     >
-                      {!isCollapsed && item.label}
-                    </motion.span>
+                      {!isCollapsed && (
+                        <span className={`text-sm font-medium relative z-10 ${isActive(item.href) 
+                          ? `${isDarkMode ? 'text-blue-300' : 'text-blue-600'}` 
+                          : `${isDarkMode ? 'text-gray-300 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-800'}`
+                        }`}>
+                          {item.label}
+                        </span>
+                      )}
+                    </motion.div>
+                    
+                    {/* Active indicator */}
                     {isActive(item.href) && !isCollapsed && (
-                      <span className="ml-auto h-1 w-1 rounded-full bg-blue-400 opacity-70"></span>
+                      <div className="ml-auto mr-1 h-1.5 w-1.5 rounded-full bg-white opacity-80"></div>
                     )}
                     {isActive(item.href) && isCollapsed && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute right-1 top-0.5 w-1.5 h-1.5 rounded-full bg-blue-400 opacity-70"
+                        className="absolute right-1.5 bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-80"
                       />
                     )}
                   </Link>
@@ -196,63 +213,66 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
               </nav>
             </div>
             
-            {/* Ayarlar butonu - En altta sabit */}
-              <div className="border-t border-gray-800/30 bg-gradient-to-b from-gray-900/80 to-gray-900/95">
-                <motion.div
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                >
+            {/* Settings button with modern styling */}
+              <div className={`border-t ${isDarkMode ? 'border-gray-800/30 bg-gradient-to-b from-gray-800/80 to-gray-900/95' : 'border-gray-200/50 bg-gradient-to-b from-gray-50/80 to-white/95'} backdrop-blur-sm`}>
+                <div className="py-3 px-3">
                   <Link
                     href="/settings"
                     onClick={(e) => e.stopPropagation()}
-                    className={`group flex items-center py-3.5 px-5 transition-all duration-200 relative ${
-                      isActive("/settings")
-                        ? "text-blue-300 bg-blue-900/20"
-                        : "text-gray-400 hover:bg-gray-800/40 hover:text-gray-300"
-                    } ${isCollapsed ? "justify-center" : ""}`}
+                    className={`group flex items-center py-2.5 px-4 rounded-xl transition-all duration-300 relative ${isCollapsed ? "justify-center" : ""}`}
                     title={isCollapsed ? "Ayarlar" : undefined}
                   >
-                    <div className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 ${
-                      isActive("/settings")
-                        ? "bg-gradient-to-r from-blue-600/40 to-blue-800/50 text-blue-300"
-                        : "bg-transparent text-gray-400 group-hover:text-blue-300"
-                    }`}>
-                      <FiSettings size={17} />
+                    {/* Background effect */}
+                    <div className={`absolute inset-0 rounded-xl transition-all duration-300 ${isActive("/settings") 
+                      ? `bg-gradient-to-r from-blue-500 to-indigo-600 opacity-15 ${isDarkMode ? 'opacity-25' : 'opacity-10'} shadow-md` 
+                      : `${isDarkMode ? 'group-hover:bg-gray-800/30' : 'group-hover:bg-gray-100/70'} opacity-0 group-hover:opacity-100`}`}></div>
+                    
+                    {/* Icon with gradient */}
+                    <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 ${isActive("/settings")
+                        ? `bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm` 
+                        : `${isDarkMode ? 'text-gray-400' : 'text-gray-500'} ${isDarkMode ? 'group-hover:text-gray-300' : 'group-hover:text-gray-700'}`
+                      }`}
+                    >
+                      <FiSettings size={16} />
                     </div>
                     <motion.div 
                       initial={false}
                       animate={{ 
                         opacity: isCollapsed ? 0 : 1,
-                        width: isCollapsed ? 0 : "auto"
+                        width: isCollapsed ? 0 : "auto",
+                        marginLeft: isCollapsed ? 0 : "0.75rem"
                       }}
                       transition={{ duration: 0.2 }}
-                      className="ml-4 flex-1 overflow-hidden"
+                      className="overflow-hidden whitespace-nowrap"
                     >
                       {!isCollapsed && (
-                        <span className="text-sm font-medium whitespace-nowrap">Ayarlar</span>
+                        <span className={`text-sm font-medium relative z-10 ${isActive("/settings") 
+                          ? `${isDarkMode ? 'text-blue-300' : 'text-blue-600'}` 
+                          : `${isDarkMode ? 'text-gray-300 group-hover:text-gray-200' : 'text-gray-600 group-hover:text-gray-800'}`
+                        }`}>Ayarlar</span>
                       )}
                     </motion.div>
+                    
+                    {/* Active indicator */}
                     {isActive("/settings") && !isCollapsed && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="w-1 h-1 rounded-full bg-blue-400 opacity-70 ml-2"
-                      />
+                      <div className="ml-auto mr-1 h-1.5 w-1.5 rounded-full bg-white opacity-80"></div>
                     )}
                     {isActive("/settings") && isCollapsed && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute right-1 top-0.5 w-1.5 h-1.5 rounded-full bg-blue-400 opacity-70"
+                        className="absolute right-1.5 bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-80"
                       />
                     )}
                   </Link>
-                </motion.div>
+                </div>
               </div>
           </>
         )}
       </div>
       
+      {/* Bottom decorative element */}
+      <div className={`h-2 w-full ${isDarkMode ? 'bg-gradient-to-r from-gray-900 via-blue-900/20 to-gray-900' : 'bg-gradient-to-r from-white via-blue-100/20 to-white'}`}></div>
     </motion.div>
   );
 }
