@@ -29,7 +29,7 @@ import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
 import { SubTopicItem as SubTopic } from "@/types/quiz.type"; // Updated import
 import { LearningTarget } from "@/types/learningTarget.type";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ApiError } from "@/services/error.service"; 
 import { Quiz } from "@/types";
 
@@ -487,10 +487,7 @@ export default function ExamCreationWizard({
 
   // Konu tespiti iptal
   const handleTopicDetectionCancel = () => {
-    console.log(`❌ Konu tespiti kullanıcı tarafından iptal edildi!`);
-    // Konu seçimi zorunlu olduğundan (weakTopicFocused hariç), iptal edilirse kullanıcı bilgilendirilmeli veya akış durmalı
-    // Şimdilik bir sonraki adıma (tercihler) geçiyoruz, ancak bu mantık iyileştirilebilir.
-    console.log(`🔄 Adım 3'e (Tercihler) geçiliyor...`);
+
     setCurrentStep(3);
   };
 
@@ -759,6 +756,8 @@ export default function ExamCreationWizard({
   // Bir önceki adıma dön
   const prevStep = () => {
     console.log(`⏪ GERİ: Adım ${currentStep}'den bir öncekine dönülüyor...`);
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     
     if (currentStep > 1) {
       let prevStep = currentStep - 1;
@@ -775,6 +774,15 @@ export default function ExamCreationWizard({
 
       console.log(`✅ Adım ${currentStep}'den Adım ${prevStep}'e geri dönülüyor...`);
       setCurrentStep(prevStep);
+    } else {
+      // İlk adımda geri butonuna tıklandığında ana sayfaya dön
+      console.log('🏠 İlk adımda geri butonuna tıklandı, ana sayfaya dönülüyor...');
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('wizard');
+      
+      // Next.js router ile ana sayfaya dön
+      const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      router.push(newUrl);
     }
   };
 
@@ -1537,13 +1545,7 @@ export default function ExamCreationWizard({
             lastError = error;
             console.error(`[ECW handleFinalSubmit] Sınav oluşturma hatası (${retryCount}/${maxRetries}):`, error);
             
-            // Hata mesajını kontrol et - belirli hata durumlarında farklı davran
-            const errorMessage = error?.message || "";
-            if (errorMessage.includes("AI modeli") || errorMessage.includes("konu")) {
-              console.log(`[ECW handleFinalSubmit] AI modeli konu işleme hatası tespit edildi. Konu sayısı azaltılacak.`);
-              // Bir sonraki denemede bu otomatik olarak daha az konuyla tekrar denenecek
-            }
-            
+          
             if (retryCount >= maxRetries) {
               throw error;
             }
@@ -1864,25 +1866,23 @@ export default function ExamCreationWizard({
     );
   };
 
+  // Adıma tıklama işleyicisi
+  const handleStepClick = (step: number) => {
+    // Sadece tamamlanmış adımlara geri dönebilir
+    if (step < currentStep) {
+      setCurrentStep(step);
+    }
+  };
+
   // Render
   return (
-    <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-          {quizType === "quick" ? "Hızlı Sınav Oluştur" : "Kişiselleştirilmiş Sınav Oluştur"}
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-          Yapay zeka destekli kişiselleştirilmiş öğrenme deneyimi için adımları takip edin.
-        </p>
-      </div>
-
-      <div className="p-6 md:p-8">
-        <ExamCreationProgress 
-          currentStep={currentStep} 
-          totalSteps={totalSteps} 
-          quizType={quizType} 
-        />
-
+    <div className="w-full h-full bg-background">
+      <ExamCreationProgress 
+        currentStep={currentStep} 
+        totalSteps={totalSteps} 
+        quizType={quizType}
+        onStepClick={handleStepClick}
+      >
         <AnimatePresence mode="wait">
           {/* Adım 1: Ders Seçimi (Kişiselleştirilmiş sınav için) */}
           {currentStep === 1 && quizType === "personalized" && (
@@ -2365,7 +2365,7 @@ export default function ExamCreationWizard({
         </AnimatePresence>
 
         {/* Gezinme Butonları */}
-        <div className="flex justify-between mt-10 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between mt-6">
           <button
             onClick={prevStep}
             disabled={currentStep === 1}
@@ -2406,7 +2406,7 @@ export default function ExamCreationWizard({
             )}
           </button>
         </div>
-      </div>
+      </ExamCreationProgress>
     </div>
   );
 }

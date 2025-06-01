@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTheme } from "@/context/ThemeProvider";
 import {
   FiArrowLeft,
   FiArrowRight,
@@ -21,7 +22,7 @@ import {
 import { toast } from "react-hot-toast";
 import quizService from "@/services/quiz.service";
 import { SubTopicItem as SubTopic } from "@/types/quiz.type"; // Updated import
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Quiz } from "@/types";
 
 
@@ -125,14 +126,12 @@ export default function ExamCreationWizard({
   // URL'den belge ID ve konular alındıysa otomatik olarak işle
   useEffect(() => {
     if (initialDocumentId && initialDocumentId.trim() !== "" && currentStep === 1) {
-      console.log('[ECW useEffect] URL üzerinden belge ID algılandı:', initialDocumentId);
       setUploadedDocumentId(initialDocumentId);
       
       // Belge metin içeriğini yükle
       documentService.getDocumentText(initialDocumentId)
         .then(response => {
           setDocumentTextContent(response.text);
-          console.log('[ECW useEffect] Belge metni yüklendi, uzunluk:', response.text.length);
           
           // Konu teşhisi için adım 2'ye geç
           setCurrentStep(2);
@@ -157,17 +156,14 @@ export default function ExamCreationWizard({
             };
             setSelectedTopics([subTopicItem]);
             
-            console.log('[ECW useEffect] Varsayılan konu oluşturuldu:', subTopicItem);
           }
         })
         .catch(error => {
-          console.error('[ECW useEffect] Belge metni yüklenirken hata:', error);
         });
     }
     
     // İlk konular belirtilmişse
     if (initialTopics && initialTopics.length > 0 && currentStep === 1) {
-      console.log('[ECW useEffect] URL üzerinden konular algılandı:', initialTopics);
       setSelectedTopicIds(initialTopics);
       setSelectedSubTopicIds(initialTopics);
       
@@ -178,7 +174,6 @@ export default function ExamCreationWizard({
       }));
       
       setSelectedTopics(subTopicItems);
-      console.log('[ECW useEffect] URL konuları alt konulara dönüştürüldü:', subTopicItems);
       
       // Belge ve konular hazır, adım 3'e geç
       if (initialDocumentId) {
@@ -210,17 +205,12 @@ export default function ExamCreationWizard({
       return subTopic && selectedTopicIds.includes(subTopic.id); 
     });
 
-    console.log('[ECW useEffect] validSubTopicIds after filtering:', JSON.stringify(validSubTopicIds));
-
     // Sadece değişiklik varsa state güncelle
     const isSame = validSubTopicIds.length === selectedSubTopicIds.length &&
       validSubTopicIds.every((id, idx) => id === selectedSubTopicIds[idx]);
 
-    // Sonsuz döngüyü önlemek için, topicDetectionStatus === "success" durumunda bu güncellemeyi atlayalım
-    // Bu, konu tespiti tamamlandıktan hemen sonraki ilk render'da bu güncellemeyi atlamak anlamına gelir
     if (!isSame && topicDetectionStatus !== 'success') {
       setSelectedSubTopicIds(validSubTopicIds);
-      console.log('[ECW useEffect] setSelectedSubTopicIds called with:', JSON.stringify(validSubTopicIds));
       setPreferences((prev) => {
         const newPrefs = {
           ...prev,
@@ -254,7 +244,6 @@ export default function ExamCreationWizard({
     setDocumentTextContent("");
     // Document ID'yi sıfırla
     setUploadedDocumentId("");
-    console.log(`📂 Dosya yükleme başarılı: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
   };
 
   // Dosya yükleme hatası
@@ -272,13 +261,11 @@ export default function ExamCreationWizard({
 
     if (selectedTopics && selectedTopics.length > 0) {
       setSelectedTopicIds(selectedTopics); // Update state
-      console.log('[ECW handleTopicsDetected] setSelectedTopicIds called with:', JSON.stringify(selectedTopics));
       
       // Alt konular oluştur ve güncelle
       const subTopicItems: SubTopic[] = selectedTopics.map(topicId => {
         const topic = detectedTopics.find(t => t.id === topicId);
         if (!topic) {
-          console.warn(`[ECW handleTopicsDetected] UYARI: ${topicId} ID'li konu bulunamadı!`);
           return {
             subTopic: topicId,  // Konu bulunamazsa ID'yi kullan
             normalizedSubTopic: topicId
@@ -290,13 +277,11 @@ export default function ExamCreationWizard({
         };
       });
       
-      console.log('[ECW handleTopicsDetected] Created subTopicItems:', JSON.stringify(subTopicItems));
       setSelectedTopics(subTopicItems);
       
       // Alt konu ID'lerini güncelle
       const subTopicIds = selectedTopics.map(topicId => topicId);
       setSelectedSubTopicIds(subTopicIds);
-      console.log('[ECW handleTopicsDetected] setSelectedSubTopicIds called with:', JSON.stringify(subTopicIds));
       
       // Tercihleri güncelle
       setPreferences(prev => ({
@@ -307,7 +292,6 @@ export default function ExamCreationWizard({
     } else {
       // Seçilen konular boş ama belge ID varsa, varsayılan bir konu oluştur
       if (uploadedDocumentId) {
-        console.log('[ECW handleTopicsDetected] Seçilen konular boş ancak belge yüklenmiş, varsayılan konu oluşturuluyor');
         
         const fileName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "Belge İçeriği";
         const defaultTopicId = `default-${uploadedDocumentId.substring(0, 8)}`;
@@ -325,9 +309,7 @@ export default function ExamCreationWizard({
           normalizedSubTopic: defaultTopicId
         };
         setSelectedTopics([subTopicItem]);
-        
-        console.log('[ECW handleTopicsDetected] Varsayılan konu oluşturuldu:', defaultTopicId, fileName);
-        
+                
         // Tercihleri güncelle
         setPreferences(prev => ({
           ...prev,
@@ -345,10 +327,7 @@ export default function ExamCreationWizard({
 
   // Konu tespiti iptal
   const handleTopicDetectionCancel = () => {
-    console.log(`❌ Konu tespiti kullanıcı tarafından iptal edildi!`);
-    // Konu seçimi zorunlu olduğundan (weakTopicFocused hariç), iptal edilirse kullanıcı bilgilendirilmeli veya akış durmalı
-    // Şimdilik bir sonraki adıma (tercihler) geçiyoruz, ancak bu mantık iyileştirilebilir.
-    console.log(`🔄 Adım 3'e (Tercihler) geçiliyor...`);
+ 
     setCurrentStep(3);
   };
 
@@ -365,11 +344,9 @@ export default function ExamCreationWizard({
   const handleTopicSelectionChange = (selectedTopicIds: string[]) => {
     // Eğer önceki seçimlerle aynıysa, hiçbir şey yapma (sonsuz döngüyü önlemek için)
     if (JSON.stringify(selectedTopicIds) === JSON.stringify(selectedTopicsList)) {
-      console.log(`[ECW handleTopicSelectionChange] Konu seçimleri değişmedi, işlem atlanıyor`);
       return;
     }
     
-    console.log(`[ECW handleTopicSelectionChange] Konu seçimleri değişiyor: ${selectedTopicIds.length} konu seçildi`);
     
     // Konu tespiti başarılı olduğunda topicDetectionStatus'ı değiştirelim
     // Bu, useEffect'teki sonsuz döngüyü önlemek için
@@ -387,11 +364,7 @@ export default function ExamCreationWizard({
       };
     });
     
-    console.log(`[ECW handleTopicSelectionChange] Güncellenmiş konu listesi: ${JSON.stringify(updatedTopics)}`);
-    
-    // React 18'de state güncellemelerini batch'leme davranışı değişti
-    // Tüm state güncellemelerini bir arada yapmak daha güvenli
-    // Bu, gereksiz yeniden render'ları önler
+
     const newPreferences = {
       ...preferences,
       topicIds: selectedTopicIds,
@@ -406,60 +379,8 @@ export default function ExamCreationWizard({
     setPreferences(newPreferences);
   };
 
-  // Alt konu seçimini değiştir
-  const handleSubTopicToggle = (subTopicId: string) => {
-    console.log(`🔄 Alt konu seçimi değişiyor: ${subTopicId}`);
-    
-    setSelectedSubTopicIds((prev) => {
-      const updated = prev.includes(subTopicId)
-        ? prev.filter((id) => id !== subTopicId)
-        : [...prev, subTopicId];
-      
-      console.log(`${prev.includes(subTopicId) ? "➖ Alt konu kaldırıldı:" : "➕ Alt konu eklendi:"} ${subTopicId}`);
-      console.log(`✅ Güncel alt konu sayısı: ${updated.length}`);
-      
-      // Tercihleri güncelle
-      setPreferences((prev) => ({
-        ...prev,
-        subTopicIds: updated,
-      }));
-      console.log(`✅ Quiz tercihleri güncellendi. Alt konu ID'leri: ${updated.length} adet`);
-      
-      return updated;
-    });
 
-    // selectedTopics listesini güncelle (handleFinalSubmit'e gönderilecek olan)
-    // Alt konu nesnesini bul
-    const subTopic = detectedTopics.find(topic => topic.id === subTopicId);
-    
-    if (subTopic) {
-      setSelectedTopics(prev => {
-        // Alt konu zaten var mı kontrol et
-        const existingIndex = prev.findIndex(item => item.normalizedSubTopic === subTopicId);
-        
-        if (existingIndex >= 0) {
-          // Alt konu varsa listeden çıkar
-          console.log(`✅ Konu selectedTopics listesinden kaldırıldı: ${subTopicId}`);
-          return prev.filter(item => item.normalizedSubTopic !== subTopicId);
-        } else {
-          // Alt konu yoksa listeye ekle
-          const newSubTopicItem = {
-            subTopic: subTopic.subTopicName,
-            normalizedSubTopic: subTopicId
-          };
-          console.log(`✅ Konu selectedTopics listesine eklendi:`, newSubTopicItem);
-          return [...prev, newSubTopicItem];
-        }
-      });
-      console.log(`✅ selectedTopics listesi güncellendi. Şu anda seçili konular:`, selectedTopics);
-    } else {
-      console.warn(`⚠️ Uyarı: ${subTopicId} ID'sine sahip konu bulunamadı!`);
-    }
-  };
 
-  // Kişiselleştirilmiş sınav alt türü
-
-  // Tercih işlemleri
   const handlePreferenceChange = (
     key: keyof QuizPreferences,
     value: unknown,
@@ -499,11 +420,9 @@ export default function ExamCreationWizard({
 
   // Adım işlemleri
   const nextStep = () => {
-    console.log(`📋 SINAV OLUŞTURMA AŞAMASI: ${currentStep}/${totalSteps} adımdan bir sonrakine geçiliyor...`);
     
     // Adım 1 Doğrulama: Dosya Yükleme
     if (currentStep === 1 && (!selectedFile || uploadStatus !== "success")) {
-      console.error(`❌ HATA: Dosya yükleme başarısız. Durum: ${uploadStatus}`);
       return;
     }
 
@@ -511,7 +430,6 @@ export default function ExamCreationWizard({
     if (currentStep === 1 && selectedFile && uploadStatus === "success" && topicDetectionStatus !== "loading") {
       // Zayıf/Orta odaklı kişiselleştirilmiş sınav için konu tespiti atlanabilir
       if (quizType === "personalized" ) {
-        console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 1'den Adım 3'e atlıyoruz`);
         setCurrentStep(3);
         return;
       }
@@ -530,7 +448,6 @@ export default function ExamCreationWizard({
       quizType === "personalized" &&
       selectedTopicIds.length === 0
     ) {
-      console.error(`❌ HATA: Konu seçimi yapılmadı. Seçilen konular: ${selectedTopicIds.length}`);
       return;
     }
 
@@ -543,11 +460,9 @@ export default function ExamCreationWizard({
         quizType === "personalized" &&
         currentStep === 1
       ) {
-        console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 1'den Adım 3'e atlıyoruz`);
         nextStepNumber = 3;
       }
 
-      console.log(`✅ Adım ${currentStep}'den Adım ${nextStepNumber}'e ilerletiliyor...`);
       setCurrentStep(nextStepNumber);
     } else {
       // Son adımda handleFinalSubmit fonksiyonunu çağır
@@ -557,22 +472,21 @@ export default function ExamCreationWizard({
 
   // Bir önceki adıma dön
   const prevStep = () => {
-    console.log(`⏪ GERİ: Adım ${currentStep}'den bir öncekine dönülüyor...`);
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     
     if (currentStep > 1) {
-      let prevStep = currentStep - 1;
-
-      // Konu Seçimini Atlayan Durumlar İçin Geri Gitme Mantığı
-      if (
-        quizType === "personalized" &&
-        currentStep === 3
-      ) {
-        console.log(`🔄 Akış değişikliği: Zayıf/Orta odaklı sınav türü için Adım 3'ten Adım 1'e dönüyoruz`);
-        prevStep = 1;
-      }
-
-      console.log(`✅ Adım ${currentStep}'den Adım ${prevStep}'e geri dönülüyor...`);
-      setCurrentStep(prevStep);
+      // Bir önceki adıma git
+      setCurrentStep(currentStep - 1);
+    } else {
+      // İlk adımda ana sayfaya dön
+      console.log('🏠 İlk adımda geri butonuna tıklandı, ana sayfaya dönülüyor...');
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('wizard');
+      
+      // Next.js router ile ana sayfaya dön
+      const newUrl = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      router.push(newUrl);
     }
   };
 
@@ -657,7 +571,6 @@ export default function ExamCreationWizard({
       
       return topics;
     } catch (error) {
-      console.error(`⚠️ Varsayılan konular oluşturulurken hata:`, error);
       
       // Hata durumunda en basit bir konu listesi döndür
       return [
@@ -723,11 +636,7 @@ export default function ExamCreationWizard({
           const headers: Record<string, string> = { 'Content-Type': 'application/json' };
           if (quizType === "personalized") {
             try {
-              const token = localStorage.getItem("auth_token");
-              if (!token) console.warn("[ECW detectTopicsFromUploadedFile] ⚠️ Token bulunamadı, anonim istek gönderilecek");
-              else { headers['Authorization'] = `Bearer ${token}`; console.log("[ECW detectTopicsFromUploadedFile] 🔑 Authorization token başarıyla eklendi"); }
             } catch (tokenError) {
-              console.warn(`[ECW detectTopicsFromUploadedFile] ⚠️ Token alma hatası: ${tokenError instanceof Error ? tokenError.message : 'Bilinmeyen hata'}`);
             }
           }
           console.log(`[ECW detectTopicsFromUploadedFile] 🔍 ${quizType === "personalized" ? "Yetkilendirilmiş" : "Anonim"} konu tespiti isteği gönderiliyor...`);
@@ -1109,7 +1018,7 @@ export default function ExamCreationWizard({
           <h2 className="text-xl font-bold">Sınav Tercihleri</h2>
           
           {/* Seçilen konu ve dosya bilgileri */}
-          <div className="bg-secondary p-4 rounded-md">
+          <div className={`${isDarkMode ? 'bg-gray-800/60' : 'bg-gray-100/60'} p-4 rounded-md border ${isDarkMode ? 'border-gray-700/50' : 'border-gray-200/50'}`}>
             <h3 className="font-semibold mb-2">Sınav İçeriği</h3>
             
             <div className="flex flex-wrap gap-2 mb-2">
@@ -1129,7 +1038,7 @@ export default function ExamCreationWizard({
               
               <div className="flex items-center text-sm">
                 <span className="font-medium mr-1">Belge Metni:</span>
-                <span className={`${documentTextContent ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <span className={`${documentTextContent ? (isDarkMode ? 'text-green-400' : 'text-green-600') : (isDarkMode ? 'text-red-400' : 'text-red-600')}`}>
                   {documentTextContent ? `Yüklendi (${documentTextContent.length} karakter)` : 'Yüklenmedi'}
                 </span>
               </div>
@@ -1137,12 +1046,12 @@ export default function ExamCreationWizard({
             
             {/* Belge metni durumu bildirimi */}
             {!documentTextContent && uploadedDocumentId && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded mt-2 text-sm">
-                <p className="text-yellow-800 dark:text-yellow-200 font-medium">Belge metni henüz yüklenmedi!</p>
-                <p className="text-yellow-700 dark:text-yellow-300 mt-1">
+              <div className={`${isDarkMode ? 'bg-yellow-900/20 border-yellow-800' : 'bg-yellow-50 border-yellow-200'} border p-3 rounded mt-2 text-sm`}>
+                <p className={`${isDarkMode ? 'text-yellow-200' : 'text-yellow-800'} font-medium`}>Belge metni henüz yüklenmedi!</p>
+                <p className={`${isDarkMode ? 'text-yellow-300' : 'text-yellow-700'} mt-1`}>
                   Sınav oluşturmak için belge metni gereklidir. Lütfen şunları deneyin:
                 </p>
-                <ul className="list-disc pl-5 mt-1 text-yellow-700 dark:text-yellow-300">
+                <ul className={`list-disc pl-5 mt-1 ${isDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
                   <li>Sayfayı yenileyip tekrar deneyin</li>
                   <li>Belgeyi tekrar yükleyin</li>
                   <li>Daha küçük boyutlu bir belge kullanın</li>
@@ -1180,7 +1089,7 @@ export default function ExamCreationWizard({
             
             {/* Hata mesajı */}
             {errorMessage && (
-              <div className="bg-red-50 text-red-700 p-2 rounded mt-2 text-sm">
+              <div className={`${isDarkMode ? 'bg-red-900/20 text-red-400' : 'bg-red-50 text-red-700'} p-2 rounded mt-2 text-sm border ${isDarkMode ? 'border-red-800/50' : 'border-red-200/50'}`}>
                 {errorMessage}
               </div>
             )}
@@ -1195,7 +1104,7 @@ export default function ExamCreationWizard({
               <div className="h-0.5 w-24 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-4 opacity-80"></div>
             </div>
             
-            <div className="backdrop-blur-sm bg-white/90 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 rounded-xl p-6 shadow-sm">
+            <div className={`backdrop-blur-sm ${isDarkMode ? 'bg-gray-800/50 border-gray-700/50' : 'bg-white/90 border-gray-100'} border rounded-xl p-6 shadow-sm`}>
               <div className="space-y-6">
                 <div className="mb-4">
               <label
@@ -1218,13 +1127,13 @@ export default function ExamCreationWizard({
                       parseInt(e.target.value),
                     )
                   }
-                  className="w-full h-2 bg-tertiary rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                  className={`w-full h-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-lg appearance-none cursor-pointer ${isDarkMode ? 'accent-blue-400' : 'accent-blue-600'}`}
                 />
-                <span className="w-12 text-center text-sm font-medium text-primary ml-4 bg-secondary px-2 py-0.5 rounded">
+                <span className={`w-12 text-center text-sm font-medium ${isDarkMode ? 'text-gray-200 bg-gray-800' : 'text-gray-800 bg-gray-100'} ml-4 px-2 py-0.5 rounded`}>
                   {preferences.questionCount}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
                 {quizType === "quick" ? "5-20 arası." : "5-30 arası."} Daha
                 fazla soru, daha detaylı analiz sağlar.
               </p>
@@ -1233,7 +1142,7 @@ export default function ExamCreationWizard({
                 <div className="mb-6">
                   <label
                     htmlFor="difficulty"
-                    className="block text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300 mb-2"
+                    className={`block text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r ${isDarkMode ? 'from-blue-300 to-indigo-300' : 'from-blue-700 to-indigo-700'} mb-2`}
                   >
                     Zorluk Seviyesi
                   </label>
@@ -1250,7 +1159,7 @@ export default function ExamCreationWizard({
                           | "mixed",
                       )
                     }
-                    className="w-full px-3 py-2.5 border border-gray-200/80 dark:border-gray-700/30 rounded-lg bg-white/70 dark:bg-gray-800/40 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/60 text-sm backdrop-blur-sm shadow-sm"
+                    className={`w-full px-3 py-2.5 border ${isDarkMode ? 'border-gray-700/30 bg-gray-800/40 text-gray-200' : 'border-gray-200/80 bg-white/70 text-gray-800'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/60 text-sm backdrop-blur-sm shadow-sm`}
                   >
                     <option value="easy">Kolay</option>
                     <option value="medium">Orta</option>
@@ -1263,7 +1172,7 @@ export default function ExamCreationWizard({
             </div>
 
                 <div className="mb-2">
-                  <label className="block text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 dark:from-blue-300 dark:to-indigo-300 mb-2">
+                  <label className={`block text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r ${isDarkMode ? 'from-blue-300 to-indigo-300' : 'from-blue-700 to-indigo-700'} mb-2`}>
                     Zaman Sınırı
                   </label>
                   <div className="flex items-center space-x-4">
@@ -1276,7 +1185,7 @@ export default function ExamCreationWizard({
                           onChange={(e) =>
                             handleUseTimeLimitChange(e.target.checked)
                           }
-                          className="h-4 w-4 text-blue-600 dark:text-blue-400 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:ring-offset-1 relative z-10"
+                          className={`h-4 w-4 ${isDarkMode ? 'text-blue-400 border-gray-600' : 'text-blue-600 border-gray-300'} rounded focus:ring-blue-500 focus:ring-offset-1 relative z-10`}
                         />
                         {useTimeLimit && (
                           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded animate-pulse"></div>
@@ -1284,7 +1193,7 @@ export default function ExamCreationWizard({
                       </div>
                       <label
                         htmlFor="useTimeLimit"
-                        className="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium"
+                        className={`ml-2 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} font-medium`}
                       >
                         Zaman sınırı uygula
                       </label>
@@ -1306,12 +1215,12 @@ export default function ExamCreationWizard({
                             onChange={(e) =>
                               handleTimeLimitInputChange(e.target.value)
                             }
-                            className="w-20 px-3 py-1.5 border border-gray-200/80 dark:border-gray-700/30 rounded-lg bg-white/70 dark:bg-gray-800/40 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/60 text-sm backdrop-blur-sm shadow-sm"
+                            className={`w-20 px-3 py-1.5 border ${isDarkMode ? 'border-gray-700/30 bg-gray-800/40 text-gray-200' : 'border-gray-200/80 bg-white/70 text-gray-800'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/60 text-sm backdrop-blur-sm shadow-sm`}
                             placeholder="örn: 30"
                           />
                           <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/5 to-indigo-500/5 pointer-events-none"></div>
                         </div>
-                        <span className="ml-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        <span className={`ml-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} font-medium`}>
                           dakika
                         </span>
                       </motion.div>
@@ -1331,34 +1240,26 @@ export default function ExamCreationWizard({
     );
   };
 
+  // Get theme context
+  const { isDarkMode } = useTheme();
+
+  // Adıma tıklama işleyicisi
+  const handleStepClick = (step: number) => {
+    // Sadece tamamlanmış adımlara geri dönebilir
+    if (step < currentStep) {
+      setCurrentStep(step);
+    }
+  };
+
   // Render
   return (
-    <div className="max-w-3xl mx-auto overflow-hidden relative backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-xl dark:shadow-gray-900/30 border border-gray-100 dark:border-gray-800">
-      {/* Decorative gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white/80 to-indigo-50/50 dark:from-gray-800/50 dark:via-gray-900/80 dark:to-indigo-900/30 -z-10 opacity-80"></div>
-      
-      {/* Header with gradient border */}
-      <div className="p-6 border-b border-gray-200/70 dark:border-gray-800/70 bg-white/90 dark:bg-gray-900/90 relative overflow-hidden">
-        {/* Subtle accent gradient */}
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 opacity-80"></div>
-        
-        <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-100 dark:to-blue-100">
-          {quizType === "quick" ? "Hızlı Sınav Oluştur" : "Kişiselleştirilmiş Sınav Oluştur"}
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-          Yapay zeka destekli kişiselleştirilmiş öğrenme deneyimi için adımları takip edin.
-        </p>
-      </div>
-
-      <div className="p-6 md:p-8 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
-        {/* Progress indicator with enhanced styling */}
-        <div className="mb-8">
-          <ExamCreationProgress 
-            currentStep={currentStep} 
-            totalSteps={totalSteps} 
-            quizType={quizType} 
-          />
-        </div>
+    <div className="w-full h-full bg-background">
+      <ExamCreationProgress 
+        currentStep={currentStep} 
+        totalSteps={totalSteps} 
+        quizType={quizType}
+        onStepClick={handleStepClick}
+      >
 
         <AnimatePresence mode="wait">
           {/* Adım 1: Belge Yükleme */}
@@ -1370,7 +1271,7 @@ export default function ExamCreationWizard({
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} mb-4`}>
                 1. Belge Yükleme
               </h3>
 
@@ -1381,30 +1282,30 @@ export default function ExamCreationWizard({
                 allowedFileTypes={[".pdf", ".docx", ".doc", ".txt"]}
                 className="mb-4"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
                 Desteklenen formatlar: PDF, DOCX, DOC, TXT (Maks 40MB). Yapay zeka bu belgeleri analiz ederek sizin için en uygun soruları oluşturacaktır.
               </p>
               {quizType === "personalized" && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   <b>Not:</b> Kişiselleştirilmiş sınav türü için farklı odak seçenekleri bir sonraki adımda sunulacaktır.
                 </p>
               )}
               
               {/* Konu tespiti yüklenme durumu - modern glass effect */}
               {topicDetectionStatus === "loading" && (
-                <div className="mt-6 p-5 backdrop-blur-sm bg-white/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 rounded-xl shadow-sm relative overflow-hidden">
+                <div className={`mt-6 p-5 backdrop-blur-sm ${isDarkMode ? 'bg-gray-800/50 border-gray-700/50' : 'bg-white/80 border-gray-100'} border rounded-xl shadow-sm relative overflow-hidden`}>
                   {/* Animated gradient background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 -z-10 animate-pulse"></div>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${isDarkMode ? 'from-blue-900/20 to-indigo-900/20' : 'from-blue-50 to-indigo-50'} -z-10 animate-pulse`}></div>
                   
                   <div className="flex items-center justify-center">
-                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 mr-3">
+                    <div className={`flex items-center justify-center h-8 w-8 rounded-full ${isDarkMode ? 'bg-blue-900/30' : 'bg-blue-100'} mr-3`}>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 dark:border-blue-400 border-b-transparent"></div>
                     </div>
-                    <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
+                    <p className={`${isDarkMode ? 'text-blue-300' : 'text-blue-700'} text-sm font-medium`}>
                       Belge içeriği analiz ediliyor ve konular tespit ediliyor...
                     </p>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 text-center">
+                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mt-3 text-center`}>
                     Bu işlem belge boyutuna bağlı olarak 10-30 saniye sürebilir. Lütfen bekleyin.
                   </p>
                 </div>
@@ -1485,16 +1386,16 @@ export default function ExamCreationWizard({
         </AnimatePresence>
 
         {/* Navigation Buttons with modern styling */}
-        <div className="flex justify-between mt-10 pt-6 border-t border-gray-200/50 dark:border-gray-800/30">
+        <div className="flex justify-between mt-6">
           {/* Back button with subtle glass effect */}
           <button
             onClick={prevStep}
             disabled={currentStep === 1}
             className={`px-5 py-2.5 rounded-xl flex items-center text-sm font-medium transition-all duration-300 backdrop-blur-sm relative ${currentStep === 1
-              ? "text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
-              : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white/50 dark:bg-gray-800/30 hover:bg-white/80 dark:hover:bg-gray-800/50 shadow-sm hover:shadow"}`}
+              ? `${isDarkMode ? 'text-gray-600' : 'text-gray-400'} cursor-not-allowed opacity-50`
+              : `${isDarkMode ? 'text-gray-300 bg-gray-800/30 hover:text-blue-400 hover:bg-gray-800/50' : 'text-gray-700 bg-white/50 hover:text-blue-600 hover:bg-white/80'} shadow-sm hover:shadow`}`}
           >
-            <div className={`absolute inset-0 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 opacity-0 ${currentStep !== 1 ? "group-hover:opacity-10" : ""} -z-10`}></div>
+            <div className={`absolute inset-0 rounded-xl bg-gradient-to-r ${isDarkMode ? 'from-gray-800 to-gray-900' : 'from-gray-100 to-gray-50'} opacity-0 ${currentStep !== 1 ? "group-hover:opacity-10" : ""} -z-10`}></div>
             <FiArrowLeft className="mr-2" size={16} /> Geri
           </button>
 
@@ -1528,7 +1429,7 @@ export default function ExamCreationWizard({
             </span>
           </button>
         </div>
-      </div>
+      </ExamCreationProgress>
     </div>
   );
 }

@@ -174,13 +174,13 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
 
     {topicSubTopics.length > 0 && (
       <div className="mb-6">
-        <label className={`block text-base font-semibold mb-3 flex items-center ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
-          <span className={`w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 shadow-md ${isDarkMode ? 'bg-gradient-to-br from-blue-700/40 to-indigo-700/50' : 'bg-gradient-to-br from-blue-100 to-indigo-100'}`}>
+        <label className={`block text-sm font-medium mb-3 flex items-center ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
+          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 mr-2 shadow-sm">
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
           </span>
           Alt Konu Seçimi
         </label>
-        <div className={`flex flex-wrap gap-2 p-4 rounded-2xl border backdrop-blur-lg ${isDarkMode ? 'bg-gray-800/50 border-gray-700/60 shadow-xl shadow-gray-950/20' : 'bg-white/70 border-gray-200/60 shadow-xl shadow-gray-300/30'}`}>
+        <div className={`flex flex-wrap gap-1.5 p-3 rounded-2xl border backdrop-blur-lg ${isDarkMode ? 'bg-gray-800/50 border-gray-700/60 shadow-xl shadow-gray-950/20' : 'bg-white/70 border-gray-200/60 shadow-xl shadow-gray-300/30'}`}>
           {topicSubTopics.map((subTopic) => {
             // Alt konu durumuna göre simge ve renk belirle
             let StatusIcon = null;
@@ -212,22 +212,31 @@ const CourseTopicSelector: React.FC<CourseTopicSelectorProps> = ({
                 key={subTopic.id}
                 type="button"
                 onClick={() => handleSubTopicToggle(subTopic.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSubTopicToggle(subTopic.id);
+                  }
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`group relative px-4 py-2 rounded-xl border text-sm transition-all duration-300 flex items-center gap-2 ${hoverEffect} ${isDarkMode ? 'border-gray-700/50 shadow-lg shadow-gray-950/20' : 'border-gray-300/70 shadow-lg shadow-gray-300/30'}`}
+                aria-pressed={selectedSubTopicIds.includes(subTopic.id)}
+                aria-label={`${subTopic.subTopicName} ${selectedSubTopicIds.includes(subTopic.id) ? 'seçili' : 'seçili değil'}`}
+                tabIndex={0}
+                className={`group relative px-2.5 py-1.5 rounded-lg border text-xs transition-all duration-300 flex items-center gap-1.5 ${hoverEffect} ${isDarkMode ? 'border-gray-700/50 shadow-md shadow-gray-950/20' : 'border-gray-300/70 shadow-md shadow-gray-300/30'} ${selectedSubTopicIds.includes(subTopic.id) ? 'ring-2 ring-offset-1 ring-blue-500/50 dark:ring-blue-400/50' : 'focus:ring-2 focus:ring-blue-400/30'}`}
               >
                 {/* Background and styling */}
-                <div className={`absolute inset-0 rounded-xl transition-all duration-300 group-hover:opacity-100 ${selectedSubTopicIds.includes(subTopic.id) 
+                <div className={`absolute inset-0 rounded-lg transition-all duration-300 group-hover:opacity-100 ${selectedSubTopicIds.includes(subTopic.id) 
                   ? `bg-gradient-to-r ${bgGradient || (isDarkMode ? 'from-blue-600 to-indigo-700' : 'from-blue-500 to-indigo-600')} ${isDarkMode ? 'opacity-85 shadow-md shadow-blue-950/20' : 'opacity-90 shadow-md shadow-blue-400/30'}` 
                   : `${isDarkMode ? 'bg-gray-800/40' : 'bg-white/60'} opacity-0`}`}></div>
                 
                 {/* Icon and text */}
                 {StatusIcon && (
-                  <div className={`relative z-10 p-1.5 rounded-lg transition-all duration-300 ${selectedSubTopicIds.includes(subTopic.id) ? (isDarkMode ? 'bg-white/25' : 'bg-white/30') : (isDarkMode ? 'bg-gray-700/70 group-hover:bg-gray-600/50' : 'bg-gray-100/90 group-hover:bg-gray-200/70')} shadow-sm`}>
-                    <StatusIcon className={`w-3.5 h-3.5 ${selectedSubTopicIds.includes(subTopic.id) ? 'text-white' : statusColor}`} />
+                  <div className={`relative z-10 p-1 rounded-md transition-all duration-300 ${selectedSubTopicIds.includes(subTopic.id) ? (isDarkMode ? 'bg-white/25' : 'bg-white/30') : (isDarkMode ? 'bg-gray-700/70 group-hover:bg-gray-600/50' : 'bg-gray-100/90 group-hover:bg-gray-200/70')} shadow-sm`}>
+                    <StatusIcon className={`w-3 h-3 ${selectedSubTopicIds.includes(subTopic.id) ? 'text-white' : statusColor}`} />
                   </div>
                 )}
-                <span className={`relative z-10 font-medium transition-all duration-300 ${selectedSubTopicIds.includes(subTopic.id) 
+                <span className={`relative z-10 font-medium transition-all duration-300 max-w-[120px] truncate ${selectedSubTopicIds.includes(subTopic.id) 
                   ? 'text-white' 
                   : isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {subTopic.subTopicName}

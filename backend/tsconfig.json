@@ -7,7 +7,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2022",
+    "target": "ES2024",
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -37,5 +37,5 @@
     },
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "exclude": ["node_modules", "dist", "*.ts", "examples"]
+  "exclude": ["node_modules", "dist", "*.ts"]
 }

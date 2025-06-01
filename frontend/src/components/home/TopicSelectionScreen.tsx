@@ -32,7 +32,7 @@ export const getStatusStyle = (status: LearningTargetStatusLiteral | undefined):
         color: "text-tertiary",
         bgColor: "bg-secondary",
         borderColor: "border-primary",
-        label: "Başlamadı",
+        label: "Yeni",
         icon: FiBook,
       };
     case "medium":
@@ -417,10 +417,6 @@ export default function TopicSelectionScreen({
             ? "Henüz çalışmadığınız yeni konulara odaklanan bir sınav oluşturulacak."
             : "Çalışma durumunuza uygun kapsamlı bir sınav oluşturulacak."}
         </p>
-        <div className={`mt-4 p-3.5 rounded-xl border flex items-center backdrop-blur-md shadow-md ${isDarkMode ? 'bg-sky-900/30 border-sky-700/50 text-sky-300 shadow-sky-950/20' : 'bg-sky-50/80 border-sky-200/70 text-sky-700 shadow-sky-300/30'}`}>
-          <FiInfo className={`min-w-5 w-5 h-5 mr-2.5 ${isDarkMode ? 'text-sky-400' : 'text-sky-600'}`} />
-          <span className="text-sm">En fazla <strong>10 konu</strong> seçebilirsiniz. Bu sınır, AI'nin daha odaklı ve kaliteli sorular oluşturabilmesi için gereklidir.</span>
-        </div>
       </div>
 
       {availableCourses && availableCourses.length > 0 && (
@@ -512,15 +508,6 @@ export default function TopicSelectionScreen({
         ))}
       </div>
 
-      <div className="flex justify-center mt-10">
-        <button
-          onClick={handleContinue}
-          className={`px-10 py-3.5 rounded-xl text-base font-semibold transition-all duration-300 ease-in-out flex items-center justify-center shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDarkMode ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-emerald-500 focus:ring-offset-gray-900 disabled:from-gray-600 disabled:to-gray-700' : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white focus:ring-emerald-500 focus:ring-offset-white disabled:from-gray-400 disabled:to-gray-500'}`}
-          disabled={topicCounts.selected === 0 && personalizedQuizType !== 'weakTopicFocused'} // Zayıf konu odaklı değilse ve seçili konu yoksa disable et
-        >
-          <span>{topicCounts.selected > 0 ? `${topicCounts.selected} Konu ile Devam Et` : (personalizedQuizType === 'weakTopicFocused' ? "Devam Et (Zayıf Konular)" : "Konu Seçin")}</span>
-        </button>
-      </div>
     </div>
   );
 }
@@ -558,30 +545,35 @@ function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
 
   return (
     <div
-      className={`group flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all duration-300 ease-in-out border hover:shadow-lg
+      className={`group flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all duration-300 ease-in-out border hover:shadow-md
         ${topic.isSelected
-          ? `bg-gradient-to-r ${statusInfo.bgColor || (isDarkMode ? 'from-sky-600 to-cyan-700' : 'from-sky-500 to-cyan-600')} ${isDarkMode ? 'opacity-90 shadow-md shadow-sky-950/30' : 'opacity-95 shadow-md shadow-sky-400/40'} border-transparent`
+          ? `bg-gradient-to-r ${statusInfo.bgColor || (isDarkMode ? 'from-sky-600 to-cyan-700' : 'from-sky-500 to-cyan-600')} ${isDarkMode ? 'opacity-90 shadow-sm shadow-sky-950/30' : 'opacity-95 shadow-sm shadow-sky-400/40'} border-transparent`
           : `${isDarkMode ? 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-700/60 shadow-sm shadow-gray-950/10' : 'bg-white/50 border-gray-200/60 hover:bg-gray-50/70 shadow-sm shadow-gray-300/20'}`
         }`}
       onClick={() => onToggle(topic.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onToggle(topic.id);
+      }}
     >
-      <div className="flex items-center gap-3 flex-1 min-w-0"> {/* Added flex-1 min-w-0 for better text wrapping */}
+      <div className="flex items-center gap-2 flex-1 min-w-0"> {/* Reduced gap */}
         <div
-          className={`rounded-md min-w-6 w-6 h-6 flex items-center justify-center transition-all duration-200 ${
+          className={`rounded-md min-w-5 w-5 h-5 flex items-center justify-center transition-all duration-200 ${
             topic.isSelected
               ? (isDarkMode ? 'bg-white/20 text-white border border-white/30' : 'bg-white/30 text-white border border-white/40')
               : (isDarkMode ? 'bg-gray-700 border-gray-500' : 'bg-gray-100 border-gray-300')
           }`}
         >
-          {topic.isSelected && <FiCheck className={`w-3.5 h-3.5 ${isDarkMode ? 'text-white' : 'text-white'}`} />}
+          {topic.isSelected && <FiCheck className={`w-3 h-3 ${isDarkMode ? 'text-white' : 'text-white'}`} />}
         </div>
 
         <div className="flex-1 min-w-0"> {/* Added flex-1 min-w-0 */}
-          <h3 className="font-medium text-sm text-primary truncate"> {/* Added truncate for very long names */}
+          <h3 className="font-medium text-xs text-primary truncate"> {/* Smaller text */}
             {displayTopicName()}
           </h3>
           {topic.parentTopic && (
-            <p className="text-xs text-tertiary mt-0.5 truncate"> {/* Added truncate */}
+            <p className="text-[10px] text-tertiary mt-0.5 truncate"> {/* Smaller text */}
               {topic.parentTopic}
             </p>
           )}
@@ -589,19 +581,19 @@ function TopicCard({ topic, onToggle, statusInfo }: TopicCardProps) {
       </div> {/* Moved closing div for left part */}
 
       {/* Right part (status and new badge) */}
-      <div className="flex items-center gap-2 ml-2 flex-shrink-0"> {/* Added ml-2 and flex-shrink-0 */}
+      <div className="flex items-center gap-1.5 ml-1.5 flex-shrink-0"> {/* Reduced gap and margin */}
         <div
-          className={`flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap
+          className={`flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium transition-all duration-200 whitespace-nowrap
           ${topic.isSelected
             ? (isDarkMode ? 'bg-white/20 text-white border border-white/30' : 'bg-white/30 text-white border border-white/40')
             : `${statusInfo.bgColor} ${statusInfo.color} border ${statusInfo.borderColor}`
           }
         `}>
-          <StatusIcon className="w-3 h-3 mr-1.5" />
+          <StatusIcon className="w-2.5 h-2.5 mr-1" />
           {statusInfo.label}
         </div>
         {topic.isNew && ( // isNew property TopicData'da olmalı
-          <div className="text-xs rounded-lg px-2.5 py-1 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 whitespace-nowrap font-medium">
+          <div className="text-[10px] rounded-md px-1.5 py-0.5 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 whitespace-nowrap font-medium">
             Yeni
           </div>
         )}
