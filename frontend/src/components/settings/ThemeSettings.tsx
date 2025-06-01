@@ -63,7 +63,7 @@ const ThemeSettings: React.FC = () => {
       {/* Current Theme Status */}
       <motion.div
         variants={fadeInVariants}
-        className="bg-surface-secondary rounded-xl p-6 border border-border-primary"
+        className={`rounded-xl p-6 border ${isDarkMode ? 'bg-gray-800/90 border-gray-700/30' : 'bg-white border-gray-200/70'}`}
       >
         <div className="flex items-center gap-3 mb-4">
           {isDarkMode ? (
@@ -87,7 +87,7 @@ const ThemeSettings: React.FC = () => {
       {/* Theme Mode Selection */}
       <motion.div
         variants={fadeInVariants}
-        className="bg-surface-secondary rounded-xl p-6 border border-border-primary"
+        className={`rounded-xl p-6 border ${isDarkMode ? 'bg-gray-800/90 border-gray-700/30' : 'bg-white border-gray-200/70'}`}
       >
         <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
           <FiMonitor className="text-blue-500" />
@@ -188,7 +188,7 @@ const ThemeSettings: React.FC = () => {
       {/* Accessibility Settings */}
       <motion.div
         variants={fadeInVariants}
-        className="bg-surface-secondary rounded-xl p-6 border border-border-primary"
+        className={`rounded-xl p-6 border ${isDarkMode ? 'bg-gray-800/90 border-gray-700/30' : 'bg-white border-gray-200/70'}`}
       >
         <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
           <FiEye className="text-purple-500" />
@@ -257,7 +257,7 @@ const ThemeSettings: React.FC = () => {
       {/* Reset Settings */}
       <motion.div
         variants={fadeInVariants}
-        className="bg-surface-secondary rounded-xl p-6 border border-border-primary"
+        className={`rounded-xl p-6 border ${isDarkMode ? 'bg-gray-800/90 border-gray-700/30' : 'bg-white border-gray-200/70'}`}
       >
         <h3 className="text-lg font-semibold text-text-primary mb-4">
           Reset Settings
@@ -271,15 +271,17 @@ const ThemeSettings: React.FC = () => {
           onClick={resetTheme}
           className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
         >
-          <FiRefreshCw />
-          Reset to Defaults
+          <div className={`flex items-center rounded-md p-0.5 transition-colors duration-300 ${isDarkMode ? 'bg-gray-700/40' : 'bg-gray-100/80'}`}>
+            <FiRefreshCw />
+            Reset to Defaults
+          </div>
         </button>
       </motion.div>
 
       {/* Current Settings Summary */}
       <motion.div
         variants={fadeInVariants}
-        className="bg-surface-secondary rounded-xl p-6 border border-border-primary"
+        className={`rounded-xl p-6 border ${isDarkMode ? 'bg-gray-800/90 border-gray-700/30' : 'bg-white border-gray-200/70'}`}
       >
         <h3 className="text-lg font-semibold text-text-primary mb-4">
           Current Settings

@@ -1,8 +1,8 @@
 # AI Model Yanıtı
 
-Tarih: 2025-05-31T22:04:11.630Z
-Trace ID: quiz-1748729035256-qj772
-Yanıt Uzunluğu: 10529 karakter
+Tarih: 2025-06-01T19:30:31.910Z
+Trace ID: quiz-1748806217512-9wwdf
+Yanıt Uzunluğu: 8774 karakter
 
 ## Ham Çıktı:
 ```json
@@ -11,172 +11,172 @@ Yanıt Uzunluğu: 10529 karakter
   "questions": [
     {
       "id": "q1",
-      "questionText": "Aşağıdakilerden hangisi, eksaskala sistemlerde verimliliği artırmak amacıyla kullanılan temel bir yaklaşımdır?",
+      "questionText": "Eksaskala bilgisayar sistemlerinde karşılaşılan temel yazılım zorluklarından biri, geleneksel sistemlerin hangi özelliğinin yetersiz kalmasıdır?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Tek çekirdekli işlemci kullanımı",
-        "Paralellikten yararlanma",
-        "Bellek erişimini kısıtlama",
-        "Seri programlama"
+        "Veri depolama kapasitesi",
+        "Ölçeklenebilirlik",
+        "Enerji verimliliği",
+        "Giriş/Çıkış hızı"
       ],
-      "correctAnswer": "Paralellikten yararlanma",
-      "explanation": "Eksaskala sistemlerde verimliliği artırmak için paralellik gücünden yararlanılır. İşlemler küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülür. Diğer seçenekler (tek çekirdekli işlemci, bellek erişimini kısıtlama, seri programlama) paralelliğin zıttı veya verimliliği düşüren yaklaşımlardır.",
-      "subTopicName": "Paralel Programlama Paradigmaları",
-      "normalizedSubTopicName": "paralel_programlama_paradigmaları",
+      "correctAnswer": "Ölçeklenebilirlik",
+      "explanation": "Geleneksel sistemler, eksaskala sistemlerdeki milyonlarca çekirdeği verimli bir şekilde yönetmekte yetersiz kalır. Bu durum, ölçeklenebilirlik sorununu ortaya çıkarır. Diğer seçenekler eksaskala sistemlerde önemli olsa da, ölçeklenebilirlik doğrudan belirtilen bir zorluktur.",
+      "subTopicName": "Eksaskala Çağında Yazılım Zorlukları",
+      "normalizedSubTopicName": "eksaskala_caginda_yazilim_zorluklari",
       "difficulty": "medium"
     },
     {
       "id": "q2",
-      "questionText": "Paralel programlama paradigması nedir?",
+      "questionText": "Aşağıdakilerden hangisi eksaskala çağında yazılım geliştirme zorluklarına çözüm olarak geliştirilen yaklaşımlardan biri değildir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "İşlemlerin sıralı bir şekilde yürütülmesini sağlayan yazılımlardır.",
-        "Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır.",
-        "Sadece tek bir işlemci üzerinde çalışan yazılımlardır.",
-        "Bellek kullanımını en aza indiren yazılımlardır."
+        "Hafif işletim sistemleri",
+        "Veri yönetimi ve depolama çözümleri",
+        "Uygulamalar için yazılımlar",
+        "Merkezi işlem birimi optimizasyonu"
       ],
-      "correctAnswer": "Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide yürütülmesini sağlayan yazılımlardır.",
-      "explanation": "Paralel programlama paradigması, büyük ölçekli hesaplamalarda performansı maksimize etmek için kritik bir bileşendir. İşlemlerin sıralı yürütülmesi, tek işlemci kullanımı veya bellek optimizasyonu paralel programlamanın temel amacı değildir.",
-      "subTopicName": "Paralel Programlama Paradigmaları",
-      "normalizedSubTopicName": "paralel_programlama_paradigmaları",
+      "correctAnswer": "Merkezi işlem birimi optimizasyonu",
+      "explanation": "Hafif işletim sistemleri, veri yönetimi ve depolama çözümleri ve uygulamalar için yazılımlar, eksaskala sistemlerde karşılaşılan zorluklara çözüm olarak geliştirilmiştir. Ancak, merkezi işlem birimi optimizasyonu doğrudan bu çözümler arasında sayılmaz.",
+      "subTopicName": "Eksaskala Çağında Yazılım Zorlukları",
+      "normalizedSubTopicName": "eksaskala_caginda_yazilim_zorluklari",
       "difficulty": "easy"
     },
     {
       "id": "q3",
-      "questionText": "Aşağıdakilerden hangisi, paylaşımlı bellek paradigmasının temel özelliğidir?",
+      "questionText": "Eksaskala sistemlerde milyonlarca çekirdeği verimli bir şekilde yönetememe durumu, aşağıdaki zorluklardan hangisinin temel nedenidir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Her işlemcinin kendi özel belleği olması",
-        "Tüm işlemcilerin ortak bir belleğe erişmesi",
-        "Veri iletişiminin mesajlaşma ile sağlanması",
-        "Sadece tek çekirdekli işlemcilerde çalışabilmesi"
+        "Güç tüketimi",
+        "Hata toleransı",
+        "Ölçeklenebilirlik",
+        "Veri depolama"
       ],
-      "correctAnswer": "Tüm işlemcilerin ortak bir belleğe erişmesi",
-      "explanation": "Paylaşımlı bellek paradigmasında tüm işlemciler ortak belleğe erişir, bu da çok çekirdekli işlemciler için idealdir. Diğer seçenekler (özel bellek, mesajlaşma, tek çekirdekli çalışma) paylaşımlı bellek paradigmasının özelliklerini yansıtmaz.",
-      "subTopicName": "Paylaşımlı Bellek Paradigması",
-      "normalizedSubTopicName": "paylasimli_bellek_paradigmasi",
-      "difficulty": "easy"
+      "correctAnswer": "Ölçeklenebilirlik",
+      "explanation": "Milyonlarca çekirdeği verimli yönetememe durumu, ölçeklenebilirlik zorluğunun temel nedenidir. Eksaskala sistemlerin bu kadar çok sayıda işlem birimini etkin bir şekilde kullanabilmesi gerekmektedir.",
+      "subTopicName": "Ölçeklenebilirlik Zorlukları",
+      "normalizedSubTopicName": "olceklenebilirlik_zorluklari",
+      "difficulty": "medium"
     },
     {
       "id": "q4",
-      "questionText": "OpenMP'nin paylaşımlı bellek paradigmasındaki rolü nedir?",
+      "questionText": "Aşağıdakilerden hangisi eksaskala sistemlerde ölçeklenebilirlik zorluklarının üstesinden gelmek için kullanılan bir yaklaşım değildir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Dağıtık bellekli sistemlerde veri iletişimini sağlamak",
-        "Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırmak",
-        "Tek çekirdekli işlemcilerde performansı artırmak",
-        "Bellek erişimini kısıtlayarak güvenliği sağlamak"
+        "Dağıtık mimariler",
+        "Paralel programlama",
+        "Tek çekirdek performansı artırma",
+        "Hafif işletim sistemleri"
       ],
-      "correctAnswer": "Mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırmak",
-      "explanation": "OpenMP, paylaşımlı bellek mimarilerinde paralel uygulamalar geliştirmek için kullanılır ve mevcut koda direktifler ekleyerek uygulama geliştirmeyi kolaylaştırır. Diğer seçenekler (dağıtık bellek, tek çekirdekli işlemci, bellek erişimini kısıtlama) OpenMP'nin rolünü doğru bir şekilde tanımlamaz.",
-      "subTopicName": "Paylaşımlı Bellek Paradigması",
-      "normalizedSubTopicName": "paylasimli_bellek_paradigmasi",
+      "correctAnswer": "Tek çekirdek performansı artırma",
+      "explanation": "Dağıtık mimariler, paralel programlama ve hafif işletim sistemleri, eksaskala sistemlerde ölçeklenebilirlik sorunlarını çözmek için kullanılır. Tek çekirdek performansını artırmak, ölçeklenebilirlik yerine bireysel işlemci performansına odaklanır.",
+      "subTopicName": "Ölçeklenebilirlik Zorlukları",
+      "normalizedSubTopicName": "olceklenebilirlik_zorluklari",
       "difficulty": "medium"
     },
     {
       "id": "q5",
-      "questionText": "Dağıtık bellek paradigmasında veri değişimi nasıl sağlanır?",
+      "questionText": "Büyük eksaskala sistemlerde donanım arızalarının sık görülmesi durumunda, sistemlerin hangi özelliğe sahip olması kritik öneme sahiptir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Ortak bir belleğe erişerek",
-        "Mesajlaşma ile",
-        "Paylaşımlı değişkenler kullanarak",
-        "Donanım yoluyla"
+        "Yüksek işlem hızı",
+        "Gelişmiş grafik yetenekleri",
+        "Hata toleransı",
+        "Büyük bellek kapasitesi"
       ],
-      "correctAnswer": "Mesajlaşma ile",
-      "explanation": "Dağıtık bellek paradigmasında her işlemci kendi düğümünün belleğine erişir ve veri değişimi mesajlaşma ile sağlanır. Ortak bellek, paylaşımlı değişkenler veya donanım yoluyla veri değişimi dağıtık bellek paradigmasının temel özelliği değildir.",
-      "subTopicName": "Dağıtık Bellek Paradigması",
-      "normalizedSubTopicName": "dagitik_bellek_paradigmasi",
-      "difficulty": "easy"
+      "correctAnswer": "Hata toleransı",
+      "explanation": "Büyük sistemlerde donanım arızaları sık görüldüğü için, sistemlerin hata toleransına sahip olması kritik öneme sahiptir. Hata toleransı, sistemlerin hatalara rağmen çalışmaya devam edebilme yeteneğidir.",
+      "subTopicName": "Hata Toleransı Gereksinimleri",
+      "normalizedSubTopicName": "hata_toleransi_gereksinimleri",
+      "difficulty": "medium"
     },
     {
       "id": "q6",
-      "questionText": "MPI (Message Passing Interface) ne için kullanılır?",
+      "questionText": "Eksaskala sistemlerde hata toleransını artırmak için hangi yaklaşım benimsenmez?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Paylaşımlı bellekli ortamlarda paralel uygulamalar geliştirmek için",
-        "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için",
-        "Tek çekirdekli işlemcilerde performansı artırmak için",
-        "Grafik işlem birimlerinde (GPU) hesaplama yapmak için"
+        "Yedekleme sistemleri",
+        "Hata düzeltme kodları",
+        "Sürekli sistem güncellemeleri",
+        "Arızalı bileşenlerin izolasyonu"
       ],
-      "correctAnswer": "Dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için",
-      "explanation": "MPI, dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır. İşlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim mekanizmaları sunar. Diğer seçenekler (paylaşımlı bellek, tek çekirdekli işlemci, GPU hesaplama) MPI'ın kullanım alanlarını doğru bir şekilde tanımlamaz.",
-      "subTopicName": "Dağıtık Bellek Paradigması",
-      "normalizedSubTopicName": "dagitik_bellek_paradigmasi",
+      "correctAnswer": "Sürekli sistem güncellemeleri",
+      "explanation": "Yedekleme sistemleri, hata düzeltme kodları ve arızalı bileşenlerin izolasyonu, hata toleransını artırmak için kullanılan yöntemlerdir. Sürekli sistem güncellemeleri sistem güvenliğini ve performansını artırsa da, doğrudan hata toleransı mekanizması değildir.",
+      "subTopicName": "Hata Toleransı Gereksinimleri",
+      "normalizedSubTopicName": "hata_toleransi_gereksinimleri",
       "difficulty": "medium"
     },
     {
       "id": "q7",
-      "questionText": "Hibrit paralellik yaklaşımı neyi ifade eder?",
+      "questionText": "Hafif çekirdek yapılarının temel amacı nedir?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Sadece paylaşımlı bellek paradigmasını kullanmayı",
-        "Sadece dağıtık bellek paradigmasını kullanmayı",
-        "Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmeyi",
-        "Sadece tek bir işlemci üzerinde çalışmayı"
+        "Gereksiz özellikleri barındırmak",
+        "Yüksek enerji tüketimi sağlamak",
+        "Temel işletim sistemi fonksiyonlarını yerine getirmek",
+        "Karmaşık sistem yönetimini kolaylaştırmak"
       ],
-      "correctAnswer": "Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmeyi",
-      "explanation": "Hibrit paralellik, farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirir. Eksaskala bilişimde MPI ve OpenMP paralellik modellerinin kombinasyonu yaygın bir hibrit yaklaşımdır. Diğer seçenekler (sadece paylaşımlı bellek, sadece dağıtık bellek, tek işlemci) hibrit paralelliğin tanımını doğru bir şekilde yansıtmaz.",
-      "subTopicName": "Hibrit Paralel Programlama",
-      "normalizedSubTopicName": "hibrit_paralel_programlama",
-      "difficulty": "easy"
+      "correctAnswer": "Temel işletim sistemi fonksiyonlarını yerine getirmek",
+      "explanation": "Hafif çekirdek yapıları, yalnızca temel işletim sistemi fonksiyonlarını yerine getiren yapılardır. Bu sayede küçük, hızlı ve verimli olmaları sağlanır.",
+      "subTopicName": "Hafif Çekirdek Yapısı",
+      "normalizedSubTopicName": "hafif_cekirdek_yapisi",
+      "difficulty": "medium"
     },
     {
       "id": "q8",
-      "questionText": "MPI ve OpenMP kombinasyonunda, MPI ve OpenMP'nin rolleri nelerdir?",
+      "questionText": "Aşağıdakilerden hangisi hafif çekirdek yapılarının özelliklerinden biri değildir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "MPI: Çok çekirdekli işlemciler içinde iş parçacıklarını yönetir; OpenMP: İşlemciler arası iletişim sağlar.",
-        "MPI: İşlemciler arası iletişim sağlar; OpenMP: Çok çekirdekli işlemciler içinde iş parçacıklarını yönetir.",
-        "Her ikisi de sadece işlemciler arası iletişim sağlar.",
-        "Her ikisi de sadece çok çekirdekli işlemciler içinde iş parçacıklarını yönetir."
+        "Küçük ve hızlı olmaları",
+        "Gereksiz özellikleri barındırmamaları",
+        "İhtiyaca göre modüler olarak genişletilebilmeleri",
+        "Yüksek gecikme sağlamaları"
       ],
-      "correctAnswer": "MPI: İşlemciler arası iletişim sağlar; OpenMP: Çok çekirdekli işlemciler içinde iş parçacıklarını yönetir.",
-      "explanation": "MPI, işlemciler arası iletişim sağlarken (dış paralelleştirme), OpenMP çok çekirdekli işlemciler içinde iş parçacıklarını yönetir (iç paralelleştirme). Bu kombinasyon daha fazla işlem gücü ve daha hızlı veri işleme sağlar. Diğer seçenekler MPI ve OpenMP'nin rollerini yanlış bir şekilde tanımlar.",
-      "subTopicName": "Hibrit Paralel Programlama",
-      "normalizedSubTopicName": "hibrit_paralel_programlama",
+      "correctAnswer": "Yüksek gecikme sağlamaları",
+      "explanation": "Hafif çekirdek yapıları düşük gecikme sağlar, yüksek değil. Bu, gerçek zamanlı ve yüksek performanslı hesaplamalar için ideal olmalarını sağlar.",
+      "subTopicName": "Hafif Çekirdek Yapısı",
+      "normalizedSubTopicName": "hafif_cekirdek_yapisi",
       "difficulty": "medium"
     },
     {
       "id": "q9",
-      "questionText": "Döngü açma (Loop Unrolling) tekniğinin temel amacı nedir?",
+      "questionText": "Hafif işletim sistemlerinde hata oluştuğunda sistemin geri kalanının korunmasını sağlamak için hangi mekanizma kullanılır?",
       "questionType": "multiple_choice",
       "cognitiveDomain": "understanding",
       "options": [
-        "Döngü kontrol yapılarının yükünü azaltmak",
-        "Döngüleri birleştirerek bellek erişimini artırmak",
-        "Döngüleri karmaşıklaştırarak hata ayıklamayı zorlaştırmak",
-        "Sadece tek çekirdekli işlemcilerde performansı artırmak"
+        "Merkezi işlem birimi yeniden başlatma",
+        "İzole çalışma",
+        "Veri yedekleme",
+        "Güç kaynağı optimizasyonu"
       ],
-      "correctAnswer": "Döngü kontrol yapılarının yükünü azaltmak",
-      "explanation": "Döngü açma (Loop Unrolling), döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici optimizasyon tekniğidir. Birden fazla iterasyon tek bir döngüde açılır ve bu da işlemcinin birden fazla talimatı aynı anda çalıştırmasını mümkün kılar. Diğer seçenekler (bellek erişimini artırmak, hata ayıklamayı zorlaştırmak, tek çekirdekli işlemci) döngü açmanın amacını doğru bir şekilde tanımlamaz.",
-      "subTopicName": "Döngü Açma Loop Unrolling",
-      "normalizedSubTopicName": "dongu_acma_loop_unrolling",
-      "difficulty": "easy"
+      "correctAnswer": "İzole çalışma",
+      "explanation": "Hafif işletim sistemlerinde hata oluştuğunda sistemin geri kalanı korunarak izole çalışma sağlanır. Bu, hatanın yayılmasını önler ve sistem kararlılığını korur.",
+      "subTopicName": "Hata Toleransı Mekanizmaları",
+      "normalizedSubTopicName": "hata_toleransi_mekanizmalari",
+      "difficulty": "medium"
     },
     {
       "id": "q10",
-      "questionText": "Döngü açma (Loop Unrolling) ile ilgili olarak, döngü sınırlarına dikkat etmenin nedeni nedir?",
+      "questionText": "Aşağıdakilerden hangisi hafif işletim sistemlerinde kullanılan bir hata toleransı mekanizması değildir?",
       "questionType": "multiple_choice",
-      "cognitiveDomain": "understanding",
+      "cognitiveDomain": "remembering",
       "options": [
-        "Döngü açma işleminin daha hızlı tamamlanmasını sağlamak",
-        "Sınır dışı bellek erişimini önlemek",
-        "Döngülerin daha az bellek kullanmasını sağlamak",
-        "Döngülerin daha kolay birleştirilmesini sağlamak"
+        "Otomatik hata yönetimi",
+        "Sistem kilitlemelerinde otomatik yeniden başlatma",
+        "Arızalanan bileşenlerin sistem çalışırken değiştirilebilmesi",
+        "Manuel sistem onarımı"
       ],
-      "correctAnswer": "Sınır dışı bellek erişimini önlemek",
-      "explanation": "Döngü açmada dikkat edilmesi gereken en temel faktör döngü sınırlarıdır. Özellikle döngü açma işleminden sonra döngü sınırlarının aşılması, sınır dışı bellek erişimine yol açabilir. Diğer seçenekler (daha hızlı tamamlanma, daha az bellek, kolay birleştirme) döngü sınırlarına dikkat etmenin temel nedenini doğru bir şekilde tanımlamaz.",
-      "subTopicName": "Döngü Açma Loop Unrolling",
-      "normalizedSubTopicName": "dongu_acma_loop_unrolling",
+      "correctAnswer": "Manuel sistem onarımı",
+      "explanation": "Otomatik hata yönetimi, sistem kilitlemelerinde otomatik yeniden başlatma ve arızalanan bileşenlerin sistem çalışırken değiştirilebilmesi, hafif işletim sistemlerinde kullanılan hata toleransı mekanizmalarıdır. Manuel sistem onarımı, otomatik mekanizmaların aksine manuel müdahale gerektirir.",
+      "subTopicName": "Hata Toleransı Mekanizmaları",
+      "normalizedSubTopicName": "hata_toleransi_mekanizmalari",
       "difficulty": "medium"
     }
   ]

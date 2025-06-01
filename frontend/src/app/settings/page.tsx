@@ -184,16 +184,16 @@ export default function SettingsPage() {
   };
 
   // Kart stilini merkezi olarak tanımla
-  const cardClassName = "bg-white dark:bg-[#1e293b] rounded-lg shadow-sm dark:shadow-md border border-[#e2e8f0] dark:border-[#334155]/60 p-6 backdrop-blur-[2px] dark:backdrop-blur-[4px]";
+  const cardClassName = `rounded-xl p-6 border shadow-sm mb-6 ${isDarkMode ? 'bg-gray-800/90 border-gray-700/30' : 'bg-white border-gray-200/70'}`;
 
   // Form öğeleri için genel stil
-  const inputClassName = "w-full text-sm px-3 py-2.5 bg-[#f8fafc] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155]/60 rounded-md focus:outline-none focus:ring-1 focus:ring-[#3b82f6] dark:focus:ring-[#3b82f6] focus:border-[#3b82f6] dark:focus:border-[#3b82f6] transition-colors";
-
+  const inputClassName = "w-full text-sm px-3 py-2.5 bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-md text-[#0f172a] dark:text-[#f8fafc] focus:ring-2 focus:ring-[#3b82f6]/50 dark:focus:ring-[#60a5fa]/50 focus:border-transparent outline-none transition-colors";
+  
   // Toggle butonu stilini merkezi olarak tanımla
   const toggleClassName = "w-10 h-5 bg-[#f1f5f9] dark:bg-[#1e293b] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#3b82f6]/30 dark:peer-focus:ring-[#3b82f6]/40 rounded-full peer dark:bg-border-secondary peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-white after:border-[#e2e8f0] dark:after:border-[#334155] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3b82f6] dark:peer-checked:bg-[#3b82f6]";
 
   // Bölüm başlığı stili
-  const sectionHeaderClassName = "flex justify-between items-center mb-6 pb-4 border-b border-[#f1f5f9] dark:border-[#334155]/60";
+  const sectionHeaderClassName = "flex justify-between items-center mb-6";
 
   if (!mounted) {
     return null; // veya bir yükleme göstergesi
@@ -228,6 +228,7 @@ export default function SettingsPage() {
                 Görünüm Ayarları
               </h2>
               {savedSuccess && (
+                
                 <div className="text-sm text-[#10b981] dark:text-[#34d399] bg-[#f0fdf4] dark:bg-[#065f46]/20 px-3 py-1.5 rounded-md flex items-center border border-[#86efac] dark:border-[#065f46] backdrop-blur-sm">
                   <FiCheck className="mr-1.5" />
                   Kaydedildi
@@ -235,7 +236,7 @@ export default function SettingsPage() {
               )}
             </header>
 
-            <div className="bg-[#f8fafc] dark:bg-[#0f172a]/80 rounded-md p-4 mb-6 flex items-center gap-4 border border-[#e2e8f0] dark:border-[#334155]/40">
+            <div className={`rounded-md p-4 mb-6 flex items-center gap-4 border ${isDarkMode ? 'bg-gray-900/80 border-gray-700/40' : 'bg-gray-50 border-gray-200/70'} transition-colors duration-300`}>
               {isDarkMode ? (
                 <FiMoon className="text-2xl text-[#3b82f6] dark:text-[#60a5fa]" />
               ) : (
@@ -355,7 +356,7 @@ export default function SettingsPage() {
                   showHints: "Uygulama içi yardımcı ipuçlarını göster"
                 };
                 return (
-                  <div key={key} className="flex items-center justify-between p-3.5 bg-[#f8fafc] dark:bg-[#0f172a]/80 rounded-md border border-[#e2e8f0] dark:border-[#334155]/40">
+                  <div key={key} className={`flex items-center justify-between p-3.5 rounded-md border ${isDarkMode ? 'bg-gray-900/80 border-gray-700/40' : 'bg-white border-gray-200/70'} transition-colors duration-300`}>
                     <div>
                       <h3 className="text-sm font-medium text-[#0f172a] dark:text-[#f8fafc]">{labels[key]}</h3>
                       <p className="text-xs text-[#64748b] dark:text-[#cbd5e1] mt-0.5">
@@ -376,7 +377,7 @@ export default function SettingsPage() {
                 );
               })}
 
-              <div className="p-3.5 bg-[#f8fafc] dark:bg-[#0f172a]/80 rounded-md border border-[#e2e8f0] dark:border-[#334155]/40">
+              <div className={`p-3.5 rounded-md border ${isDarkMode ? 'bg-gray-900/80 border-gray-700/40' : 'bg-white border-gray-200/70'} transition-colors duration-300`}>
                 <label
                   htmlFor="language"
                   className="block text-sm font-medium text-[#0f172a] dark:text-[#f8fafc] mb-1.5"
@@ -436,26 +437,26 @@ export default function SettingsPage() {
                   <div key={field}>
                     <label
                       htmlFor={field}
-                      className="block text-sm font-medium text-[#0f172a] dark:text-[#f8fafc] mb-1.5"
+                      className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}
                     >
                       {labels[field]}
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <FiLock className="text-[#64748b] dark:text-[#94a3b8] text-sm" />
+                        <FiLock className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                       </div>
                       <input
                         type={showField[fieldName] ? "text" : "password"}
                         id={field}
                         name={field}
-                        className={`${inputClassName} pl-10 pr-10`}
+                        className={`w-full pl-10 pr-10 py-2.5 text-sm rounded-md border transition-colors duration-150 focus:ring-2 focus:outline-none ${isDarkMode ? 'bg-gray-900 border-gray-700 text-gray-100 focus:ring-blue-600/40 focus:border-blue-700' : 'bg-white border-gray-200 text-gray-800 focus:ring-blue-500/30 focus:border-blue-400'}`}
                         placeholder="••••••••"
                         value={passwordData[field]}
                         onChange={handlePasswordChange}
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#64748b] hover:text-[#0f172a] dark:hover:text-[#f8fafc] transition-colors"
+                        className={`absolute inset-y-0 right-0 pr-3 flex items-center transition-colors ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
                         onClick={() => toggleShowPassword(fieldName)}
                       >
                         {showField[fieldName] ? <FiEyeOff className="text-sm" /> : <FiEye className="text-sm" />}

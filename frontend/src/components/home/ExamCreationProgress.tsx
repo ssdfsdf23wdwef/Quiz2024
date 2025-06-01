@@ -72,7 +72,7 @@ const ExamCreationProgress: React.FC<ExamCreationProgressProps> = ({
   return (
     <div className="flex w-full h-full">
       {/* Sol taraf - Adım listesi */}
-      <div className={`w-64 p-5 flex flex-col ${isDarkMode ? 'bg-gray-950 shadow-lg' : 'bg-white shadow-md'}`}>
+      <div className={`w-64 p-5 flex flex-col ${isDarkMode ? 'bg-gray-900 shadow-lg' : 'bg-gray-50 shadow-md'}`}>
         <h2 className="text-lg font-semibold mb-6 text-primary">Sınav Oluşturma</h2>
         
         <div className="flex flex-col space-y-1 flex-grow">
@@ -83,7 +83,6 @@ const ExamCreationProgress: React.FC<ExamCreationProgressProps> = ({
             // Adımın durumu (tamamlandı, aktif, bekliyor)
             const isCompleted = stepNumber < currentStep;
             const isActive = stepNumber === currentStep;
-            const isPending = stepNumber > currentStep;
             
             return (
               <div 
@@ -120,9 +119,6 @@ const ExamCreationProgress: React.FC<ExamCreationProgressProps> = ({
               className="bg-brand-primary h-full transition-all duration-500 rounded-full"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             ></div>
-          </div>
-          <div className="flex justify-center mt-2 text-xs text-tertiary">
-            <span>Adım {currentStep}/{totalSteps}</span>
           </div>
         </div>
       </div>

@@ -1,8 +1,8 @@
 # Sınav Oluşturma Promptu
 
-## Tarih: 2025-05-31T22:03:55.288Z
+## Tarih: 2025-06-01T19:30:17.523Z
 
-## Trace ID: quiz-1748729035256-qj772
+## Trace ID: quiz-1748806217512-9wwdf
 
 ## Alt Konular (9 adet):
 ```
@@ -10,11 +10,11 @@
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Paralel Programlama Paradigmaları** (2 soru)
-2. **Paylaşımlı Bellek Paradigması** (2 soru)
-3. **Dağıtık Bellek Paradigması** (2 soru)
-4. **Hibrit Paralel Programlama** (2 soru)
-5. **Döngü Açma Loop Unrolling** (2 soru)
+1. **Eksaskala Çağında Yazılım Zorlukları** (2 soru)
+2. **Ölçeklenebilirlik Zorlukları** (2 soru)
+3. **Hata Toleransı Gereksinimleri** (2 soru)
+4. **Hafif Çekirdek Yapısı** (2 soru)
+5. **Hata Toleransı Mekanizmaları** (2 soru)
 
 **Toplam Aktif: 5 alt konu, 10 soru**
 
@@ -22,10 +22,10 @@
 
 **Aşağıdaki konulardan soru üretilmeyecektir:**
 
-1. Döngü Birleştirme Loop Fusion
-2. Vektörizasyon Vectorization
-3. Profilleme Araçları
-4. Hata Ayıklama Araçları
+1. Dinamik Kaynak Yönetimi
+2. Akıllı Veri Yönlendirme
+3. Önbellekleme Teknikleri
+4. Paralel Programlama Paradigmaları
 
 ```
 
@@ -51,11 +51,11 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **Aşağıdaki alt konular için belirtilen sayıda soru üretilecektir:**
 
-1. **Paralel Programlama Paradigmaları** (2 soru)
-2. **Paylaşımlı Bellek Paradigması** (2 soru)
-3. **Dağıtık Bellek Paradigması** (2 soru)
-4. **Hibrit Paralel Programlama** (2 soru)
-5. **Döngü Açma Loop Unrolling** (2 soru)
+1. **Eksaskala Çağında Yazılım Zorlukları** (2 soru)
+2. **Ölçeklenebilirlik Zorlukları** (2 soru)
+3. **Hata Toleransı Gereksinimleri** (2 soru)
+4. **Hafif Çekirdek Yapısı** (2 soru)
+5. **Hata Toleransı Mekanizmaları** (2 soru)
 
 **Toplam Aktif: 5 alt konu, 10 soru**
 
@@ -63,10 +63,10 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 
 **Aşağıdaki konulardan soru üretilmeyecektir:**
 
-1. Döngü Birleştirme Loop Fusion
-2. Vektörizasyon Vectorization
-3. Profilleme Araçları
-4. Hata Ayıklama Araçları
+1. Dinamik Kaynak Yönetimi
+2. Akıllı Veri Yönlendirme
+3. Önbellekleme Teknikleri
+4. Paralel Programlama Paradigmaları
 
   *Lütfen dikkat: Bu bölümde "AKTİF KONULAR (SORU ÜRETİLECEK)" ve "BEKLEYEN KONULAR (SORU ÜRETİLMEYECEK)" olmak üzere iki liste görebilirsin.*
 - **Eğitim İçeriği:** 
@@ -74,346 +74,150 @@ Sen bir eğitim içeriği ve test geliştirme uzmanısın. Verilen metin içeri�
 Bilgisayar Mühendisliği Bölümü
 Bahar –2025(ÖÖ.,İÖ.)
 MBM7-452 -Eksaskala Bilgisayar Sistemleri
-(Sunu 3)
+(Sunu 4)
 Dr. Öğr. Üyesi Esra Çelik
 
 Günün Sorusu
-Eksaskala bilgisayarlarda kullanılan
-programlama modelleri ve araçları
-nelerdir?
+Eksaskala çağında oluşabilecek yazılım
+zorlukları neler olabilir?
 
-Programlama Modelleri ve Araçları
-•Programlama modelleri ve araçları,
-•tasarımcılara eksaskala sistemlerin yüksek hesaplama gücünü
-kullanabilmeleri için bir köprü görevi görür.
-•Eksaskala bilgisayar sistemleri için kritik bir roloynar.
-•Programlamada kullanılan en temel modeller ve araçlar:
-•Paralel Programlama Paradigmaları
-•Derleyici Optimizasyonları
-•Performans Profilleme ve Hata Ayıklama’dir.
-
-Paralel Programlama Paradigmaları
-•Eksaskala sistemlerde verimliliği artırmak için paralellikgücünden yararlanılır.
-•Paralel programlama paradigması:
-•Bir işlemin küçük parçalara bölünerek aynı anda birden fazla işlemcide
-yürütülmesini sağlayan yazılımlardır.
-•Büyük ölçekli hesaplamalarda performansı maksimize etmek için kritik bir
-bileşendir.
-
-Paralel Programlama Paradigmaları
-•Eksaskala sistemlerde kullanılan başlıca paralel programlama
-paradigmaları şunlardır:
-•Paylaşımlı Bellek Paradigması
-•Dağıtık Bellek Paradigması
-•Hibrit Paralel Programlama
-
-Paralel Programlama Paradigmaları
-•Paylaşımlı bellek paradigması:
-•Çok çekirdekli işlemciler için idealdir;
-tüm işlemciler ortak belleğe erişir.
-•Bu paradigmada:
-•OpenMP, mevcut koda direktifler
-ekleyerek uygulama geliştirmeyi
-kolaylaştırır.
-•Düşük iletişim gecikmesi avantajıdır.
-
-Paralel Programlama Paradigmaları
-•OpenMP (Open Multi-Processing),
-•çok çekirdekli işlemciler ve paylaşımlı bellek mimarileriile paralel uygulamalar
-geliştirmek için kullanılır.
-•Eksaskala sistemlerde, her düğümdeki yüksek çekirdek sayısı sayesinde görevlerin paralel
-çalıştırılmasına olanak tanır.
-•Paralellik sağlamak için derleyici direktiflerikullanılır. Örneğin,
-•#pragma omp parallel direktifi, paralel bir bölge başlatır ve derleyici, kapsanan görevleri
-paralel çalıştırmak için kod üretir.
-•#pragma omp for direktifi, for-döngülerinin paralelleştirilmesi için kullanılır.
-
-Paralel Programlama Paradigmaları
-•Dağıtık bellek paradigması
-•Her işlemci kendi düğümünün
-belleğine erişir; veri değişimi
-mesajlaşmaile sağlanır.
-•Bu paradigmada:
-•MPI,yaygın olarak kullanılır.
-•Mesajlaşma ek yük getirebilir.
-
-Paralel Programlama Paradigmaları
-•Message Passing Interface (MPI),
-•dağıtık bellekli ortamlarda paralel uygulamalar geliştirmek için kullanılır.
-•Eksaskala sistemlerde bağımsız işlemciler arasında veri alışverişi ve paralel görev
-koordinasyonu sağlanır.
-•MPI, işlemler arasında doğrudan veri alışverişi sağlayan point-to-point iletişim
-mekanizmaları sunar.
-•Örneğin MPI_Send ve MPI_Recv fonksiyonları.
-MPI
-
-Paralel Programlama Paradigmaları
-•Hibrit paralellik,
-•farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla
-paradigma birleştirir.
-•Eksaskala bilişimde,
-•MPI ve OpenMP paralellik modellerinin kombinasyonu yaygın bir hibrit
-yaklaşımdır.
-•Bu hibrit yaklaşım,
-•hem her bir düğümlerdeki paralel işlem hemde tüm sistem genelindeki paralel
-işlemlerinverimli bir şekilde yapılmasını sağlar.
-•MPI, işlemler arası iletişimsağlarken, OpenMP, düğüm içindeki paralellikten faydalanarak
-paralelleme verimliliğini artırır.
-MPI
-
-Paralel Programlama Paradigmaları
-•MPI + OpenMP kombinasyonunda:
-•MPI:İşlemciler arası iletişim sağlar (dış paralelleştirme).
-•OpenMP: Çok çekirdekli işlemciler içinde iş parçacıklarını yönetir (iç
-paralelleştirme).
-•Avantajı:
-•Daha fazla işlem gücü ve daha hızlı veri işleme.
-•Kaynak kullanımını optimize eder.
-•OpenMP, paylaşımlı bellek içinde çalışarak MPI’nin iletişim yükünü azaltır ve
-performansı artırır.
-
-Derleyici Optimizasyonları
-•Derleyici optimizasyonları:
-•kaynak kodun yüksek verimli makine koduna dönüştürülmesi sürecidir.
-•Eksaskala sistemlerde amaç,
-•hesaplama verimliliğini artırmak ve bellek erişim gecikmesini azaltılmaktır.
-•Derleyici optimizasyonu ile performans iyileştirimesinde,
-•döngü açma,
-•döngü birleştirme
-•ve döngü vektörleştirme teknikleri kullanılır.
-•Bu optimizasyonlar, eksaskala sistemlerde optimal performanssağlamak için gereklidir.
-Derleyici
-Optimizasyonu
-Kaynak
-kodu
-Makine
-kodu
-(yüksek
-verimli)
-Hatalar
-
-Derleyici Optimizasyonları
-•Döngü açma (Loop Unrolling),
-•döngü kontrol yapılarının yükünü azaltmayı amaçlayan bir derleyici
-optimizasyon tekniğidir.
-•Birden fazla iterasyon tek bir döngüde açılır ve bu da işlemcinin birden fazla talimatı
-aynı anda çalıştırmasını mümkün kılar.
-•Döngü açma, derleyicinin daha fazla talimat seviyesinde paralellik açığa çıkarmasını
-sağlar.
-
-Peki ama
-nasıl?
-
-Derleyici Optimizasyonları
-•Örneğin, N çift sayı olsun:
-for (int i = 0; i < N; i++) {
-array[i] = array[i] * 2;
-}
-•Yukarıdakidöngüde döngü kontrolü (i'nin artırılması ve i < N koşulunun kontrolü) her
-iterasyonda bir kez çalışır.
-•Her iterasyon bir dizi elemanını işler, toplamda N iterasyon yapılır.
-
-Bu döngüyü nasıl
-açabilirsiniz?
-
-Derleyici Optimizasyonları
-Çözüm:
-•Her iterasyonda tek eleman yerine iki eleman işleyerek toplam iterasyon sayısını
-yarıyaindirebilirsiniz. Bunun için:
-•i değerini 2 artırılarak döngüye giriş yapılır(i += 2).
-•N yerine N/2 iterasyon gerçekleşir.
-•Bu şekildebirbirine bağlı olmayaniki eleman(array[i]ve array[i + 1])aynı anda
-işlenirve paralellikoluşur.
-for (int i = 0; i < N; i += 2) {örneğin bu satır core 1 ile işlenir.
-array[i] = array[i] * 2;
-array[i + 1] = array[i + 1] * 2;bu satır core 2 ile işlenir.
-}
-
-Derleyici Optimizasyonları
-Döngü koşulunun kontrol edilmesi ve i'nin artırılması daha az
-yapılır.
-Her iterasyonda işlenen eleman sayısı arttırılır.
-Paralellik sağlanır.
-Daha az işlem daha hızlı sonuç alınır.
-
-
-Döngü açma ile birlikte:
-
-
-
-Derleyici Optimizasyonları
-•Döngü açmada dikkat edilmesi gereken en temel faktör döngü sınırlarıdır.
+Eksaskala Çağında Yazılım Zorlukları
+•Eksaskala bilgisayar sistemlerinde en sık görülen yazılım zolukları,
+•geleneksel yazılım ve işletim sistemleri için büyük zorluklar oluşturur.
 •Örneğin:
-for (int i = 0; i < N; i++) {
-array[i] = array[i] * 2;
-}
-•Yukarıdaki döndü yapısında N tek sayıise,
-•son iterasyon (yani i == N -1) array[i + 1]'e erişmeye çalışacaktır,
-•bu da sınır dışı bellek erişimine yol açabilir.
+•Ölçeklenebilirlik: Geleneksel sistemler milyonlarca çekirdeği verimli yönetemez.
+•Hata Toleransı: Büyük sistemlerde donanım arızaları sık görülür, dayanıklı
+yazılım gerekir.
+•Kaynak Yönetimi: Dinamik ve verimli kaynak kullanımı şarttır.
+•Veri Hareketi:Büyük veri setlerinin hızlı taşınması ve depolanması gereklidir.
+•Programlama:Paralel işlem için özel yazılım ve diller gereklidir.
+
+Eksaskala Çağında Yazılım Zorlukları
+•Eksaskaladaki zorluklara çözüm olarak:
+•Hafif işletim sistemleri
+•Veri yönetimi ve depolama çözümleri
+•Uygulamalar için yazılımlar
+•geliştirilmiştir.
 
-Bu sorunu nasıl
-çözersiniz?
+Peki nedir bu
+yapılar?
 
-Derleyici Optimizasyonları
-Çözüm:
-•N tek olduğunda döngü içindeki elemanlar (örneğin array[0] ve array[1], array[2] ve
-array[3]) çifter çifter işlenir.
-•Sadece son eleman (örneğin array[N-1]) döngü dışındabir kez işlenir.
-for (int i = 0; i < N -1; i += 2) {
-array[i] = array[i] * 2; örneğin bu satır core 1 ile işlenir.
-array[i + 1] = array[i + 1] * 2; bu satır core 2 ile işlenir.
-}
-array[N -1] = array[N -1] * 2;
+Hafif İşletim Sistemleri
+•Geleneksel işletim sistemleri:
+•Milyonlarca çekirdeği verimli yönetemez.
+•Büyük sistemlerdekidonanım hatalarınıtolere edemez.
+•CPU, GPUve TPU için optimize edilmemiştir.
+•Güç tüketimini dinamik olarak ayarlanmaz.
+•Hafif çekirdek tasarımlarına kıyasla gereksiz yük oluşturur.
+•İş yüklerine göre esnek kaynak tahsisi yapamaz.
+•Büyük veri setlerinin hızlı işlenmesini sağlayacak optimizasyonlardan
+yoksundur.
+•Geleneksel işletim sistemleri, eksaskala bilgisayar sistemlerinin gereksinimlerini
+karşılayamadığı için yeni nesil ölçeklenebilir ve uyarlanabilir hafif işletim sistemleri
+gereklidir.
 
-Derleyici Optimizasyonları
-•Döngü birleştirme (Loop Fusion),
-•iki veya daha fazla döngünün tek bir döngüde birleştirilmesi işlemidir.
-•Eksaskala sistemlerde bu optimizasyon,
-•bellek erişimini iyileştirmek ve döngü başlatma maliyetlerini azaltmakiçin
-kullanılır.
+Hafif İşletim Sistemleri
+•Hafif işletim sistemleri, geleneksel işletim sistemlerine kıyasla:
+•daha az kaynak tüketen,
+•minimum düzeyde hizmet sunan ve
+•yalnızca belirli görevleri (kritik görevleri) yerine getirmek için optimize edilmiş
+sistemlerdir.
+•Eksaskala sistemlerde hafif işletim sistemleri:
+•Performans kayıplarını azaltır.
+•Gereksiz arka plan işlemlerini ortadan kaldırır.
+•Daha iyi bellek yönetimi sağlar.
+•Daha hızlı işlem gerçekleştirir.
+•TOSS (Tri-Lab Operating System Stack),eksaskala bilgisayar sistemleri için
+tasarlanmış hafif ve yüksek performanslı bir işletim sistemi türüdür.
 
-Peki ama
-nasıl?
+Hafif işletim
+sistemlerinin bu
+şekilde performans
+göstermesini
+sağlayan nedir?
 
-Derleyici Optimizasyonları
-•Örneğin, aşağıdaki iki ayrı döngüolsun:
-for (int i = 0; i < N; i++) {
-A[i] = B[i] * 2;
-}
-for (int i = 0; i < N; i++) {
-C[i] = A[i]+ 5;
-}
-•Bu kodda ilk döngü A dizisini hesaplar, ikinci döngü ise A'nın sonuçlarını C dizisine
-işler.
-•A dizisine iki kez erişilir:
-•Birinci döngüde yazılır, ikinci döngüde okunur.
-•Bu da gereksiz bellek erişimine neden olur.
+Hafif İşletim Sistemleri
+•Hafif çekirdek (Lightweight kernel),
+•hafif işletim sisteminin en temel bileşeni olup,
+•yalnızca temel işletim sistemi fonksiyonlarınıyerine getiren
+yapılardır.
+•Hafif çekirdek yapıları:
+•Küçük ve hızlıdır.
+•Gereksiz özellikleri barındırmaz.
+•İhtiyaca göre modülerolarak genişletilebilir.
+•Milyonlarca çekirdeği verimli şekilde yönetir.
+•Düşük gecikmesağlar.
+•Gerçek zamanlı ve yüksek performanslı hesaplamalar için idealdir.
+Programlar
+Donanım
+İşletim Sistemi
+Kullanıcılar
 
-Derleyici Optimizasyonları
-Çözüm:
-•Bu iki döngüyü tek bir döngüyebirleştirerek bellek erişimini optimize edebiliriz:
-for (int i = 0; i < N; i++) {
-A[i]= B[i] * 2;
-C[i] = A[i] + 5;
-}
-•A[i] birinci satırda hesaplanır ve hemen ikinci satırda kullanılır.
-•Tek bir döngü başlatılır.
-•Bellek erişimi azaltılır.
-Seri
-programlama
-kullanılmakta
-
-Derleyici Optimizasyonları
-Bağımsız işlem adımları içeren döngüler varsa (Örneğin A[i]
-önce hesaplanıp sonra C[i]'de kullanılıyorsa)
-Diziler arasındaki veri bağımlılığı yoksa
-Yada veri bağımlılığı kontrol ediliyorsa
-Bellek performansı artırılmak isteniyorsa
-
-
-Döngü birleştirme ne zaman kullanılır?
-
-
-
-Derleyici Optimizasyonları
-•Vektörizasyon (Vectorization):
-•Tek Komut Çoklu Veri (SIMD) paralelliğiolarak da bilinen bir
-optimizasyon tekniğidir.
-•Bu teknik,
-•aynı işlemci komutunun birden fazla veri elemanına aynı anda
-uygulanmasını sağlar
-•Özellikle diziler veya vektörler üzerinde çalışan döngüler için oldukça
-etkilidir.
-•Modern işlemciler, SIMD komut setleri (SSE, AVX, Neon vb.) ile vektör
-işlemlerini hızlandırır.
-
-Derleyici Optimizasyonları
-•Örneğin 8 elemanlı bir dizininher elemanı 2 ile çarpılmak istensin:
-•Skaler işlem yapılır. Yani standart bir for döngüsüyle her elemanı tek tek çarpılır:
-int array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-for (int i = 0; i < 8; i++) {
-array[i] = array[i] * 2;
-}
-•İşlem Adımları:
-•İlk iterasyon: array[0] = 1 * 2
-•İkinci iterasyon: array[1] = 2 * 2
-•Üçüncü iterasyon: array[2] = 3 * 2
-•...
-•Sekizinci iterasyon: array[7] = 8 * 2
-•Toplamda 8 işlem yapılır (8 döngü turu).
 
-Bu işlem
-vektörleştirme
-ile nasıl olur?
+Hafif işletim sistemlerinde ne
+gibi hatalar oluşur ve
+çözümler neler olabilir?
 
-Derleyici Optimizasyonları
-Çözüm 1:
-•4’lü SIMDile Vektörizasyonda4 tane sayı tek seferde işlenebilir.
-int array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-#pragma omp simd
-for (int i = 0; i < 8; i++) {
-array[i] = array[i] * 2;
-}
-•İşlem adımları:
-•İlk adımda işlemci 4 elemanı aynı andaçarpar: {1, 2, 3, 4} * 2 → {2, 4, 6, 8}
-•İkinci adımda diğer 4 elemanı aynı anda çarpar: {5, 6, 7, 8} * 2 → {10, 12, 14, 16}
-•Toplamda 2 döngü turu ile işlem tamamlanır.
+Hafif İşletim Sistemlerinde Hata Toleransı
+•Hafif işletim sistemlerinde:
+•Hata oluştuğunda sistemin geri kalanı korunarak izole çalışma sağlanır.
+•Hatalar erkenden algılanarak düzeltilmesi için otomatik hata yönetimi uygulanır.
+•Sistem kilitlendiğinde, otomatik olarak yeniden başlatma sağlanır.
+•Arızalanan bileşenler sistem çalışırken değiştirilebilir.
+•Sistem hataları kayıt altına alınarak analiz edilir ve tekrar oluşmasını önleyici
+önlemleralınır.
+•Dağıtık sistemlerde bir düğüm hatalandığında, diğerleri devreye girerek işleyişi
+devam ettirir.
+•Kritik işlemler hata durumunda kesintiye uğramadan devam eder.
 
-Derleyici Optimizasyonları
-Çözüm 2:
-•8’lü SIMDile Vektörizasyonda8tane sayı tek seferde işlenebilir.
-int array[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-#pragma omp simd
-for (int i = 0; i < 8; i++) {
-array[i] = array[i] * 2;
-}
-•İşlem adımları:
-•Tek adımda işlemci 8elemanı aynı andaçarpar:
-•{1, 2, 3, 4, 5, 6, 7, 8} * 2 → {2, 4, 6, 8, 10, 12, 14, 16}
-•Toplamda 1 döngü turu ile işlem tamamlanır.
+
+Hafif işletim sistemlerinde
+dinamik kaynak yönetimi
+nasıl olabilir?
 
-Derleyici Optimizasyonları
-Tek bir saat döngüsünde birden fazla veri elemanını işler.
-İşlem süresini hızlandırır.
-Bellekten okuma ve yazma işlemlerinin sayısını azaltır.
-Güç tüketimini azaltır.
-
-
-Vektörizasyonun avantajları nelerdir?
-
-
+Hafif İşletim Sistemlerinde Dinamik Kaynak Yönetimi
+•Hafif işletim sistemlerinde milyonlarca işlem birimi arasında dinamik kaynak yönetim
+için:
+•İşlemciler arasında iş yükü dengelenerek performans artırılır.
+•Değişken iş yüklerine göre kaynaklar otomatik olarak artırılır veya azaltılır.
+•Anlık ihtiyaçlara göre kaynak kullanımı optimize edilir.
+•Hata durumlarında sistem kesintisiz çalışmaya devam edecek şekilde kaynaklar
+yeniden düzenlenir.
+•Dağıtık mimaride bileşenler arasında hızlı veri akışı sağlanır.
+•Boşta kalan kaynaklar düşük güç modunaalınarak enerji tasarrufu yapılır.
+•Farklı uygulama türlerine göre en uygun kaynak yönetimi stratejisi seçilir.
 
-Performans Profilleme ve Hata Ayıklama
-•Eksaskala sistemlerde, işlemci veya çekirdek sayısı arttıkça uygulamanın
-performansı analiz edilir.
-•Profilleme ve hata ayıklama,
-•Eksaskala sistemlerde kod verimliliğini optimize etmek ve performans
-sorunlarını tespit etmek için kullanılır.
-•Profilleme,
-•programın çalışma zamanı davranışını analiz etmeye ve darboğazları tespit
-etmeyeyardımcı olur.
-•Hata ayıklama,
-•performans, eşzamanlılık ve kaynak kullanımıyla ilgili hataları giderir ve
-programın doğruluğunu sağlar.
+Veri Yönetimi ve Depolama Çözümleri
+•Eksaskala sistemlerinde yüksek kapasiteli depolama sistemlerinde:
+•Akıllı tahmin algoritmalarıyla veriye hızlı erişim sağlanır.
+•Veri kaybını önlemek için yedekleme, hata tespiti ve onarımyapılır.
+•Enerji dostu donanım ve yazılımla güç tüketimi azaltılır.
+•Veri aktarım darboğazlarını azaltmak için akıllı veri yönlendirme ve
+önbellekleme teknikleri kullanılır.
+
+Akıllı veri yönlendirme ve
+önbellekleme
+tekniklerinin avantajları
+neler olabilir?
 
-Performans Profilleme ve Hata Ayıklama
-•Eksaskala sistemlerde profilleme araçları genel olarak işlemci, bellek ve I/O
-kullanımıgibi farklı kaynakların nasıl kullanıldığını analiz eder.
-•Eksaskala sistemlerde en sık kullanılan profilleme araçlar:
-•Intel VTune Amplifier
-•Cray Pat
-•TAU (Tuning and Analysis Utilities)
-•gprof
-•perf
+Veri Yönetimi ve Depolama Çözümleri
+•Akıllı veri yönlendirme ve önbellekleme teknikleri ile:
+•İçeriği kullanıcılara yakın sunuculardan sunar, ağ tıkanıklığını
+azaltır.
+•Ağ trafiğini dinamik yönlendirir, en uygun veri yollarını seçer.
+•Popüler veriler RAM'de saklanarak disk erişimi azaltılır.
+•Gelecekteki veri ihtiyaçları önceden tahmin edilip önbelleğe alınır
+ve veri aktarımı hızlanır.
 
-Performans Profilleme ve Hata Ayıklama
-•Eksaskala sistemlerde hata ayıklama araçları genel olarak bellek hataları, veri
-yarışları gibi hataları analiz eder.
-•Eksaskala sistemlerde en sık kullanılan hata ayıklama araçları:
-•TotalView
-•GDB (GNU Debugger)
-•Allinea DDT
-•Intel Debugger (IDB)
+Uygulamalar İçin Yazılımlar
+•Eksaskala bilgisayar sistemlerinde uygulamalar için yazılımlar :
+•MPI, OpenMP ve CUDA, gibi geniş ölçekli paralel programlama paradigmaları
+sunar.
+•Dögü açma/kapama, vektörleştirme ve işlemciye özel optimizasyonlarsağlar.
+•Verimli veri hareketi, önbellekleme stratejileri ile bellek erişimini optimize eder.
+•Profiling, izleme ve hata ayıklama ile kod optimizasyonu desteği sunar.
+•Heterojen kaynaklar arasında hesaplama iş yüklerini dengeler.
+•Yapay zeka tabanlı analiz araçlarıyla veri odaklı kararlar alır.
 - **İstenen Toplam Soru Sayısı:** 10 soru
 - **Zorluk Seviyesi:** mixed
 
@@ -588,42 +392,42 @@ yarışları gibi hataları analiz eder.
 - Toplam Soru Sayısı: 10
 - Alt Konu Dağılımı:
 
-  - Paralel Programlama Paradigmaları: 2 soru
-  - Paylaşımlı Bellek Paradigması: 2 soru
-  - Dağıtık Bellek Paradigması: 2 soru
-  - Hibrit Paralel Programlama: 2 soru
-  - Döngü Açma Loop Unrolling: 2 soru
+  - Eksaskala Çağında Yazılım Zorlukları: 2 soru
+  - Ölçeklenebilirlik Zorlukları: 2 soru
+  - Hata Toleransı Gereksinimleri: 2 soru
+  - Hafif Çekirdek Yapısı: 2 soru
+  - Hata Toleransı Mekanizmaları: 2 soru
 
 
 ### Soru Örnekleri (Her Alt Konudan 1 Adet):
 
-#### Paralel Programlama Paradigmaları:
-- Soru: Aşağıdakilerden hangisi, eksaskala sistemlerde verimliliği artırmak amacıyla kullanılan temel bir yaklaşımdır?
-- Seçenekler: Tek çekirdekli işlemci kullanımı | Paralellikten yararlanma | Bellek erişimini kısıtlama | Seri programlama
-- Doğru Cevap: Paralellikten yararlanma
+#### Eksaskala Çağında Yazılım Zorlukları:
+- Soru: Eksaskala bilgisayar sistemlerinde karşılaşılan temel yazılım zorluklarından biri, geleneksel sistemlerin hangi özelliğinin yetersiz kalmasıdır?
+- Seçenekler: Veri depolama kapasitesi | Ölçeklenebilirlik | Enerji verimliliği | Giriş/Çıkış hızı
+- Doğru Cevap: Ölçeklenebilirlik
 - Zorluk: medium
 
-#### Paylaşımlı Bellek Paradigması:
-- Soru: Aşağıdakilerden hangisi, paylaşımlı bellek paradigmasının temel özelliğidir?
-- Seçenekler: Her işlemcinin kendi özel belleği olması | Tüm işlemcilerin ortak bir belleğe erişmesi | Veri iletişiminin mesajlaşma ile sağlanması | Sadece tek çekirdekli işlemcilerde çalışabilmesi
-- Doğru Cevap: Tüm işlemcilerin ortak bir belleğe erişmesi
-- Zorluk: easy
+#### Ölçeklenebilirlik Zorlukları:
+- Soru: Eksaskala sistemlerde milyonlarca çekirdeği verimli bir şekilde yönetememe durumu, aşağıdaki zorluklardan hangisinin temel nedenidir?
+- Seçenekler: Güç tüketimi | Hata toleransı | Ölçeklenebilirlik | Veri depolama
+- Doğru Cevap: Ölçeklenebilirlik
+- Zorluk: medium
 
-#### Dağıtık Bellek Paradigması:
-- Soru: Dağıtık bellek paradigmasında veri değişimi nasıl sağlanır?
-- Seçenekler: Ortak bir belleğe erişerek | Mesajlaşma ile | Paylaşımlı değişkenler kullanarak | Donanım yoluyla
-- Doğru Cevap: Mesajlaşma ile
-- Zorluk: easy
+#### Hata Toleransı Gereksinimleri:
+- Soru: Büyük eksaskala sistemlerde donanım arızalarının sık görülmesi durumunda, sistemlerin hangi özelliğe sahip olması kritik öneme sahiptir?
+- Seçenekler: Yüksek işlem hızı | Gelişmiş grafik yetenekleri | Hata toleransı | Büyük bellek kapasitesi
+- Doğru Cevap: Hata toleransı
+- Zorluk: medium
 
-#### Hibrit Paralel Programlama:
-- Soru: Hibrit paralellik yaklaşımı neyi ifade eder?
-- Seçenekler: Sadece paylaşımlı bellek paradigmasını kullanmayı | Sadece dağıtık bellek paradigmasını kullanmayı | Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmeyi | Sadece tek bir işlemci üzerinde çalışmayı
-- Doğru Cevap: Farklı paralel programlama paradigmalarının gücünden yararlanmak için birden fazla paradigmayı birleştirmeyi
-- Zorluk: easy
+#### Hafif Çekirdek Yapısı:
+- Soru: Hafif çekirdek yapılarının temel amacı nedir?
+- Seçenekler: Gereksiz özellikleri barındırmak | Yüksek enerji tüketimi sağlamak | Temel işletim sistemi fonksiyonlarını yerine getirmek | Karmaşık sistem yönetimini kolaylaştırmak
+- Doğru Cevap: Temel işletim sistemi fonksiyonlarını yerine getirmek
+- Zorluk: medium
 
-#### Döngü Açma Loop Unrolling:
-- Soru: Döngü açma (Loop Unrolling) tekniğinin temel amacı nedir?
-- Seçenekler: Döngü kontrol yapılarının yükünü azaltmak | Döngüleri birleştirerek bellek erişimini artırmak | Döngüleri karmaşıklaştırarak hata ayıklamayı zorlaştırmak | Sadece tek çekirdekli işlemcilerde performansı artırmak
-- Doğru Cevap: Döngü kontrol yapılarının yükünü azaltmak
-- Zorluk: easy
+#### Hata Toleransı Mekanizmaları:
+- Soru: Hafif işletim sistemlerinde hata oluştuğunda sistemin geri kalanının korunmasını sağlamak için hangi mekanizma kullanılır?
+- Seçenekler: Merkezi işlem birimi yeniden başlatma | İzole çalışma | Veri yedekleme | Güç kaynağı optimizasyonu
+- Doğru Cevap: İzole çalışma
+- Zorluk: medium
 
