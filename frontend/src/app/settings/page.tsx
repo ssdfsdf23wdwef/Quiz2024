@@ -213,8 +213,8 @@ export default function SettingsPage() {
       )}
 
       <motion.div variants={fadeInVariants} className="mb-10 text-center sm:text-left">
-        <h1 className="text-4xl font-bold text-[#0f172a] dark:text-[#f8fafc] mb-2">Ayarlar</h1>
-        <p className="text-lg text-[#334155] dark:text-[#cbd5e1]">
+        <h1 className={`text-4xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Ayarlar</h1>
+        <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           Hesap ayarlarınızı ve tercihlerinizi yönetin.
         </p>
       </motion.div>
@@ -223,7 +223,7 @@ export default function SettingsPage() {
         <div className="md:col-span-2 space-y-8">
           <motion.section variants={fadeInVariants} className={cardClassName}>
             <header className={sectionHeaderClassName}>
-              <h2 className="text-xl font-semibold text-[#0f172a] dark:text-[#f8fafc] flex items-center gap-3">
+              <h2 className={`text-xl font-semibold flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 <FiSettings className="text-[#3b82f6] dark:text-[#3b82f6]" />
                 Görünüm Ayarları
               </h2>
@@ -243,7 +243,7 @@ export default function SettingsPage() {
                 <FiSun className="text-2xl text-[#f59e0b] dark:text-[#fbbf24]" />
               )}
               <div>
-                <h3 className="font-medium text-[#0f172a] dark:text-[#f8fafc]">
+                <h3 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                   Mevcut Tema: <span className="capitalize font-semibold">{currentMode === 'light' ? 'Açık' : currentMode === 'dark' ? 'Koyu' : 'Sistem'}</span>
                 </h3>
                 <p className="text-sm text-[#334155] dark:text-[#cbd5e1]">
@@ -255,7 +255,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-3 mb-6">
-              <h3 className="text-base font-medium text-[#0f172a] dark:text-[#f8fafc] mb-2 flex items-center gap-2">
+              <h3 className={`text-base font-medium mb-2 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                 <FiMonitor className="text-[#3b82f6] dark:text-[#3b82f6]" />
                 Tema Modu
               </h3>
@@ -296,7 +296,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-base font-medium text-[#0f172a] dark:text-[#f8fafc] mb-2 flex items-center gap-2">
+              <h3 className={`text-base font-medium mb-2 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                 <FiType className="text-[#10b981] dark:text-[#34d399]" />
                 Yazı Boyutu
               </h3>
@@ -337,7 +337,7 @@ export default function SettingsPage() {
 
           <motion.section variants={fadeInVariants} className={cardClassName}>
             <header className={sectionHeaderClassName}>
-              <h2 className="text-xl font-semibold text-[#0f172a] dark:text-[#f8fafc] flex items-center gap-3">
+              <h2 className={`text-xl font-semibold flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 <FiBell className="text-[#f59e0b] dark:text-[#f59e0b]" />
                 Uygulama Tercihleri
               </h2>
@@ -358,7 +358,7 @@ export default function SettingsPage() {
                 return (
                   <div key={key} className={`flex items-center justify-between p-3.5 rounded-md border ${isDarkMode ? 'bg-gray-900/80 border-gray-700/40' : 'bg-white border-gray-200/70'} transition-colors duration-300`}>
                     <div>
-                      <h3 className="text-sm font-medium text-[#0f172a] dark:text-[#f8fafc]">{labels[key]}</h3>
+                      <h3 className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{labels[key]}</h3>
                       <p className="text-xs text-[#64748b] dark:text-[#cbd5e1] mt-0.5">
                         {descriptions[key]}
                       </p>
@@ -380,7 +380,7 @@ export default function SettingsPage() {
               <div className={`p-3.5 rounded-md border ${isDarkMode ? 'bg-gray-900/80 border-gray-700/40' : 'bg-white border-gray-200/70'} transition-colors duration-300`}>
                 <label
                   htmlFor="language"
-                  className="block text-sm font-medium text-[#0f172a] dark:text-[#f8fafc] mb-1.5"
+                  className={`block text-sm font-medium mb-1.5 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}
                 >
                   Dil
                 </label>
@@ -413,7 +413,7 @@ export default function SettingsPage() {
 
           <motion.section variants={fadeInVariants} className={cardClassName}>
             <header className={sectionHeaderClassName}>
-              <h2 className="text-xl font-semibold text-[#0f172a] dark:text-[#f8fafc] flex items-center gap-3">
+              <h2 className={`text-xl font-semibold flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 <FiLock className="text-[#ef4444] dark:text-[#f87171]" />
                 Şifre Değiştir
               </h2>
@@ -493,7 +493,7 @@ export default function SettingsPage() {
             variants={fadeInVariants}
             className={`${cardClassName} sticky top-8`}
           >
-            <h2 className="text-lg font-semibold text-[#0f172a] dark:text-[#f8fafc] mb-3 flex items-center gap-2">
+            <h2 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               <FiHelpCircle className="text-[#3b82f6] dark:text-[#60a5fa]"/>
               Yardım & Destek
               </h2>
