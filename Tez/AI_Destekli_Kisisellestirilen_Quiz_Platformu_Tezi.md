@@ -1,54 +1,65 @@
-T.C.
-ATATÜRK ÜNİVERSİTESİ
-MÜHENDİSLİK FAKÜLTESİ
-BİLGİSAYAR MÜHENDİSLİĞİ BÖLÜMÜ
+# YAPAY ZEKA DESTEKLİ KİŞİSELLEŞTİRİLMİŞ ÖĞRENİM QUIZ PLATFORMU
+## Çift Modaliteli Hibrit Eğitim Sistemi
 
- 
+**Atatürk Üniversitesi - Mühendislik Fakültesi**  
+**Bilgisayar Mühendisliği Bölümü**  
+**Bitirme Projesi - 2025**
 
+---
 
-BİLGİSAYAR MÜHENDİSLİĞİ SEÇMELİ TASARIM DERSİ I
-YAPAY ZEKA DESTEKLİ KİŞİSELLEŞTİRİLMİŞ ÖĞRENİM QUIZ PLATFORMU
+> **Bu doküman, tezin tüm bölümlerini tek dosyada toplar. Her bölümün detaylı versiyonu ayrı dosyalarda mevcuttur.**
 
-HAZIRLAYANLAR
-Ahmet Haman Bekmez - 2025000001
+---
 
-PROJE DANIŞMANI
-Dr. Öğr. Üyesi [Danışman Adı Soyadı]
+## 📑 TEZ BÖLÜMLERİ
 
-HAZİRAN 2025
+Bu tez aşağıdaki modüler bölümlerden oluşmaktadır:
 
-İÇİNDEKİLER
+- **[00_Executive_Summary.md](./00_Executive_Summary.md)** - Yönetici Özeti
+- **[01_Kapak_ve_Icindekiler.md](./01_Kapak_ve_Icindekiler.md)** - Kapak ve İçindekiler  
+- **[02_Ozet.md](./02_Ozet.md)** - Özet (Türkçe/İngilizce)
+- **[03_Giris.md](./03_Giris.md)** - Giriş  
+- **[04_Literatur_Arastirmasi.md](./04_Literatur_Arastirmasi.md)** - Literatür Araştırması
+- **[05_Materyal_ve_Yontem.md](./05_Materyal_ve_Yontem.md)** - Materyal ve Yöntem
+- **[06_Bulgular_ve_Tartisma.md](./06_Bulgular_ve_Tartisma.md)** - Bulgular ve Tartışma  
+- **[07_Sonuclar_ve_Oneriler.md](./07_Sonuclar_ve_Oneriler.md)** - Sonuçlar ve Öneriler
+- **[08_Surdurulebilir_Kalkinma.md](./08_Surdurulebilir_Kalkinma.md)** - Sürdürülebilir Kalkınma
+- **[09_Etik_Degerlendirme.md](./09_Etik_Degerlendirme.md)** - Etik Değerlendirme
+- **[10_Hukuki_Degerlendirme.md](./10_Hukuki_Degerlendirme.md)** - Hukuki Değerlendirme  
+- **[11_Saglik_Cevre_Guvenlik.md](./11_Saglik_Cevre_Guvenlik.md)** - Sağlık, Çevre ve Güvenlik
+- **[12_Kaynakca.md](./12_Kaynakca.md)** - Kaynakça
+- **[13_Gorseller_ve_Ekler.md](./13_Gorseller_ve_Ekler.md)** - Görseller ve Ekler
 
-KISALTMALAR	3
-ŞEKİLLER DİZİNİ	4
-TABLOLAR DİZİNİ	5
-ÖZET	6
-GİRİŞ	7
-LİTERATÜR ARAŞTIRMASI	8
-MATERYAL ve YÖNTEM	12
-BULGULAR ve TARTIŞMA	18
-SONUÇLAR ve ÖNERİLER	22
-PROJENİN SÜRDÜRÜLEBİLİR KALKINMA İLE İLİŞKİSİ	23
-PROJENİN ETİK AÇIDAN DEĞERLENDİRİLMESİ	24
-PROJENİN HUKUKİ AÇIDAN DEĞERLENDİRİLMESİ	25
-PROJENİN SAĞLIK, ÇEVRE ve GÜVENLİK ÜZERİNDEKİ ETKİLERİ	26
-KAYNAKÇA	27
+### 📋 DESTEK DOKÜMANLARI
+- **[TEZ_KALITE_KONTROL_RAPORU.md](./TEZ_KALITE_KONTROL_RAPORU.md)** - Kalite Kontrol (95/100)
+- **[TEZ_SAVUNMA_REHBERI.md](./TEZ_SAVUNMA_REHBERI.md)** - Savunma Hazırlık Rehberi
 
-DEĞİŞİKLİK TARİHÇESİ
-Versiyon: 1.0
-Değişiklik gerekçesi	Değişiklik Talebini yapan/gerçekleştiren kişi	Değişiklik Kapsamı	Değişikliğin Talebinin Projeye Etkileri
-İlk sürüm	Ahmet Haman Bekmez	Tam sistem implementasyonu	Projenin tamamlanması
-			
-			
-			
+---
 
-KISALTMALAR
+## 🎯 PROJE HAKKINDA
 
-AI: Artificial Intelligence (Yapay Zeka)
-API: Application Programming Interface (Uygulama Programlama Arayüzü)
-CRUD: Create, Read, Update, Delete (Oluştur, Oku, Güncelle, Sil)
-DTO: Data Transfer Object (Veri Transfer Nesnesi)
-NLP: Natural Language Processing (Doğal Dil İşleme)
+### Proje Adı
+**Yapay Zeka Destekli Kişiselleştirilmiş Öğrenim Quiz Platformu**
+
+### Ana Özellik: Çift Modaliteli Hibrit Sistem
+- **Hızlı Sınav (Quick Quiz):** Kayıt gerektirmeyen anlık değerlendirme
+- **Kişiselleştirilmiş Sınav (Personalized Quiz):** AI destekli adaptif öğrenme
+
+### Teknoloji Stack'i
+- **Frontend:** Next.js 15 + TypeScript + TailwindCSS
+- **Backend:** NestJS + Mikroservis Mimarisi  
+- **AI:** Google Gemini Pro API
+- **Veritabanı:** Firebase Firestore
+- **Deployment:** Vercel + CI/CD
+
+### Başlıca İnovasyonlar
+✅ Çift modaliteli hibrit platform tasarımı  
+✅ AI destekli adaptif soru üretimi  
+✅ Cross-modal kullanıcı deneyimi  
+✅ Gerçek zamanlı performans analizi  
+✅ Doküman-to-quiz otomatik üretimi  
+
+---
 LLM: Large Language Model (Büyük Dil Modeli)
 JWT: JSON Web Token
 REST: Representational State Transfer
@@ -514,7 +525,7 @@ Test kullanıcılarından alınan geri bildirimler şu şekildedir:
 - Mobil uygulama geliştirme
 - Offline çalışma modu
 
-### Teknik Başarımlar
+### Teknik Başarılar
 
 1. **Modüler Mimari**: NestJS framework'ü sayesinde genişletilebilir ve bakımı kolay kod yapısı oluşturulmuştur.
 
@@ -602,7 +613,7 @@ Bu proje kapsamında geliştirilen yapay zeka destekli kişiselleştirilmiş qui
 
 4. **Performans**: Sistem performans hedeflerinin tümü başarıyla karşılanmıştır.
 
-5. **Teknik Başarımlar**:
+5. **Teknik Başarılar**:
    - 342ms ortalama API yanıt süresi (hedef: <500ms)
    - 2.1s quiz oluşturma süresi (hedef: <3s)
    - 1.3s sayfa yükleme süresi (hedef: <2s)
