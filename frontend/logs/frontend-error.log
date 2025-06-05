@@ -744,3 +744,7 @@ Details: {"filename":"webpack-internal:///(app-pages-browser)/./node_modules/nex
 ------------------------------------------------------------
 [2025-06-01T19:59:49.980Z] [info] [LogSetup] Frontend log sistemi başlatıldı
 ------------------------------------------------------------
+[2025-06-05T20:01:58.138Z] [info] [ClientLogSetup] Uygulama başlatıldı
+------------------------------------------------------------
+[2025-06-05T20:01:58.136Z] [info] [LogSetup] Frontend log sistemi başlatıldı
+------------------------------------------------------------
