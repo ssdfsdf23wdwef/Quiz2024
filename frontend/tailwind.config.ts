@@ -2,346 +2,132 @@ import type { Config } from "tailwindcss";
 import forms from "@tailwindcss/forms";
 import typography from "@tailwindcss/typography";
 import aspectRatio from "@tailwindcss/aspect-ratio";
-import { colors, spacing, borderRadius, typography as typographyTokens, breakpoints, duration, easing } from "./src/styles";
-
-// Stil sisteminden değişkenleri içe aktar
-import colors from "./src/style/colors";
-import typography_styles from "./src/style/typography";
-import spacing from "./src/style/spacing";
-import shadows from "./src/style/shadows";
-import breakpoints from "./src/style/breakpoints";
-import zIndex from "./src/style/zIndex";
-import animations from "./src/style/animations";
-import theme from "./src/style/theme";
-
-// CSS değer türü için esnek tip
-type CSSValue = string | { [key: string]: string | { [key: string]: string } };
 
 const config: Config = {
-<<<<<<< HEAD
-  // Dark theme support with class and system preference
-  darkMode: ["class", '[data-theme="dark"]'],
-=======
-  // Koyu tema desteği için `class` stratejisini kullan
+  // Koyu tema desteği için `dark` class'ını kullan
   darkMode: "class",
->>>>>>> origin/en-yeni
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-<<<<<<< HEAD
-    // Use imported design tokens
-    colors,
-    spacing,
-    borderRadius,
-    fontFamily: typographyTokens.fontFamily,
-    fontSize: typographyTokens.fontSize,
-    fontWeight: typographyTokens.fontWeight,
-    lineHeight: typographyTokens.lineHeight,
-    letterSpacing: typographyTokens.letterSpacing,
-    screens: breakpoints,    
     extend: {
-      // CSS custom properties integration with new design system
-      backgroundColor: {
-        'surface': {
-          'primary': 'rgb(var(--color-surface-primary) / <alpha-value>)',
-          'secondary': 'rgb(var(--color-surface-secondary) / <alpha-value>)',
-          'tertiary': 'rgb(var(--color-surface-tertiary) / <alpha-value>)',
-          'elevated': 'rgb(var(--color-surface-elevated) / <alpha-value>)',
-          'overlay': 'rgb(var(--color-surface-overlay) / <alpha-value>)',
-          'inverse': 'rgb(var(--color-surface-inverse) / <alpha-value>)',
-        },
-        'state': {
-          'success': 'rgb(var(--color-success-bg) / <alpha-value>)',
-          'warning': 'rgb(var(--color-warning-bg) / <alpha-value>)',
-          'error': 'rgb(var(--color-error-bg) / <alpha-value>)',
-          'info': 'rgb(var(--color-info-bg) / <alpha-value>)',
-        },
-        'interactive': {
-          'hover': 'rgb(var(--color-interactive-hover) / <alpha-value>)',
-          'active': 'rgb(var(--color-interactive-active) / <alpha-value>)',
-          'disabled': 'rgb(var(--color-interactive-disabled) / <alpha-value>)',
-          'selected': 'rgb(var(--color-interactive-selected) / <alpha-value>)',
-        },
-      },
-      
-      textColor: {
-        'semantic': {
-          'primary': 'rgb(var(--color-text-primary) / <alpha-value>)',
-          'secondary': 'rgb(var(--color-text-secondary) / <alpha-value>)',
-          'tertiary': 'rgb(var(--color-text-tertiary) / <alpha-value>)',
-          'quaternary': 'rgb(var(--color-text-quaternary) / <alpha-value>)',
-          'disabled': 'rgb(var(--color-text-disabled) / <alpha-value>)',
-          'inverse': 'rgb(var(--color-text-inverse) / <alpha-value>)',
-          'link': 'rgb(var(--color-text-link) / <alpha-value>)',
-          'link-hover': 'rgb(var(--color-text-link-hover) / <alpha-value>)',
-        },
-        'state': {
-          'success': 'rgb(var(--color-success) / <alpha-value>)',
-          'warning': 'rgb(var(--color-warning) / <alpha-value>)',
-          'error': 'rgb(var(--color-error) / <alpha-value>)',
-          'info': 'rgb(var(--color-info) / <alpha-value>)',
-        },
-      },
-      
-      borderColor: {
-        'semantic': {
-          'primary': 'rgb(var(--color-border-primary) / <alpha-value>)',
-          'secondary': 'rgb(var(--color-border-secondary) / <alpha-value>)',
-          'tertiary': 'rgb(var(--color-border-tertiary) / <alpha-value>)',
-          'focus': 'rgb(var(--color-border-focus) / <alpha-value>)',
-        },
-        'state': {
-          'success': 'rgb(var(--color-border-success) / <alpha-value>)',
-          'warning': 'rgb(var(--color-border-warning) / <alpha-value>)',
-          'error': 'rgb(var(--color-border-error) / <alpha-value>)',
-        },
-      },      
-      // Box shadows using CSS custom properties
-      boxShadow: {
-        'xs': 'var(--shadow-xs)',
-        'sm': 'var(--shadow-sm)',
-        'md': 'var(--shadow-md)',
-        'lg': 'var(--shadow-lg)',
-        'xl': 'var(--shadow-xl)',
-        '2xl': 'var(--shadow-2xl)',
-        'inner': 'var(--shadow-inner)',
-      },
-      
-      // Blur effects
-      blur: {
-        'xs': 'var(--blur-xs)',
-        'sm': 'var(--blur-sm)',
-        'md': 'var(--blur-md)',
-        'lg': 'var(--blur-lg)',
-        'xl': 'var(--blur-xl)',
-        '2xl': 'var(--blur-2xl)',
-        '3xl': 'var(--blur-3xl)',
-      },      
-      // Z-index scale for layering
-      zIndex: {
-        'hide': '-1',
-        'auto': 'auto',
-        'base': '0',
-        'docked': '10',
-        'dropdown': '1000',
-        'sticky': '1100',
-        'banner': '1200',
-        'overlay': '1300',
-        'modal': '1400',
-        'popover': '1500',
-        'skipLink': '1600',
-        'toast': '1700',
-        'tooltip': '1800',
-      },
-        // Animation durations using design tokens
-      transitionDuration: {
-        ...duration,
-      },
-      
-      // Animation timing functions using design tokens
-      transitionTimingFunction: {
-        ...easing,
-      },
-      // Responsive breakpoints
-      screens: breakpoints,
-        // Enhanced animations for modern UX
-      animation: {
-        'fade-in': `fadeIn ${duration.slower} ${easing['ease-out']}`,
-        'fade-out': `fadeOut ${duration.normal} ${easing['ease-in']}`,
-        'slide-up': `slideUp ${duration.slow} ${easing['ease-out']}`,
-        'slide-down': `slideDown ${duration.slow} ${easing['ease-out']}`,
-        'slide-left': `slideLeft ${duration.slow} ${easing['ease-out']}`,
-        'slide-right': `slideRight ${duration.slow} ${easing['ease-out']}`,
-        'scale-in': `scaleIn ${duration.normal} ${easing['ease-out']}`,
-        'scale-out': `scaleOut ${duration.normal} ${easing['ease-in']}`,
-        'bounce-in': `bounceIn ${duration.slow} ${easing['ease-out-bounce']}`,
-        'pulse-soft': `pulseSoft 2s ${easing['ease-in-out']} infinite`,
-        'spin-slow': 'spin 3s linear infinite',
-        'float': `float 3s ${easing['ease-in-out']} infinite`,
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        fadeOut: {
-          '0%': { opacity: '1' },
-          '100%': { opacity: '0' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(1rem)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideDown: {
-          '0%': { transform: 'translateY(-1rem)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideLeft: {
-          '0%': { transform: 'translateX(1rem)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-        slideRight: {
-          '0%': { transform: 'translateX(-1rem)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-        scaleIn: {
-          '0%': { transform: 'scale(0.95)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        scaleOut: {
-          '0%': { transform: 'scale(1)', opacity: '1' },
-          '100%': { transform: 'scale(0.95)', opacity: '0' },
-        },
-        bounceIn: {
-          '0%': { transform: 'scale(0.3)', opacity: '0' },
-          '50%': { transform: 'scale(1.05)' },
-          '70%': { transform: 'scale(0.9)' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        pulseSoft: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.8' },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-      },
-    },
-  },
-  plugins: [
-    forms,
-    typography,
-    aspectRatio,
-=======
-    // Temel tema değerlerini belirle
-    screens: breakpoints,
-    fontFamily: typography_styles.fontFamily,
-    fontSize: typography_styles.fontSize,
-    fontWeight: typography_styles.fontWeight,
-    lineHeight: typography_styles.lineHeight,
-    letterSpacing: typography_styles.letterSpacing,
-    zIndex: zIndex,
-    
-    extend: {
-      // Tüm renk değişkenlerini doğrudan stil sisteminden al
       colors: {
-        // Ana tema renkleri
-        primary: colors.primary,
-        secondary: colors.secondary,
-        success: colors.success,
-        warning: colors.warning,
-        danger: colors.danger,
-        info: colors.info,
-        neutral: colors.neutral,
-        
-        // Açık tema renkleri
-        light: colors.light,
-        
-        // Koyu tema renkleri
-        dark: colors.dark,
+        // Ana tema renkleri - hem açık hem de koyu tema için kullanılabilir
+        primary: {
+          50: "#f0f9ff",
+          100: "#e0f2fe",
+          200: "#bae6fd",
+          300: "#7dd3fc",
+          400: "#38bdf8",
+          500: "#0ea5e9",
+          600: "#0284c7",
+          700: "#0369a1",
+          800: "#075985",
+          900: "#0c4a6e",
+          950: "#082f49",
+        },
+        secondary: {
+          50: "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7c3aed",
+          700: "#6d28d9",
+          800: "#5b21b6",
+          900: "#4c1d95",
+          950: "#2e1065",
+        },
+        success: {
+          50: "#f0fdf4",
+          100: "#dcfce7",
+          200: "#bbf7d0",
+          300: "#86efac",
+          400: "#4ade80",
+          500: "#22c55e",
+          600: "#16a34a",
+          700: "#15803d",
+          800: "#166534",
+          900: "#14532d",
+          950: "#052e16",
+        },
+        warning: {
+          50: "#fffbeb",
+          100: "#fef3c7",
+          200: "#fde68a",
+          300: "#fcd34d",
+          400: "#fbbf24",
+          500: "#f59e0b",
+          600: "#d97706",
+          700: "#b45309",
+          800: "#92400e",
+          900: "#78350f",
+          950: "#451a03",
+        },
+        danger: {
+          50: "#fef2f2",
+          100: "#fee2e2",
+          200: "#fecaca",
+          300: "#fca5a5",
+          400: "#f87171",
+          500: "#ef4444",
+          600: "#dc2626",
+          700: "#b91c1c",
+          800: "#991b1b",
+          900: "#7f1d1d",
+          950: "#450a0a",
+        },
+        // Açık tema için özel renkler
+        light: {
+          background: "#ffffff",
+          "background-secondary": "#f9fafb",
+          "background-tertiary": "#f3f4f6",
+          "text-primary": "#111827",
+          "text-secondary": "#4b5563",
+          "text-tertiary": "#9ca3af",
+          border: "#e5e7eb",
+          "border-focus": "#d1d5db",
+        },
+        // Koyu tema için özel renkler
+        dark: {
+          "bg-primary": "#121212",
+          "bg-secondary": "#1e1e1e",
+          "bg-tertiary": "#2d2d2d",
+          "text-primary": "#e6e6e6",
+          "text-secondary": "#a0a0a0",
+          "text-tertiary": "#6b7280",
+          border: "#374151",
+          "border-focus": "#4b5563",
+          accent: "#6366f1",
+        },
       },
-      
-      // Animasyonlar ve geçişler
-      transitionDuration: {
-        fastest: `${animations.duration.fastest}s`,
-        fast: `${animations.duration.fast}s`,
-        normal: `${animations.duration.normal}s`,
-        slow: `${animations.duration.slow}s`,
-        slowest: `${animations.duration.slowest}s`,
-      },
-      
-      transitionTimingFunction: {
-        'ease-smooth': 'cubic-bezier(0.4, 0.0, 0.2, 1)',
-        'ease-spring': 'cubic-bezier(0.155, 1.105, 0.295, 1.12)',
-        'ease-bounce': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-      },
-      
-      transitionProperty: {
-        'height': 'height',
-        'spacing': 'margin, padding',
-        'opacity-transform': 'opacity, transform',
-      },
-      
-      // Boşluk değerleri
-      spacing: spacing,
-      
-      // Kenar yuvarlaklığı değerleri
-      borderRadius: theme.properties.borderRadius,
-      
-      // Kenar kalınlığı değerleri
-      borderWidth: theme.properties.borderWidth,
-      
-      // Opaklık değerleri
-      opacity: theme.properties.opacity,
-      
-      // Arkaplan desenleri
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        ...colors.gradients,
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
-      
+      // Duyarlı ekran boyutları
+      screens: {
+        xs: "475px",
+        // sm, md, lg, xl default Tailwind değerleri
+        "2xl": "1536px",
+      },
+      // Geçiş animasyonları
+      transitionProperty: {
+        height: "height",
+        spacing: "margin, padding",
+      },
       // Gölgeler
-      boxShadow: shadows,
+      boxShadow: {
+        soft: "0 2px 15px 0 rgba(0, 0, 0, 0.05)",
+        light: "0 0 10px rgba(0, 0, 0, 0.035)",
+      },
     },
   },
-  
-  // CSS değişkenlerine dayalı tema değişimi için
-  plugins: [
-    forms, 
-    typography, 
-    aspectRatio,
-    // Renk modu değişkenleri için özel eklenti
-    function({ addBase }: { addBase: (styles: Record<string, CSSValue>) => void }) {
-      addBase({
-        // Açık tema (varsayılan) için kök değişkenler
-        ':root': {
-          // Ana arkaplan ve metin renkleri
-          '--background-primary': colors.light.background,
-          '--background-secondary': colors.light["background-secondary"],
-          '--background-tertiary': colors.light["background-tertiary"],
-          '--text-primary': colors.light["text-primary"],
-          '--text-secondary': colors.light["text-secondary"],
-          '--text-tertiary': colors.light["text-tertiary"],
-          '--border-color': colors.light.border,
-          '--border-focus': colors.light["border-focus"],
-        },
-        // Koyu tema için değişkenler
-        '.dark': {
-          '--background-primary': colors.dark["bg-primary"],
-          '--background-secondary': colors.dark["bg-secondary"],
-          '--background-tertiary': colors.dark["bg-tertiary"],
-          '--text-primary': colors.dark["text-primary"],
-          '--text-secondary': colors.dark["text-secondary"],
-          '--text-tertiary': colors.dark["text-tertiary"],
-          '--border-color': colors.dark.border,
-          '--border-focus': colors.dark["border-focus"],
-        },
-        // Azaltılmış hareket desteği
-        '.reduce-motion': {
-          '--transition-duration-fast': '0ms',
-          '--transition-duration-normal': '0ms',
-          '--transition-duration-slow': '0ms',
-        },
-        // Yüksek kontrast desteği
-        '.high-contrast': {
-          '--text-primary': '#000000',
-          '--text-secondary': '#222222',
-          '--border-color': '#000000',
-          '.dark &': {
-            '--text-primary': '#ffffff',
-            '--text-secondary': '#dddddd',
-            '--border-color': '#ffffff',
-          },
-        },
-      });
-    },
->>>>>>> origin/en-yeni
-  ],
+  plugins: [forms, typography, aspectRatio],
 };
 
 export default config;
