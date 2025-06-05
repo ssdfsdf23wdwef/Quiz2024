@@ -871,3 +871,5 @@ Platformun çift modaliteli yaklaşımı, **BM 2030 Sürdürülebilir Kalkınma 
 
 **Son Değerlendirme:**
 Sonuç olarak, çift modaliteli AI-destekli quiz platformu, sürdürülebilir kalkınma hedefleriyle **paradigma değiştiren bir hibrit etkileşim** içindedir. Platform, hem **anlık erişilebilirlik** hem de **derin sürdürülebilirlik** sunarak, eğitim teknolojilerinin sürdürülebilir kalkınmaya nasıl **bütünsel ve çok boyutlu** katkı sağlayabileceğinin çığır açan bir örneğini oluşturmaktadır.
+
+dsf
