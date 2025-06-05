@@ -1,6 +1,7 @@
 "use client";
 
 import React, { ReactNode, useEffect } from "react";
+<<<<<<< HEAD
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "../context/ToastContext";
@@ -12,6 +13,18 @@ import dynamic from "next/dynamic";
 import { setupLogging, setupGlobalErrorHandling, startFlow } from "@/lib/logger.utils";
 import { FlowCategory } from "@/constants/logging.constants";
 import { LogLevel } from "@/services/logger.service";
+=======
+import dynamic from "next/dynamic";
+import { getLogger } from "@/lib/logger.utils";
+import { QueryClient } from "@tanstack/react-query";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/lib/i18n/i18n";
+import { AuthProvider } from "@/context/AuthContext";
+import { ToastProvider } from "@/context/ToastContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { QueryClientProvider } from "@tanstack/react-query";
+>>>>>>> origin/en-yeni
 
 // Loglama ve akış izleme servislerini başlat
 const { logger } = setupLogging({
@@ -58,6 +71,15 @@ interface ProvidersProps {
 /**
  * Tüm uygulama sağlayıcılarını (providers) bir araya getiren bileşen
  * Bu bileşen, RootLayout içerisinde tüm uygulamayı sarmalar
+ * 
+ * Sağlanan özellikler:
+ * - Hata sınırlama (ErrorBoundary)
+ * - Kimlik doğrulama (AuthProvider)
+ * - Çoklu dil desteği (I18nextProvider)
+ * - API veri yönetimi (QueryClientProvider)
+ * - Tema yönetimi (ThemeProvider - yeni stil sistemi entegrasyonu)
+ * - Bildirim sistemi (ToastProvider)
+ * - Analitik izleme (AnalyticsComponent)
  */
 export function Providers({ children }: ProvidersProps) {
   // Tarayıcıda çalıştığında i18n'i başlat (SSR'daki uyumsuzluklardan kaçınmak için)

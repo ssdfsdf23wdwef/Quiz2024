@@ -10,7 +10,11 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
+<<<<<<< HEAD
           "border-transparent bg-tertiary text-primary",
+=======
+          "border-transparent bg-neutral-800 text-white dark:bg-neutral-700 dark:text-white",
+>>>>>>> origin/en-yeni
         primary:
           "border-transparent bg-brand-primary text-white",
         secondary:
@@ -22,7 +26,11 @@ const badgeVariants = cva(
         danger:
           "border-transparent bg-state-error text-white",
         outline:
+<<<<<<< HEAD
           "text-primary border-primary",
+=======
+          "text-light-text-primary border-light-border dark:text-dark-text-primary dark:border-dark-border",
+>>>>>>> origin/en-yeni
       },
       size: {
         sm: "h-4 text-[0.625rem]",
@@ -43,6 +51,7 @@ export interface BadgeProps
 
 /**
  * Etiket veya durum göstergesi olarak kullanılan küçük rozet bileşeni
+ * Yeni stil sistemine uygun olarak güncellenmiştir
  */
 const Badge = forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant, size, ...props }, ref) => {

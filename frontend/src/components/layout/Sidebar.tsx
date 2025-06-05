@@ -20,6 +20,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/context/ThemeProvider";
 
+<<<<<<< HEAD
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
@@ -28,6 +29,13 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
   const [isInitializing, setIsInitializing] = useState(true);
+=======
+/**
+ * Yan menü bileşeni
+ * Yeni stil sistemi ile güncellenmiştir
+ */
+export default function Sidebar() {
+>>>>>>> origin/en-yeni
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
@@ -93,6 +101,7 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
   };
 
   return (
+<<<<<<< HEAD
     <motion.div 
       initial={false}
       animate={{ width: isCollapsed ? "68px" : "240px" }}
@@ -274,5 +283,33 @@ export default function Sidebar({ isCollapsed, onToggleCollapse }: SidebarProps)
       {/* Bottom decorative element */}
       <div className={`h-2 w-full ${isDarkMode ? 'bg-gradient-to-r from-gray-900 via-blue-900/20 to-gray-900' : 'bg-gradient-to-r from-white via-blue-100/20 to-white'}`}></div>
     </motion.div>
+=======
+    <aside className="hidden lg:block fixed top-0 left-0 h-full w-64 z-30 pt-[70px] border-r transition-colors duration-200 bg-light-background dark:bg-dark-bg-primary border-light-border dark:border-dark-border">
+      {isInitializing ? (
+        // Yükleme durumunda placeholder göster
+        <div className="flex flex-col gap-2 p-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="h-10 bg-light-background-tertiary dark:bg-dark-bg-tertiary rounded animate-pulse"
+            ></div>
+          ))}
+        </div>
+      ) : (
+        <nav className="flex flex-col gap-2 p-4">
+          {menuItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="py-2 px-3 rounded flex items-center text-light-text-primary dark:text-dark-text-primary hover:bg-primary-50 dark:hover:bg-dark-bg-secondary transition-colors"
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      )}
+    </aside>
+>>>>>>> origin/en-yeni
   );
 }
