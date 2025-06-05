@@ -14,9 +14,15 @@ const buttonVariants = cva(
         secondary:
           "bg-brand-secondary text-white hover:bg-brand-secondary-hover hover:-translate-y-0.5 hover:shadow-md hover:shadow-brand-secondary/20 focus-visible:ring-brand-secondary",
         outline:
+<<<<<<< HEAD
           "border border-primary/50 bg-transparent hover:bg-interactive-hover hover:border-brand-primary/50 focus-visible:ring-brand-primary",
         ghost:
           "bg-transparent hover:bg-interactive-hover hover:shadow-sm focus-visible:ring-brand-primary",
+=======
+          "border border-light-border dark:border-dark-border bg-transparent hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary focus-visible:ring-neutral-400",
+        ghost:
+          "bg-transparent hover:bg-light-background-secondary dark:hover:bg-dark-bg-secondary focus-visible:ring-neutral-400",
+>>>>>>> 66e977648eb1fd7bb9ac27cf4f26357001f75d96
         destructive:
           "bg-state-error text-white hover:bg-state-error/90 hover:-translate-y-0.5 hover:shadow-md hover:shadow-state-error/20 focus-visible:ring-state-error",
         success:
@@ -62,6 +68,7 @@ export interface ButtonProps
 
 /**
  * Yeniden kullanılabilir ve tüm varyantları destekleyen buton bileşeni
+ * Yeni stil sistemine uygun olarak güncellenmiştir
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
